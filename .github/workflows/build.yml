@@ -28,6 +28,17 @@ jobs:
         run: ruff format --check .
       - name: Lint (style, bugs, security)
         run: ruff check .
+      - name: The tag matches the app's version
+        # a release whose app reports an older number keeps offering itself as an update
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          v=$(python -c "import ast, pathlib; t = ast.parse(pathlib.Path('bodega/__init__.py').read_text()); print(next(n.value.value for n in t.body if isinstance(n, ast.Assign) and n.targets[0].id == '__version__'))")
+          if [ "$TAG" != "v$v" ]; then
+            echo "::error::Tag $TAG doesn't match __version__ $v in bodega/__init__.py. Bump the version, commit, then tag."
+            exit 1
+          fi
 
   build:
     needs: lint

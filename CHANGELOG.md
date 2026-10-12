@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.3
 
 - Bodega is blue now: a blue accent across the app and on the paper (new profiles; your profile's paper color is
   in Settings › Profiles), with neutral greys to match.

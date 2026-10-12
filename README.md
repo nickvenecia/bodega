@@ -67,7 +67,8 @@ renting 1 of your 3 lights sends 1 of its 2 fresnels.
 middle is a big sortable table of it, and the right is the piece you picked, where you change it. If it's out or
 booked, the top says so; click to open that rental. **Rent This…** starts a quote with it. Gear is divided by
 department, and a bar under the table adds it all up like your sheet did: pieces, paid, tax, value with tax and
-the day rate for everything. Light or dark follows your computer (View → Appearance).
+the day rate for everything. Light or dark follows your computer (View → Appearance), and you can pick the accent color in
+Settings › General.
 
 **Your order, your columns.** Drag gear by its grip to put it in the order you want (the other rows slide out of the way), or click a column title to
 sort (by name, company, value…). Divide the list by department, group or company, or not at all. Right-click

@@ -152,6 +152,7 @@ BODEGA_DATA_DIR=/tmp/x python -m bodega   # a throwaway data folder
 
 ## Releasing
 Same as Cobro: bump `__version__` in `bodega/__init__.py`, update CHANGELOG, commit, tag `vX.Y.Z`, push the tag.
+The build refuses a tag that doesn't match `__version__` (an app reporting an older number offers itself as an update).
 CI attaches Bodega-mac-apple-silicon.dmg, Bodega-mac-intel.dmg, Bodega-windows-setup.exe, Bodega-windows-portable.zip,
 Bodega-linux-x64.AppImage, Bodega-linux-x64.tar.gz. **These names are a contract** (README links + update.asset_name).
 update.REPO = "nickvenecia/bodega"; the repo must stay public.
