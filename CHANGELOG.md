@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.3
+## 1.1.0
 
 - Bodega is blue now: a blue accent across the app and on the paper (new profiles; your profile's paper color is
   in Settings › Profiles), with neutral greys to match.
@@ -19,7 +19,7 @@
 
 ## 1.0.0
 
-The first Bodega: Listo and Cobro's sibling, for gear and rentals.
+The first Bodega, for gear and rentals.
 
 - Gear with departments, groups, quantities, a serial number per unit, value, replacement value, day rate, link,
   notes and status (Ready, In Repair, Retired).
@@ -50,7 +50,7 @@ The first Bodega: Listo and Cobro's sibling, for gear and rentals.
 - A Liquid-Glass look: floating rounded panels on a soft gradient, capsule controls, rounded row highlights.
 - The right panel slides in when you pick something and out on Esc; the toolbar's search is centred.
 - Import straight from a Google Sheets link (links included, =HYPERLINK formulas too).
-- Updates itself from GitHub, like its siblings.
+- Updates itself from GitHub.
 - AI with your own key: Anthropic, OpenAI, Gemini, Kimi, OpenRouter, DeepSeek, Mistral, xAI, Groq or any
   OpenAI-compatible service (a local model too), models listed live. The AI Assistant (✦, ⌘J) updates prices and
   names from links, finds missing links (each one checked), tidies names and answers questions. Every change is

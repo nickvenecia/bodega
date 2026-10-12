@@ -1,4 +1,4 @@
-"""Design tokens (the same system as Listo): the ONLY place sizes, spacing, type and colors are defined.
+"""Design tokens: the ONLY place sizes, spacing, type and colors are defined.
 
 Every widget, layout and stylesheet rule uses these names. If something needs a value
 that isn't here, add a token (and document it in DESIGN.md) instead of typing a number.
@@ -181,7 +181,6 @@ DARK = {
     "FAINT": "#737072",  # hints, disabled, section labels
     "WELL": "#0C0B0C",  # sunken areas: thumbnails, previews, logs
     "ACCENT": "#4A90F7",  # sky blue — selection, primary action, focus
-    # (Listo's is marigold, Cobro's turquoise)
     "ACCENT_HOVER": "#66A3FF",
     "ACCENT_PRESS": "#3478E0",
     "ON_ACCENT": "#FFFFFF",  # text/icons on the accent
@@ -264,7 +263,7 @@ LIGHT = {
 }
 # ---------------------------------------------------------------- the accent you pick (Settings › General)
 # Bodega's own is blue, hand-set in DARK / LIGHT above. The others are built from one color by accent_set().
-# Never red: red means late, failed or delete in every app of the family.
+# Never red: red means late, failed or delete.
 APP_ACCENT = "blue"
 ACCENTS = {  # key -> (name, on dark, on light)
     "blue": ("Blue", "#4A90F7", "#2F6FDB"),

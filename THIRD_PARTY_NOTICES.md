@@ -15,6 +15,6 @@ The packaged app includes these open-source components. Thank you to their autho
 | IBM Plex Mono (serial numbers; unmodified) | SIL Open Font License 1.1 | https://github.com/IBM/plex |
 | Icons (redrawn line icons) | ISC (Lucide) | https://lucide.dev |
 
-The fonts' license files are in `bodega/assets/fonts` (OFL-*.txt). Inter's fixed weights are the same cut
-Cobro ships; IBM Plex Mono is included exactly as published.
+The fonts' license files are in `bodega/assets/fonts` (OFL-*.txt). Inter's fixed weights are included as
+published; IBM Plex Mono is included exactly as published.
 Qt libraries are shipped as separate shared libraries in the app folder and can be replaced.

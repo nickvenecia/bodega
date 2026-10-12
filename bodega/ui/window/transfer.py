@@ -302,7 +302,7 @@ class TransferMixin:
             notice(
                 self,
                 "Cobro isn't set up here",
-                "Send to Cobro makes the invoice in Cobro, Bodega's sibling app for invoices. Open Cobro once "
+                "Send to Cobro makes the invoice in Cobro, the invoice app. Open Cobro once "
                 "on this computer and add your profile, then try again.",
             )
             return

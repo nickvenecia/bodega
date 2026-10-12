@@ -1,6 +1,6 @@
 # Bodega design rules
 
-The rules for how Bodega looks and reads. They are Listo's and Cobro's rules (the three apps are siblings), with the parts that are only about video or invoices swapped for gear and rentals. Follow them for every screen, dialog and control.
+The rules for how Bodega looks and reads. Follow them for every screen, dialog and control.
 If a change needs something these rules don't cover, add a rule here in the same commit.
 
 All numbers and colors live in **`bodega/ui/tokens.py`**. The stylesheet (`bodega/ui/theme.py`) and
@@ -296,7 +296,7 @@ rentals are the plus underneath.
 - **Menus hold commands, the panels hold settings.** File / Edit / View / Profile / AI / Window / Help in the Mac
   menu bar; the profile card at the bottom of the sidebar opens profiles, Send Feedback and Settings on every system.
 - **Scrolling never changes a value**, and menus open on click, never on hover (`app._RoundPopups`).
-- **One identity everywhere.** The icon is "b." on the family's dark tile, the full stop in the accent
+- **One identity everywhere.** The icon is "b." on a dark tile, the full stop in the accent
   (`scripts/make_icon.py`); in the app the wordmark is "bodega." with the same blue full stop; on the Mac the title bar is ours (`ui/titlebar.py`).
 
 ---

@@ -53,7 +53,7 @@ USB scanner), note its condition, add photos. **Check In…** does the same when
 **Looking after it.** A maintenance log for every piece, with service reminders (Every 3 Months, say) and a
 **Needs Service** filter.
 
-**Cobro and your calendar.** **Send to Cobro…** turns a rental into a draft invoice in Cobro, Bodega's sibling
+**Cobro and your calendar.** **Send to Cobro…** turns a rental into a draft invoice in Cobro, the invoice
 app. **Add to Calendar** puts pickups and returns in Apple Calendar; Google Calendar can import the same file.
 
 **Gear that belongs to other gear.** A cage that only fits the FX6 belongs to the FX6. Attach it (**Belongs To**, or
@@ -164,7 +164,7 @@ git tag v1.0.1 && git push --tags
 ```
 
 GitHub Actions builds the Mac (Apple Silicon and Intel), Windows and Linux versions, tests each one, and attaches
-them to a new Release. Signing the Mac app works the same way as Listo and Cobro (add the `MACOS_*` / `APPLE_*` secrets).
+them to a new Release. To sign the Mac app, add the `MACOS_*` / `APPLE_*` secrets.
 
 ## Changing the icon
 Run `python scripts/make_icon.py`, or replace `bodega/assets/icon.png` with a 1024×1024 PNG (transparent corners).

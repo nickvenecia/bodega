@@ -1,4 +1,4 @@
-"""Send a rental to Cobro (Bodega's sibling invoice app, github.com/nickvenecia/cobro) as a draft invoice.
+"""Send a rental to Cobro (the invoice app) as a draft invoice.
 
 Bodega writes the invoice straight into Cobro's data folder, in Cobro's own format (cobro/core/model.py
 Invoice): your profile there (matched by name), the renter, one line per rental line with its dates, the

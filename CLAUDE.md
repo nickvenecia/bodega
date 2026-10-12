@@ -1,7 +1,6 @@
 # Bodega: notes for working on the code
 
-Cross-platform (macOS / Windows / Linux) gear inventory and rental app. Listo's and Cobro's sibling: same structure,
-same design system, same build and release pipeline (github.com/nickvenecia/listo, github.com/nickvenecia/cobro).
+Cross-platform (macOS / Windows / Linux) gear inventory and rental app.
 Python 3.12 + PySide6 (Qt Widgets). Pages are drawn with QPainter (one layout for preview, PDF, PNG, print).
 Shipped as a PyInstaller app; GitHub Actions builds the downloads.
 The owner is a filmmaker (director/DP/editor/colorist), not a full-time developer. Explain changes in plain words.
@@ -49,13 +48,13 @@ bodega/
     ics.py         rentals as a calendar file: pickup + return events per date range, stable UIDs, SEQUENCE grows
     history.py     undo/redo: History.mark() after saves and refreshes keeps the state before each change;
                    undo()/redo() put a state back and save it (window state and settings aren't undone)
-    update.py, paths.py, log.py, net.py, fileutil.py, dates.py, money.py   from Cobro
+    update.py, paths.py, log.py, net.py, fileutil.py, dates.py, money.py   shared helpers
     web.py         safe web fetching for anything a link points at: https only, public addresses only (checked
                    on every redirect, connecting to the checked address), size caps, a linear HTML reader
                    (read() -> PageInfo); image_of() a page's main picture, fetch_image() pictures only, whole or
                    refused; web_link() is THE test of "is this a web link"
   doc/             render.py: layout(DocView, Palette, logo) -> [Page]; paint(); label sheets are Avery 5160
-                   (30 to a Letter page), QR codes via segno. fonts.py, export.py from Cobro
+                   (30 to a Letter page), QR codes via segno. fonts.py, export.py
   services/        Outside Bodega, no Qt. Each has a plain interface and a "not connected yet" default.
     secrets.py     the system keychain (keyring): AI keys and the account session; never a file, never logged
     ai/providers.py  PROVIDERS (Anthropic, OpenAI, Gemini, Kimi, OpenRouter, DeepSeek, Mistral, xAI, Groq, custom);
@@ -108,7 +107,7 @@ bodega/
                    --smoke-test
   cli.py           `python -m bodega cli sample OUT.pdf --doc agreement|quote|inventory|ratecard|package`,
                    `python -m bodega cli import SHEET.xlsx OUT.pdf`
-scripts/make_icon.py   draws bodega/assets/icon.png ("b." on the family's dark tile, the full stop in sky blue)
+scripts/make_icon.py   draws bodega/assets/icon.png ("b." on the dark tile, the full stop in sky blue)
 tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR [SHEET.xlsx]
 ```
 
@@ -151,7 +150,7 @@ BODEGA_DATA_DIR=/tmp/x python -m bodega   # a throwaway data folder
 ```
 
 ## Releasing
-Same as Cobro: bump `__version__` in `bodega/__init__.py`, update CHANGELOG, commit, tag `vX.Y.Z`, push the tag.
+Bump `__version__` in `bodega/__init__.py`, update CHANGELOG, commit, tag `vX.Y.Z`, push the tag.
 The build refuses a tag that doesn't match `__version__` (an app reporting an older number offers itself as an update).
 CI attaches Bodega-mac-apple-silicon.dmg, Bodega-mac-intel.dmg, Bodega-windows-setup.exe, Bodega-windows-portable.zip,
 Bodega-linux-x64.AppImage, Bodega-linux-x64.tar.gz. **These names are a contract** (README links + update.asset_name).

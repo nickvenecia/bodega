@@ -1,4 +1,4 @@
-"""Draw the app icon (bodega/assets/icon.png): "b." on the family's dark tile, the full stop in the accent.
+"""Draw the app icon (bodega/assets/icon.png): "b." on a dark tile, the full stop in the accent.
 
     python scripts/make_icon.py
 
