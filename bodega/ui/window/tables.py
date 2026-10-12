@@ -327,7 +327,7 @@ def _tone(it: Item, out: int) -> tuple[str, str]:
 
 class RowPainter(QStyledItemDelegate):
     """Every table row's highlight, drawn once across the whole row as one rounded shape (hover, selected,
-    and the dividers' violet band, a step brighter under the mouse), the way iOS lists do it.
+    and the dividers' accent band, a step brighter under the mouse), the way iOS lists do it.
     The stylesheet leaves cells clear so nothing paints over it."""
 
     def row_shape(self, painter, option, index, fill: QColor) -> None:

@@ -187,7 +187,7 @@ class Lift(QObject):
             p.drawPixmap(QPointF(0, top), self._picture(r))
             top += self.h[id(r)]
         p.restore()
-        if len(self.moving) > 1:  # how many are moving, in a violet badge at the top right
+        if len(self.moving) > 1:  # how many are moving, in an accent badge at the top right
             label = str(len(self.moving))
             fm = p.fontMetrics()
             bw = max(tokens.SMALL_H, fm.horizontalAdvance(label) + 2 * tokens.SPACE_2)

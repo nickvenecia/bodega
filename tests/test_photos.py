@@ -127,7 +127,7 @@ def test_photos_on_the_inventory_list(qapp, data_folder):
     items[0].photo = photos.keep(picture())
     v = document.build_inventory(lib, items, lib.pricing())
     assert v.table.photos
-    pages = render.layout(v, palette("violet"))
+    pages = render.layout(v, palette("chile"))
     assert any(isinstance(s, render.Photo) for pg in pages for s in pg.steps)
     r = document.build_ratecard(lib, items, list(lib.packages.values()), lib.pricing())
     assert r.table.photos
@@ -143,7 +143,7 @@ def test_labels_sheet_and_scanning(qapp, data_folder):
     v = document.build_labels(items, lib.pricing())
     units = sum(i.qty for i in items if i.status != "retired")
     assert len(v.labels) == units
-    pages = render.layout(v, palette("violet"))
+    pages = render.layout(v, palette("chile"))
     assert len(pages) == -(-units // 30)  # 30 to a sheet
     qrs = [s for pg in pages for s in pg.steps if isinstance(s, render.QR)]
     assert len(qrs) == units and qrs[0].modules and len(qrs[0].modules) == len(qrs[0].modules[0])

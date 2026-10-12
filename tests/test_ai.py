@@ -112,13 +112,13 @@ def test_addresses_must_be_https_except_this_computer():
 def test_anthropic_request_shape_and_answer(provider):
     seen, replies = provider
     replies.append(anthropic_reply("Hi"))
-    assert providers.ask(Setup("anthropic", "claude-x"), "sys", "hello") == "Hi"
+    assert providers.ask(Setup("anthropic", "model-x"), "sys", "hello") == "Hi"
     req = seen[0]
     assert req.full_url == "https://api.anthropic.com/v1/messages"
     assert req.get_header("X-api-key") == "sk-ant-secret" and req.get_header("Anthropic-version")
     body = json.loads(req.data)
     assert (
-        body["model"] == "claude-x" and body["system"] == "sys" and body["messages"][0]["content"] == "hello"
+        body["model"] == "model-x" and body["system"] == "sys" and body["messages"][0]["content"] == "hello"
     )
 
 

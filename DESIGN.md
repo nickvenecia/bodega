@@ -121,15 +121,16 @@ Icons made with `theme.icon()` redraw themselves; the table refills. The table b
 | `WELL` | Sunken areas: the preview behind the paper |
 | `BORDER` / `BORDER_STRONG` / `BORDER_HOVER` / `BORDER_CHECK` | Hairlines, control borders, hover, empty checkbox |
 | `TEXT` / `MUTED` / `FAINT` | Main text / secondary text / hints, labels, disabled |
-| `ACCENT` (+ `_HOVER`, `_PRESS`) | Franklin Mountains dusk violet (Listo's is marigold, Cobro's turquoise). Selection, the one primary action, focus |
-| `ON_ACCENT` | Text and icons on violet |
+| `ACCENT` (+ `_HOVER`, `_PRESS`) | Chile red (Listo's is marigold, Cobro's turquoise). Selection, the one primary action, focus |
+| `ON_ACCENT` | Text and icons on the accent (and on a Late chip) |
 | `ACCENT_OFF` / `ACCENT_OFF_TEXT` | A disabled primary button |
-| `ACCENT_TINT` / `ACCENT_EDGE` | Violet wash and outline (the Booked chip, the selected card, an open fold count) |
-| `GOOD` / `WARN` / `BAD` | Returned / out or in repair / late or double-booked |
+| `ACCENT_TINT` / `ACCENT_EDGE` | Red wash and outline (the Booked chip, the selected card, an open fold count) |
+| `GOOD` / `WARN` / `BAD` | Returned / out or in repair / late or double-booked. `BAD` is a cooler rose-red so it never reads as the accent; Late is always a solid fill |
+| `WARN_TINT` | An amber wash: Out on the calendar |
 | `PAPER` / `SHADOW` | The paper and its shadow in the preview |
-| `BAD_TINT` / `BAD_EDGE` | Danger button hover / the Late chip |
+| `BAD_TINT` / `BAD_EDGE` | Danger button hover / a failed card's outline |
 
-- Violet means "selected" or "do this". **One** Primary button per view (Save PDF…, Save, Import Spreadsheet…).
+- The accent means "selected" or "do this". **One** Primary button per view (Save PDF…, Save, Import Spreadsheet…).
 - Status color comes from data, not code: `widgets.set_tone(w, tone, text)` with "quote" | "booked" | "out" |
   "late" | "returned" | "cancelled" | "repair" | "retired". The stylesheet maps tone to color.
 - Never call `setStyleSheet()` on a single widget. Add a rule to `theme.STYLESHEET`
@@ -153,8 +154,6 @@ button is a capsule CONTROL_H tall; every icon button is a circle:
 | Link | `LinkBtn` | Inline text links (Get a Key ↗, Forgot your password?) |
 | Round icon button | `widgets.circle_button()` (`#Circle`, `#CirclePrimary` for New) | Every icon button in a toolbar or a panel header (✕, ⋯, filter, ‹ ›): round, raised, CONTROL_H. **Must** have a tooltip |
 | Small icon button | `widgets.icon_button()` (`#IconBtn`) | Icon buttons inside a row or card (a line's ⋯): round, no frame until hovered |
-| Left panel | `panels.LeftPanel` (+ `NavRow`) | Every list of places on the left (the sidebar, Settings): rows `NAV_INSET` from the glass, corners `NAV_R` (concentric) |
-| Right panel | `panels.SidePanel` | Every panel on the right (details, assistant); `header_icon()` for its own round buttons |
 | Left panel | `panels.LeftPanel` (+ `NavRow`) | Every list of places on the left (the sidebar, Settings): rows `NAV_INSET` from the glass, corners `NAV_R` (concentric) |
 | Right panel | `panels.SidePanel` | Every panel on the right (details, assistant); `header_icon()` for its own round buttons |
 | Panel header | `widgets.PanelHeader` + `add_close()` | Every right-hand panel: title at the left; round ⋯ (or ⚙), then the round ✕ at the far right, `SPACE_4` from every edge |
@@ -217,29 +216,26 @@ Bodega talks like a helpful person, not like software.
 ## 8. Layout of the main window
 
 **The glass** (`ui/components/glass.py`), after Apple's Liquid Glass (iOS 26/27, macOS 26+): the window is a flat,
-quiet backdrop (`WINDOW_TOP`, a step darker than the panels, so violet group rows stand out on it), the content sits on it, and the tools float above it on rounded, see-through
+quiet backdrop (`WINDOW_TOP`, a step darker than the panels, so the accent's group rows stand out on it), the content sits on it, and the tools float above it on rounded, see-through
 panels (`GLASS`, `GLASS_EDGE`, `GLASS_R`, a painted shadow). Search, dropdowns and buttons are capsules; the
 + and export buttons are circles; "add" buttons are tinted capsules (`widgets.add_chip`). Table rows highlight
 as one rounded shape across the row (`tables.RowPainter`); a divider under the mouse goes a step brighter
 (`DIVIDER_HOVER`), never white or black. Qt can't blur what's behind a widget, so the glass is a tint, not a blur.
 
-**The inspector only shows with something picked.** It slides in (`Dock`, `DOCK_MS`) when you click a row and
-slides out on Esc or a click on empty space. The search and dropdowns are centred in the toolbar.
+**The inspector only shows with something picked** (or the assistant open). It slides in (`Dock`, `DOCK_MS`) when
+you click a row and slides out on Esc, a click on empty space or its ✕. The search capsule is centred in the toolbar.
 
 ```
-┌ bodega. ──────────┬ All Gear 112        [Search      ] [Everything ▾] ⇪ [+ New Gear] ┬ Gear        [Rent This…] ┐
-│ Inventory         │ Name                 Department  Group   Qty  Status  Rate  Value│ Booked · Northwind · Oct… │
-│  All Gear     112 │ Sony FX6 Body        Camera      Body      1  In      $288 $6,493│ ▾ Item                    │
-│   Camera       49 │ ▾ Tilta Cage for FX6 Camera      Body      1  In     incl.  $302 │   Name · Department · …   │
-│   G&E          49 │ Aputure STORM 80c    G&E         1000c     3  1 of 3 In  $36  …  │ ▸ Belongs To · 3 attached │
-│  Kits           1 │ …                                                                │ ▸ Serial Numbers          │
-│ Rentals           │                                                                  │ ▾ Value & Rate            │
-│  Out Now          │                                                                  │ ▸ Link & Notes            │
-│  Coming Up      1 │                                                                  │                           │
-│  All Rentals    1 │                                                                  │                           │
-│  Calendar         │                                                                  │                           │
-├ Import…        ⋯  │                                                                  │                           │
-└───────────────────┴──────────────────────────────────────────────────────────────────┴───────────────────────────┘
+╭ bodega. ──────────╮  All Gear 18   (⌕ Search                ) (≡)    (⇪) (☺) (+)  ╭ Gear          (⋯)(✕) ╮
+│ Inventory ˅    (+)│  Name                       Company   Qty  Status  With Tax  Rate │ Out · Northwind · Oct 25 │
+│ ▸ All Gear      18│  ▾ Body                               4           $6,992  $280│ photo                    │
+│ ▾ Kits           1│  ⋮ Sony FX6 Cinema Camera  +3 Sony     1  In       $6,493  $260│ Sony FX6 Cinema Camera   │
+│     FX6 Run & Gun │  ⋮ Tilta Cage …  with Sony FX6 Tilta   1  In         $302   $12│ ╭ Details ────────────╮  │
+│ Rentals ˅      (+)│  …                                                             │ ╭ Value & Rate ───────╮  │
+│ ▸ All Rentals    1│                                                                │ + Photo  + Link  + Notes │
+│   Calendar        │                                                                │                          │
+│ ╭ JL Juniper Lane ⇕╮│  Pieces 38   Paid $21,223   Tax $1,751   With Tax $22,974     │ [     Rent This…       ] │
+╰───────────────────╯                                                                  ╰──────────────────────────╯
 ```
 Full screen, three columns: **where you are → a big table of it → the one you picked, editable.** Inventory first;
 rentals are the plus underneath.
@@ -248,10 +244,11 @@ rentals are the plus underneath.
   Now, Coming Up, All Rentals, Calendar. Groups are the one way gear is organised (no departments on screen;
   a sheet's departments are only read while importing). Tidy Up Groups (`core/tidy.py`) gives them plain names. Each with a count; Out Now turns red when something's late.
 - **The middle is one table** (`ui/tables.py`): a toolbar (`TOOLBAR_H`) with the place's name and count, Search,
-  and for gear a status filter (Everything / In / Out / In Repair / For Rent) and ⇪ (inventory list, rate card,
-  CSV); then **one primary button**: New Gear / New Kit / New Rental. Columns sort by clicking their header.
+  the filter icon (`filters.FilterButton`: Divide By, Show, Company, Missing, Clear Filters; the accent while on),
+  the share button (import, Google Sheets, inventory list, rate card, labels, CSV), the assistant, then **one
+  primary round +**: New Gear or New Group / New Kit / New Rental. Columns sort by clicking their header.
   The Calendar (`ui/calendar_view.py`) replaces the table for rentals: one row per rental, a bar per stretch of dates.
-- **Gear is divided** by group in All Gear and by company inside a group (or not at all): a violet band (`DIVIDER`,
+- **Gear is divided** by group in All Gear and by company inside a group (or not at all): an accent band (`DIVIDER`,
   painted by `tables._DividerBand`; the stylesheet ignores a row's own background) with its name and totals in
   `DIVIDER_TEXT`, click to fold it (remembered). Columns follow a gear sheet: Qty, Status, Paid, With Tax, Day Rate.
 - **Categories are yours.** Department and Group are picked from a list (with New Department… / New Group…
@@ -286,17 +283,17 @@ rentals are the plus underneath.
 - **Every group in a panel is a Card**; in kits and rentals they fold away (`widgets.Disclosure`), remembered per
   panel, and say what's inside when folded.
 - **Rental lines fold to one row each** (name, amount, ⋯), one open at a time. A line with its own dates shows a
-  small violet calendar; a line with gear that isn't free shows a red alert and says why when opened.
+  small accent calendar; a line with gear that isn't free shows a red alert and says why when opened.
 - **Adding gear goes through one window** (`gear_picker.GearPicker`): search, tick, Add. The same window attaches
   gear to a piece, fills a package and puts gear on a rental.
 - **Only show what applies**: Open beside Belongs To only when it belongs to something; Attach Gear… only on a
   top-level piece; the Discount or Day Rate field only for that pricing; dates on a line only with Its Own Dates.
 - **Removing goes through a menu or a confirmation, never a single click.**
-- **Menus hold commands, the panels hold settings.** File / View / Profile / Help in the Mac menu bar; the same
-  tools under ⋯ at the bottom of the sidebar on every system.
+- **Menus hold commands, the panels hold settings.** File / Edit / View / Profile / AI / Window / Help in the Mac
+  menu bar; the profile card at the bottom of the sidebar opens profiles, Send Feedback and Settings on every system.
 - **Scrolling never changes a value**, and menus open on click, never on hover (`app._RoundPopups`).
-- **One identity everywhere.** The icon is the "bodega." wordmark on the family's dark tile, the dot in violet
-  (`scripts/make_icon.py`); on the Mac the title bar is ours (`ui/titlebar.py`).
+- **One identity everywhere.** The icon is "b." on the family's dark tile, the full stop in the accent
+  (`scripts/make_icon.py`); in the app the wordmark is "bodega." with the same red full stop; on the Mac the title bar is ours (`ui/titlebar.py`).
 
 ---
 

@@ -214,7 +214,7 @@ QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::su
     min-height: {CHIP_SM_H}px; max-height: {CHIP_SM_H}px; border: 1px solid {tokens.BORDER_STRONG}; color: {tokens.MUTED}; }}
 #Chip[tone="booked"] {{ color: {tokens.ACCENT}; border-color: {tokens.ACCENT_EDGE}; background: {tokens.ACCENT_TINT}; }}
 #Chip[tone="out"] {{ color: {tokens.WARN}; border-color: {tokens.WARN}; }}
-#Chip[tone="late"], #Chip[tone="short"] {{ color: {tokens.BAD}; border-color: {tokens.BAD_EDGE}; background: {tokens.BAD_TINT}; }}
+#Chip[tone="late"], #Chip[tone="short"] {{ color: {tokens.ON_ACCENT}; border-color: {tokens.BAD}; background: {tokens.BAD}; }}
 #Chip[tone="returned"] {{ color: {tokens.GOOD}; border-color: {tokens.GOOD}; }}
 #Chip[tone="repair"] {{ color: {tokens.WARN}; border-color: {tokens.BORDER_STRONG}; }}
 #Chip[tone="cancelled"], #Chip[tone="retired"] {{ color: {tokens.FAINT}; border-color: {tokens.BORDER}; }}
@@ -288,7 +288,7 @@ QHeaderView::up-arrow {{ image: url(__CHEVRON_UP__); width: {SORT_ARROW}px; heig
 QHeaderView::down-arrow {{ image: url(__CHEVRON__); width: {SORT_ARROW}px; height: {SORT_ARROW}px; padding-right: {SPACE_1}px; }}
 QPushButton#Where {{ background: {tokens.ACCENT_TINT}; border: 1px solid {tokens.ACCENT_EDGE}; color: {tokens.ACCENT_HOVER}; text-align: left; }}
 QPushButton#Where[tone="out"] {{ background: transparent; border-color: {tokens.WARN}; color: {tokens.WARN}; }}
-QPushButton#Where[tone="late"] {{ background: {tokens.BAD_TINT}; border-color: {tokens.BAD_EDGE}; color: {tokens.BAD}; }}
+QPushButton#Where[tone="late"] {{ background: {tokens.BAD}; border-color: {tokens.BAD}; color: {tokens.ON_ACCENT}; }}
 
 /* ---------- the gear overview */
 
@@ -477,7 +477,7 @@ def icon(name: str, color: str = "", size: int = ICON) -> QIcon:
 
 
 def menu_icon(name: str, color: str = "", size: int = ICON) -> QIcon:
-    """For menu rows: the highlighted row is violet, so its icon switches there."""
+    """For menu rows: the highlighted row is the accent, so its icon switches there."""
     color = color or tokens.MUTED
     return QIcon(_Themed(name, _token_of(color), color, size, True))
 
@@ -510,7 +510,7 @@ def stylesheet(folder: Path) -> str:
 
 
 def wordmark() -> str:
-    """The "bodega." wordmark as rich text, the dot in the current violet."""
+    """The "bodega." wordmark as rich text, the dot in the accent."""
     return f'bodega<span style="color:{tokens.ACCENT}">.</span>'
 
 

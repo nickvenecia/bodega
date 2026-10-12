@@ -98,7 +98,7 @@ class PagesMixin:
             return []
         v, b, _stem = got
         logo = logos_dir() / b.logo if b and b.logo else None
-        return render.layout(v, palette(b.color if b else "violet", dark), logo)
+        return render.layout(v, palette(b.color if b else "chile", dark), logo)
 
     def redraw(self) -> None:
         if self.page is None:

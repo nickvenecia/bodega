@@ -1,7 +1,7 @@
 """AI providers: which ones Bodega knows, their live model lists, and asking one a question.
 
 Two kinds of API cover them all:
-- "anthropic": Anthropic's Messages API (Claude)
+- "anthropic": Anthropic's Messages API
 - "openai":    the OpenAI-style Chat Completions API, which OpenAI, Google Gemini (its compatibility
                endpoint), Kimi (Moonshot AI), OpenRouter, DeepSeek, Mistral, xAI, Groq and local servers
                (Ollama, LM Studio) all speak. "Other" takes any address that speaks it.
@@ -51,7 +51,7 @@ class Provider:
 PROVIDERS: dict[str, Provider] = {
     p.key: p
     for p in (
-        Provider("anthropic", "Anthropic (Claude)", "https://api.anthropic.com/v1", "anthropic",
+        Provider("anthropic", "Anthropic", "https://api.anthropic.com/v1", "anthropic",
                  "https://console.anthropic.com/settings/keys"),
         Provider("openai", "OpenAI (ChatGPT)", "https://api.openai.com/v1", "openai",
                  "https://platform.openai.com/api-keys"),

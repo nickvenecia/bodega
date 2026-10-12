@@ -26,8 +26,8 @@ HEAD_H = tokens.CAL_HEAD_H
 BAR_TONES = {  # fill, edge, text: token names, read when drawing (light and dark differ)
     "quote": ("CARD_HOVER", "BORDER_STRONG", "MUTED"),
     "booked": ("ACCENT_TINT", "ACCENT_EDGE", "TEXT"),
-    "out": ("ACCENT", "ACCENT", "ON_ACCENT"),
-    "late": ("BAD_TINT", "BAD", "BAD"),
+    "out": ("WARN_TINT", "WARN", "TEXT"),
+    "late": ("BAD", "BAD", "ON_ACCENT"),
     "returned": ("CARD", "BORDER", "FAINT"),
 }
 

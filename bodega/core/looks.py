@@ -6,10 +6,10 @@ from dataclasses import dataclass
 
 # key -> (label, accent on white paper, accent on the Dark Page)
 COLORS = {
+    "chile": ("Chile Red", "#C8352A", "#F47566"),
     "violet": ("Dusk Violet", "#5B48D9", "#A99BFF"),
     "turquoise": ("Turquoise", "#11806F", "#4FD1BD"),
     "marigold": ("Marigold", "#A86A12", "#F2B347"),
-    "chile": ("Chile Red", "#B23A2E", "#F07A6A"),
     "sage": ("Sage", "#4A7356", "#8FC29C"),
     "ink": ("Ink", "#1B1B1F", "#F2F0EB"),
 }
@@ -32,7 +32,7 @@ class Palette:
 
 
 def palette(color: str, dark: bool = False) -> Palette:
-    _label, light_accent, dark_accent = COLORS.get(color, COLORS["violet"])
+    _label, light_accent, dark_accent = COLORS.get(color, COLORS["chile"])
     if dark:
         return Palette(
             "#1A1A1E", "#F2F0EB", "#B4AFA8", "#7C7872", "#3A3A42", "#24242A", dark_accent, "#121214"

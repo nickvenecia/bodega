@@ -45,9 +45,9 @@ def test_pages_render_and_save(qapp, lib, tmp_path):
 
     for n, v in enumerate(views(lib)):
         for dark in (False, True):
-            pages = render.layout(v, palette("violet", dark))
+            pages = render.layout(v, palette("chile", dark))
             assert pages and all(p.steps for p in pages)
-        pdf = export.to_pdf(render.layout(v, palette("violet")), tmp_path / f"{n}.pdf")
+        pdf = export.to_pdf(render.layout(v, palette("chile")), tmp_path / f"{n}.pdf")
         assert pdf.read_bytes().startswith(b"%PDF")
 
 

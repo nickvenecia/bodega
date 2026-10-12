@@ -45,7 +45,7 @@ def test_tidy_names_end_to_end(win, monkeypatch):
     from bodega.ui.dialogs import ai_review
 
     providers.save_key("anthropic", "sk-test")
-    Setup("anthropic", "claude-test").to_settings(win.lib.settings)
+    Setup("anthropic", "test-model").to_settings(win.lib.settings)
     win.go("grp:Lenses")
     lens = next(i for i in win.lib.items.values() if i.group == "Lenses")
     answer = [{"n": 0, "name": lens.name + " (Tidy)", "brand": lens.brand, "series": "Cine"}]
@@ -108,7 +108,7 @@ def test_ai_setup_saves_to_keychain_not_settings(win, keychain):
 
 def test_question_is_answered_as_plain_text(win, monkeypatch):
     providers.save_key("anthropic", "sk-test")
-    Setup("anthropic", "claude-test").to_settings(win.lib.settings)
+    Setup("anthropic", "test-model").to_settings(win.lib.settings)
     monkeypatch.setattr(
         web,
         "open_no_redirect",

@@ -1,4 +1,4 @@
-# Bodega: notes for Claude Code
+# Bodega: notes for working on the code
 
 Cross-platform (macOS / Windows / Linux) gear inventory and rental app. Listo's and Cobro's sibling: same structure,
 same design system, same build and release pipeline (github.com/nickvenecia/listo, github.com/nickvenecia/cobro).
@@ -107,7 +107,7 @@ bodega/
                    --smoke-test
   cli.py           `python -m bodega cli sample OUT.pdf --doc agreement|quote|inventory|ratecard|package`,
                    `python -m bodega cli import SHEET.xlsx OUT.pdf`
-scripts/make_icon.py   draws bodega/assets/icon.png ("bodega." on the family's dark tile, violet dot)
+scripts/make_icon.py   draws bodega/assets/icon.png ("b." on the family's dark tile, the full stop in chile red)
 tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR [SHEET.xlsx]
 ```
 

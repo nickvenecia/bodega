@@ -173,7 +173,7 @@ class MainWindow(
         self.search.textChanged.connect(lambda _t: self._apply_search())
         self.search.returnPressed.connect(self._scanned)  # a label's QR code, read by a scanner
         mid.addWidget(self.search)
-        # how the list is divided and what it shows, behind one icon (violet while a filter hides gear)
+        # how the list is divided and what it shows, behind one icon (the accent while a filter hides gear)
         self.view_menu = FilterButton(self.lib.brands)
         self.view_menu.changed.connect(self._view_picked)
         mid.addWidget(self.view_menu)

@@ -164,103 +164,105 @@ MONTH_CELL_MIN_H = 96
 # The app follows the system (or View → Appearance). Read colors as tokens.X when drawing, never copy them
 # into a constant at import: use() swaps them.
 DARK = {
-    "BG": "#111016",  # window background
-    "PANEL": "#18171E",  # sidebar, footer, dialogs
-    "CARD": "#1E1D26",  # cards, fields
-    "CARD_HOVER": "#25242F",
-    "CARD_SELECTED": "#231E3A",  # a selected card (cool, so it reads as violet)
-    "RAISED": "#2A2935",  # buttons, popups
-    "RAISED_HOVER": "#33323F",
-    "RAISED_PRESS": "#262531",
-    "BORDER": "#2C2B37",
-    "BORDER_STRONG": "#3A3947",
-    "BORDER_HOVER": "#4C4A5C",
-    "BORDER_CHECK": "#5A5870",  # unchecked checkbox outline
-    "TEXT": "#F3F1F8",
-    "MUTED": "#A6A3B8",  # secondary text
-    "FAINT": "#716E86",  # hints, disabled, section labels
-    "WELL": "#0C0B11",  # sunken areas: thumbnails, previews, logs
-    "ACCENT": "#8069F7",  # Franklin Mountains dusk violet — selection, primary action, focus
+    "BG": "#121112",  # window background
+    "PANEL": "#19181A",  # sidebar, footer, dialogs
+    "CARD": "#1F1E20",  # cards, fields
+    "CARD_HOVER": "#262527",
+    "CARD_SELECTED": "#2F1F1E",  # a selected card (warm, so it reads as the accent)
+    "RAISED": "#2B2A2C",  # buttons, popups
+    "RAISED_HOVER": "#343335",
+    "RAISED_PRESS": "#272628",
+    "BORDER": "#2D2C2E",
+    "BORDER_STRONG": "#3B3A3D",
+    "BORDER_HOVER": "#4D4B4F",
+    "BORDER_CHECK": "#5C5A5F",  # unchecked checkbox outline
+    "TEXT": "#F4F2F1",
+    "MUTED": "#A8A5A6",  # secondary text
+    "FAINT": "#737072",  # hints, disabled, section labels
+    "WELL": "#0C0B0C",  # sunken areas: thumbnails, previews, logs
+    "ACCENT": "#EE4B3B",  # chile red — selection, primary action, focus
     # (Listo's is marigold, Cobro's turquoise)
-    "ACCENT_HOVER": "#9A86FF",
-    "ACCENT_PRESS": "#6A52E8",
-    "ON_ACCENT": "#FFFFFF",  # text/icons on violet
-    "ACCENT_OFF": "#2A2541",  # disabled primary button
-    "ACCENT_OFF_TEXT": "#6E6895",
-    "ACCENT_TINT": "rgba(140, 120, 255, 0.14)",  # violet wash
-    "ACCENT_EDGE": "rgba(150, 130, 255, 0.55)",
+    "ACCENT_HOVER": "#FF6555",
+    "ACCENT_PRESS": "#D43A2B",
+    "ON_ACCENT": "#FFFFFF",  # text/icons on the accent
+    "ACCENT_OFF": "#3A2321",  # disabled primary button
+    "ACCENT_OFF_TEXT": "#8F605B",
+    "ACCENT_TINT": "rgba(238, 75, 59, 0.15)",  # a red wash
+    "ACCENT_EDGE": "rgba(255, 101, 85, 0.55)",
     "GOOD": "#4CC38A",
-    "BAD": "#F0616D",
-    "BAD_TINT": "#2A1A1D",  # danger button hover
-    "BAD_EDGE": "#5A2A30",  # failed card border
+    "BAD": "#FF4F7B",  # late, failed, delete: a cooler rose-red, so it never reads as the accent
+    "BAD_TINT": "#2E1820",  # danger button hover
+    "BAD_EDGE": "#5E2A3A",  # failed card border
     "WARN": "#E9B949",
+    "WARN_TINT": "rgba(233, 185, 73, 0.14)",  # an amber wash (out on the calendar)
     "PAPER": "#FFFFFF",  # the paper (and logo thumbnails) in the preview
     "SHADOW": "rgba(0, 0, 0, 0.55)",  # the paper's shadow on the dark preview
-    "DIVIDER": "#26213D",  # a department or group divider in the gear table: a violet band
-    "DIVIDER_TEXT": "#B3A4FF",  # its name and totals
-    "DIVIDER_HOVER": "#2F294B",  # a divider under the mouse: the same violet, a step brighter
+    "DIVIDER": "#33211F",  # a department or group divider in the gear table: a red band
+    "DIVIDER_TEXT": "#FF9C8F",  # its name and totals
+    "DIVIDER_HOVER": "#3E2724",  # a divider under the mouse: the same red, a step brighter
     "ROW_HOVER": "rgba(255, 255, 255, 0.05)",  # a table row under the mouse
-    "WINDOW_TOP": "#121118",  # the window's backdrop: flat, a step darker than the panels
-    "WINDOW_BOTTOM": "#121118",
-    "GLASS_TOP": "rgba(72, 66, 100, 0.74)",  # a floating panel's sheen at the top…
-    "GLASS": "rgba(38, 35, 52, 0.80)",  # …fading to this at the bottom (sidebar, inspector)
+    "WINDOW_TOP": "#131213",  # the window's backdrop: flat, a step darker than the panels
+    "WINDOW_BOTTOM": "#131213",
+    "GLASS_TOP": "rgba(80, 75, 77, 0.74)",  # a floating panel's sheen at the top…
+    "GLASS": "rgba(40, 38, 40, 0.80)",  # …fading to this at the bottom (sidebar, inspector)
     "GLASS_STROKE": "rgba(255, 255, 255, 0.09)",  # its outline, so it reads as its own sheet
     "GLASS_EDGE": "rgba(255, 255, 255, 0.08)",  # the bright line just inside it (strongest along the top)
     "GLASS_SHADOW": "rgba(0, 0, 0, 0.60)",
-    "CHIP": "rgba(150, 130, 255, 0.16)",  # a tinted capsule (+ Link, + Notes)
-    "CHIP_HOVER": "rgba(150, 130, 255, 0.26)",
+    "CHIP": "rgba(238, 75, 59, 0.16)",  # a tinted capsule (+ Link, + Notes)
+    "CHIP_HOVER": "rgba(238, 75, 59, 0.26)",
     "FIELD": "rgba(255, 255, 255, 0.07)",  # a text field or dropdown: lightly frosted
     "FIELD_BORDER": "rgba(255, 255, 255, 0.08)",
     "BLOCK": "rgba(255, 255, 255, 0.045)",  # a card inside a glass panel: a soft tint, no outline
 }
 LIGHT = {
-    "BG": "#F5F4F9",
-    "PANEL": "#EEEDF4",
+    "BG": "#F6F5F4",
+    "PANEL": "#EFEDEC",
     "CARD": "#FFFFFF",
-    "CARD_HOVER": "#EFEDF7",
-    "CARD_SELECTED": "#ECE8FD",
+    "CARD_HOVER": "#F2F0EF",
+    "CARD_SELECTED": "#FCEAE7",
     "RAISED": "#FFFFFF",
-    "RAISED_HOVER": "#F3F1F9",
-    "RAISED_PRESS": "#E7E4F1",
-    "BORDER": "#E3E0EE",
-    "BORDER_STRONG": "#D4D0E3",
-    "BORDER_HOVER": "#B6B0CC",
-    "BORDER_CHECK": "#A19CB5",
-    "TEXT": "#1C1A26",
-    "MUTED": "#686480",
-    "FAINT": "#9C98B0",
-    "WELL": "#E6E3EF",
-    "ACCENT": "#6A52E8",
-    "ACCENT_HOVER": "#7A64F0",
-    "ACCENT_PRESS": "#5840D4",
+    "RAISED_HOVER": "#F4F2F1",
+    "RAISED_PRESS": "#E8E5E4",
+    "BORDER": "#E5E2E0",
+    "BORDER_STRONG": "#D6D2D0",
+    "BORDER_HOVER": "#B8B3B1",
+    "BORDER_CHECK": "#A39E9C",
+    "TEXT": "#1D1B1B",
+    "MUTED": "#696464",
+    "FAINT": "#9D9897",
+    "WELL": "#E8E5E3",
+    "ACCENT": "#D93A2B",
+    "ACCENT_HOVER": "#E54B3B",
+    "ACCENT_PRESS": "#BC2E20",
     "ON_ACCENT": "#FFFFFE",
-    "ACCENT_OFF": "#DCD6F8",
-    "ACCENT_OFF_TEXT": "#9A90D0",
-    "ACCENT_TINT": "rgba(106, 82, 232, 0.09)",
-    "ACCENT_EDGE": "rgba(106, 82, 232, 0.45)",
+    "ACCENT_OFF": "#F5D4CF",
+    "ACCENT_OFF_TEXT": "#CF8B83",
+    "ACCENT_TINT": "rgba(217, 58, 43, 0.09)",
+    "ACCENT_EDGE": "rgba(217, 58, 43, 0.45)",
     "GOOD": "#1E9A5E",
-    "BAD": "#D3374A",
-    "BAD_TINT": "#FBEAEC",
-    "BAD_EDGE": "#EFB7BF",
+    "BAD": "#D42A5C",
+    "BAD_TINT": "#FCE8EE",
+    "BAD_EDGE": "#F0B3C5",
     "WARN": "#A97A06",
+    "WARN_TINT": "rgba(169, 122, 6, 0.10)",
     "PAPER": "#FFFFFF",
     "SHADOW": "rgba(0, 0, 0, 0.16)",
-    "DIVIDER": "#E0D9F8",
-    "DIVIDER_TEXT": "#5840D4",
-    "DIVIDER_HOVER": "#D3C9F7",
-    "ROW_HOVER": "rgba(60, 40, 140, 0.05)",
-    "WINDOW_TOP": "#EFEDF5",
-    "WINDOW_BOTTOM": "#EFEDF5",
+    "DIVIDER": "#F8DDD8",
+    "DIVIDER_TEXT": "#BC2E20",
+    "DIVIDER_HOVER": "#F3CCC5",
+    "ROW_HOVER": "rgba(90, 40, 30, 0.05)",
+    "WINDOW_TOP": "#F0EEED",
+    "WINDOW_BOTTOM": "#F0EEED",
     "GLASS_TOP": "rgba(255, 255, 255, 0.94)",
     "GLASS": "rgba(255, 255, 255, 0.76)",
-    "GLASS_STROKE": "rgba(40, 25, 100, 0.13)",
+    "GLASS_STROKE": "rgba(80, 40, 30, 0.13)",
     "GLASS_EDGE": "rgba(255, 255, 255, 1.0)",
-    "GLASS_SHADOW": "rgba(35, 20, 80, 0.16)",
-    "CHIP": "rgba(106, 82, 232, 0.10)",
-    "CHIP_HOVER": "rgba(106, 82, 232, 0.18)",
+    "GLASS_SHADOW": "rgba(60, 25, 20, 0.16)",
+    "CHIP": "rgba(217, 58, 43, 0.10)",
+    "CHIP_HOVER": "rgba(217, 58, 43, 0.18)",
     "FIELD": "rgba(255, 255, 255, 0.92)",
-    "FIELD_BORDER": "rgba(50, 30, 120, 0.12)",
-    "BLOCK": "rgba(90, 70, 190, 0.05)",
+    "FIELD_BORDER": "rgba(90, 40, 30, 0.12)",
+    "BLOCK": "rgba(190, 70, 50, 0.05)",
 }
 SCHEME = "dark"
 globals().update(DARK)

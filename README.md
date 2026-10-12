@@ -114,7 +114,7 @@ have their own dates, totals, your terms and signature lines. Plus the **Invento
 for insurance), the **Rate Card**, and a **Kit Sheet**. Each opens in its own window. **Save PDF…**, **Print…**, **Save as PNG…**, **Copy as
 Text**, or **Email Renter** (opens a new email with the summary and shows the PDF to drag in).
 
-**AI, with your own key.** Connect any AI you like in **AI → AI Setup…** (or Settings): Anthropic (Claude), OpenAI,
+**AI, with your own key.** Connect any AI you like in **AI → AI Settings…** (or Settings › AI): Anthropic, OpenAI,
 Google Gemini, Kimi (Moonshot AI), OpenRouter, DeepSeek, Mistral, xAI, Groq, or any other OpenAI-compatible
 service, including a model running on your own computer. Models are listed live from the provider. Then the
 **AI Assistant** (the ✦ button, or ⌘J) can **Update from Links** (today's prices, cleaner names), **Find Missing

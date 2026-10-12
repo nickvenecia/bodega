@@ -6,7 +6,7 @@
     Missing   ▸  Link, Price, Serial Numbers, Company (any you tick)
     Clear Filters
 
-Just an icon; violet while a filter hides gear. Clear Filters puts everything back to how it starts.
+Just an icon; the accent while a filter hides gear. Clear Filters puts everything back to how it starts.
 """
 
 from __future__ import annotations
