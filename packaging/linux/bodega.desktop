@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Bodega
+Comment=Keep track of your gear, put it in packages, rent it out.
+Exec="BODEGA_DIR/Bodega"
+Icon=BODEGA_DIR/icon.png
+Terminal=false
+Categories=Office;AudioVideo;

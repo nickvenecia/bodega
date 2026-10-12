@@ -1,0 +1,186 @@
+"""Small dialogs: alerts (confirm, notice), names, Tidy Up's preview, and the About box."""
+
+from __future__ import annotations
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QApplication,
+    QCompleter,
+    QDialog,
+    QFrame,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QWidget,
+)
+
+from bodega.ui.components.widgets import button_row, hbox, hint, vbox
+from bodega.ui.style import tokens
+from bodega.ui.style.tokens import DIALOG_W, SPACE_3, SPACE_5
+from bodega.ui.style.tokens import IMPORT_LIST_H as PICKER_LIST_H
+
+
+class Alert(QDialog):
+    """A Mac-style alert: the app's icon, a bold question, a line of detail, two buttons side by side.
+    Return does the action, Esc cancels. A rounded card floating over the window, with no title bar."""
+
+    def __init__(
+        self, parent: QWidget | None, title: str, text: str, action: str, cancel: str = "", danger=False
+    ):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setWindowTitle(title)
+        outer = vbox(self, 0, 0)
+        card = QFrame()
+        card.setObjectName("Alert")
+        card.setFixedWidth(tokens.ALERT_W)
+        outer.addWidget(card)
+        lay = vbox(card, (tokens.SPACE_5, tokens.SPACE_5, tokens.SPACE_5, tokens.SPACE_4), tokens.SPACE_2)
+        icon = QLabel()
+        app_icon = QApplication.windowIcon()
+        if not app_icon.isNull():
+            icon.setPixmap(app_icon.pixmap(tokens.ALERT_ICON, tokens.ALERT_ICON))
+            icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            lay.addWidget(icon)
+            lay.addSpacing(tokens.SPACE_1)
+        t = QLabel(title)
+        t.setObjectName("AlertTitle")
+        t.setWordWrap(True)
+        t.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lay.addWidget(t)
+        if text:
+            body = hint(text)
+            body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            lay.addWidget(body)
+        lay.addSpacing(tokens.SPACE_3)
+        row = hbox(spacing=tokens.SPACE_2)
+        if cancel:
+            no = QPushButton(cancel)
+            no.setAutoDefault(False)
+            no.clicked.connect(self.reject)
+            row.addWidget(no, 1)
+        go = QPushButton(action)
+        go.setObjectName("DangerFill" if danger else "Primary")
+        go.setDefault(True)  # Return
+        go.setAutoDefault(True)
+        go.clicked.connect(self.accept)
+        row.addWidget(go, 1)
+        lay.addLayout(row)
+        self.go = go
+
+    def showEvent(self, e):
+        super().showEvent(e)
+        self.go.setFocus()
+        win = self.parentWidget().window() if self.parentWidget() is not None else None
+        if win is not None:  # over the middle of the window, a little above centre, like a Mac alert
+            g = win.frameGeometry()
+            self.move(g.center().x() - self.width() // 2, g.top() + g.height() // 3 - self.height() // 2)
+
+
+def confirm(parent: QWidget, title: str, text: str, action: str, danger: bool = True) -> bool:
+    """Ask before doing something big. Return says yes (you pressed Delete to get here); Esc says no."""
+    return Alert(parent, title, text, action, "Cancel", danger).exec() == QDialog.DialogCode.Accepted
+
+
+def notice(parent: QWidget, title: str, text: str) -> None:
+    """Something went wrong and it needs more than a toast to say why."""
+    Alert(parent, title, text, "OK").exec()
+
+
+def ask_name(
+    parent: QWidget,
+    title: str,
+    action: str,
+    text: str = "",
+    placeholder: str = "",
+    known: list[str] | None = None,
+) -> str | None:
+    """One name, typed (a new department, a renamed group). None if cancelled or left blank."""
+    d = QDialog(parent)
+    d.setWindowTitle(title)
+    d.setMinimumWidth(DIALOG_W)
+    lay = vbox(d, SPACE_5, SPACE_3)
+    t = QLabel(title)
+    t.setObjectName("DialogTitle")
+    lay.addWidget(t)
+    field = QLineEdit(text)
+    field.setPlaceholderText(placeholder)
+    field.selectAll()
+    if known:
+        c = QCompleter(known, field)
+        c.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        field.setCompleter(c)
+    lay.addWidget(field)
+    row = button_row()
+    cancel = QPushButton("Cancel")
+    cancel.clicked.connect(d.reject)
+    go = QPushButton(action)
+    go.setObjectName("Primary")
+    go.setDefault(True)
+    go.clicked.connect(d.accept)
+    go.setEnabled(bool(text.strip()))
+    field.textChanged.connect(lambda t: go.setEnabled(bool(t.strip())))
+    row.addWidget(cancel)
+    row.addWidget(go)
+    lay.addLayout(row)
+    if d.exec() != QDialog.DialogCode.Accepted:
+        return None
+    return field.text().strip() or None
+
+
+def tidy_preview(parent: QWidget, moves: list) -> bool:
+    """Show what Tidy Up Groups would do (old group → new group, how many) and ask before doing it."""
+    from collections import Counter
+
+    from PySide6.QtWidgets import QListWidget
+
+    d = QDialog(parent)
+    d.setWindowTitle("Tidy Up Groups")
+    d.setMinimumWidth(DIALOG_W)
+    lay = vbox(d, SPACE_5, SPACE_3)
+    t = QLabel("Tidy Up Groups")
+    t.setObjectName("DialogTitle")
+    lay.addWidget(t)
+    lay.addWidget(hint(f"{len(moves)} pieces get a clearer group. You can rename or move anything after."))
+    box = QListWidget()
+    box.setObjectName("Picker")
+    pairs = Counter((old or "No Group", new or "No Group") for _it, old, new in moves)
+    for (old, new), n in sorted(pairs.items(), key=lambda x: (x[0][1], x[0][0])):
+        box.addItem(f"{old}  →  {new}   ·  {n}")
+    box.setMinimumHeight(PICKER_LIST_H)
+    lay.addWidget(box)
+    row = button_row()
+    cancel = QPushButton("Cancel")
+    cancel.clicked.connect(d.reject)
+    go = QPushButton("Tidy Up")
+    go.setObjectName("Primary")
+    go.setDefault(True)
+    go.clicked.connect(d.accept)
+    row.addWidget(cancel)
+    row.addWidget(go)
+    lay.addLayout(row)
+    return d.exec() == QDialog.DialogCode.Accepted
+
+
+def about(parent: QWidget, version: str, data_folder: str) -> None:
+    d = QDialog(parent)
+    d.setWindowTitle("About Bodega")
+    d.setMinimumWidth(DIALOG_W)
+    lay = vbox(d, SPACE_5, SPACE_3)
+    from bodega.ui.style import theme
+
+    word = QLabel(theme.wordmark())
+    word.setObjectName("Wordmark")
+    word.setTextFormat(Qt.TextFormat.RichText)
+    lay.addWidget(word)
+    lay.addWidget(hint(f"Version {version}. Keep track of your gear, put it in packages, rent it out."))
+    lay.addWidget(hint(f"Your gear and rentals are saved on this computer only, in {data_folder}"))
+    lay.addWidget(hint("Open source under GPL-3.0. Fonts under the SIL Open Font License."))
+    row = button_row()
+    ok = QPushButton("Done")
+    ok.setObjectName("Primary")
+    ok.clicked.connect(d.accept)
+    row.addWidget(ok)
+    lay.addLayout(row)
+    d.exec()

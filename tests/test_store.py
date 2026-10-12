@@ -1,0 +1,154 @@
+"""Saving and loading (core/store.py), and the made-up sample."""
+
+from __future__ import annotations
+
+import json
+
+from bodega.core import sample
+from bodega.core.model import Item, Rental
+from bodega.core.store import Library
+
+
+def test_round_trip(data_folder):
+    lib = sample.fill(Library(data_folder).load())
+    again = Library(data_folder).load()
+    assert len(again.items) == len(lib.items)
+    assert len(again.packages) == 1 and len(again.rentals) == 1 and len(again.clients) == 1
+    r = next(iter(again.rentals.values()))
+    assert any(ln.pickup for ln in r.lines)  # line dates survive
+    assert any(i.parent for i in again.items.values())
+
+
+def test_unreadable_file_is_set_aside(data_folder):
+    data_folder.mkdir(parents=True)
+    (data_folder / "gear.json").write_text("{not json")
+    lib = Library(data_folder).load()
+    assert lib.items == {}
+    assert any(p.name.startswith("gear.json.unreadable-") for p in data_folder.iterdir())
+
+
+def test_old_files_load(data_folder):
+    data_folder.mkdir(parents=True)
+    (data_folder / "gear.json").write_text(json.dumps([{"id": "a", "name": "Old", "qty": "3", "future": 1}]))
+    it = Library(data_folder).load().items["a"]
+    assert it.qty == 3 and it.rentable and it.status == "ready"
+
+
+def test_delete_item_frees_what_was_attached(data_folder):
+    lib = sample.fill(Library(data_folder).load())
+    fx6 = next(i for i in lib.items.values() if i.name.startswith("Sony FX6"))
+    kids = [i for i in lib.items.values() if i.parent == fx6.id]
+    lib.delete_item(fx6.id)
+    assert all(not k.parent for k in kids)
+    assert all(ln.item_id != fx6.id for p in lib.packages.values() for ln in p.lines)
+
+
+def test_numbers_count_up_per_year(data_folder):
+    lib = sample.fill(Library(data_folder).load())
+    b = next(iter(lib.businesses.values()))
+    first = next(iter(lib.rentals.values())).number
+    second = lib.new_rental(b).number
+    assert first.startswith("JLF-") and int(second.rsplit("-", 1)[1]) == int(first.rsplit("-", 1)[1]) + 1
+
+
+def test_duplicate_rental_is_a_quote(data_folder):
+    lib = sample.fill(Library(data_folder).load())
+    src = next(iter(lib.rentals.values()))
+    copy = lib.duplicate_rental(src)
+    assert copy.status == "quote" and copy.id != src.id and len(copy.lines) == len(src.lines)
+    copy.lines[0].qty = 9
+    assert src.lines[0].qty == 1
+
+
+def test_attached_item_cant_loop(data_folder):
+    lib = Library(data_folder).load()
+    a, b = Item(name="A"), Item(name="B")
+    a.parent, b.parent = b.id, a.id
+    lib.add_item(a)
+    lib.add_item(b)
+    from bodega.core import pricing
+
+    assert pricing.root_of(lib, a) in (a, b)  # no endless loop
+    assert len(pricing.with_attached(lib, a, 1)) == 2
+
+
+def test_renter_edits_reach_quotes_only(data_folder):
+    lib = sample.fill(Library(data_folder).load())
+    c = next(iter(lib.clients.values()))
+    r = next(iter(lib.rentals.values()))
+    q = Rental(client=c, status="quote")
+    lib.save_rental(q)
+    c.email = "new@example.com"
+    lib.save_client(c)
+    assert lib.rentals[q.id].client.email == "new@example.com"
+    assert lib.rentals[r.id].client.email == "new@example.com"  # booked follows too
+    r.status = "out"
+    c.phone = "1"
+    lib.save_client(c)
+    assert lib.rentals[r.id].client.phone != "1"
+
+
+def test_groups(tmp_path):
+    from bodega.core.model import Item
+
+    lib = Library(tmp_path).load()
+    a = lib.add_item(Item(name="Pelican 1615", group="Body"))
+    b = lib.add_item(Item(name="FX6", group="Body"))
+    c = lib.add_item(Item(name="Cage", group="Body", parent=b.id))
+    lib.add_group("Cases")
+    assert lib.groups() == ["Body", "Cases"]  # an empty one stays
+    lib.put_in_group([a.id], "Cases")
+    assert a.group == "Cases"
+    lib.put_in_group([b.id], "Cameras")
+    assert c.group == "Cameras"  # what goes with it comes along
+    assert "Body" not in lib.groups()  # the move emptied it
+    lib.rename_group("Cameras", "Cinema Cameras")
+    assert b.group == c.group == "Cinema Cameras"
+    lib.step_group("Cinema Cameras", -1)
+    assert lib.groups()[0] == "Cinema Cameras"
+    assert lib.ordered_items()[0] is b
+    lib.rename_group("Cases", "Cinema Cameras")  # merging
+    assert a.group == "Cinema Cameras" and lib.groups() == ["Cinema Cameras"]
+    lib.remove_group("Cinema Cameras")
+    assert a.group == "" and not lib.groups()
+    again = Library(tmp_path).load()
+    assert again.items[a.id].group == ""
+
+
+def test_tidy_groups(tmp_path):
+    from bodega.core import tidy
+    from bodega.core.model import Item
+
+    lib = Library(tmp_path).load()
+    card = lib.add_item(Item(name="Sony 128GB SF-M Tough Series UHS-II SDXC Memory Card", group="SD Cards"))
+    light = lib.add_item(Item(name="Aputure STORM 1000c LED Monolight with Wide Reflector", group="1000c"))
+    fres = lib.add_item(Item(name="Aputure CF12 Fresnel", group="1000c", parent=light.id))
+    case = lib.add_item(Item(name="Pelican 1615AirWD Wheeled Hard Case", group="Body"))
+    odd = lib.add_item(Item(name="Mystery Thing", group="Steel"))
+    new = tidy.suggest(lib.items)
+    assert new[card.id] == "Media" and new[light.id] == new[fres.id] == "Lights"
+    assert (
+        new[case.id] == "Cases & Carts" and new[odd.id] == "Grip"
+    )  # by the old name when the name says nothing
+    assert lib.apply_groups(new) == 5
+    assert lib.groups() == ["Media", "Lights", "Grip", "Cases & Carts"]  # in the tidy order
+
+
+def test_your_order_and_companies(tmp_path):
+    from bodega.core.model import Item
+
+    lib = Library(tmp_path).load()
+    a = lib.add_item(Item(name="Aputure STORM 80c", department="G&E", group="Lights"))
+    b = lib.add_item(Item(name="amaran PT4c", department="G&E", group="Lights"))
+    c = lib.add_item(Item(name="Matthews C-Stand", department="G&E", group="Steel"))
+    assert (
+        lib.guess_brands() == 3 and a.brand == "Aputure" and lib.brands() == ["amaran", "Aputure", "Matthews"]
+    )
+    lib.reorder_items([b.id], a.id)
+    assert [i.name for i in lib.ordered_items()][:2] == ["amaran PT4c", "Aputure STORM 80c"]
+    lib.reorder_items([c.id], a.id, after=True)  # next to a light: into Lights
+    assert c.group == "Lights" and [i.id for i in lib.ordered_items()] == [b.id, a.id, c.id]
+    again = Library(tmp_path).load()
+    assert [i.id for i in again.ordered_items()] == [b.id, a.id, c.id] and again.items[
+        a.id
+    ].brand == "Aputure"
