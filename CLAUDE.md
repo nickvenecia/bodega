@@ -11,6 +11,7 @@ The owner is a filmmaker (director/DP/editor/colorist), not a full-time develope
   paper colors in `bodega/core/looks.py`. Never type a size or color anywhere else.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)**: code rules.
 - Before finishing any change: `ruff format . && ruff check . && python -m pytest -q`.
+- Commit messages: a short plain summary, nothing added after it.
 
 ## Layout
 ```
