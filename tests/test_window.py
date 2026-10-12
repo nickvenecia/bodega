@@ -627,3 +627,32 @@ def test_shortcuts_listed(win):
     edit = dict(menus["Edit"])
     assert {"Undo", "Redo", "Copy", "Select All", "Find"} <= set(edit)
     assert "New" in dict(menus["File"])
+
+
+def test_drifting_left_or_up_keeps_the_row_lifted(win):
+    from PySide6.QtCore import QEvent, QPointF
+    from PySide6.QtGui import QMouseEvent
+
+    t = win.gear_table
+    win.go("gear")
+    row = [r for r in t.item_rows() if not r.isHidden()][1]
+    y = t.visualItemRect(row).center().y()
+    t.start_lift(row, y)
+    vp = t.viewport()
+    for x, dy in ((4, -6), (-6, -14), (1, -40)):  # back up, and a little past the grip's edge
+        local = QPointF(x, y + dy)
+        ev = QMouseEvent(
+            QEvent.Type.MouseMove,
+            local,
+            QPointF(vp.mapToGlobal(local.toPoint())),
+            Qt.MouseButton.NoButton,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
+        t.mouseMoveEvent(ev)
+        assert t._lift is not None, (x, dy)  # still following the pointer
+    win.refresh()  # a refill asked for mid-drag waits until the row lands
+    assert t._lift is not None and t._fill_later is not None
+    t.end_lift(drop=False)
+    QApplication.processEvents()
+    assert t._fill_later is None

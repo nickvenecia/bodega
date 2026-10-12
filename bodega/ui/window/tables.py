@@ -563,6 +563,7 @@ class GearTable(Table):
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self._press = None  # (where, row) a grip was pressed, until it moves far enough to lift
         self._lift: Lift | None = None
+        self._fill_later = None  # a refill asked for mid-drag, run when the row lands
         self.setDefaultDropAction(Qt.DropAction.CopyAction)
         self.setDropIndicatorShown(True)
 
@@ -671,6 +672,9 @@ class GearTable(Table):
         if lift is None:
             return
         lift.stop()
+        later, self._fill_later = self._fill_later, None
+        if later is not None:  # the list changed while it was lifted
+            QTimer.singleShot(0, lambda: self.fill(*later))
         self.viewport().setCursor(Qt.CursorShape.ArrowCursor)
         self.viewport().update()
         got = lift.result() if drop else None
@@ -705,7 +709,7 @@ class GearTable(Table):
     def mouseMoveEvent(self, e):
         pos = e.position().toPoint()
         if self._lift is not None:
-            if pos.x() < 0:  # off towards the sidebar: drop it on a group there instead
+            if self._over_sidebar(e.globalPosition().toPoint()):  # onto the sidebar: drop it on a group there
                 ids = self._lift.ids
                 self.end_lift(drop=False)
                 for r in self.item_rows():
@@ -731,6 +735,19 @@ class GearTable(Table):
             if self.viewport().cursor().shape() != shape:
                 self.viewport().setCursor(shape)
         super().mouseMoveEvent(e)
+
+    @staticmethod
+    def _over_sidebar(global_pos) -> bool:
+        """The pointer is over the list of places on the left (not just a little left of the grip, which sits
+        at the table's very edge: drifting there while dragging mustn't drop the row)."""
+        from bodega.ui.components.panels import LeftPanel
+
+        w = QApplication.widgetAt(global_pos)
+        while w is not None:
+            if isinstance(w, LeftPanel):
+                return True
+            w = w.parentWidget()
+        return False
 
     def target_at(self, pos):
         """What a drop here means: ("row", row) next to a piece, or ("divider", row) into a divider."""
@@ -818,6 +835,9 @@ class GearTable(Table):
 
     # ------------------------------------------------------------------ filling
     def fill(self, lib: Library, b: Business | None, group: str = "", divide: str = "") -> None:
+        if self._lift is not None:  # never rebuild the rows under a row being dragged: after it lands
+            self._fill_later = (lib, b, group, divide)
+            return
         self.thumbs = any(it.photo for it in lib.items.values())  # once one has a photo, every row has room
         self.earned = earnings.earnings(lib)
         self.group = group
