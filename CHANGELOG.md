@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- Dragging a row to reorder it no longer lets go when you drift back up or a little left of the grip. It only
+  hands off to the sidebar's groups once the pointer is over the sidebar.
+
 ## 1.0.0
 
 The first Bodega: Listo and Cobro's sibling, for gear and rentals.
