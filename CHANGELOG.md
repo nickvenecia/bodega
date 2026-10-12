@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- The same app as 1.0.1, released again from a tidied-up history.
+
 ## 1.0.1
 
 - Dragging a row to reorder it no longer lets go when you drift back up or a little left of the grip. It only
