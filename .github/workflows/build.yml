@@ -1,0 +1,237 @@
+name: Build Bodega
+
+# Every push builds and tests on all platforms.
+# Pushing a tag like v1.0.0 also publishes a GitHub Release with the downloads.
+# Actions are pinned to exact commits (a tag can be moved; a commit can't). Update them deliberately.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false  # the build never needs to push
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - run: pip install "ruff==0.16.8"
+      - name: Format check
+        run: ruff format --check .
+      - name: Lint (style, bugs, security)
+        run: ruff check .
+
+  build:
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            name: mac-apple-silicon
+          - os: macos-15-intel
+            name: mac-intel
+          - os: windows-latest
+            name: windows
+          - os: ubuntu-22.04
+            name: linux
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false  # the build never needs to push
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Linux libraries for Qt
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libxkbcommon0 libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libgl1 libcups2
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run tests
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          set +e
+          python -m pytest -v -p no:cacheprovider > pytest.log 2>&1
+          code=$?
+          tail -n 200 pytest.log
+          # Qt can crash while Python shuts down AFTER every test has passed (Windows does this);
+          # what counts is pytest's own verdict on its last summary line.
+          if [ $code -ne 0 ] && python -c "import re,sys; lines=[l for l in open('pytest.log',encoding='utf-8',errors='replace').read().splitlines() if l.startswith('=')]; sys.exit(0 if lines and re.search(r' passed', lines[-1]) and not re.search(r'failed|error', lines[-1]) else 1)"; then
+            echo "All tests passed (exit code $code came from shutting down afterwards)."
+            code=0
+          fi
+          if [ $code -ne 0 ]; then
+            # Show the end of the test output on the run's summary page (readable without the full log).
+            python -c "import sys; lines = open('pytest.log', encoding='utf-8', errors='replace').read().splitlines()[-60:]; print('::error title=Tests failed (exit $code)::' + '%0A'.join(l.replace('%', '%25').replace(chr(13), '') for l in lines))"
+          fi
+          exit $code
+
+      - name: Build app
+        run: pyinstaller bodega.spec --noconfirm
+
+      # the signing certificate is only handed to the signing step (never to installs, tests or the build)
+      - name: Is signing set up?
+        id: signing
+        if: runner.os == 'macOS'
+        env:
+          HAS_CERT: ${{ secrets.MACOS_CERTIFICATE != '' }}
+        run: echo "ready=$HAS_CERT" >> "$GITHUB_OUTPUT"
+
+      # ---------- smoke tests: launch the packaged app, open a sample rental, save its agreement as a PDF
+      - name: Smoke test (macOS)
+        if: runner.os == 'macOS'
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          dist/Bodega.app/Contents/MacOS/Bodega --smoke-test
+          dist/Bodega.app/Contents/MacOS/Bodega cli sample smoke.pdf --doc agreement
+          test -s smoke.pdf
+
+      - name: Smoke test (Linux)
+        if: runner.os == 'Linux'
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          dist/Bodega/Bodega --smoke-test
+          dist/Bodega/Bodega cli sample smoke.pdf --doc inventory
+          test -s smoke.pdf
+
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $p = Start-Process -FilePath dist\Bodega\Bodega.exe -ArgumentList "--smoke-test" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "GUI smoke test failed: $($p.ExitCode)" }
+          $p = Start-Process -FilePath dist\Bodega\Bodega.exe -ArgumentList "cli","sample","smoke.pdf" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "CLI smoke test failed: $($p.ExitCode)" }
+          if (-not (Test-Path smoke.pdf)) { throw "no PDF" }
+
+      # ---------- optional: sign + notarize on macOS (only if you add the secrets — see README)
+      - name: Sign and notarize (macOS)
+        if: runner.os == 'macOS' && steps.signing.outputs.ready == 'true'
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          CERT="$RUNNER_TEMP/cert.p12"
+          trap 'rm -f "$CERT"' EXIT  # gone even if a step below fails
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$CERT"
+          security create-keychain -p ci build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p ci build.keychain
+          security import "$CERT" -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          rm -f "$CERT"
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci build.keychain
+          find dist/Bodega.app -type f \( -perm -u+x -o -name "*.dylib" -o -name "*.so" \) -print0 | \
+            xargs -0 codesign --force --timestamp --options runtime --entitlements packaging/macos/entitlements.plist --sign "$MACOS_SIGN_IDENTITY" || true
+          codesign --force --deep --timestamp --options runtime --entitlements packaging/macos/entitlements.plist --sign "$MACOS_SIGN_IDENTITY" dist/Bodega.app
+          ditto -c -k --keepParent dist/Bodega.app notarize.zip
+          xcrun notarytool submit notarize.zip --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_PASSWORD" --wait
+          xcrun stapler staple dist/Bodega.app
+
+      # ---------- package
+      - name: Package (macOS .dmg)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p out dmg
+          cp -R dist/Bodega.app dmg/
+          ln -s /Applications dmg/Applications
+          hdiutil create -volname "Bodega" -srcfolder dmg -ov -format UDZO "out/Bodega-${{ matrix.name }}.dmg"
+
+      - name: Package (Windows .zip)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          Compress-Archive -Path dist\Bodega -DestinationPath out\Bodega-windows-portable.zip
+
+      - name: Package (Windows installer)
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+          $v = (python -c "import bodega; print(bodega.__version__)")
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$v packaging\windows\bodega.iss
+          Copy-Item packaging\windows\Output\Bodega-Setup.exe out\Bodega-windows-setup.exe
+
+      - name: Package (Linux .tar.gz)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p out
+          cp packaging/linux/install.sh packaging/linux/bodega.desktop bodega/assets/icon.png dist/Bodega/
+          chmod +x dist/Bodega/install.sh
+          tar -C dist -czf out/Bodega-linux-x64.tar.gz Bodega
+
+      - name: Package (Linux AppImage, one file)
+        if: runner.os == 'Linux'
+        env:
+          QT_QPA_PLATFORM: offscreen
+          APPIMAGE_EXTRACT_AND_RUN: "1"
+        run: |
+          bash packaging/linux/build_appimage.sh dist/Bodega out/Bodega-linux-x64.AppImage
+          out/Bodega-linux-x64.AppImage --smoke-test
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Bodega-${{ matrix.name }}
+          path: out/*
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
+          body: |
+            ## Download
+            | Your computer | File |
+            |---|---|
+            | Mac with Apple Silicon (M1 and newer) | `Bodega-mac-apple-silicon.dmg` |
+            | Intel Mac | `Bodega-mac-intel.dmg` |
+            | Windows (installer) | `Bodega-windows-setup.exe` |
+            | Windows (no install) | `Bodega-windows-portable.zip` |
+            | Linux (one file — double-click to run) | `Bodega-linux-x64.AppImage` |
+            | Linux (folder + install script) | `Bodega-linux-x64.tar.gz` |
+
+            Everything Bodega needs is inside — nothing else to install.
+            **First launch on Mac:** if macOS says it can't check the app, open **System Settings → Privacy & Security** and click **Open Anyway**.
+            **First launch on Windows:** if SmartScreen appears, click **More info → Run anyway**.

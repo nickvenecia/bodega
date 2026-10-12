@@ -1,0 +1,105 @@
+"""A saved renter: who you rent to. Filled in once, then picked on every rental after that."""
+
+from __future__ import annotations
+
+from dataclasses import replace
+
+from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
+
+from bodega.core.model import Client
+from bodega.ui.components.widgets import Section, TextBox, hbox, vbox
+from bodega.ui.style.tokens import DIALOG_W_WIDE, SPACE_2, SPACE_3, SPACE_4, SPACE_5, TEXT_BOX_H
+
+
+class ClientDialog(QDialog):
+    """Add or edit a renter. After Save, `.client` holds the result; `.deleted` if Delete was chosen."""
+
+    def __init__(self, client: Client | None, can_delete: bool, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.editing = client is not None
+        self.client = replace(client) if client else Client()
+        self.deleted = False
+        title_text = "Edit Renter" if self.editing else "New Renter"
+        self.setWindowTitle(title_text)
+        self.setMinimumWidth(DIALOG_W_WIDE)
+        lay = vbox(self, SPACE_5, SPACE_3)
+        title = QLabel(title_text)
+        title.setObjectName("DialogTitle")
+        lay.addWidget(title)
+        c = self.client
+        row = hbox(spacing=SPACE_2)
+        self.name = self._line(row, "Name", c.name, "Who signs the agreement")
+        self.company = self._line(row, "Company", c.company, "Production company (optional)")
+        lay.addLayout(row)
+        row = hbox(spacing=SPACE_2)
+        self.email = self._line(row, "Email", c.email, "Where the agreement goes")
+        self.phone = self._line(row, "Phone", c.phone, "")
+        lay.addLayout(row)
+        sec = Section("Address")
+        self.address = TextBox("Street\nCity, State ZIP")
+        self.address.set_text(c.address)
+        sec.add(self.address)
+        lay.addWidget(sec)
+        sec = Section("Notes")
+        self.notes = TextBox("ID checked, insurance on file until…", TEXT_BOX_H)
+        self.notes.set_text(c.notes)
+        self.notes.setToolTip("Just for you: never printed")
+        sec.add(self.notes)
+        lay.addWidget(sec)
+        lay.addStretch(1)
+        buttons = hbox(spacing=SPACE_2)
+        buttons.setContentsMargins(0, SPACE_4 - SPACE_3, 0, 0)
+        if self.editing and can_delete:
+            delete = QPushButton("Delete Renter…")
+            delete.setObjectName("Danger")
+            delete.clicked.connect(self._delete)
+            buttons.addWidget(delete)
+        buttons.addStretch(1)
+        cancel = QPushButton("Cancel")
+        cancel.clicked.connect(self.reject)
+        self.save = QPushButton("Save")
+        self.save.setObjectName("Primary")
+        self.save.setDefault(True)
+        self.save.clicked.connect(self._save)
+        buttons.addWidget(cancel)
+        buttons.addWidget(self.save)
+        lay.addLayout(buttons)
+        for f in (self.name, self.company):
+            f.textChanged.connect(self._check)
+        self._check()
+
+    def _line(self, row, label: str, value: str, placeholder: str) -> QLineEdit:
+        sec = Section(label)
+        f = QLineEdit(value)
+        f.setPlaceholderText(placeholder)
+        sec.add(f)
+        row.addWidget(sec, 1)
+        return f
+
+    def _check(self, *_a) -> None:
+        self.save.setEnabled(bool(self.name.text().strip() or self.company.text().strip()))
+
+    def _save(self) -> None:
+        self.client = replace(
+            self.client,
+            name=self.name.text().strip(),
+            company=self.company.text().strip(),
+            email=self.email.text().strip(),
+            phone=self.phone.text().strip(),
+            address=self.address.text().strip(),
+            notes=self.notes.text().strip(),
+        )
+        self.accept()
+
+    def _delete(self) -> None:
+        from bodega.ui.dialogs.common import confirm
+
+        who = self.client.name or self.client.company
+        if confirm(
+            self,
+            f"Delete {who}?",
+            f"{who} will be taken off your renters. Rentals you already made keep their details.",
+            "Delete Renter",
+        ):
+            self.deleted = True
+            self.accept()
