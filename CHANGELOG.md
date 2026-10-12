@@ -2,11 +2,9 @@
 
 ## Unreleased
 
-- Bodega is red now: a chile red accent across the app and on the paper (new profiles; your profile's paper color
-  is in Settings › Profiles), with warm greys to match.
-- A new icon: "b." with a red full stop.
-- Late stands out on its own: a solid rose-red chip and calendar bar. Out shows in amber on the calendar, as it
-  does in the list.
+- Bodega is blue now: a blue accent across the app and on the paper (new profiles; your profile's paper color is
+  in Settings › Profiles), with neutral greys to match.
+- A new icon: "b." with a blue full stop.
 
 ## 1.0.2
 

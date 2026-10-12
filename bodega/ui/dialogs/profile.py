@@ -317,7 +317,7 @@ class ProfileDialog(Embeddable, QDialog):
         )
         self.pricing.set_summary(f"{money.fmt_rate(b.rate_pct)} a day · {b.week_days}-day week")
         self.numbers.set_summary(
-            f"{b.prefix}-{dates.today().year}-001 · {COLORS.get(b.color, COLORS['chile'])[0]}"
+            f"{b.prefix}-{dates.today().year}-001 · {COLORS.get(b.color, COLORS['blue'])[0]}"
         )
 
     # ------------------------------------------------------------------ logo

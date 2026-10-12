@@ -107,7 +107,7 @@ bodega/
                    --smoke-test
   cli.py           `python -m bodega cli sample OUT.pdf --doc agreement|quote|inventory|ratecard|package`,
                    `python -m bodega cli import SHEET.xlsx OUT.pdf`
-scripts/make_icon.py   draws bodega/assets/icon.png ("b." on the family's dark tile, the full stop in chile red)
+scripts/make_icon.py   draws bodega/assets/icon.png ("b." on the family's dark tile, the full stop in sky blue)
 tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR [SHEET.xlsx]
 ```
 

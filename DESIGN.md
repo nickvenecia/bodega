@@ -121,12 +121,11 @@ Icons made with `theme.icon()` redraw themselves; the table refills. The table b
 | `WELL` | Sunken areas: the preview behind the paper |
 | `BORDER` / `BORDER_STRONG` / `BORDER_HOVER` / `BORDER_CHECK` | Hairlines, control borders, hover, empty checkbox |
 | `TEXT` / `MUTED` / `FAINT` | Main text / secondary text / hints, labels, disabled |
-| `ACCENT` (+ `_HOVER`, `_PRESS`) | Chile red (Listo's is marigold, Cobro's turquoise). Selection, the one primary action, focus |
+| `ACCENT` (+ `_HOVER`, `_PRESS`) | Blue (red is never an accent: it means late or delete). Selection, the one primary action, focus |
 | `ON_ACCENT` | Text and icons on the accent (and on a Late chip) |
 | `ACCENT_OFF` / `ACCENT_OFF_TEXT` | A disabled primary button |
-| `ACCENT_TINT` / `ACCENT_EDGE` | Red wash and outline (the Booked chip, the selected card, an open fold count) |
-| `GOOD` / `WARN` / `BAD` | Returned / out or in repair / late or double-booked. `BAD` is a cooler rose-red so it never reads as the accent; Late is always a solid fill |
-| `WARN_TINT` | An amber wash: Out on the calendar |
+| `ACCENT_TINT` / `ACCENT_EDGE` | Blue wash and outline (the Booked chip, the selected card, an open fold count) |
+| `GOOD` / `WARN` / `BAD` | Returned / out or in repair / late or double-booked. |
 | `PAPER` / `SHADOW` | The paper and its shadow in the preview |
 | `BAD_TINT` / `BAD_EDGE` | Danger button hover / a failed card's outline |
 
@@ -293,7 +292,7 @@ rentals are the plus underneath.
   menu bar; the profile card at the bottom of the sidebar opens profiles, Send Feedback and Settings on every system.
 - **Scrolling never changes a value**, and menus open on click, never on hover (`app._RoundPopups`).
 - **One identity everywhere.** The icon is "b." on the family's dark tile, the full stop in the accent
-  (`scripts/make_icon.py`); in the app the wordmark is "bodega." with the same red full stop; on the Mac the title bar is ours (`ui/titlebar.py`).
+  (`scripts/make_icon.py`); in the app the wordmark is "bodega." with the same blue full stop; on the Mac the title bar is ours (`ui/titlebar.py`).
 
 ---
 

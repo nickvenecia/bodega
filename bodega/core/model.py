@@ -222,7 +222,7 @@ class Business:
     logo: str = ""  # file name inside data_dir()/logos
     currency: str = "$"
     prefix: str = ""  # rental numbers: PREFIX-2026-001
-    color: str = "chile"  # the accent on the paper (core/looks.py)
+    color: str = "blue"  # the accent on the paper (core/looks.py)
     rate_pct: str = "4"  # a day's rent, as a percent of replacement value (with tax)
     value_tax: str = "8.25"  # sales tax added to what you paid, for replacement value
     week_days: int = 3  # a 7-day week is billed as this many days

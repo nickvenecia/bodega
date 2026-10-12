@@ -168,7 +168,7 @@ DARK = {
     "PANEL": "#19181A",  # sidebar, footer, dialogs
     "CARD": "#1F1E20",  # cards, fields
     "CARD_HOVER": "#262527",
-    "CARD_SELECTED": "#2F1F1E",  # a selected card (warm, so it reads as the accent)
+    "CARD_SELECTED": "#1C2333",  # a selected card (a hint of the accent)
     "RAISED": "#2B2A2C",  # buttons, popups
     "RAISED_HOVER": "#343335",
     "RAISED_PRESS": "#272628",
@@ -180,26 +180,25 @@ DARK = {
     "MUTED": "#A8A5A6",  # secondary text
     "FAINT": "#737072",  # hints, disabled, section labels
     "WELL": "#0C0B0C",  # sunken areas: thumbnails, previews, logs
-    "ACCENT": "#EE4B3B",  # chile red — selection, primary action, focus
+    "ACCENT": "#4A90F7",  # sky blue — selection, primary action, focus
     # (Listo's is marigold, Cobro's turquoise)
-    "ACCENT_HOVER": "#FF6555",
-    "ACCENT_PRESS": "#D43A2B",
+    "ACCENT_HOVER": "#66A3FF",
+    "ACCENT_PRESS": "#3478E0",
     "ON_ACCENT": "#FFFFFF",  # text/icons on the accent
-    "ACCENT_OFF": "#3A2321",  # disabled primary button
-    "ACCENT_OFF_TEXT": "#8F605B",
-    "ACCENT_TINT": "rgba(238, 75, 59, 0.15)",  # a red wash
-    "ACCENT_EDGE": "rgba(255, 101, 85, 0.55)",
+    "ACCENT_OFF": "#1F2A3D",  # disabled primary button
+    "ACCENT_OFF_TEXT": "#5E7499",
+    "ACCENT_TINT": "rgba(74, 144, 247, 0.15)",  # a blue wash
+    "ACCENT_EDGE": "rgba(102, 163, 255, 0.55)",
     "GOOD": "#4CC38A",
-    "BAD": "#FF4F7B",  # late, failed, delete: a cooler rose-red, so it never reads as the accent
-    "BAD_TINT": "#2E1820",  # danger button hover
-    "BAD_EDGE": "#5E2A3A",  # failed card border
+    "BAD": "#F0616D",  # late, failed, delete
+    "BAD_TINT": "#2A1A1D",  # danger button hover
+    "BAD_EDGE": "#5A2A30",  # failed card border
     "WARN": "#E9B949",
-    "WARN_TINT": "rgba(233, 185, 73, 0.14)",  # an amber wash (out on the calendar)
     "PAPER": "#FFFFFF",  # the paper (and logo thumbnails) in the preview
     "SHADOW": "rgba(0, 0, 0, 0.55)",  # the paper's shadow on the dark preview
-    "DIVIDER": "#33211F",  # a department or group divider in the gear table: a red band
-    "DIVIDER_TEXT": "#FF9C8F",  # its name and totals
-    "DIVIDER_HOVER": "#3E2724",  # a divider under the mouse: the same red, a step brighter
+    "DIVIDER": "#1C2638",  # a department or group divider in the gear table: a blue band
+    "DIVIDER_TEXT": "#9CC2FF",  # its name and totals
+    "DIVIDER_HOVER": "#233049",  # a divider under the mouse: the same blue, a step brighter
     "ROW_HOVER": "rgba(255, 255, 255, 0.05)",  # a table row under the mouse
     "WINDOW_TOP": "#131213",  # the window's backdrop: flat, a step darker than the panels
     "WINDOW_BOTTOM": "#131213",
@@ -208,8 +207,8 @@ DARK = {
     "GLASS_STROKE": "rgba(255, 255, 255, 0.09)",  # its outline, so it reads as its own sheet
     "GLASS_EDGE": "rgba(255, 255, 255, 0.08)",  # the bright line just inside it (strongest along the top)
     "GLASS_SHADOW": "rgba(0, 0, 0, 0.60)",
-    "CHIP": "rgba(238, 75, 59, 0.16)",  # a tinted capsule (+ Link, + Notes)
-    "CHIP_HOVER": "rgba(238, 75, 59, 0.26)",
+    "CHIP": "rgba(74, 144, 247, 0.16)",  # a tinted capsule (+ Link, + Notes)
+    "CHIP_HOVER": "rgba(74, 144, 247, 0.26)",
     "FIELD": "rgba(255, 255, 255, 0.07)",  # a text field or dropdown: lightly frosted
     "FIELD_BORDER": "rgba(255, 255, 255, 0.08)",
     "BLOCK": "rgba(255, 255, 255, 0.045)",  # a card inside a glass panel: a soft tint, no outline
@@ -219,7 +218,7 @@ LIGHT = {
     "PANEL": "#EFEDEC",
     "CARD": "#FFFFFF",
     "CARD_HOVER": "#F2F0EF",
-    "CARD_SELECTED": "#FCEAE7",
+    "CARD_SELECTED": "#E8F0FD",
     "RAISED": "#FFFFFF",
     "RAISED_HOVER": "#F4F2F1",
     "RAISED_PRESS": "#E8E5E4",
@@ -231,38 +230,37 @@ LIGHT = {
     "MUTED": "#696464",
     "FAINT": "#9D9897",
     "WELL": "#E8E5E3",
-    "ACCENT": "#D93A2B",
-    "ACCENT_HOVER": "#E54B3B",
-    "ACCENT_PRESS": "#BC2E20",
+    "ACCENT": "#2F6FDB",
+    "ACCENT_HOVER": "#3D7DE8",
+    "ACCENT_PRESS": "#245CC0",
     "ON_ACCENT": "#FFFFFE",
-    "ACCENT_OFF": "#F5D4CF",
-    "ACCENT_OFF_TEXT": "#CF8B83",
-    "ACCENT_TINT": "rgba(217, 58, 43, 0.09)",
-    "ACCENT_EDGE": "rgba(217, 58, 43, 0.45)",
+    "ACCENT_OFF": "#D3E0F7",
+    "ACCENT_OFF_TEXT": "#8FA9D6",
+    "ACCENT_TINT": "rgba(47, 111, 219, 0.09)",
+    "ACCENT_EDGE": "rgba(47, 111, 219, 0.45)",
     "GOOD": "#1E9A5E",
-    "BAD": "#D42A5C",
-    "BAD_TINT": "#FCE8EE",
-    "BAD_EDGE": "#F0B3C5",
+    "BAD": "#D3374A",
+    "BAD_TINT": "#FBEAEC",
+    "BAD_EDGE": "#EFB7BF",
     "WARN": "#A97A06",
-    "WARN_TINT": "rgba(169, 122, 6, 0.10)",
     "PAPER": "#FFFFFF",
     "SHADOW": "rgba(0, 0, 0, 0.16)",
-    "DIVIDER": "#F8DDD8",
-    "DIVIDER_TEXT": "#BC2E20",
-    "DIVIDER_HOVER": "#F3CCC5",
-    "ROW_HOVER": "rgba(90, 40, 30, 0.05)",
+    "DIVIDER": "#DCE7FA",
+    "DIVIDER_TEXT": "#245CC0",
+    "DIVIDER_HOVER": "#CDDDF7",
+    "ROW_HOVER": "rgba(30, 60, 120, 0.05)",
     "WINDOW_TOP": "#F0EEED",
     "WINDOW_BOTTOM": "#F0EEED",
     "GLASS_TOP": "rgba(255, 255, 255, 0.94)",
     "GLASS": "rgba(255, 255, 255, 0.76)",
-    "GLASS_STROKE": "rgba(80, 40, 30, 0.13)",
+    "GLASS_STROKE": "rgba(25, 45, 100, 0.13)",
     "GLASS_EDGE": "rgba(255, 255, 255, 1.0)",
-    "GLASS_SHADOW": "rgba(60, 25, 20, 0.16)",
-    "CHIP": "rgba(217, 58, 43, 0.10)",
-    "CHIP_HOVER": "rgba(217, 58, 43, 0.18)",
+    "GLASS_SHADOW": "rgba(20, 35, 80, 0.16)",
+    "CHIP": "rgba(47, 111, 219, 0.10)",
+    "CHIP_HOVER": "rgba(47, 111, 219, 0.18)",
     "FIELD": "rgba(255, 255, 255, 0.92)",
-    "FIELD_BORDER": "rgba(90, 40, 30, 0.12)",
-    "BLOCK": "rgba(190, 70, 50, 0.05)",
+    "FIELD_BORDER": "rgba(30, 60, 120, 0.12)",
+    "BLOCK": "rgba(50, 100, 200, 0.05)",
 }
 SCHEME = "dark"
 globals().update(DARK)
