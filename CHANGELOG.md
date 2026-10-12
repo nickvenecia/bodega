@@ -5,6 +5,8 @@
 - Bodega is blue now: a blue accent across the app and on the paper (new profiles; your profile's paper color is
   in Settings › Profiles), with neutral greys to match.
 - A new icon: "b." with a blue full stop.
+- Pick your own accent color in Settings › General: blue, purple, pink, orange, yellow, green, turquoise or
+  graphite. The whole app follows, in light and dark.
 
 ## 1.0.2
 

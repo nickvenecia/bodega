@@ -112,6 +112,11 @@ dark and a light value (`tokens.DARK`, `tokens.LIGHT`); `tokens.use()` swaps the
 the stylesheet. So: read colors as `tokens.X` when drawing, never copy one into a constant at import time.
 Icons made with `theme.icon()` redraw themselves; the table refills. The table below lists the dark values.
 
+**The accent is yours to pick** (Settings › General › Accent Color: `widgets.AccentPicker`, settings "accent";
+empty means Bodega's own blue). `tokens.ACCENTS` lists the choices (never red); `tokens.accent_set()` builds
+every accent shade from one color for dark or light, with dark words on the accent wherever white wouldn't read.
+The blue's shades are hand-set in `DARK` / `LIGHT`. The app icon and the paper keep their own colors.
+
 | Token | Use |
 |---|---|
 | `BG` | Window background |

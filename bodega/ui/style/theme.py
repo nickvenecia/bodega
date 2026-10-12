@@ -528,10 +528,11 @@ def system_scheme() -> str:
     return "light" if scheme == Qt.ColorScheme.Light else "dark"
 
 
-def apply(app, appearance: str, folder: Path) -> str:
-    """Use the light or dark look ("system" asks the computer). Returns the look in use."""
+def apply(app, appearance: str, folder: Path, accent: str | None = None) -> str:
+    """Use the light or dark look ("system" asks the computer), in an accent (None keeps the current one).
+    Returns the look in use."""
     look = system_scheme() if appearance not in ("light", "dark") else appearance
-    tokens.use(look)
+    tokens.use(look, accent)
     _load_colors()
     hints = app.styleHints()
     if appearance in ("light", "dark") and hasattr(hints, "setColorScheme"):  # title bars match

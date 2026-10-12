@@ -206,8 +206,13 @@ def setup_app(app: QApplication) -> None:
     from bodega.core.store import read_json
 
     saved = read_json(data_dir() / "settings.json", {})
-    appearance = saved.get("appearance", "system") if isinstance(saved, dict) else "system"
-    set_appearance(app, appearance if isinstance(appearance, str) else "system")
+    saved = saved if isinstance(saved, dict) else {}
+    appearance, accent = saved.get("appearance", "system"), saved.get("accent", "")
+    set_appearance(
+        app,
+        appearance if isinstance(appearance, str) else "system",
+        accent if isinstance(accent, str) else "",
+    )
     hints = app.styleHints()
     if hasattr(hints, "colorSchemeChanged"):
         hints.colorSchemeChanged.connect(lambda _s: _system_changed(app))
@@ -215,12 +220,13 @@ def setup_app(app: QApplication) -> None:
     app.installEventFilter(app._round)
 
 
-def set_appearance(app: QApplication, appearance: str) -> str:
-    """Light, dark, or "system" (follow the computer). Redraws open windows."""
+def set_appearance(app: QApplication, appearance: str, accent: str | None = None) -> str:
+    """Light, dark, or "system" (follow the computer), and the accent ("" = Bodega's own; None keeps it).
+    Redraws open windows."""
     app._appearance = appearance
     app._applying = True  # asking the system can itself report a change
     try:
-        look = theme.apply(app, appearance, data_dir() / "ui")
+        look = theme.apply(app, appearance, data_dir() / "ui", accent)
     finally:
         app._applying = False
     for w in app.topLevelWidgets():

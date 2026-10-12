@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QPoint, QRect, QRectF, QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QPainter
+from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (
     QAbstractButton,
     QButtonGroup,
@@ -228,6 +228,97 @@ def repolish(w: QWidget) -> None:
     w.style().unpolish(w)
     w.style().polish(w)
     w.update()
+
+
+class AccentPicker(QWidget):
+    """A row of color circles (tokens.ACCENTS), the chosen one ringed. Click, or the arrow keys."""
+
+    picked = Signal(str)
+
+    def __init__(self, current: str, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.keys = list(tokens.ACCENTS)
+        self.current = current if current in tokens.ACCENTS else tokens.APP_ACCENT
+        self._hover = ""
+        self.setMouseTracking(True)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFixedHeight(tokens.CONTROL_H)
+        self.setMinimumWidth(self._pitch() * len(self.keys))
+
+    @staticmethod
+    def _pitch() -> int:
+        return tokens.SWATCH + 2 * tokens.SWATCH_RING * 2 + tokens.SPACE_1
+
+    def _rect(self, i: int) -> QRectF:
+        outer = tokens.SWATCH + 4 * tokens.SWATCH_RING
+        y = (self.height() - outer) / 2
+        return QRectF(i * self._pitch(), y, outer, outer)
+
+    def _key_at(self, pos) -> str:
+        for i, k in enumerate(self.keys):
+            if self._rect(i).contains(pos):
+                return k
+        return ""
+
+    def set_value(self, key: str) -> None:
+        self.current = key if key in tokens.ACCENTS else tokens.APP_ACCENT
+        self.update()
+
+    def _pick(self, key: str) -> None:
+        if key and key != self.current:
+            self.current = key
+            self.update()
+            self.picked.emit(key)
+
+    def paintEvent(self, _e) -> None:
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        ring = tokens.SWATCH_RING
+        for i, k in enumerate(self.keys):
+            r = self._rect(i)
+            dot = r.adjusted(2 * ring, 2 * ring, -2 * ring, -2 * ring)
+            if k == self.current or k == self._hover:
+                pen = QPen(theme.qcolor(tokens.TEXT if k == self.current else tokens.BORDER_HOVER))
+                pen.setWidthF(ring)
+                p.setPen(pen)
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.drawEllipse(r.adjusted(ring / 2, ring / 2, -ring / 2, -ring / 2))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(theme.qcolor(tokens.accent_of(k)))
+            p.drawEllipse(dot)
+        if self.hasFocus():
+            pen = QPen(theme.qcolor(tokens.ACCENT_EDGE))
+            pen.setWidthF(1)
+            p.setPen(pen)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawEllipse(self._rect(self.keys.index(self.current)))
+
+    def mouseMoveEvent(self, e) -> None:
+        k = self._key_at(e.position())
+        if k != self._hover:
+            self._hover = k
+            self.update()
+        name = tokens.ACCENTS[k][0] if k else ""
+        if k == tokens.APP_ACCENT:
+            name += " (Bodega's own)"
+        self.setToolTip(name)
+
+    def leaveEvent(self, _e) -> None:
+        self._hover = ""
+        self.update()
+
+    def mousePressEvent(self, e) -> None:
+        if e.button() == Qt.MouseButton.LeftButton:
+            self._pick(self._key_at(e.position()))
+
+    def keyPressEvent(self, e) -> None:
+        step = {Qt.Key.Key_Left: -1, Qt.Key.Key_Right: 1}.get(e.key())
+        if step is None:
+            super().keyPressEvent(e)
+            return
+        i = (self.keys.index(self.current) + step) % len(self.keys)
+        self._pick(self.keys[i])
 
 
 class Segmented(QFrame):

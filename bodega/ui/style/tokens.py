@@ -262,12 +262,125 @@ LIGHT = {
     "FIELD_BORDER": "rgba(30, 60, 120, 0.12)",
     "BLOCK": "rgba(50, 100, 200, 0.05)",
 }
+# ---------------------------------------------------------------- the accent you pick (Settings › General)
+# Bodega's own is blue, hand-set in DARK / LIGHT above. The others are built from one color by accent_set().
+# Never red: red means late, failed or delete in every app of the family.
+APP_ACCENT = "blue"
+ACCENTS = {  # key -> (name, on dark, on light)
+    "blue": ("Blue", "#4A90F7", "#2F6FDB"),
+    "purple": ("Purple", "#8069F7", "#6A52E8"),
+    "pink": ("Pink", "#F25FA6", "#C9387F"),
+    "orange": ("Orange", "#F5893A", "#C2600E"),
+    "yellow": ("Yellow", "#EDBA3A", "#9C7104"),
+    "green": ("Green", "#3DBE6E", "#1B8747"),
+    "turquoise": ("Turquoise", "#2EBFB0", "#0D8178"),
+    "graphite": ("Graphite", "#9B999F", "#68666D"),
+}
+SWATCH = 22  # a color circle in Settings
+SWATCH_RING = 2  # the ring around the chosen one (and the gap inside it)
+DARK_ON_ACCENT = "#141314"  # words on a light accent (yellow, green…), where white wouldn't read
+
+
+def _rgb(c: str) -> tuple[int, int, int]:
+    c = c.lstrip("#")
+    return int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
+
+
+def _hex(rgb) -> str:
+    return "#" + "".join(f"{max(0, min(255, round(v))):02X}" for v in rgb)
+
+
+def _mix(c: str, into: str, amount: float) -> str:
+    """`amount` of color c mixed into `into`."""
+    a, b = _rgb(c), _rgb(into)
+    return _hex(x * amount + y * (1 - amount) for x, y in zip(a, b, strict=True))
+
+
+def _rgba(c: str, alpha: float) -> str:
+    r, g, b = _rgb(c)
+    return f"rgba({r}, {g}, {b}, {alpha:g})"
+
+
+def luminance(c: str) -> float:
+    """Relative luminance (WCAG), 0 black … 1 white."""
+
+    def ch(v: int) -> float:
+        v = v / 255
+        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+
+    r, g, b = _rgb(c)
+    return 0.2126 * ch(r) + 0.7152 * ch(g) + 0.0722 * ch(b)
+
+
+def contrast(a: str, b: str) -> float:
+    hi, lo = sorted((luminance(a), luminance(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def accent_set(base: str, scheme: str) -> dict[str, str]:
+    """Every accent token for one color, in the dark or light look (the same steps as the hand-set blue)."""
+    light = scheme == "light"
+    on = "#FFFFFF" if contrast("#FFFFFF", base) >= 3 else DARK_ON_ACCENT
+    if light:
+        ink = _mix(base, "#000000", 0.45)  # the accent's own dark, for the faint lines and tints
+        return {
+            "ACCENT": base,
+            "ACCENT_HOVER": _mix(base, "#FFFFFF", 0.9),
+            "ACCENT_PRESS": _mix(base, "#000000", 0.85),
+            "ON_ACCENT": "#FFFFFE" if on == "#FFFFFF" else on,
+            "ACCENT_OFF": _mix(base, "#FFFFFF", 0.2),
+            "ACCENT_OFF_TEXT": _mix(base, "#FFFFFF", 0.5),
+            "ACCENT_TINT": _rgba(base, 0.09),
+            "ACCENT_EDGE": _rgba(base, 0.45),
+            "CARD_SELECTED": _mix(base, "#FFFFFF", 0.1),
+            "DIVIDER": _mix(base, "#FFFFFF", 0.15),
+            "DIVIDER_TEXT": _mix(base, "#000000", 0.85),
+            "DIVIDER_HOVER": _mix(base, "#FFFFFF", 0.22),
+            "CHIP": _rgba(base, 0.10),
+            "CHIP_HOVER": _rgba(base, 0.18),
+            "ROW_HOVER": _rgba(ink, 0.05),
+            "GLASS_STROKE": _rgba(ink, 0.13),
+            "GLASS_SHADOW": _rgba(_mix(base, "#000000", 0.3), 0.16),
+            "FIELD_BORDER": _rgba(ink, 0.12),
+            "BLOCK": _rgba(base, 0.05),
+        }
+    return {
+        "ACCENT": base,
+        "ACCENT_HOVER": _mix(base, "#FFFFFF", 0.85),
+        "ACCENT_PRESS": _mix(base, "#000000", 0.88),
+        "ON_ACCENT": on,
+        "ACCENT_OFF": _mix(base, DARK["CARD"], 0.18),
+        "ACCENT_OFF_TEXT": _mix(base, DARK["CARD"], 0.45),
+        "ACCENT_TINT": _rgba(base, 0.15),
+        "ACCENT_EDGE": _rgba(_mix(base, "#FFFFFF", 0.85), 0.55),
+        "CARD_SELECTED": _mix(base, DARK["CARD"], 0.12),
+        "DIVIDER": _mix(base, DARK["BG"], 0.15),
+        "DIVIDER_TEXT": _mix(base, "#FFFFFF", 0.55),
+        "DIVIDER_HOVER": _mix(base, DARK["BG"], 0.2),
+        "CHIP": _rgba(base, 0.16),
+        "CHIP_HOVER": _rgba(base, 0.26),
+    }
+
+
 SCHEME = "dark"
+ACCENT_KEY = APP_ACCENT
 globals().update(DARK)
 
 
-def use(scheme: str) -> None:
-    """Switch every color token to the dark or light set."""
-    global SCHEME
+def use(scheme: str, accent: str | None = None) -> None:
+    """Switch every color token to the dark or light set, in the chosen accent (None keeps the current one;
+    an unknown or empty one means Bodega's own)."""
+    global SCHEME, ACCENT_KEY
     SCHEME = "light" if scheme == "light" else "dark"
+    if accent is not None:
+        ACCENT_KEY = accent if accent in ACCENTS else APP_ACCENT
     globals().update(LIGHT if SCHEME == "light" else DARK)
+    if ACCENT_KEY != APP_ACCENT:
+        _name, dark, light = ACCENTS[ACCENT_KEY]
+        globals().update(accent_set(light if SCHEME == "light" else dark, SCHEME))
+
+
+def accent_of(key: str, scheme: str | None = None) -> str:
+    """A choice's color in the dark or light look (the current one by default)."""
+    _name, dark, light = ACCENTS.get(key, ACCENTS[APP_ACCENT])
+    return light if (scheme or SCHEME) == "light" else dark

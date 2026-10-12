@@ -97,6 +97,19 @@ class ServicesMixin:
         self.lib.settings["appearance"] = appearance
         set_appearance(QApplication.instance(), appearance)
 
+    def set_accent(self, key: str) -> None:
+        """The accent color ("" or Bodega's own blue: the default)."""
+        from PySide6.QtWidgets import QApplication
+
+        from bodega.app import set_appearance
+        from bodega.ui.style import tokens
+
+        key = "" if key == tokens.APP_ACCENT or key not in tokens.ACCENTS else key
+        self.lib.settings["accent"] = key
+        self.lib.save_settings()
+        app = QApplication.instance()
+        set_appearance(app, getattr(app, "_appearance", "system"), key)
+
     def look_changed(self) -> None:
         """The colors changed: redraw what holds its own."""
         from PySide6.QtWidgets import QApplication

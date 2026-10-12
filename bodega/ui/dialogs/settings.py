@@ -23,6 +23,7 @@ from bodega.services import account
 from bodega.ui.components.glass import GlassRoot
 from bodega.ui.components.panels import LeftPanel
 from bodega.ui.components.widgets import (
+    AccentPicker,
     ElidedLabel,
     FitScroll,
     Section,
@@ -150,6 +151,11 @@ class SettingsDialog(QDialog):
         self.look.changed.connect(self.win.set_look)
         look.add(self.look)
         lay.addWidget(look)
+        accent = Section("Accent Color")
+        self.accent = AccentPicker(str(self.lib.settings.get("accent", "")))
+        self.accent.picked.connect(self.win.set_accent)
+        accent.add(self.accent)
+        lay.addWidget(accent)
         upd = Section("Updates")
         self.auto = ToggleRow(
             "Check for Updates Automatically", bool(self.lib.settings.get("auto_update", True))

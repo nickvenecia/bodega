@@ -68,7 +68,8 @@ bodega/
                    (numbering ported from cobro/core/numbering.py; never sets Cobro's files aside)
     feedback.py    Feedback, an outbox in the data folder until a FeedbackSender (or ADDRESS) is connected
   ui/
-    style/         tokens.py (every size, color, timing; DARK/LIGHT swapped by tokens.use()), theme.py (the QSS,
+    style/         tokens.py (every size, color, timing; DARK/LIGHT swapped by tokens.use(scheme, accent); ACCENTS the accent
+                   choices, accent_set() builds one's shades), theme.py (the QSS,
                    icons, theme.font(), theme.qcolor(), plain_tip())
     components/    photos.py (gear photos: keep() reads and saves every picture again into photos/, scaled to
                    PHOTO_MAX_PX; from_link() takes a product page's main picture through core.web; thumbnails),
