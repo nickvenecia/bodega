@@ -109,8 +109,9 @@ packaging/     Installer files per OS
 
 - One topic per commit. Message: short summary line in the present tense ("Add A4 paper"),
   then a blank line and the why, if it isn't obvious.
-- Update `CHANGELOG.md` under "Unreleased" for anything a user would notice.
-- Release: bump `__version__` in `bodega/__init__.py`, move the changelog entries under the new version,
-  commit, then `git tag vX.Y.Z && git push --tags`. CI builds and publishes the downloads.
+- Anything a user would notice goes in `CHANGELOG.md` under the next version, and the same pull request bumps
+  `__version__` in `bodega/__init__.py` (the last number for fixes and polish, the middle one for a new feature).
+- Merging is releasing: when main has a version with no tag yet, CI builds, tags it `vX.Y.Z` and publishes the
+  downloads. A pull request that doesn't bump the version (docs, tests, tidying) releases nothing.
 - Never commit `build/`, `dist/`, real gear lists, rentals, personal details, or anything with a password or key in it.
   Signing secrets live only in GitHub → Settings → Secrets.

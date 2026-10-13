@@ -1,7 +1,8 @@
 name: Build Bodega
 
 # Every push builds and tests on all platforms.
-# Pushing a tag like v1.0.0 also publishes a GitHub Release with the downloads.
+# Releasing is merging: when main has a __version__ (bodega/__init__.py) that has no tag yet, this run tags it
+# vX.Y.Z and publishes a GitHub Release with the downloads. Pushing a tag like v1.0.0 by hand still works too.
 # Actions are pinned to exact commits (a tag can be moved; a commit can't). Update them deliberately.
 on:
   push:
@@ -16,6 +17,9 @@ permissions:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      release: ${{ steps.version.outputs.release }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -28,17 +32,33 @@ jobs:
         run: ruff format --check .
       - name: Lint (style, bugs, security)
         run: ruff check .
-      - name: The tag matches the app's version
-        # a release whose app reports an older number keeps offering itself as an update
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Is this a release?
+        # main with a version that has no tag yet, or a tag pushed by hand (which must match the version: a
+        # release whose app reports an older number keeps offering itself as an update)
+        id: version
         env:
-          TAG: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
         run: |
           v=$(python -c "import ast, pathlib; t = ast.parse(pathlib.Path('bodega/__init__.py').read_text()); print(next(n.value.value for n in t.body if isinstance(n, ast.Assign) and n.targets[0].id == '__version__'))")
-          if [ "$TAG" != "v$v" ]; then
-            echo "::error::Tag $TAG doesn't match __version__ $v in bodega/__init__.py. Bump the version, commit, then tag."
-            exit 1
+          tag="v$v"
+          release=false
+          if [ "${GITHUB_REF#refs/tags/}" != "$GITHUB_REF" ]; then
+            if [ "$GITHUB_REF" != "refs/tags/$tag" ]; then
+              echo "::error::Tag ${GITHUB_REF#refs/tags/} doesn't match __version__ $v in bodega/__init__.py. Bump the version, commit, then tag."
+              exit 1
+            fi
+            release=true
+          elif [ "$GITHUB_REF" = "refs/heads/main" ] && [ "$EVENT" != "pull_request" ]; then
+            if git ls-remote --exit-code --tags "$REPO_URL" "refs/tags/$tag" > /dev/null; then
+              echo "$tag is already released."
+            else
+              echo "$tag isn't released yet: this run releases it."
+              release=true
+            fi
           fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
 
   build:
     needs: lint
@@ -218,18 +238,36 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    if: needs.lint.outputs.release == 'true'
+    needs: [lint, build]
     runs-on: ubuntu-latest
+    concurrency: release  # one release at a time
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - name: Still not released?
+        # two quick merges can both see the same new version; only the first one releases it
+        id: still
+        env:
+          TAG: ${{ needs.lint.outputs.tag }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          if [ "$GITHUB_REF" = "refs/heads/main" ] && git ls-remote --exit-code --tags "$REPO_URL" "refs/tags/$TAG" > /dev/null; then
+            echo "$TAG was released by another run."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.still.outputs.go == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: artifacts
           merge-multiple: true
-      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+      - if: steps.still.outputs.go == 'true'
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
+          tag_name: ${{ needs.lint.outputs.tag }}
+          target_commitish: ${{ github.sha }}  # on main, the tag is made here, on the commit that was built
           files: artifacts/*
           generate_release_notes: true
           body: |
