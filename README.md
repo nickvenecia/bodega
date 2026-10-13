@@ -27,8 +27,9 @@ Not sure which Mac you have? Apple menu → About This Mac: "Chip: Apple M…" m
 - **Windows:** run the installer (no admin needed). If SmartScreen pops up, click **More info → Run anyway**.
 - **Linux:** make the AppImage runnable (right-click → Properties → Allow executing, or `chmod +x`) and double-click it.
 
-Everything comes bundled, fonts included. No Python or terminal needed. Bodega checks for a new version once a day
-and offers **Update to …** at the bottom of the sidebar.
+Everything comes bundled, fonts included. No Python or terminal needed. Each time Bodega opens it checks for a new version
+and, if there is one, shows what's new right away (**Later** closes it; **Update to …** stays at the bottom of the
+sidebar).
 
 ## What it does
 

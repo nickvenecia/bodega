@@ -45,7 +45,7 @@ an icon once with a color and keep the picture. Add new icons there; don't load 
 `NUM_FIELD_W`, `QTY_FIELD_W`, `LOGO_THUMB`, `PAGE_GAP`, `PAGE_SHADOW`, `DIALOG_W` (and `DIALOG_W_WIDE`, `DIALOG_W_XWIDE`),
 `PROFILE_DIALOG_H`, `PICKER_SIZE`, `PAGE_DIALOG_SIZE`, `CAL_*`, `DAY_W`, `WINDOW_SIZE`, `WINDOW_MIN`, `COL_W` (every
 table column), `LIST_ROW_H`, `NAV_GAP`, `ROW_INSET`, `NOTES_H`. Timings too: `DOCK_MS`, `SAVE_DELAY_MS`,
-`TABLE_DELAY_MS`, `TOAST_MS`, `UPDATE_CHECK_DELAY_MS`, `QUIT_WAIT_MS`. Use these names, never the numbers.
+`TABLE_DELAY_MS`, `TOAST_MS`, `UPDATE_CHECK_DELAY_MS`, `UPDATE_WAIT_MS`, `QUIT_WAIT_MS`. Use these names, never the numbers.
 
 **Fonts:** one family (Inter, `looks.FONT`, shared with the paper), loaded once in `app.py`. Every size is a
 `TEXT_*` token in pixels and every weight a `WEIGHT_*` token; in code, make a font with `theme.font(size, weight)`,

@@ -8,7 +8,7 @@ import time
 
 from bodega import __version__
 from bodega.core import update
-from bodega.ui.style import theme
+from bodega.ui.style import theme, tokens
 
 
 class ServicesMixin:
@@ -50,10 +50,7 @@ class ServicesMixin:
     def _auto_check_updates(self) -> None:
         if not self.lib.settings.get("auto_update", True) or update.install_kind() == "source":
             return
-        last = float(self.lib.settings.get("last_update_check", 0) or 0)
-        if time.time() - last < update.CHECK_EVERY_S:
-            return
-        self.check_updates(quiet=True)
+        self.check_updates(quiet=True)  # every time Bodega opens
 
     def check_updates(self, quiet: bool = False) -> None:
         from bodega.ui.dialogs.update import CheckThread
@@ -73,10 +70,23 @@ class ServicesMixin:
             self._release = rel
             self.sidebar.btn_update.setText(f"Update to {rel.version}")
             self.sidebar.btn_update.show()
-            if not quiet:
+            if quiet:
+                self._offer_update()  # found on its own: say so right away (Later closes it, like any window)
+            else:
                 self.show_update()
         elif not quiet:
             self.toast(f"You have the newest Bodega ({__version__}).")
+
+    def _offer_update(self) -> None:
+        """Show the update window once Bodega is free: never on top of another window or an open menu."""
+        from PySide6.QtCore import QTimer
+        from PySide6.QtWidgets import QApplication
+
+        busy = QApplication.activeModalWidget() is not None or QApplication.activePopupWidget() is not None
+        if busy or not self.isVisible():
+            QTimer.singleShot(tokens.UPDATE_WAIT_MS, self._offer_update)
+            return
+        self.show_update()
 
     def show_update(self) -> None:
         if self._release is None:

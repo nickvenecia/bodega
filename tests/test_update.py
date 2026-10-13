@@ -220,3 +220,28 @@ def test_window_offers_the_update(qapp, data_folder):
     w._found_release(rel, quiet=True)
     assert w.sidebar.btn_update.isVisibleTo(w.sidebar) and w.sidebar.btn_update.text() == "Update to 9.1.0"
     w.shutdown()
+
+
+def test_a_new_version_found_on_opening_shows_right_away(qapp, data_folder, monkeypatch):
+    """The automatic check runs every launch; what it finds opens the update window by itself, but never on
+    top of another window."""
+    from PySide6.QtWidgets import QApplication
+
+    from bodega.core import sample, update
+    from bodega.core.store import Library
+    from bodega.ui.window.main_window import MainWindow
+
+    win = MainWindow(sample.fill(Library(data_folder).load()))
+    win.show()
+    shown, later = [], []
+    monkeypatch.setattr(win, "show_update", lambda: shown.append(win._release.version))
+    monkeypatch.setattr("PySide6.QtCore.QTimer.singleShot", lambda ms, fn: later.append(fn))
+    monkeypatch.setattr(QApplication, "activeModalWidget", staticmethod(lambda: object()))
+    win._found_release(update.Release("99.0.0"), quiet=True)
+    assert not shown and later  # another window is open: it waits
+    monkeypatch.setattr(QApplication, "activeModalWidget", staticmethod(lambda: None))
+    later.pop()()
+    assert shown == ["99.0.0"] and win.sidebar.btn_update.isVisibleTo(win.sidebar)
+    win._found_release(update.Release("0.0.1"), quiet=True)  # nothing newer: nothing shows
+    assert shown == ["99.0.0"]
+    win.close()

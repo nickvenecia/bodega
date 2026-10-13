@@ -50,7 +50,6 @@ log = get_logger(__name__)
 REPO = "nickvenecia/bodega"  # github.com/<owner>/<repo> the releases come from
 API = f"https://api.github.com/repos/{REPO}/releases/latest"
 PAGE = f"https://github.com/{REPO}/releases/latest"
-CHECK_EVERY_S = 20 * 3600  # the automatic check: at most about once a day
 
 
 class Canceled(Exception):
