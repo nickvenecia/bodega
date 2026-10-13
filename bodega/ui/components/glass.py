@@ -47,7 +47,7 @@ def paint_backdrop(p: QPainter, rect: QRectF, size) -> None:
 
 
 def paint_shadow(p: QPainter, r: QRectF) -> None:
-    """A soft shadow just under a panel, so it floats."""
+    """A soft, wide, faint shadow all round a panel, so it floats (the Mac's, never a dark smudge)."""
     rad = tokens.GLASS_R
     base = theme.qcolor(tokens.GLASS_SHADOW)
     steps, spread = tokens.GLASS_SHADOW_STEPS, tokens.GLASS_SHADOW_SPREAD
@@ -58,8 +58,8 @@ def paint_shadow(p: QPainter, r: QRectF) -> None:
         c.setAlphaF(base.alphaF() * (1 - t) ** 2 / steps * 3)
         grow = spread * t
         path = QPainterPath()
-        path.addRoundedRect(
-            r.adjusted(-grow, -grow * 0.6 + tokens.GLASS_SHADOW_DROP, grow, grow + tokens.GLASS_SHADOW_DROP),
+        path.addRoundedRect(  # even all round (Apple's shadows spread evenly), just a touch lower
+            r.adjusted(-grow, -grow + tokens.GLASS_SHADOW_DROP, grow, grow + tokens.GLASS_SHADOW_DROP),
             rad + grow,
             rad + grow,
         )
@@ -67,26 +67,22 @@ def paint_shadow(p: QPainter, r: QRectF) -> None:
 
 
 def paint_glass(p: QPainter, r: QRectF) -> None:
-    """The panel itself, like Apple's glass: one even tone (no gradient), an outline, and a thin bright rim just
-    inside, strongest along the top edge where the light catches it."""
+    """The panel itself, like Apple's glass: one even tone (no gradient) and a single hairline edge, a touch
+    brighter along the top where the light catches it."""
     rad = tokens.GLASS_R
     path = QPainterPath()
     path.addRoundedRect(r, rad, rad)
     p.fillPath(path, theme.qcolor(tokens.GLASS))
+    # one hairline, just inside the edge: GLASS_EDGE along the top, settling to GLASS_STROKE
+    line = QPainterPath()
+    line.addRoundedRect(r.adjusted(0.5, 0.5, -0.5, -0.5), rad - 0.5, rad - 0.5)
+    pen = QLinearGradient(r.topLeft(), r.bottomLeft())
+    pen.setColorAt(0, theme.qcolor(tokens.GLASS_EDGE))
+    pen.setColorAt(min(1.0, tokens.GLASS_EDGE_FADE / max(1.0, r.height())), theme.qcolor(tokens.GLASS_STROKE))
+    pen.setColorAt(1, theme.qcolor(tokens.GLASS_STROKE))
     p.setBrush(Qt.BrushStyle.NoBrush)
-    p.setPen(QPen(theme.qcolor(tokens.GLASS_STROKE), 1))
-    p.drawPath(path)
-    inner = QPainterPath()
-    inner.addRoundedRect(r.adjusted(1, 1, -1, -1), rad - 1, rad - 1)
-    edge = theme.qcolor(tokens.GLASS_EDGE)
-    fade = QLinearGradient(r.topLeft(), r.bottomLeft())
-    fade.setColorAt(0, edge)
-    faint = QColor(edge)
-    faint.setAlphaF(edge.alphaF() * tokens.GLASS_EDGE_REST)
-    fade.setColorAt(min(1.0, tokens.GLASS_EDGE_FADE / max(1.0, r.height())), faint)
-    fade.setColorAt(1, faint)
-    p.setPen(QPen(fade, 1))
-    p.drawPath(inner)
+    p.setPen(QPen(pen, 1))
+    p.drawPath(line)
 
 
 def _shadow_margin() -> int:

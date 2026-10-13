@@ -231,7 +231,8 @@ Bodega talks like a helpful person, not like software.
 **The glass** (`ui/components/glass.py`), after Apple's Liquid Glass (iOS 26/27, macOS 26+): the window is a flat,
 quiet backdrop (`WINDOW_TOP`: pure white in the light look, like a Mac app's main area; the Mac's charcoal `#1E1E1E`
 in dark, darker than the panels), the content sits on it, and the tools float above it on rounded, see-through
-panels (`GLASS`, `GLASS_EDGE`, `GLASS_R`, a painted shadow). Search, dropdowns and buttons are capsules; the
+panels (`GLASS`, one hairline `GLASS_STROKE` a touch brighter along the top `GLASS_EDGE`, `GLASS_R`, and a soft, wide,
+faint shadow all round, like the Mac's). Search, dropdowns and buttons are capsules; the
 + and export buttons are circles; "add" buttons are tinted capsules (`widgets.add_chip`). Table rows highlight
 as one rounded shape across the row (`tables.RowPainter`); a divider under the mouse goes a step brighter
 (`DIVIDER_HOVER`), never white or black. Qt can't blur what's behind a widget, so the glass is a tint, not a blur.
@@ -304,7 +305,9 @@ rentals are the plus underneath.
   top-level piece; the Discount or Day Rate field only for that pricing; dates on a line only with Its Own Dates.
 - **Removing goes through a menu or a confirmation, never a single click.**
 - **Menus hold commands, the panels hold settings.** File / Edit / View / Profile / AI / Window / Help in the Mac
-  menu bar; the profile card at the bottom of the sidebar opens profiles, Send Feedback and Settings on every system.
+  menu bar; the profile card at the bottom of the sidebar (initials and the profile's name on one line; the email under it only
+  once signed in) opens profiles, Send Feedback, Check for Updates and Settings on every system. Settings › General
+  keeps only the automatic-update switch and the version.
 - **Scrolling never changes a value**, and menus open on click, never on hover (`app._RoundPopups`).
 - **One identity everywhere.** The icon is "b." on a dark tile, the full stop in the accent
   (`scripts/make_icon.py`); in the app the wordmark is "bodega." with the same blue full stop; on the Mac the title bar is ours (`ui/titlebar.py`).

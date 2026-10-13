@@ -59,8 +59,8 @@ class SectionHead(QFrame):
 
 
 class ProfileCard(QFrame):
-    """The bottom of the sidebar: your business (its initials, its name) and your account. Click for your
-    profiles and Settings."""
+    """The bottom of the sidebar: your business (its initials, its name), and your account's email once you're
+    signed in. Click for your profiles, feedback, updates and Settings."""
 
     clicked = Signal()
 
@@ -77,13 +77,17 @@ class ProfileCard(QFrame):
         self.avatar.setFixedSize(tokens.AVATAR, tokens.AVATAR)
         self.avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(self.avatar)
-        texts = vbox(spacing=0)
+        texts = vbox(
+            spacing=0
+        )  # the name (and who's signed in, when someone is), tight and centred like the App Store's
         self.name = ElidedLabel()
         self.name.setObjectName("ProfileName")
         self.sub = ElidedLabel()
         self.sub.setObjectName("ProfileSub")
+        texts.addStretch(1)
         texts.addWidget(self.name)
         texts.addWidget(self.sub)
+        texts.addStretch(1)
         lay.addLayout(texts, 1)
         lay.addWidget(IconLabel("updown", "FAINT"))
 
@@ -92,6 +96,7 @@ class ProfileCard(QFrame):
         self.avatar.setText("".join(w[0] for w in words[:2]).upper() or "B")
         self.name.set_full_text(name)
         self.sub.set_full_text(sub)
+        self.sub.setVisible(bool(sub))  # nothing to say until someone's signed in
         self.setToolTip("Profiles and Settings")
 
     def mousePressEvent(self, e):
@@ -192,9 +197,7 @@ class Sidebar(LeftPanel):
         lib = self.lib
         b = lib.businesses.get(lib.settings.get("business", "")) or next(iter(lib.businesses.values()), None)
         who = account.current()
-        self.profile_card.show_who(
-            (b.name if b and b.name else "Your Profile"), who.email if who else "Not signed in"
-        )
+        self.profile_card.show_who((b.name if b and b.name else "Your Profile"), who.email if who else "")
 
     def recolor(self) -> None:
         """The look changed: redraw the icons."""

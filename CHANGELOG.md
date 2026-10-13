@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.3
+
+- Panels have one thin edge and a soft, wide shadow, like the Mac's (no more dark smudge in dark mode).
+- Check for Updates… is in the profile menu (and the Bodega menu on the Mac); Settings keeps the automatic switch.
+- The profile card is one clean line: your profile's name, with your email under it only once you're signed in.
+
 ## 1.1.2
 
 - The side panels are one even tone, like Apple's glass (no more gradient), in light and dark.

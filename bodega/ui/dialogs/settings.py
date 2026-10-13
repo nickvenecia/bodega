@@ -162,9 +162,9 @@ class SettingsDialog(QDialog):
         )
         self.auto.toggled.connect(self._auto)
         upd.add(self.auto)
-        now = QPushButton("Check Now")
-        now.clicked.connect(lambda: self.win.check_updates())
-        upd.add(self._row(f"Bodega {__version__}", now))
+        version = ElidedLabel(f"Version {__version__}")
+        version.setObjectName("Muted")
+        upd.add(version)  # checking now is a command: the profile menu and Bodega › Check for Updates…
         lay.addWidget(upd)
         lay.addStretch(1)
         self._fill("general", w)

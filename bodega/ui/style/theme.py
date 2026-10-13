@@ -256,7 +256,7 @@ QListWidget#Picker::indicator:checked {{ background: {tokens.ACCENT}; border-col
 /* ---------- the window: sidebar, toolbar, tables */
 #Sidebar {{ background: transparent; border: none; }}
 #SidebarFoot {{ border: none; }}
-#ProfileCard {{ background: transparent; border-radius: {RADIUS}px; }}
+#ProfileCard {{ background: transparent; border-radius: {tokens.NAV_R}px; }}
 #ProfileCard:hover {{ background: {tokens.CARD_HOVER}; }}
 #Avatar {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT}; border-radius: {AVATAR // 2}px;
     font-size: {TEXT_SM}px; font-weight: {WEIGHT_SEMIBOLD}; }}

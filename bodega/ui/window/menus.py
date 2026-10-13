@@ -114,7 +114,10 @@ class MenusMixin:
         h = bar.addMenu("Help")
         act(h, "Keyboard Shortcuts", self.show_shortcuts, "Ctrl+/")
         act(h, "Send Feedback…", self.open_feedback)
-        act(h, "Check for Updates…", self.check_updates)
+        upd = act(h, "Check for Updates…", self.check_updates)
+        upd.setMenuRole(
+            QAction.MenuRole.ApplicationSpecificRole
+        )  # on the Mac: in the Bodega menu, like Mac apps
         act(h, "Open Data Folder", self.open_data_folder)
         act(h, "Open Log File", lambda: reveal(log_dir() / "bodega.log"))
         act(h, "About Bodega", lambda: about(self, __version__, str(data_dir())))
@@ -153,7 +156,7 @@ class MenusMixin:
         self.new_menu.addAction(theme.menu_icon("folder"), "New Group…", self.new_group)
 
     def _app_menu(self) -> None:
-        """The profile card's menu: your profiles (pick one to work as), and Settings, where everything else is."""
+        """The profile card's menu: your profiles (pick one to work as), feedback, updates, and Settings."""
         card = self.sidebar.profile_card
         m = QMenu(card)
         current = self.business()
@@ -170,6 +173,7 @@ class MenusMixin:
         m.addAction(theme.menu_icon("plus"), "Add a Profile…", lambda: self.edit_business(True))
         m.addSeparator()
         m.addAction(theme.menu_icon("message"), "Send Feedback…", self.open_feedback)
+        m.addAction(theme.menu_icon("arrow-down"), "Check for Updates…", self.check_updates)
         s = m.addAction(theme.menu_icon("cog"), "Settings…", self.open_settings)
         s.setShortcut(QKeySequence.StandardKey.Preferences)  # shown for reference; the menu bar's runs it
         s.setShortcutVisibleInContextMenu(True)

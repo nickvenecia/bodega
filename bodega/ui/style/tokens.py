@@ -89,16 +89,15 @@ GRIP_GAP = 5  # between the grip's dots
 CHEVRON = 9  # a divider's open/closed chevron
 GLASS_R = 18  # a floating glass panel's corners
 GLASS_GAP = 10  # between the window's edge and its floating panels, and between panels
-GLASS_SHADOW_STEPS = 10  # layers of a panel's shadow
-GLASS_SHADOW_SPREAD = 14  # how far it reaches
-GLASS_SHADOW_DROP = 4  # how far below the panel it sits
+GLASS_SHADOW_STEPS = 16  # layers of a panel's shadow (soft, like the Mac's)
+GLASS_SHADOW_SPREAD = 24  # how far it reaches: wide and faint, never a dark smudge
+GLASS_SHADOW_DROP = 3  # how far below the panel it sits: barely
 DOCK_MS = 240  # the inspector sliding in or out
 LIFT_STEP_MS = 16  # dragging a row: how often the other rows move (about 60 a second)
 LIFT_EASE = 0.3  # …and how far towards their new place each step (smaller is slower)
 LIFT_ROWS_SHOWN = 3  # rows drawn on the lifted card when several move
 LIFT_SHADOW_STEPS = 6
-GLASS_EDGE_FADE = 60  # its bright inner edge fades over this many
-GLASS_EDGE_REST = 0.35  # …to this much of its strength
+GLASS_EDGE_FADE = 60  # the hairline is brightest along the top, settling over this many px
 QUIT_WAIT_MS = 1500  # how long quitting waits for a price or update check to finish
 SAVE_DELAY_MS = 400  # save this long after the last keystroke
 TABLE_DELAY_MS = 350  # refresh the table this long after an edit
@@ -207,9 +206,9 @@ DARK = {
     "WINDOW_TOP": "#1E1E1E",  # the window's backdrop: flat, darker than the panels (as on the Mac)
     "WINDOW_BOTTOM": "#1E1E1E",
     "GLASS": "rgba(48, 47, 50, 0.92)",  # a floating panel (sidebar, inspector): one even tone, lighter than the page
-    "GLASS_STROKE": "rgba(255, 255, 255, 0.09)",  # its outline, so it reads as its own sheet
-    "GLASS_EDGE": "rgba(255, 255, 255, 0.08)",  # the bright line just inside it (strongest along the top)
-    "GLASS_SHADOW": "rgba(0, 0, 0, 0.60)",
+    "GLASS_STROKE": "rgba(255, 255, 255, 0.10)",  # its one hairline: faintly lighter than the panel
+    "GLASS_EDGE": "rgba(255, 255, 255, 0.18)",  # …a little brighter along the top, where light catches it
+    "GLASS_SHADOW": "rgba(0, 0, 0, 0.35)",  # soft and wide
     "CHIP": "rgba(74, 144, 247, 0.16)",  # a tinted capsule (+ Link, + Notes)
     "CHIP_HOVER": "rgba(74, 144, 247, 0.26)",
     "FIELD": "rgba(255, 255, 255, 0.07)",  # a text field or dropdown: lightly frosted
@@ -256,9 +255,9 @@ LIGHT = {
     "WINDOW_TOP": "#FFFFFF",
     "WINDOW_BOTTOM": "#FFFFFF",
     "GLASS": "rgba(242, 242, 245, 0.94)",
-    "GLASS_STROKE": "rgba(0, 0, 0, 0.08)",
-    "GLASS_EDGE": "rgba(255, 255, 255, 1.0)",
-    "GLASS_SHADOW": "rgba(0, 0, 0, 0.10)",
+    "GLASS_STROKE": "rgba(0, 0, 0, 0.06)",  # a very faint gray hairline
+    "GLASS_EDGE": "rgba(0, 0, 0, 0.04)",  # (fainter still along the top)
+    "GLASS_SHADOW": "rgba(0, 0, 0, 0.08)",  # soft and wide
     "CHIP": "rgba(47, 111, 219, 0.10)",
     "CHIP_HOVER": "rgba(47, 111, 219, 0.18)",
     "FIELD": "rgba(255, 255, 255, 1.0)",

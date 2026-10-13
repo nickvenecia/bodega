@@ -85,7 +85,7 @@ bodega/
                    jobs, review, apply); common.py (kind_of, TITLES); sidebar.py (Inventory: All Gear with its
                    groups, Kits with each kit; Rentals: All Rentals with Out Now and Coming Up, then Calendar;
                    rows fold, kept in settings "sidebar_folded"; a folded All Rentals still shows out/late;
-                   at the bottom: your profile card (its menu: your profiles, Settings));
+                   at the bottom: your profile card (its menu: your profiles, Send Feedback, Check for Updates, Settings));
                    tables.py (GearTable, KitTable, RentalTable; COL_W widths; never per-row widgets); lift.py (Lift: drag
                    by the grip, drawn live: rows slide apart to show where it lands; off to the left it becomes a
                    normal drag for the sidebar's groups);
