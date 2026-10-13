@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0
+
+- Some stores, B&H among them, let only web browsers read their pages, so Bodega can't read their links. Now it says
+  so and what to do: Check Price says to open the link and see the price there, and a photo From the Link says how
+  to bring it in yourself.
+- Paste a photo onto a piece of gear: in your browser, right-click the picture and choose Copy Image, then in Bodega
+  choose + Photo › Paste (or press ⌘V while the gear is open). Dragging a picture out of a browser onto the gear works
+  too.
+- Long messages along the bottom of the window stay up long enough to read.
+
 ## 1.1.7
 
 - What's new in an update is easier to read: Bodega's own type, a small label, a dot before each change and room

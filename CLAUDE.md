@@ -38,7 +38,7 @@ bodega/
                    (what goes with it comes along, emptied groups go), apply_groups(); pricing() never None
     tidy.py        Tidy Up Groups: GROUPS, RULES (by name), RENAMES (by old group); suggest(), changes()
     prices.py      Check Price: fetch a product page, read its price (JSON-LD offers, price meta tags). Stores
-                   may block it; that's an OSError with a plain message
+                   may block it; that's web.Refused, with a plain message
     looks.py       paper palettes (light for every export, dark for the preview's Dark Page) + accent colors
     sample.py      the made-up Juniper Lane Films rental house (tests, smoke test, screenshots)
     earnings.py    what each piece has earned: its share of Out/Returned rentals (by own day rate), coming (Booked),
@@ -52,7 +52,9 @@ bodega/
     web.py         safe web fetching for anything a link points at: https only, public addresses only (checked
                    on every redirect, connecting to the checked address), size caps, a linear HTML reader
                    (read() -> PageInfo); image_of() a page's main picture, fetch_image() pictures only, whole or
-                   refused; web_link() is THE test of "is this a web link"
+                   refused; web_link() is THE test of "is this a web link"; site_name() ("B&H"); Refused: a store
+                   that lets only web browsers in (B&H). Bodega never disguises itself to get past one: the app
+                   offers another way in (copy the photo in the browser, paste it)
   doc/             render.py: layout(DocView, Palette, logo) -> [Page]; paint(); label sheets are Avery 5160
                    (30 to a Letter page), QR codes via segno. fonts.py, export.py
   services/        Outside Bodega, no Qt. Each has a plain interface and a "not connected yet" default.
@@ -71,7 +73,8 @@ bodega/
                    choices, accent_set() builds one's shades), theme.py (the QSS,
                    icons, theme.font(), theme.qcolor(), plain_tip())
     components/    photos.py (gear photos: keep() reads and saves every picture again into photos/, scaled to
-                   PHOTO_MAX_PX; from_link() takes a product page's main picture through core.web; thumbnails),
+                   PHOTO_MAX_PX; from_link() takes a product page's main picture through core.web; a picture
+                   pasted (Copy Image in a browser) or dropped: picture_file/image/link, has_picture; thumbnails),
                    panels.py (LeftPanel: every list of places on the left, with NavRow; SidePanel: every
                    panel on the right, one header: title, round buttons, ⋯, ✕ at the far right),
                    widgets.py (Card, Disclosure, Section, TitleEdit, IconLabel, SearchField, button_row, fields…), glass.py

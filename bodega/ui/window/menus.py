@@ -73,7 +73,7 @@ class MenusMixin:
         e.addSeparator()
         act(e, "Cut", lambda: self._text_do("cut"), QKeySequence.StandardKey.Cut)
         act(e, "Copy", self.copy, QKeySequence.StandardKey.Copy)
-        act(e, "Paste", lambda: self._text_do("paste"), QKeySequence.StandardKey.Paste)
+        act(e, "Paste", self.paste, QKeySequence.StandardKey.Paste)
         act(e, "Select All", self.select_all, QKeySequence.StandardKey.SelectAll)
         e.addSeparator()
         act(e, "Duplicate", self._duplicate_current, "Ctrl+D")
@@ -266,6 +266,13 @@ class MenusMixin:
             if rows:
                 QApplication.clipboard().setText("\n".join(rows))
                 self.toast(f"Copied {len(rows)} piece{'s' if len(rows) != 1 else ''}.")
+
+    def paste(self) -> None:
+        """⌘V: into the text box you're typing in; otherwise a picture you copied becomes the open gear's photo."""
+        if self._text_widget() is not None:
+            self._text_do("paste")
+        elif self.inspector.currentWidget() is self.items and self.dock.opened:
+            self.items.paste_photo()
 
     def select_all(self) -> None:
         w = QApplication.focusWidget()

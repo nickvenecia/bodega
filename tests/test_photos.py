@@ -70,6 +70,122 @@ def test_from_link(qapp, data_folder, monkeypatch):
         photos.from_link("https://shop.example.com/x")
 
 
+def test_a_picture_copied_in_a_browser(qapp, data_folder):
+    from bodega.ui.components import photos
+
+    solid = QImage(40, 30, QImage.Format.Format_ARGB32)  # browsers hand over photos with see-through
+    solid.fill(QColor("#7c5cff"))
+    assert photos.keep_image(solid).endswith(".jpg")  # …that a photo doesn't use
+    cutout = QImage(40, 30, QImage.Format.Format_ARGB32)
+    cutout.fill(QColor(0, 0, 0, 0))
+    assert photos.keep_image(cutout).endswith(".png")  # a cut-out keeps its see-through background
+
+
+def test_what_counts_as_a_picture_to_paste_or_drop(qapp, tmp_path):
+    from PySide6.QtCore import QMimeData, QUrl
+
+    from bodega.ui.components import photos
+
+    m = QMimeData()
+    m.setText("Sony FX6")
+    assert not photos.has_picture(m) and not photos.has_picture(None)
+    m = QMimeData()
+    img = QImage(40, 30, QImage.Format.Format_RGB32)
+    img.fill(QColor("#7c5cff"))
+    m.setImageData(img)
+    assert photos.has_picture(m, links=False) and photos.picture_image(m).size() == img.size()
+    m = QMimeData()
+    m.setUrls(
+        [QUrl.fromLocalFile(str(tmp_path / "notes.txt")), QUrl.fromLocalFile(str(tmp_path / "fx6.png"))]
+    )
+    assert photos.picture_file(m) == tmp_path / "fx6.png" and photos.has_picture(m, links=False)
+    m = QMimeData()
+    m.setUrls([QUrl("https://cdn.example.com/fx6.jpg")])
+    assert photos.picture_link(m) == "https://cdn.example.com/fx6.jpg"
+    assert photos.has_picture(m) and not photos.has_picture(
+        m, links=False
+    )  # a copied link is for the Link field
+    m.setUrls(
+        [QUrl("smb://server/share/x.jpg"), QUrl("javascript:alert(1)"), QUrl("ftp://example.com/x.jpg")]
+    )
+    assert photos.picture_link(m) == "" and photos.picture_file(m) is None
+
+
+def test_a_photo_dragged_out_of_a_browser(qapp, data_folder, monkeypatch):
+    from bodega.ui.components import photos
+
+    monkeypatch.setattr(web, "fetch_image", lambda url, **_k: picture())
+    assert photos.path_of(photos.from_any_link("https://cdn.example.com/fx6.jpg"))
+
+    def page_not_picture(url, **_k):
+        if url == "https://shop.example.com/fx6":
+            raise web.NotPicture("That link isn't a picture.")
+        return picture(color="#22aa66")
+
+    monkeypatch.setattr(web, "fetch_image", page_not_picture)  # the link of the page the photo was on
+    monkeypatch.setattr(
+        web, "fetch", lambda url, **_k: web.Page(url, '<meta property="og:image" content="/fx6.jpg">')
+    )
+    assert photos.path_of(photos.from_any_link("https://shop.example.com/fx6"))
+
+
+def test_paste_a_photo(qapp, data_folder, monkeypatch):
+    from PySide6.QtWidgets import QApplication
+
+    from bodega.ui.window.main_window import MainWindow
+
+    win = MainWindow(sample.fill(Library(data_folder).load()))
+    win.show()
+    it = next(iter(win.lib.items.values()))
+    win.open("gear", it.id)
+    QApplication.clipboard().setText("just words")
+    win.items._paste_state()
+    assert not win.items.act_add_photo_paste.isEnabled()
+    win.paste()  # ⌘V with no picture copied: nothing happens
+    assert not it.photo
+    img = QImage(40, 30, QImage.Format.Format_ARGB32)
+    img.fill(QColor("#7c5cff"))
+    QApplication.clipboard().setImage(img)
+    win.items._paste_state()
+    assert win.items.act_add_photo_paste.isEnabled()
+    win.paste()  # ⌘V (no text box being typed in)
+    assert win.lib.items[it.id].photo.endswith(".jpg")
+    win.flush()
+    assert Library(data_folder).load().items[it.id].photo == win.lib.items[it.id].photo
+    win.close()
+
+
+def test_a_store_that_turns_bodega_away_says_what_to_do(qapp, data_folder, monkeypatch):
+    from PySide6.QtWidgets import QApplication
+
+    from bodega.ui.panels.item import PASTE_INSTEAD, PriceCheck
+    from bodega.ui.window.main_window import MainWindow
+
+    def refuse(url, **_k):
+        raise web.Refused("B&H only lets web browsers read its pages.")
+
+    monkeypatch.setattr(web, "fetch", refuse)
+    win = MainWindow(sample.fill(Library(data_folder).load()))
+    win.show()
+    it = next(iter(win.lib.items.values()))
+    it.link = "https://www.bhphotovideo.com/c/product/1592483-REG/sony_fx6.html"
+    win.open("gear", it.id)
+    said = []
+    win.items.toast_wanted.connect(said.append)
+    win.items.photo_from_link()
+    win.items._photo_job.wait(5000)
+    QApplication.processEvents()
+    assert said[-1] == f"B&H only lets web browsers read its pages. {PASTE_INSTEAD}" and not it.photo
+    got = []
+    check = PriceCheck(it.id, it.link)
+    check.done.connect(lambda *a: got.append(a))
+    check.run()  # (in this thread)
+    assert got == [
+        (it.id, "", "", "B&H only lets web browsers read its pages. Open the link to see the price.")
+    ]
+    win.close()
+
+
 def test_photo_in_the_panel_and_the_list(qapp, data_folder, monkeypatch):
     from bodega.ui.components import photos
     from bodega.ui.window.main_window import MainWindow

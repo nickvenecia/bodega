@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from bodega.core import prices
+from bodega.core import prices, web
 
 
 def test_json_ld_offer():
@@ -32,5 +32,5 @@ def test_nothing_there():
 
 
 def test_store_names():
-    assert prices.store_name("https://www.bhphotovideo.com/c/product/1.html") == "B&H"
-    assert prices.store_name("tilta.com/x") == "tilta.com"
+    assert web.site_name("https://www.bhphotovideo.com/c/product/1.html") == "B&H"
+    assert web.site_name("tilta.com/x") == "tilta.com"

@@ -375,6 +375,7 @@ class Toast(QLabel):
         self._t.timeout.connect(self.hide)
 
     def show_message(self, text: str, ms: int = tokens.TOAST_MS) -> None:
+        ms = max(ms, len(text) * tokens.TOAST_MS_PER_CHAR)
         self.setText(text)
         self.setMaximumWidth(min(tokens.TOAST_MAX_W, self.parentWidget().width() - 2 * tokens.SPACE_5))
         self.adjustSize()

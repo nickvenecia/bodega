@@ -106,6 +106,7 @@ TABLE_DELAY_MS = 350  # refresh the table this long after an edit
 UPDATE_CHECK_DELAY_MS = 1500  # the automatic update check, just after the window is up (every launch)
 UPDATE_WAIT_MS = 1500  # a found update waits this long between looks while another window is open
 TOAST_MS = 3500  # how long a toast stays up
+TOAST_MS_PER_CHAR = 60  # …or longer, for a long one: time to read it
 TOAST_MAX_W = 520
 NAV_GAP = 2  # between rows in the sidebar
 ROW_INSET = 2  # a table row's rounded highlight sits this far inside the row
