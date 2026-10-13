@@ -26,8 +26,9 @@ def test_first_launch_is_empty(qapp, data_folder):
 
     w = MainWindow(Library(data_folder).load())
     w.show()
-    assert w.pages.currentWidget() is w.empty and "Add your gear" in w.empty.title.text()
-    assert len(w.empty.tiles) == 3 and not w.search.isVisible()  # nothing to search yet
+    titles = [t.findChild(QLabel, "StartTitle").text() for t in w.empty.tiles]
+    assert w.pages.currentWidget() is w.empty and titles[0] == "Add Manually" and len(titles) == 3
+    assert not w.search.isVisible()  # nothing to search yet
     w.go("rentals")
     assert "profile" in w.rentals.empty_title.text().lower()
     assert [t.findChild(QLabel, "StartTitle").text() for t in w.empty.tiles] == ["New Rental"]

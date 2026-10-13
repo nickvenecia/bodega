@@ -493,8 +493,6 @@ class MainWindow(
     def _empty_page(self, which: str) -> QWidget:
         if which == "gear":
             self.empty.show_for(
-                "box",
-                "Add your gear",
                 (
                     ("edit", "Add Manually", "One piece at a time", "", lambda: self.new("gear")),
                     (
@@ -508,21 +506,15 @@ class MainWindow(
                 ),
                 sheet_tile=1,
             )
-            return self.empty
-        if which == "packages":
+        elif which == "packages":
             self.empty.show_for(
-                "case",
-                "No kits yet",
-                (("plus", "New Kit", "Gear that rents together", "", lambda: self.new("packages")),),
+                (("case", "New Kit", "Gear that rents together", "", lambda: self.new("packages")),)
             )
-            return self.empty
-        icon, text = {
-            "out": ("camera", "Nothing's out"),
-            "upcoming": ("clock", "Nothing coming up"),
-            "rentals": ("receipt", "No rentals yet"),
-        }[which]
-        new_rental = ("plus", "New Rental", "A quote or a booking", "", lambda: self.new("rentals"))
-        self.empty.show_for(icon, text, (new_rental,))
+        else:
+            icon = {"out": "camera", "upcoming": "clock", "rentals": "receipt"}[which]
+            self.empty.show_for(
+                ((icon, "New Rental", "A quote or a booking", "", lambda: self.new("rentals")),)
+            )
         return self.empty
 
     def _inspector_empty(self, kind: str) -> None:

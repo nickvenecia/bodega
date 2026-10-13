@@ -77,8 +77,8 @@ bodega/
                    widgets.py (Card, Disclosure, Section, TitleEdit, IconLabel, SearchField, button_row, fields…), glass.py
                    (GlassRoot backdrop drawn once and reused; Dock: the inspector floats and slides, the content
                    makes room through the row's right margin, a Table slides as two pictures: freeze/thaw),
-                   empty.py (EmptyPage: where a table would be with nothing in it: the place's icon, a headline,
-                   one button or start tiles; empty gear takes a dropped spreadsheet),
+                   empty.py (EmptyPage: where a table would be with nothing in it: tiles, the ways to start;
+                   empty gear takes a dropped spreadsheet),
                    titlebar.py (Mac: macOS moves the window; double-click fills the screen or shrinks it, animated
                    via NSWindow setFrame:animate:), worker.py (Worker: background jobs with progress and stop)
     window/        main_window.py (MainWindow: building, navigation, opening, size and place) made of parts:

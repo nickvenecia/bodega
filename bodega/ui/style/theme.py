@@ -305,7 +305,6 @@ QPushButton#Where[tone="late"] {{ background: {tokens.BAD_TINT}; border-color: {
 #EmptyTitle {{ font-size: {TEXT_XL}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #EmptyText {{ color: {tokens.MUTED}; }}
 #StartBadge {{ background: {tokens.ACCENT_TINT}; border: none; border-radius: {tokens.START_BADGE // 2}px; }}
-#StartBadge[big="true"] {{ border-radius: {tokens.EMPTY_BADGE // 2}px; }}
 #StartTile {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER}; border-radius: {RADIUS_LG}px; }}
 #StartTile:hover {{ background: {tokens.RAISED_HOVER}; border-color: {tokens.BORDER_HOVER}; }}
 #StartTile:focus, #StartTile[hot="true"] {{ border-color: {tokens.ACCENT}; }}

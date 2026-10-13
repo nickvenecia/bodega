@@ -24,7 +24,6 @@ TOGGLE_INSET = 3  # gap between the switch's track and its knob
 ICON = 16
 ICON_SM = 14
 ICON_LG = 20  # the assistant's bubble in its toolbar button (sized to fill the circle)
-ICON_XL = 32  # the place's icon on an empty page
 BAR_H = 6  # progress bars
 TRACK_H = 4  # slider groove
 HANDLE = 14  # slider handle
@@ -152,7 +151,6 @@ LIST_GAP = NAV_GAP
 AVATAR = 32  # your profile's initials, bottom of the sidebar
 ASSISTANT_ICON = 28  # the assistant's face next to its title
 ASSISTANT_ICON_BIG = 64  # and saying hi in an empty chat
-EMPTY_BADGE = 72  # the circle behind an empty page's icon
 START_TILE_W = (
     184  # one way to start on an empty page (three fit beside the inspector on the smallest window)
 )
