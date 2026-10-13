@@ -1,7 +1,8 @@
 """The AI jobs. Each returns suggested Changes; nothing is changed until you approve them in the app.
 
 update_from_links  read each piece's own link: today's price (from the page's structured data), and the
-                   AI cleans up the product's name, company and series
+                   AI cleans up the product's name, company and series. A store that lets only web browsers in
+                   (B&H): the AI suggests another page about the piece, checked as find_links does, and read
 find_links         for gear with no link: the AI suggests product pages, and Bodega opens each one to check
                    it's real and is about that piece before suggesting it (models can make links up)
 tidy_names         the AI tidies names into "Company Model (Variant)" and fills Company / Series
@@ -148,6 +149,91 @@ NAMING = (
 )
 
 
+# ---------------------------------------------------------------- finding a page
+def _checked_pages(
+    setup: Setup, batch: list[Item], avoid: set[str], cancel: threading.Event | None = None
+) -> dict[str, web.Page]:
+    """Product pages the AI suggests for each piece (one question for up to BATCH pieces), each one opened and
+    checked to be about that piece before it counts (models make links up). {item id: the first page that
+    passed}. `avoid`: sites that turn Bodega away ("B&H"); more join it as they're met. Raises AIError."""
+    listing = "\n".join(f"{i}. {it.brand + ' ' if it.brand else ''}{it.name}" for i, it in enumerate(batch))
+    skip = f" Leave out {', '.join(sorted(avoid))}: Bodega can't open their pages." if avoid else ""
+    got = ask_json(
+        setup,
+        "You find product pages for film and photo gear. For each numbered piece give up to 3 web "
+        "addresses of its product page: the maker's own page first, then a store's."
+        + skip
+        + " Only give addresses you are confident exist; leave the list empty if unsure. "
+        'Reply as [{"n": 0, "urls": ["https://..."]}, ...].',
+        listing,
+    )
+    found: dict[str, web.Page] = {}
+    for row in got if isinstance(got, list) else []:
+        if cancel is not None and cancel.is_set():
+            break
+        if not isinstance(row, dict) or not isinstance(row.get("n"), int) or not 0 <= row["n"] < len(batch):
+            continue
+        it = batch[row["n"]]
+        urls = row.get("urls") if isinstance(row.get("urls"), list) else []
+        for url in urls[:3]:
+            link = web.web_link(clean_text(url, LIMITS["link"]))
+            if not link or it.id in found or web.site_name(link) in avoid:
+                continue
+            try:
+                page = web.fetch(link)
+            except web.Refused:
+                avoid.add(web.site_name(link))
+                continue
+            except OSError:
+                continue
+            if page_matches(it, web.read(page.html)):  # else: not about this piece (or made up)
+                found[it.id] = page
+    return found
+
+
+def _from_page(setup: Setup | None, it: Item, page: web.Page, why: str, out: list, problems: list) -> None:
+    """What a piece's page says: today's price, and (with an AI set up) a cleaner name, company and series."""
+    info = web.read(page.html)
+    if c := _price(it, page, why):
+        out.append(c)
+    if setup is None or not setup.ready():
+        return
+    p_name, p_brand = _product(info)
+    try:
+        got = ask_json(
+            setup,
+            "You tidy the names of film and photo gear in a rental house's inventory. "
+            + NAMING
+            + " "
+            + SAFETY
+            + ' Reply as {"name": "...", "brand": "...", "series": "..."}.',
+            f"Current name: {it.name}\nCurrent company: {it.brand}\nCurrent series: {it.series}\n"
+            f"<page>\nTitle: {info.title}\nProduct: {p_name}\nBrand: {p_brand}\n"
+            f"Words: {info.text[:PAGE_TEXT]}\n</page>",
+        )
+    except AIError as e:
+        problems.append(f"{it.name}: {e}")
+        return
+    if isinstance(got, dict):
+        for field in ("name", "brand", "series"):
+            c = _change(it, field, clean_text(got.get(field, ""), LIMITS[field]), why)
+            if c:
+                out.append(c)
+
+
+def _price(it: Item, page: web.Page, why: str) -> Change | None:
+    """The page's price for a piece, if it's new (a price in another currency says so)."""
+    found = prices.parse(page.html)
+    if found is None:
+        return None
+    where = why if found[1].upper() == "USD" else f"{why} · in {clean_text(found[1], 8)}"
+    return _change(it, "value", clean_price(found[0]), where)
+
+
+def _host(page: web.Page) -> str:
+    return (urlparse(page.url).hostname or "").removeprefix("www.")
+
+
 # ---------------------------------------------------------------- the jobs
 def update_from_links(
     setup: Setup | None,
@@ -155,8 +241,11 @@ def update_from_links(
     progress: Progress = lambda _n, _t: None,
     cancel: threading.Event | None = None,
 ) -> Result:
-    """For each piece with a link: today's price from its page, and (with an AI set up) a cleaner name."""
+    """For each piece with a link: today's price from its page, and (with an AI set up) a cleaner name. A store
+    that lets only web browsers in (B&H): with an AI set up, another page about the piece is found and read
+    instead (its link stays as it is)."""
     out, problems = [], []
+    stuck: list[tuple[Item, str]] = []  # (piece, why its own page couldn't be read)
     todo = [it for it in items if web.web_link(it.link)]
     for n, it in enumerate(todo):
         if cancel is not None and cancel.is_set():
@@ -164,36 +253,36 @@ def update_from_links(
         progress(n, len(todo))
         try:
             page = web.fetch(it.link)
+        except web.Refused as e:
+            stuck.append((it, str(e)))
+            continue
         except OSError as e:
             problems.append(f"{it.name}: {e}")
             continue
-        info = web.read(page.html)
-        host = (urlparse(page.url).hostname or "").removeprefix("www.")
-        found = prices.parse(page.html)
-        if found is not None and (c := _change(it, "value", clean_price(found[0]), host)):
-            out.append(c)
-        if setup is not None and setup.ready():
-            p_name, p_brand = _product(info)
-            try:
-                got = ask_json(
-                    setup,
-                    "You tidy the names of film and photo gear in a rental house's inventory. "
-                    + NAMING
-                    + " "
-                    + SAFETY
-                    + ' Reply as {"name": "...", "brand": "...", "series": "..."}.',
-                    f"Current name: {it.name}\nCurrent company: {it.brand}\nCurrent series: {it.series}\n"
-                    f"<page>\nTitle: {info.title}\nProduct: {p_name}\nBrand: {p_brand}\n"
-                    f"Words: {info.text[:PAGE_TEXT]}\n</page>",
-                )
-            except AIError as e:
-                problems.append(f"{it.name}: {e}")
-                continue
-            if isinstance(got, dict):
-                for field in ("name", "brand", "series"):
-                    c = _change(it, field, clean_text(got.get(field, ""), LIMITS[field]), host)
-                    if c:
-                        out.append(c)
+        _from_page(setup, it, page, _host(page), out, problems)
+    if stuck and (cancel is None or not cancel.is_set()):
+        if setup is None or not setup.ready():
+            problems += [
+                f"{it.name}: {why} With an AI set up, Bodega looks for another page." for it, why in stuck
+            ]
+        else:
+            avoid = {web.site_name(it.link) for it, _why in stuck}
+            for start in range(0, len(stuck), BATCH):
+                if cancel is not None and cancel.is_set():
+                    break
+                batch = stuck[start : start + BATCH]
+                try:
+                    pages = _checked_pages(setup, [it for it, _why in batch], avoid, cancel)
+                except AIError as e:
+                    problems.append(str(e))
+                    break
+                for it, why in batch:
+                    page = pages.get(it.id)
+                    if page is None:
+                        problems.append(f"{it.name}: {why} No other page about it could be checked.")
+                    else:
+                        site = web.site_name(it.link)
+                        _from_page(setup, it, page, f"{_host(page)} ({site} can't be read)", out, problems)
     progress(len(todo), len(todo))
     return Result(out, problems)
 
@@ -207,60 +296,25 @@ def find_links(
     """For pieces with no link: product pages the AI suggests, each one opened and checked first."""
     out, problems = [], []
     todo = [it for it in items if not web.web_link(it.link) and it.name.strip()]
-    done = 0
+    avoid: set[str] = set()
     for start in range(0, len(todo), BATCH):
         if cancel is not None and cancel.is_set():
             break
+        progress(start, len(todo))
         batch = todo[start : start + BATCH]
-        progress(done, len(todo))
-        listing = "\n".join(
-            f"{i}. {it.brand + ' ' if it.brand else ''}{it.name}" for i, it in enumerate(batch)
-        )
         try:
-            got = ask_json(
-                setup,
-                "You find product pages for film and photo gear. For each numbered piece give up to 3 web "
-                "addresses of its product page: the maker's own page first, then B&H Photo or Adorama. "
-                "Only give addresses you are confident exist; leave the list empty if unsure. "
-                'Reply as [{"n": 0, "urls": ["https://..."]}, ...].',
-                listing,
-            )
+            pages = _checked_pages(setup, batch, avoid, cancel)
         except AIError as e:
             problems.append(str(e))
             break
-        for row in got if isinstance(got, list) else []:
-            if cancel is not None and cancel.is_set():
-                break
-            if (
-                not isinstance(row, dict)
-                or not isinstance(row.get("n"), int)
-                or not 0 <= row["n"] < len(batch)
-            ):
+        for it in batch:
+            page = pages.get(it.id)
+            if page is None:
                 continue
-            it = batch[row["n"]]
-            urls = row.get("urls") if isinstance(row.get("urls"), list) else []
-            for url in urls[:3]:
-                link = web.web_link(clean_text(url, LIMITS["link"]))
-                if not link:
-                    continue
-                try:
-                    page = web.fetch(link)
-                except OSError:
-                    continue
-                info = web.read(page.html)
-                if not page_matches(it, info):
-                    continue  # not about this piece (or made up)
-                host = (urlparse(page.url).hostname or "").removeprefix("www.")
-                out.append(
-                    Change(it.id, "link", it.link, page.url, f"checked: the page is about it ({host})")
-                )
-                found = prices.parse(page.html)
-                if found is not None and not money.parse(it.value):
-                    c = _change(it, "value", clean_price(found[0]), host)
-                    if c:
-                        out.append(c)
-                break
-        done += len(batch)
+            host = _host(page)
+            out.append(Change(it.id, "link", it.link, page.url, f"checked: the page is about it ({host})"))
+            if not money.parse(it.value) and (c := _price(it, page, host)):
+                out.append(c)
     progress(len(todo), len(todo))
     found_ids = {c.item_id for c in out if c.field == "link"}
     missing = [it.name for it in todo if it.id not in found_ids]

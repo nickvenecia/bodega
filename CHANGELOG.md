@@ -8,6 +8,9 @@
 - Paste a photo onto a piece of gear: in your browser, right-click the picture and choose Copy Image, then in Bodega
   choose + Photo › Paste (or press ⌘V while the gear is open). Dragging a picture out of a browser onto the gear works
   too.
+- AI › Update from Links works for gear linked to B&H too: when a store won't let Bodega read its page, your AI
+  finds another page about that piece (usually the maker's), Bodega checks it's really about it, and you get its price
+  and a tidier name to approve. Your B&H link stays as it is. A price in another currency says so in Review.
 - Long messages along the bottom of the window stay up long enough to read.
 
 ## 1.1.7

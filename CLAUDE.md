@@ -62,7 +62,8 @@ bodega/
     ai/providers.py  PROVIDERS (Anthropic, OpenAI, Gemini, Kimi, OpenRouter, DeepSeek, Mistral, xAI, Groq, custom);
                    two API kinds (anthropic, openai); Setup (settings "ai"); list_models() live, never hardcoded;
                    ask()/ask_json(); keys never on a redirect, plain http only to this computer
-    ai/tasks.py    update_from_links, find_links (every link fetched and matched before it's suggested), tidy_names,
+    ai/tasks.py    update_from_links (a link that's Refused: another page, found and checked as find_links does),
+                   find_links (every link fetched and matched before it's suggested: _checked_pages), tidy_names,
                    organize_groups, chat (an answer, plus changes asked for: group/name/brand/series only); Change/Result; clean_text/clean_price validate everything; apply() (snapshot first)
     account.py     AccountService (sign_in / sign_out / reset_password) + REQUIRED; plug a real service in with use()
     cobro.py       Send to Cobro: a rental as a draft invoice written into Cobro's data folder in Cobro's format

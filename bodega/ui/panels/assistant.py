@@ -29,7 +29,11 @@ from bodega.ui.components.worker import Worker
 from bodega.ui.style import theme, tokens
 
 JOBS = [
-    ("links", "Update from Links", "Today's prices from each piece's link, and cleaner names"),
+    (
+        "links",
+        "Update from Links",
+        "Today's prices from each piece's link (or another page about it, when a store won't open), and cleaner names",
+    ),
     ("find", "Find Missing Links", "Product pages for gear without a link, each one checked"),
     ("names", "Tidy Up Names", "Names like the maker writes them, with Company and Series"),
     ("groups", "Organize Groups", "Gear sorted into clear groups, with new ones where needed"),
