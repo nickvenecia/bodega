@@ -43,7 +43,7 @@ an icon once with a color and keep the picture. Add new icons there; don't load 
 
 `SIDEBAR_W`, `INSPECTOR_W`, `TOOLBAR_H`, `SEARCH_W`, `TABLE_ROW_H`, `NAV_H`, `ROW_INDENT`, `TEXT_BOX_H`, `TEXT_BOX_TALL`, `TEXT_BOX_TERMS`,
 `NUM_FIELD_W`, `QTY_FIELD_W`, `LOGO_THUMB`, `PAGE_GAP`, `PAGE_SHADOW`, `DIALOG_W` (and `DIALOG_W_WIDE`, `DIALOG_W_XWIDE`),
-`PROFILE_DIALOG_H`, `PICKER_SIZE`, `PAGE_DIALOG_SIZE`, `CAL_*`, `DAY_W`, `WINDOW_SIZE`, `WINDOW_MIN`, `COL_W` (every
+`PROFILE_DIALOG_H`, `START_TILE_W`, `START_BADGE`, `PICKER_SIZE`, `PAGE_DIALOG_SIZE`, `CAL_*`, `DAY_W`, `WINDOW_SIZE`, `WINDOW_MIN`, `COL_W` (every
 table column), `LIST_ROW_H`, `NAV_GAP`, `ROW_INSET`, `NOTES_H`. Timings too: `DOCK_MS`, `SAVE_DELAY_MS`,
 `TABLE_DELAY_MS`, `TOAST_MS`, `UPDATE_CHECK_DELAY_MS`, `UPDATE_WAIT_MS`, `QUIT_WAIT_MS`. Use these names, never the numbers.
 
@@ -188,6 +188,8 @@ button is a capsule CONTROL_H tall; every icon button is a circle:
 | Rental line | `rental_panel.LineEditor` | A header row (what it is, its amount, ⋯) that folds its fields away. One open at a time |
 | Picking gear | `gear_picker.GearPicker` | Search and tick: attaching, filling a package, adding to a rental |
 | Long one-line text | `widgets.ElidedLabel` | Text that may not fit (gear names!): cut short with "…", the full text in its tooltip |
+| Empty page | `empty.EmptyPage` | Where a table would be with nothing in it: only its start tiles, centred (no headline above them; the page title says where you are) |
+| Start tile | `empty.StartTile` (`#StartTile`) | Every way to begin on an empty page (empty gear: Add Manually, Import Spreadsheet…, Google Sheets…; a kit or rental page: just its New, with the place's sidebar icon): a raised `RADIUS_LG` tile, its icon in a small tinted circle, a name and a few words, all centred |
 
 Choosing a control:
 - Pick one setting → **dropdown**, always, even with only 2–3 choices. Status, From, Renter, Belongs To, Priced By,
@@ -261,7 +263,8 @@ rentals are the plus underneath.
 - **The middle is one table** (`ui/tables.py`): a toolbar (`TOOLBAR_H`) with the place's name and count, Search,
   the filter icon (`filters.FilterButton`: Divide By, Show, Company, Missing, Clear Filters; the accent while on),
   the share button (import, Google Sheets, inventory list, rate card, labels, CSV), the assistant, then **one
-  primary round +**: New Gear or New Group / New Kit / New Rental. (A sidebar section's own + is the Mac's: a small
+  primary round +**: New Gear or New Group / New Kit / New Rental. With nothing in the place yet, search and the filter
+  hide and the empty page shows instead (`EmptyPage`); a spreadsheet dropped on the empty gear page is imported. (A sidebar section's own + is the Mac's: a small
   plain gray glyph, `SectionAdd`, that fades in over `FADE_MS` while the pointer is over its own section.) Columns sort by clicking their header.
   The Calendar (`ui/calendar_view.py`) replaces the table for rentals: one row per rental, a bar per stretch of dates.
 - **Gear is divided** by group in All Gear and by company inside a group (or not at all): an accent band (`DIVIDER`,

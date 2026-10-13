@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QMenu,
-    QPushButton,
     QSizePolicy,
     QStackedWidget,
     QToolButton,
@@ -31,8 +30,9 @@ from bodega.core.log import get_logger
 from bodega.core.model import Business
 from bodega.core.store import Library
 from bodega.ui.components import titlebar
+from bodega.ui.components.empty import EmptyPage
 from bodega.ui.components.glass import Dock, GlassRoot, glass
-from bodega.ui.components.widgets import ElidedLabel, SearchField, Toast, hbox, hint, vbox
+from bodega.ui.components.widgets import ElidedLabel, SearchField, Toast, hbox, vbox
 from bodega.ui.dialogs.preview import PageDialog
 from bodega.ui.panels.item import ItemPanel
 from bodega.ui.panels.kit import PackagePanel
@@ -214,26 +214,8 @@ class MainWindow(
         self.calendar.mode_changed.connect(lambda m: self.lib.settings.__setitem__("calendar_mode", m))
         cal_scroll = self.calendar
         self.cal_scroll = cal_scroll
-        self.empty = QWidget()
-        el = vbox(self.empty, tokens.SPACE_5, tokens.SPACE_3)
-        el.addStretch(1)
-        self.empty_text = hint("")
-        self.empty_text.setObjectName("EmptyTitle")
-        self.empty_btn = QPushButton()
-        self.empty_btn.setObjectName("Primary")
-        self.empty_btn2 = QPushButton()
-        self._empty_slots: list = [None, None]
-        self.empty_btn.clicked.connect(lambda: self._empty_slots[0] and self._empty_slots[0]())
-        self.empty_btn2.clicked.connect(lambda: self._empty_slots[1] and self._empty_slots[1]())
-        row = hbox(spacing=tokens.SPACE_2)
-        row.addStretch(1)
-        row.addWidget(self.empty_btn)
-        row.addWidget(self.empty_btn2)
-        row.addStretch(1)
-        self.empty_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        el.addWidget(self.empty_text)
-        el.addLayout(row)
-        el.addStretch(2)
+        self.empty = EmptyPage()  # where the table would be, with nothing in it yet
+        self.empty.dropped.connect(self.import_file)
         for w in (self.gear_table, self.kit_table, self.rental_table, cal_scroll, self.empty):
             self.pages.addWidget(w)
         lay.addWidget(self.pages, 1)
@@ -379,7 +361,6 @@ class MainWindow(
         self.title.setText(self._grp() or TITLES.get(view, ""))
         kind = kind_of(view)
         self.btn_export.setVisible(kind == "gear")
-        self.search.setVisible(view != "calendar")
         self.btn_new.setToolTip(
             {"gear": "New gear or group", "packages": "New Kit", "rentals": "New Rental"}[kind]
         )
@@ -390,7 +371,6 @@ class MainWindow(
             if gear_page
             else QToolButton.ToolButtonPopupMode.DelayedPopup
         )
-        self.view_menu.setVisible(kind == "gear")
         self.view_menu.set_divide(self._divide_for(view), "brand" if view.startswith("grp:") else "group")
         if changed_kind:
             self.search.blockSignals(True)
@@ -456,7 +436,10 @@ class MainWindow(
             self.rental_table.fill(lib, view if view in ("out", "upcoming") else "all")
             page = self.rental_table if self.rental_table.topLevelItemCount() else self._empty_page(view)
         self.pages.setCurrentWidget(page)
-        if page is self.empty and not self.assistant_showing():
+        empty = page is self.empty  # nothing to search or filter
+        self.search.setVisible(view != "calendar" and not empty)
+        self.view_menu.setVisible(kind == "gear" and not empty)
+        if empty and not self.assistant_showing():
             self.dock.set_open(False)
         self._apply_search()
         if self.history is not None:
@@ -508,25 +491,30 @@ class MainWindow(
         self.total_values["day"].setText(money.fmt(total.day, cur))
 
     def _empty_page(self, which: str) -> QWidget:
-        texts = {
-            "gear": (
-                "No gear yet.",
-                "Import Spreadsheet…",
-                self.import_sheet,
-                "New Gear",
-                lambda: self.new("gear"),
-            ),
-            "packages": ("No kits yet.", "New Kit", lambda: self.new("packages"), "", None),
-            "out": ("Nothing's out.", "New Rental", lambda: self.new("rentals"), "", None),
-            "upcoming": ("Nothing coming up.", "New Rental", lambda: self.new("rentals"), "", None),
-            "rentals": ("No rentals yet.", "New Rental", lambda: self.new("rentals"), "", None),
-        }
-        text, a1, s1, a2, s2 = texts[which]
-        self.empty_text.setText(text)
-        self._empty_slots = [s1, s2]
-        for btn, label in ((self.empty_btn, a1), (self.empty_btn2, a2)):
-            btn.setText(label)
-            btn.setVisible(bool(label))
+        if which == "gear":
+            self.empty.show_for(
+                (
+                    ("edit", "Add Manually", "One piece at a time", "", lambda: self.new("gear")),
+                    (
+                        "table",
+                        "Import Spreadsheet…",
+                        "Excel or CSV",
+                        "Or drop a spreadsheet on this page.",
+                        self.import_sheet,
+                    ),
+                    ("link", "Google Sheets…", "From a share link", "", self.import_google),
+                ),
+                sheet_tile=1,
+            )
+        elif which == "packages":
+            self.empty.show_for(
+                (("case", "New Kit", "Gear that rents together", "", lambda: self.new("packages")),)
+            )
+        else:
+            icon = {"out": "camera", "upcoming": "clock", "rentals": "receipt"}[which]
+            self.empty.show_for(
+                ((icon, "New Rental", "A quote or a booking", "", lambda: self.new("rentals")),)
+            )
         return self.empty
 
     def _inspector_empty(self, kind: str) -> None:

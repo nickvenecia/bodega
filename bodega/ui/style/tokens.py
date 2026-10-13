@@ -151,6 +151,10 @@ LIST_GAP = NAV_GAP
 AVATAR = 32  # your profile's initials, bottom of the sidebar
 ASSISTANT_ICON = 28  # the assistant's face next to its title
 ASSISTANT_ICON_BIG = 64  # and saying hi in an empty chat
+START_TILE_W = (
+    184  # one way to start on an empty page (three fit beside the inspector on the smallest window)
+)
+START_BADGE = 40  # the circle behind a start tile's icon
 PROFILE_CARD_H = 48
 TOOLBAR_H = 64  # the bar above a table: title, search, New
 SEARCH_W = 440  # the search box gets the room the dropdowns had
