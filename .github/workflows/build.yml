@@ -259,6 +259,16 @@ jobs:
             echo "go=true" >> "$GITHUB_OUTPUT"
           fi
       - if: steps.still.outputs.go == 'true'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false  # only the changelog is read
+      - if: steps.still.outputs.go == 'true'
+        name: Release notes
+        # this version's CHANGELOG entries, then the downloads: what the update window shows people
+        env:
+          TAG: ${{ needs.lint.outputs.tag }}
+        run: python3 scripts/release_notes.py "$TAG" > "$RUNNER_TEMP/release-notes.md"
+      - if: steps.still.outputs.go == 'true'
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: artifacts
@@ -269,18 +279,4 @@ jobs:
           tag_name: ${{ needs.lint.outputs.tag }}
           target_commitish: ${{ github.sha }}  # on main, the tag is made here, on the commit that was built
           files: artifacts/*
-          generate_release_notes: true
-          body: |
-            ## Download
-            | Your computer | File |
-            |---|---|
-            | Mac with Apple Silicon (M1 and newer) | `Bodega-mac-apple-silicon.dmg` |
-            | Intel Mac | `Bodega-mac-intel.dmg` |
-            | Windows (installer) | `Bodega-windows-setup.exe` |
-            | Windows (no install) | `Bodega-windows-portable.zip` |
-            | Linux (one file — double-click to run) | `Bodega-linux-x64.AppImage` |
-            | Linux (folder + install script) | `Bodega-linux-x64.tar.gz` |
-
-            Everything Bodega needs is inside — nothing else to install.
-            **First launch on Mac:** if macOS says it can't check the app, open **System Settings → Privacy & Security** and click **Open Anyway**.
-            **First launch on Windows:** if SmartScreen appears, click **More info → Run anyway**.
+          body_path: ${{ runner.temp }}/release-notes.md
