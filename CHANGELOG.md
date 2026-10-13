@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- A new look when there's nothing yet: the place's icon, a short headline and the ways to start. Empty gear offers
+  three tiles (Import Spreadsheet…, Google Sheets…, Add by Hand), and a spreadsheet dragged onto the window comes in
+  too. Search and the filter stay hidden until there's something to search.
+
 ## 1.1.5
 
 - A sidebar section's + fades in only while the pointer is over that section.

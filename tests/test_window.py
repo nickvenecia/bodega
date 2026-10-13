@@ -26,9 +26,57 @@ def test_first_launch_is_empty(qapp, data_folder):
 
     w = MainWindow(Library(data_folder).load())
     w.show()
-    assert w.pages.currentWidget() is w.empty and "No gear" in w.empty_text.text()
+    assert w.pages.currentWidget() is w.empty and "Add your gear" in w.empty.title.text()
+    assert len(w.empty.tiles) == 3 and not w.search.isVisible()  # nothing to search yet
     w.go("rentals")
     assert "profile" in w.rentals.empty_title.text().lower()
+    assert not w.empty.tiles and w.empty.button.text() == "New Rental"
+    w.close()
+
+
+def test_empty_gear_page_starts_and_takes_a_dropped_sheet(qapp, data_folder, tmp_path):
+    from PySide6.QtCore import QMimeData, QPointF, QUrl
+    from PySide6.QtGui import QDropEvent
+
+    from bodega.ui.components.empty import sheet_in
+    from bodega.ui.window.main_window import MainWindow
+
+    w = MainWindow(Library(data_folder).load())
+    w.show()
+    w.empty.tiles[2].clicked.emit()  # Add by Hand: a new piece, open on the right
+    assert len(w.lib.items) == 1 and w.pages.currentWidget() is w.gear_table and w.search.isVisible()
+    w.deselect()  # left blank, so it goes
+    assert not w.lib.items and w.pages.currentWidget() is w.empty
+
+    def mime(name: str) -> QMimeData:
+        m = QMimeData()
+        m.setUrls([QUrl.fromLocalFile(str(tmp_path / name))])
+        return m
+
+    assert sheet_in(mime("Gear.XLSX")) == tmp_path / "Gear.XLSX"
+    assert sheet_in(mime("photo.jpg")) is None
+
+    def drop(name: str) -> list:
+        got: list = []
+        w.empty.dropped.connect(got.append)
+        m = mime(name)  # kept alive: the event only points at it
+        e = QDropEvent(
+            QPointF(10, 10),
+            Qt.DropAction.CopyAction,
+            m,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
+        w.empty.dropEvent(e)
+        QApplication.processEvents()
+        w.empty.dropped.disconnect(got.append)
+        return got
+
+    # (the file isn't there, so the window's import just says it can't read it: no Import window opens)
+    assert drop("Gear.csv") == [tmp_path / "Gear.csv"]
+    assert drop("photo.jpg") == []
+    w.go("kits")  # only the gear page takes spreadsheets
+    assert drop("Gear.csv") == []
     w.close()
 
 

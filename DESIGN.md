@@ -34,6 +34,7 @@ If you need a value that doesn't exist, add a token, give it a comment, and add 
 |---|---|---|
 | `ICON_SM` | 14 | Icons inside small buttons (scissors, info, close) |
 | `ICON` | 16 | Icons inside normal buttons and menus |
+| `ICON_XL` | 32 | The place's icon on an empty page (in an `EMPTY_BADGE` circle) |
 
 All icons are line icons drawn as SVG in `theme._SVG` and made with `theme.icon(name, color)` (buttons, menus) or
 `widgets.IconLabel(name, tone)` (an icon that isn't a button). Both follow light and dark by themselves; never draw
@@ -43,7 +44,7 @@ an icon once with a color and keep the picture. Add new icons there; don't load 
 
 `SIDEBAR_W`, `INSPECTOR_W`, `TOOLBAR_H`, `SEARCH_W`, `TABLE_ROW_H`, `NAV_H`, `ROW_INDENT`, `TEXT_BOX_H`, `TEXT_BOX_TALL`, `TEXT_BOX_TERMS`,
 `NUM_FIELD_W`, `QTY_FIELD_W`, `LOGO_THUMB`, `PAGE_GAP`, `PAGE_SHADOW`, `DIALOG_W` (and `DIALOG_W_WIDE`, `DIALOG_W_XWIDE`),
-`PROFILE_DIALOG_H`, `PICKER_SIZE`, `PAGE_DIALOG_SIZE`, `CAL_*`, `DAY_W`, `WINDOW_SIZE`, `WINDOW_MIN`, `COL_W` (every
+`PROFILE_DIALOG_H`, `EMPTY_BADGE`, `START_TILE_W`, `START_BADGE`, `PICKER_SIZE`, `PAGE_DIALOG_SIZE`, `CAL_*`, `DAY_W`, `WINDOW_SIZE`, `WINDOW_MIN`, `COL_W` (every
 table column), `LIST_ROW_H`, `NAV_GAP`, `ROW_INSET`, `NOTES_H`. Timings too: `DOCK_MS`, `SAVE_DELAY_MS`,
 `TABLE_DELAY_MS`, `TOAST_MS`, `UPDATE_CHECK_DELAY_MS`, `UPDATE_WAIT_MS`, `QUIT_WAIT_MS`. Use these names, never the numbers.
 
@@ -188,6 +189,8 @@ button is a capsule CONTROL_H tall; every icon button is a circle:
 | Rental line | `rental_panel.LineEditor` | A header row (what it is, its amount, ⋯) that folds its fields away. One open at a time |
 | Picking gear | `gear_picker.GearPicker` | Search and tick: attaching, filling a package, adding to a rental |
 | Long one-line text | `widgets.ElidedLabel` | Text that may not fit (gear names!): cut short with "…", the full text in its tooltip |
+| Empty page | `empty.EmptyPage` | Where a table would be with nothing in it: the place's sidebar icon in an `ACCENT_TINT` circle, a short headline (no full stop), then one Primary button |
+| Start tile | `empty.StartTile` (`#StartTile`) | On an empty page with more than one way to begin (empty gear: Import Spreadsheet…, Google Sheets…, Add by Hand): a raised `RADIUS_LG` tile, its icon in a small tinted circle, a name and a few words, all centred |
 
 Choosing a control:
 - Pick one setting → **dropdown**, always, even with only 2–3 choices. Status, From, Renter, Belongs To, Priced By,
@@ -261,7 +264,8 @@ rentals are the plus underneath.
 - **The middle is one table** (`ui/tables.py`): a toolbar (`TOOLBAR_H`) with the place's name and count, Search,
   the filter icon (`filters.FilterButton`: Divide By, Show, Company, Missing, Clear Filters; the accent while on),
   the share button (import, Google Sheets, inventory list, rate card, labels, CSV), the assistant, then **one
-  primary round +**: New Gear or New Group / New Kit / New Rental. (A sidebar section's own + is the Mac's: a small
+  primary round +**: New Gear or New Group / New Kit / New Rental. With nothing in the place yet, search and the filter
+  hide and the empty page shows instead (`EmptyPage`); a spreadsheet dropped on the empty gear page is imported. (A sidebar section's own + is the Mac's: a small
   plain gray glyph, `SectionAdd`, that fades in over `FADE_MS` while the pointer is over its own section.) Columns sort by clicking their header.
   The Calendar (`ui/calendar_view.py`) replaces the table for rentals: one row per rental, a bar per stretch of dates.
 - **Gear is divided** by group in All Gear and by company inside a group (or not at all): an accent band (`DIVIDER`,
