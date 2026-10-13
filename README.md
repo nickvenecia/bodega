@@ -159,13 +159,10 @@ Build the app yourself: `pyinstaller bodega.spec --noconfirm` → `dist/`.
 
 ## Making a release
 
-```bash
-# bump __version__ in bodega/__init__.py, then:
-git tag v1.0.1 && git push --tags
-```
-
-GitHub Actions builds the Mac (Apple Silicon and Intel), Windows and Linux versions, tests each one, and attaches
-them to a new Release. To sign the Mac app, add the `MACOS_*` / `APPLE_*` secrets.
+Bump `__version__` in `bodega/__init__.py` and name a `CHANGELOG.md` section for it, in the pull request, then merge
+it. When main has a version that isn't released yet, GitHub Actions builds the Mac (Apple Silicon and Intel),
+Windows and Linux versions, tests each one, tags the commit `vX.Y.Z` and attaches them to a new Release. (Pushing a
+tag `vX.Y.Z` by hand still works too.) To sign the Mac app, add the `MACOS_*` / `APPLE_*` secrets.
 
 ## Changing the icon
 Run `python scripts/make_icon.py`, or replace `bodega/assets/icon.png` with a 1024×1024 PNG (transparent corners).

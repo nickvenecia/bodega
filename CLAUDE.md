@@ -154,8 +154,11 @@ BODEGA_DATA_DIR=/tmp/x python -m bodega   # a throwaway data folder
 ```
 
 ## Releasing
-Bump `__version__` in `bodega/__init__.py`, update CHANGELOG, commit, tag `vX.Y.Z`, push the tag.
-The build refuses a tag that doesn't match `__version__` (an app reporting an older number offers itself as an update).
+Merging is releasing. A pull request with a change users will notice also bumps `__version__` in
+`bodega/__init__.py` (patch for fixes and polish, minor for a new feature; one bump per pull request, however many
+commits) and puts its CHANGELOG entries under that version (never "Unreleased"). When main has a version with no
+tag yet, the build tags it `vX.Y.Z` and publishes the Release; the owner only merges. A pushed tag still works, and
+the build refuses one that doesn't match `__version__` (an app reporting an older number offers itself as an update).
 CI attaches Bodega-mac-apple-silicon.dmg, Bodega-mac-intel.dmg, Bodega-windows-setup.exe, Bodega-windows-portable.zip,
 Bodega-linux-x64.AppImage, Bodega-linux-x64.tar.gz. **These names are a contract** (README links + update.asset_name).
 update.REPO = "nickvenecia/bodega"; the repo must stay public.
