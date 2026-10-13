@@ -495,7 +495,8 @@ class MainWindow(
             self.empty.show_for(
                 "box",
                 "Add your gear",
-                tiles=(
+                (
+                    ("edit", "Add Manually", "One piece at a time", "", lambda: self.new("gear")),
                     (
                         "table",
                         "Import Spreadsheet…",
@@ -504,21 +505,24 @@ class MainWindow(
                         self.import_sheet,
                     ),
                     ("link", "Google Sheets…", "From a share link", "", self.import_google),
-                    ("edit", "Add by Hand", "One piece at a time", "", lambda: self.new("gear")),
                 ),
-                takes_sheets=True,
+                sheet_tile=1,
+            )
+            return self.empty
+        if which == "packages":
+            self.empty.show_for(
+                "case",
+                "No kits yet",
+                (("plus", "New Kit", "Gear that rents together", "", lambda: self.new("packages")),),
             )
             return self.empty
         icon, text = {
-            "packages": ("case", "No kits yet"),
             "out": ("camera", "Nothing's out"),
             "upcoming": ("clock", "Nothing coming up"),
             "rentals": ("receipt", "No rentals yet"),
         }[which]
-        if which == "packages":
-            self.empty.show_for(icon, text, button=("New Kit", lambda: self.new("packages")))
-        else:
-            self.empty.show_for(icon, text, button=("New Rental", lambda: self.new("rentals")))
+        new_rental = ("plus", "New Rental", "A quote or a booking", "", lambda: self.new("rentals"))
+        self.empty.show_for(icon, text, (new_rental,))
         return self.empty
 
     def _inspector_empty(self, kind: str) -> None:

@@ -1,6 +1,6 @@
 """What shows where a table would be when there's nothing in it yet: the place's icon in a soft circle, a
-headline, and the ways to start. Gear starts with three tiles (a spreadsheet, a Google Sheet, by hand), and a
-spreadsheet dropped anywhere on the page comes in too; kits and rentals get one button."""
+headline, and the ways to start as tiles. Gear starts three ways (manually, a spreadsheet, a Google Sheet), and a
+spreadsheet dropped anywhere on the page comes in too; kits and rentals start one way."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QWidget
+from PySide6.QtWidgets import QFrame, QLabel, QWidget
 
 from bodega.ui.components.widgets import IconLabel, hbox, repolish, vbox
 from bodega.ui.style import theme, tokens
@@ -98,7 +98,7 @@ class EmptyPage(QWidget):
         self.setAcceptDrops(True)
         self._key: tuple = ()
         self._slots: list[Callable] = []
-        self._takes_sheets = False
+        self._sheet_tile: int | None = None  # the tile that lights up while a spreadsheet is dragged in
         self.tiles: list[StartTile] = []
         lay = vbox(self, tokens.SPACE_5, 0)
         lay.addStretch(2)
@@ -112,29 +112,21 @@ class EmptyPage(QWidget):
         lay.addSpacing(tokens.SPACE_5)
         self.tile_row = hbox(spacing=tokens.SPACE_3)
         lay.addLayout(self.tile_row)
-        self.button = QPushButton()
-        self.button.setObjectName("Primary")
-        self.button.clicked.connect(lambda: self._slots and self._slots[0]())
-        lay.addWidget(self.button, 0, Qt.AlignmentFlag.AlignHCenter)
         lay.addStretch(3)
 
     def show_for(
         self,
         icon: str,
         title: str,
-        tiles: tuple[tuple[str, str, str, str, Callable], ...] = (),
-        button: tuple[str, Callable] | None = None,
-        takes_sheets: bool = False,
+        tiles: tuple[tuple[str, str, str, str, Callable], ...],
+        sheet_tile: int | None = None,
     ) -> None:
-        """The place's icon and headline, then either tiles (icon, title, detail, tooltip, what it does) or
-        one main button (label, what it does). `takes_sheets`: a spreadsheet dropped here is imported."""
-        self._takes_sheets = takes_sheets
+        """The place's icon and headline, then its tiles (icon, title, detail, tooltip, what it does).
+        `sheet_tile`: a spreadsheet dropped here is imported, and that tile lights up while it's dragged in."""
+        self._sheet_tile = sheet_tile
         self.title.setText(title)
         self.badge.icon.set_icon(icon)
-        self._slots = [t[4] for t in tiles] if tiles else ([button[1]] if button else [])
-        self.button.setVisible(button is not None and not tiles)
-        if button is not None:
-            self.button.setText(button[0])
+        self._slots = [t[4] for t in tiles]
         key = tuple(t[:4] for t in tiles)
         if key == self._key:
             return
@@ -144,8 +136,6 @@ class EmptyPage(QWidget):
             if w is not None:
                 w.deleteLater()
         self.tiles = []
-        if not tiles:
-            return
         self.tile_row.addStretch(1)
         for n, (name, label, detail, tip, _slot) in enumerate(tiles):
             tile = StartTile(name, label, detail, tip)
@@ -154,13 +144,13 @@ class EmptyPage(QWidget):
             self.tiles.append(tile)
         self.tile_row.addStretch(1)
 
-    # ---- a spreadsheet dragged in from the Finder or Explorer lights the first tile and is imported
+    # ---- a spreadsheet dragged in from the Finder or Explorer lights its tile and is imported
     def _light(self, on: bool) -> None:
-        if self.tiles:
-            self.tiles[0].set_hot(on)
+        if self._sheet_tile is not None and self._sheet_tile < len(self.tiles):
+            self.tiles[self._sheet_tile].set_hot(on)
 
     def dragEnterEvent(self, e):
-        if self._takes_sheets and sheet_in(e.mimeData()) is not None:
+        if self._sheet_tile is not None and sheet_in(e.mimeData()) is not None:
             e.acceptProposedAction()
             self._light(True)
         else:
@@ -171,7 +161,7 @@ class EmptyPage(QWidget):
 
     def dropEvent(self, e):
         self._light(False)
-        path = sheet_in(e.mimeData()) if self._takes_sheets else None
+        path = sheet_in(e.mimeData()) if self._sheet_tile is not None else None
         if path is None:
             e.ignore()
             return

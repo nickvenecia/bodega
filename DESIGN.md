@@ -189,8 +189,8 @@ button is a capsule CONTROL_H tall; every icon button is a circle:
 | Rental line | `rental_panel.LineEditor` | A header row (what it is, its amount, ⋯) that folds its fields away. One open at a time |
 | Picking gear | `gear_picker.GearPicker` | Search and tick: attaching, filling a package, adding to a rental |
 | Long one-line text | `widgets.ElidedLabel` | Text that may not fit (gear names!): cut short with "…", the full text in its tooltip |
-| Empty page | `empty.EmptyPage` | Where a table would be with nothing in it: the place's sidebar icon in an `ACCENT_TINT` circle, a short headline (no full stop), then one Primary button |
-| Start tile | `empty.StartTile` (`#StartTile`) | On an empty page with more than one way to begin (empty gear: Import Spreadsheet…, Google Sheets…, Add by Hand): a raised `RADIUS_LG` tile, its icon in a small tinted circle, a name and a few words, all centred |
+| Empty page | `empty.EmptyPage` | Where a table would be with nothing in it: the place's sidebar icon in an `ACCENT_TINT` circle, a short headline (no full stop), then its start tiles |
+| Start tile | `empty.StartTile` (`#StartTile`) | Every way to begin on an empty page (empty gear: Add Manually, Import Spreadsheet…, Google Sheets…; a kit or rental page: just its New): a raised `RADIUS_LG` tile, its icon in a small tinted circle, a name and a few words, all centred |
 
 Choosing a control:
 - Pick one setting → **dropdown**, always, even with only 2–3 choices. Status, From, Renter, Belongs To, Priced By,

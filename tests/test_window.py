@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QLabel
 
 from bodega.core import sample
 from bodega.core.model import RentalLine
@@ -30,7 +30,7 @@ def test_first_launch_is_empty(qapp, data_folder):
     assert len(w.empty.tiles) == 3 and not w.search.isVisible()  # nothing to search yet
     w.go("rentals")
     assert "profile" in w.rentals.empty_title.text().lower()
-    assert not w.empty.tiles and w.empty.button.text() == "New Rental"
+    assert [t.findChild(QLabel, "StartTitle").text() for t in w.empty.tiles] == ["New Rental"]
     w.close()
 
 
@@ -43,7 +43,7 @@ def test_empty_gear_page_starts_and_takes_a_dropped_sheet(qapp, data_folder, tmp
 
     w = MainWindow(Library(data_folder).load())
     w.show()
-    w.empty.tiles[2].clicked.emit()  # Add by Hand: a new piece, open on the right
+    w.empty.tiles[0].clicked.emit()  # Add Manually: a new piece, open on the right
     assert len(w.lib.items) == 1 and w.pages.currentWidget() is w.gear_table and w.search.isVisible()
     w.deselect()  # left blank, so it goes
     assert not w.lib.items and w.pages.currentWidget() is w.empty
