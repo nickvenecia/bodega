@@ -44,7 +44,7 @@ an icon once with a color and keep the picture. Add new icons there; don't load 
 `SIDEBAR_W`, `INSPECTOR_W`, `TOOLBAR_H`, `SEARCH_W`, `TABLE_ROW_H`, `NAV_H`, `ROW_INDENT`, `TEXT_BOX_H`, `TEXT_BOX_TALL`, `TEXT_BOX_TERMS`,
 `NUM_FIELD_W`, `QTY_FIELD_W`, `LOGO_THUMB`, `PAGE_GAP`, `PAGE_SHADOW`, `DIALOG_W` (and `DIALOG_W_WIDE`, `DIALOG_W_XWIDE`),
 `PROFILE_DIALOG_H`, `START_TILE_W`, `START_BADGE`, `PICKER_SIZE`, `PAGE_DIALOG_SIZE`, `CAL_*`, `DAY_W`, `WINDOW_SIZE`, `WINDOW_MIN`, `COL_W` (every
-table column), `LIST_ROW_H`, `NAV_GAP`, `ROW_INSET`, `NOTES_H`. Timings too: `DOCK_MS`, `SAVE_DELAY_MS`,
+table column), `LIST_ROW_H`, `NAV_GAP`, `ROW_INSET`, `NOTES_H`, `NOTES_LINE`. Timings too: `DOCK_MS`, `SAVE_DELAY_MS`,
 `TABLE_DELAY_MS`, `TOAST_MS`, `UPDATE_CHECK_DELAY_MS`, `UPDATE_WAIT_MS`, `QUIT_WAIT_MS`. Use these names, never the numbers.
 
 **Fonts:** one family (Inter, `looks.FONT`, shared with the paper), loaded once in `app.py`. Every size is a
@@ -190,6 +190,7 @@ button is a capsule CONTROL_H tall; every icon button is a circle:
 | Long one-line text | `widgets.ElidedLabel` | Text that may not fit (gear names!): cut short with "…", the full text in its tooltip |
 | Empty page | `empty.EmptyPage` | Where a table would be with nothing in it: only its start tiles, centred (no headline above them; the page title says where you are) |
 | Start tile | `empty.StartTile` (`#StartTile`) | Every way to begin on an empty page (empty gear: Add Manually, Import Spreadsheet…, Google Sheets…; a kit or rental page: just its New, with the place's sidebar icon): a raised `RADIUS_LG` tile, its icon in a small tinted circle, a name and a few words, all centred |
+| What's new | `update.Notes` (`#WhatsNew`) | The update window's notes: a soft `FILL` box (`RADIUS_LG`, `SPACE_4` inside) only as tall as its words (up to `NOTES_H`, then it scrolls); each section a small label like a Section's, each change an accent dot and its words at `NOTES_LINE` line height. Release text is escaped, never read as HTML; only https links open |
 
 Choosing a control:
 - Pick one setting → **dropdown**, always, even with only 2–3 choices. Status, From, Renter, Belongs To, Priced By,

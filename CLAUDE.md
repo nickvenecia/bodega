@@ -110,6 +110,7 @@ bodega/
   cli.py           `python -m bodega cli sample OUT.pdf --doc agreement|quote|inventory|ratecard|package`,
                    `python -m bodega cli import SHEET.xlsx OUT.pdf`
 scripts/make_icon.py   draws bodega/assets/icon.png ("b." on the dark tile, the full stop in sky blue)
+scripts/release_notes.py   a Release's text: the version's CHANGELOG entries, then the downloads
 tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR [SHEET.xlsx]
 ```
 
@@ -159,6 +160,8 @@ Merging is releasing. A pull request with a change users will notice also bumps 
 commits) and puts its CHANGELOG entries under that version (never "Unreleased"). When main has a version with no
 tag yet, the build tags it `vX.Y.Z` and publishes the Release; the owner only merges. A pushed tag still works, and
 the build refuses one that doesn't match `__version__` (an app reporting an older number offers itself as an update).
+The Release's text is that version's CHANGELOG entries (scripts/release_notes.py), and the update window shows them:
+write them in plain words, for the people using Bodega.
 CI attaches Bodega-mac-apple-silicon.dmg, Bodega-mac-intel.dmg, Bodega-windows-setup.exe, Bodega-windows-portable.zip,
 Bodega-linux-x64.AppImage, Bodega-linux-x64.tar.gz. **These names are a contract** (README links + update.asset_name).
 update.REPO = "nickvenecia/bodega"; the repo must stay public.

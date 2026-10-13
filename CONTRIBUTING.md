@@ -15,7 +15,7 @@ bodega/
   app.py       Starts the window (fonts, stylesheet, one window at a time, --smoke-test)
   cli.py       Same drawing without a window: `python -m bodega cli ...`
 tests/         One test file per area (test_money.py, test_store.py, test_render.py, test_window.py…)
-scripts/       make_icon.py, make_fonts.py
+scripts/       make_icon.py, make_fonts.py, release_notes.py (a Release's text, from CHANGELOG.md)
 packaging/     Installer files per OS
 ```
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.7
+
+- What's new in an update is easier to read: Bodega's own type, a small label, a dot before each change and room
+  between them, in a soft box only as tall as it needs. It's written in plain words (this changelog), without
+  GitHub's links and names.
+
 ## 1.1.6
 
 - A new look when there's nothing yet: the ways to start, as tiles. Empty gear offers three (Add Manually, Import
