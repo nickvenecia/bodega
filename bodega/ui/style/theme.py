@@ -343,8 +343,7 @@ QCalendarWidget QToolButton:hover {{ background: {tokens.RAISED_HOVER}; border-r
 #PanelFoot {{ background: transparent; border: none; }}
 #PanelBottom {{ background: {tokens.PANEL}; border-top: 1px solid {tokens.BORDER}; }}
 
-/* ---------- popups, toasts */
-#Toast {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {RADIUS_LG}px; padding: {SPACE_2}px {SPACE_4}px; }}
+/* ---------- popups */
 QTextBrowser#Notes {{ background: {tokens.WELL}; color: {tokens.TEXT}; border: 1px solid {tokens.BORDER}; border-radius: {RADIUS}px;
     padding: {SPACE_2}px; }}
 QTextBrowser#WhatsNew {{ background: {tokens.FILL}; color: {tokens.TEXT}; border: none; border-radius: {RADIUS_LG}px; }}
@@ -391,6 +390,7 @@ _SVG = {
     "export": '<path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M20 14v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5"/>',
     "printer": '<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/>',
     "copy": '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
+    "clipboard": '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
     "receipt": '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
     # the assistant: a round speech bubble with a smile and a little tail (Bodega's own, nobody's logo)
     "assistant": '<path d="M5.49 16.46A8.5 8.5 0 1 1 7.75 18.36L5.2 19.7Z"/>'

@@ -98,6 +98,20 @@ def test_broken_redirects_are_refused_politely(monkeypatch):
         web.fetch("https://shop.example.com/x")
 
 
+@pytest.mark.parametrize("status", [401, 403, 429, 503])
+def test_a_store_that_turns_bodega_away_is_named(monkeypatch, status):
+    import socket
+    from email.message import Message
+
+    monkeypatch.setattr(socket, "getaddrinfo", lambda *a, **k: [(0, 0, 0, "", ("93.184.215.14", 443))])
+    monkeypatch.setattr(web, "_get", lambda url, ip, timeout, max_bytes: web._Reply(status, Message(), b""))
+    link = "https://www.bhphotovideo.com/c/product/1592483-REG/sony_fx6.html"
+    with pytest.raises(web.Refused, match=r"^B&H "):
+        web.fetch(link)
+    with pytest.raises(web.Refused, match=r"^B&H "):  # Check Price can tell it apart, and offer the way round
+        prices.fetch(link)
+
+
 def test_tricky_links_are_not_web_links():
     for bad in (
         "https://[x",

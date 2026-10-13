@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QByteArray, QSize, Qt, QTimer
+from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt, QTimer
 from PySide6.QtGui import QGuiApplication, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFrame,
@@ -100,7 +100,7 @@ class MainWindow(
         esc = QShortcut(QKeySequence(Qt.Key.Key_Escape), self)
         esc.activated.connect(self.deselect)
         self.setCentralWidget(root)
-        self.toaster = Toast(self)
+        self.toaster = Toast(self, self._toast_area)
 
         self._save_timer = QTimer(self, singleShot=True, interval=tokens.SAVE_DELAY_MS, timeout=self.flush)
         self._table_timer = QTimer(
@@ -454,7 +454,7 @@ class MainWindow(
         if item_id in self.lib.items:
             self.open("gear", item_id)
         else:
-            self.toast("That label's piece isn't in Bodega anymore.")
+            self.toast("That label's piece isn't in Bodega anymore.", "problem")
 
     def _apply_search(self) -> None:
         t = self._table()
@@ -664,8 +664,14 @@ class MainWindow(
     # ------------------------------------------------------------------ updates
 
     # ------------------------------------------------------------------ misc
-    def toast(self, text: str) -> None:
-        self.toaster.show_message(text)
+    def toast(self, text: str, tone: str = "") -> None:
+        """A short message over the page. `tone`: "done" (it worked), "problem" (it didn't: say what to do),
+        or "" for news."""
+        self.toaster.show_message(text, tone)
+
+    def _toast_area(self) -> QRect:
+        """Where toasts float: centred over the page, between the side panels, above the totals."""
+        return QRect(self.pages.mapTo(self, QPoint(0, 0)), self.pages.size())
 
     def show(self) -> None:
         """The first time: filling the screen (all of it but the menu bar and Dock). After that: the size
@@ -701,6 +707,8 @@ class MainWindow(
         self.dock.set_target(w)
         for i in range(self.inspector.count()):  # every right-hand panel, whatever it is
             self.inspector.widget(i).setFixedWidth(w)
+        if self.toaster.isVisible():
+            self.toaster.place()
 
     def _let_work_finish(self) -> None:
         """A price check or update check may still be waiting on a website. Give it a moment; if it's still

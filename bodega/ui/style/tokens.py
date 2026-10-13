@@ -106,7 +106,12 @@ TABLE_DELAY_MS = 350  # refresh the table this long after an edit
 UPDATE_CHECK_DELAY_MS = 1500  # the automatic update check, just after the window is up (every launch)
 UPDATE_WAIT_MS = 1500  # a found update waits this long between looks while another window is open
 TOAST_MS = 3500  # how long a toast stays up
+TOAST_MS_PER_CHAR = 60  # …or longer, for a long one: time to read it
 TOAST_MAX_W = 520
+TOAST_IN_MS = 220  # it rises and fades in…
+TOAST_OUT_MS = 180  # …and fades away
+TOAST_RISE = 10  # how far it rises as it comes in
+TOAST_LIFT = SPACE_4  # its gap above the bottom of the page
 NAV_GAP = 2  # between rows in the sidebar
 ROW_INSET = 2  # a table row's rounded highlight sits this far inside the row
 LINE_STROKE = 1.8  # drawn chevrons
@@ -217,6 +222,14 @@ DARK = {
     "GLASS_STROKE": "rgba(255, 255, 255, 0.10)",  # its one hairline: faintly lighter than the panel
     "GLASS_EDGE": "rgba(255, 255, 255, 0.18)",  # …a little brighter along the top, where light catches it
     "GLASS_SHADOW": "rgba(0, 0, 0, 0.35)",  # soft and wide
+    "TOAST": "#3A393C",  # a toast: a step lighter than the panels, so it stands out over anything
+    "TOAST_TEXT": "#F4F2F1",
+    "TOAST_EDGE": "rgba(255, 255, 255, 0.12)",
+    "TOAST_SHADOW": "rgba(0, 0, 0, 0.60)",  # …lifted by a deeper shadow than the panels'
+    "TOAST_DONE": "#4CC38A",  # its icon: it worked
+    "TOAST_PROBLEM": "#E9B949",  # …it didn't (amber: red means late or delete)
+    "TOAST_PROBLEM_FILL": "#4A3F25",  # a problem's toast is tinted amber, so it's never missed
+    "TOAST_PROBLEM_EDGE": "rgba(233, 185, 73, 0.45)",
     "CHIP": "rgba(74, 144, 247, 0.16)",  # a tinted capsule (+ Link, + Notes)
     "CHIP_HOVER": "rgba(74, 144, 247, 0.26)",
     "FIELD": "rgba(255, 255, 255, 0.07)",  # a text field or dropdown: lightly frosted
@@ -266,6 +279,14 @@ LIGHT = {
     "GLASS_STROKE": "rgba(0, 0, 0, 0.06)",  # a very faint gray hairline
     "GLASS_EDGE": "rgba(0, 0, 0, 0.04)",  # (fainter still along the top)
     "GLASS_SHADOW": "rgba(0, 0, 0, 0.08)",  # soft and wide
+    "TOAST": "#2C2C2E",  # dark on the white page: easy to spot
+    "TOAST_TEXT": "#FFFFFF",
+    "TOAST_EDGE": "rgba(255, 255, 255, 0.10)",
+    "TOAST_SHADOW": "rgba(0, 0, 0, 0.30)",
+    "TOAST_DONE": "#4CC38A",  # (the dark look's: these sit on the dark toast)
+    "TOAST_PROBLEM": "#E9B949",
+    "TOAST_PROBLEM_FILL": "#4A3F25",
+    "TOAST_PROBLEM_EDGE": "rgba(233, 185, 73, 0.45)",
     "CHIP": "rgba(47, 111, 219, 0.10)",
     "CHIP_HOVER": "rgba(47, 111, 219, 0.18)",
     "FIELD": "rgba(255, 255, 255, 1.0)",

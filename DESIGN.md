@@ -45,7 +45,8 @@ an icon once with a color and keep the picture. Add new icons there; don't load 
 `NUM_FIELD_W`, `QTY_FIELD_W`, `LOGO_THUMB`, `PAGE_GAP`, `PAGE_SHADOW`, `DIALOG_W` (and `DIALOG_W_WIDE`, `DIALOG_W_XWIDE`),
 `PROFILE_DIALOG_H`, `START_TILE_W`, `START_BADGE`, `PICKER_SIZE`, `PAGE_DIALOG_SIZE`, `CAL_*`, `DAY_W`, `WINDOW_SIZE`, `WINDOW_MIN`, `COL_W` (every
 table column), `LIST_ROW_H`, `NAV_GAP`, `ROW_INSET`, `NOTES_H`, `NOTES_LINE`. Timings too: `DOCK_MS`, `SAVE_DELAY_MS`,
-`TABLE_DELAY_MS`, `TOAST_MS`, `UPDATE_CHECK_DELAY_MS`, `UPDATE_WAIT_MS`, `QUIT_WAIT_MS`. Use these names, never the numbers.
+`TABLE_DELAY_MS`, `TOAST_MS` (and `TOAST_IN_MS`, `TOAST_OUT_MS`), `UPDATE_CHECK_DELAY_MS`, `UPDATE_WAIT_MS`, `QUIT_WAIT_MS`.
+Use these names, never the numbers.
 
 **Fonts:** one family (Inter, `looks.FONT`, shared with the paper), loaded once in `app.py`. Every size is a
 `TEXT_*` token in pixels and every weight a `WEIGHT_*` token; in code, make a font with `theme.font(size, weight)`,
@@ -142,6 +143,8 @@ The blue's shades are hand-set in `DARK` / `LIGHT`. The app icon and the paper k
 | `GOOD` / `WARN` / `BAD` | Returned / out or in repair / late or double-booked. |
 | `PAPER` / `SHADOW` | The paper and its shadow in the preview |
 | `BAD_TINT` / `BAD_EDGE` | Danger button hover / a failed card's outline |
+| `TOAST` / `TOAST_TEXT` / `TOAST_EDGE` / `TOAST_SHADOW` | A toast: a lighter card in dark, a dark card on the white page in light, so it's never missed |
+| `TOAST_DONE` / `TOAST_PROBLEM` (+ `_FILL`, `_EDGE`) | Its icon when something worked; when it didn't (amber icon on an amber-tinted toast) |
 
 - The accent means "selected" or "do this". **One** Primary button per view (Save PDF…, Save, Import Spreadsheet…).
 - Status color comes from data, not code: `widgets.set_tone(w, tone, text)` with "quote" | "booked" | "out" |
@@ -190,6 +193,7 @@ button is a capsule CONTROL_H tall; every icon button is a circle:
 | Long one-line text | `widgets.ElidedLabel` | Text that may not fit (gear names!): cut short with "…", the full text in its tooltip |
 | Empty page | `empty.EmptyPage` | Where a table would be with nothing in it: only its start tiles, centred (no headline above them; the page title says where you are) |
 | Start tile | `empty.StartTile` (`#StartTile`) | Every way to begin on an empty page (empty gear: Add Manually, Import Spreadsheet…, Google Sheets…; a kit or rental page: just its New, with the place's sidebar icon): a raised `RADIUS_LG` tile, its icon in a small tinted circle, a name and a few words, all centred |
+| Toast | `widgets.Toast`, through `MainWindow.toast(text, tone)` | A short message, centred over the page just above the totals: it rises and fades in, the pointer resting on it keeps it, and it never takes a click (what's under it still works). `tone`: "done" (a green check: Copied, Saved, Moved), "problem" (amber: it didn't work, and the words say what to do), or "" for news (an info sign: Getting photos…) |
 | What's new | `update.Notes` (`#WhatsNew`) | The update window's notes: a soft `FILL` box (`RADIUS_LG`, `SPACE_4` inside) only as tall as its words (up to `NOTES_H`, then it scrolls); each section a small label like a Section's, each change an accent dot and its words at `NOTES_LINE` line height. Release text is escaped, never read as HTML; only https links open |
 
 Choosing a control:

@@ -16,6 +16,7 @@ from pathlib import Path
 from PySide6.QtCore import QPointF, QRectF, QStringListModel, Qt, QThread, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QPainter, QPainterPath
 from PySide6.QtWidgets import (
+    QApplication,
     QCompleter,
     QFileDialog,
     QFrame,
@@ -62,6 +63,7 @@ from bodega.ui.style import theme, tokens
 
 log = get_logger(__name__)
 
+PASTE_INSTEAD = "In your browser, right-click the photo, choose Copy Image, then paste it here."
 STATUS_LABELS = {"ready": "Ready", "repair": "In Repair", "retired": "Retired"}
 NEW = "\x00new"  # the "New Department…" / "New Group…" row
 EXTRAS = [
@@ -96,7 +98,7 @@ class Block(Card):
 
 class PhotoBox(QFrame):
     """The piece's photo at the top of its panel: the whole picture, rounded, on a soft tint, with a round ⋯
-    (Replace, From the Link, Remove) in its corner."""
+    (Replace, From the Link, Paste, Remove) in its corner."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -145,7 +147,7 @@ class ItemPanel(DetailsBase):
     duplicate_wanted = Signal(str)
     rent_wanted = Signal(str)
     open_rental = Signal(str)
-    toast_wanted = Signal(str)  # a short message for the window to show
+    toast_wanted = Signal(str, str)  # a short message for the window to show, and its tone (MainWindow.toast)
     ai_wanted = Signal(str)  # Update with AI (this piece)
 
     def __init__(self, lib: Library, parent: QWidget | None = None):
@@ -176,13 +178,15 @@ class ItemPanel(DetailsBase):
         pm = QMenu(self.photo.more)
         pm.addAction(theme.menu_icon("image"), "Replace…", self.choose_photo)
         self.act_photo_link = pm.addAction(theme.menu_icon("link"), "From the Link", self.photo_from_link)
+        self.act_photo_paste = pm.addAction(theme.menu_icon("clipboard"), "Paste", self.paste_photo)
+        pm.aboutToShow.connect(self._paste_state)
         pm.addSeparator()
         pm.addAction(theme.menu_icon("trash"), "Remove Photo", self.remove_photo)
         self.photo.more.setMenu(pm)
         self.photo.hide()
         lay.addWidget(self.photo)
         self._photo_job: Worker | None = None
-        self.setAcceptDrops(True)  # drop a picture anywhere on the panel
+        self.setAcceptDrops(True)  # drop a picture anywhere on the panel (a file, or one out of a browser)
 
         # what it is
         self.name = TitleEdit()
@@ -283,6 +287,7 @@ class ItemPanel(DetailsBase):
         self.check_price.setCursor(Qt.CursorShape.PointingHandCursor)
         self.price_found = QLabel()
         self.price_found.setObjectName("Meta")
+        self.price_found.setWordWrap(True)
         self.use_price = QPushButton("Use It")
         self.use_price.hide()
         prow.addWidget(self.check_price)
@@ -341,6 +346,8 @@ class ItemPanel(DetailsBase):
         am = QMenu(self.add_photo)
         am.addAction(theme.menu_icon("image"), "Choose a File…", self.choose_photo)
         self.act_add_photo_link = am.addAction(theme.menu_icon("link"), "From the Link", self.photo_from_link)
+        self.act_add_photo_paste = am.addAction(theme.menu_icon("clipboard"), "Paste", self.paste_photo)
+        am.aboutToShow.connect(self._paste_state)
         self.add_photo.setMenu(am)
         arow.addWidget(self.add_photo)
         for key, title in EXTRAS:
@@ -502,7 +509,7 @@ class ItemPanel(DetailsBase):
         if url:  # only web pages open: never file://, smb:// or an app's own links
             QDesktopServices.openUrl(QUrl(url))
         elif self.link.text().strip():
-            self.toast_wanted.emit("Only web links (https://…) open from here.")
+            self.toast_wanted.emit("Only web links (https://…) open from here.", "problem")
 
     def _check_price(self) -> None:
         if self.it is None or not self.it.link.strip() or self._price_thread is not None:
@@ -641,17 +648,28 @@ class ItemPanel(DetailsBase):
         try:
             self._use_photo(photos.keep_file(path))
         except (OSError, ValueError) as e:
-            self.toast_wanted.emit(str(e))
+            self.toast_wanted.emit(str(e), "problem")
 
     def photo_from_link(self) -> None:
-        it = self.it
-        if it is None or not web.web_link(it.link) or (self._photo_job and self._photo_job.isRunning()):
+        if self.it is not None and web.web_link(self.it.link):
+            self._photo_from_web(self.it.link, photos.from_link, "Getting the photo from the link…")
+
+    def _photo_from_web(self, link: str, get, message: str) -> None:
+        """Fetch a photo in the background: get(link) -> its name in the photos folder."""
+        if self.it is None or (self._photo_job and self._photo_job.isRunning()):
             return
-        item_id, link = it.id, it.link
-        self.toast_wanted.emit("Getting the photo from the link…")
-        w = Worker(lambda _p, _c: photos.from_link(link), self)
+        item_id = self.it.id
+
+        def job(_progress, _cancel) -> str:
+            try:
+                return get(link)
+            except web.Refused as e:  # the store lets only browsers in: the browser can hand it over
+                raise OSError(f"{e} {PASTE_INSTEAD}") from e
+
+        self.toast_wanted.emit(message, "")
+        w = Worker(job, self)
         w.done.connect(lambda name: self._photo_came(item_id, name))
-        w.failed.connect(self.toast_wanted.emit)
+        w.failed.connect(lambda e: self.toast_wanted.emit(e, "problem"))
         self._photo_job = w
         w.start()
 
@@ -667,26 +685,47 @@ class ItemPanel(DetailsBase):
     def remove_photo(self) -> None:
         self._use_photo("")
 
-    @staticmethod
-    def _dropped_picture(e) -> Path | None:
-        for url in e.mimeData().urls() if e.mimeData().hasUrls() else []:
-            if url.isLocalFile():
-                p = Path(url.toLocalFile())
-                if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp", ".heic", ".gif"):
-                    return p
-        return None
+    def paste_photo(self) -> bool:
+        """Paste (⌘V): a picture you copied (Copy Image in a browser, a picture file) becomes the photo.
+        False when there's no picture to paste."""
+        return self._take_picture(QApplication.clipboard().mimeData(), links=False)
+
+    def _paste_state(self) -> None:
+        can = self.it is not None and photos.has_picture(QApplication.clipboard().mimeData(), links=False)
+        for a in (self.act_photo_paste, self.act_add_photo_paste):
+            a.setEnabled(can)
+            a.setText("Paste" if can else "Paste (copy a picture first)")
+
+    def _take_picture(self, mime, links: bool) -> bool:
+        """A picture pasted or dropped: a picture file, the picture itself, or (`links`) a web link to it."""
+        if self.it is None or mime is None:
+            return False
+        path = photos.picture_file(mime)
+        if path is not None:
+            self._photo_file(path)
+            return True
+        img = photos.picture_image(mime)
+        if img is not None:
+            try:
+                self._use_photo(photos.keep_image(img))
+            except (OSError, ValueError) as e:
+                self.toast_wanted.emit(str(e), "problem")
+            return True
+        link = photos.picture_link(mime) if links else ""
+        if link:
+            self._photo_from_web(link, photos.from_any_link, "Getting the photo…")
+            return True
+        return False
 
     def dragEnterEvent(self, e):
-        if self.it is not None and self._dropped_picture(e) is not None:
+        if self.it is not None and photos.has_picture(e.mimeData()):
             e.acceptProposedAction()
         else:
             e.ignore()
 
     def dropEvent(self, e):
-        p = self._dropped_picture(e)
-        if p is not None:
+        if self._take_picture(e.mimeData(), links=True):
             e.acceptProposedAction()
-            self._photo_file(p)
 
     # ------------------------------------------------------------------ loading
     def b(self):
@@ -952,6 +991,9 @@ class PriceCheck(QThread):
     def run(self) -> None:
         try:
             got = prices.fetch(self.url)
+        except web.Refused as e:
+            self.done.emit(self.item_id, "", "", f"{e} Open the link to see the price.")
+            return
         except OSError as e:
             self.done.emit(self.item_id, "", "", str(e))
             return
@@ -960,6 +1002,6 @@ class PriceCheck(QThread):
             self.done.emit(self.item_id, "", "", "Couldn't read that page.")
             return
         if got is None:
-            self.done.emit(self.item_id, "", prices.store_name(self.url), "No price on that page.")
+            self.done.emit(self.item_id, "", web.site_name(self.url), "No price on that page.")
         else:
             self.done.emit(self.item_id, str(got.price), got.store, "")

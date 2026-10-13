@@ -240,6 +240,72 @@ def test_update_from_links_reads_the_price_and_tidies_the_name(provider, monkeyp
     assert new == {"value": "5998.00", "name": "Sony FX6 Cinema Camera", "brand": "Sony", "series": "FX"}
 
 
+def test_a_store_that_turns_bodega_away_gets_another_page(provider, monkeypatch):
+    seen, replies = provider
+    it = Item(
+        name="fx6", value="5000", link="https://www.bhphotovideo.com/c/product/1592483-REG/sony_fx6.html"
+    )
+    maker = (
+        '<script type="application/ld+json">{"@type": "Product", "name": "Sony FX6", "brand": {"name": "Sony"},'
+        '"offers": {"price": "5998.00", "priceCurrency": "USD"}}</script><title>Sony FX6 Cinema Camera</title>'
+    )
+    opened = []
+
+    def fetch(url, **_k):
+        opened.append(url)
+        if "bhphotovideo.com" in url:
+            raise web.Refused("B&H only lets web browsers read its pages.")
+        if url == "https://made-up.example/fx6":
+            return web.Page(url, "<title>Page not found</title>")
+        return web.Page(url, maker)
+
+    monkeypatch.setattr(web, "fetch", fetch)
+    replies.append(
+        anthropic_reply(
+            json.dumps(
+                [
+                    {
+                        "n": 0,
+                        "urls": [
+                            "https://www.bhphotovideo.com/c/product/1592483-REG/x.html",
+                            "https://made-up.example/fx6",
+                            "https://electronics.sony.com/fx6",
+                        ],
+                    }
+                ]
+            )
+        )
+    )
+    replies.append(anthropic_reply('{"name": "Sony FX6 Cinema Camera", "brand": "Sony", "series": "FX"}'))
+    got = tasks.update_from_links(Setup("anthropic", "m"), [it])
+    new = {c.field: (c.new, c.why) for c in got.changes}
+    assert new["value"] == ("5998.00", "electronics.sony.com (B&H can't be read)")
+    assert new["name"][0] == "Sony FX6 Cinema Camera" and "link" not in new  # your B&H link stays
+    assert "Leave out B&H" in json.loads(seen[0].data)["system"]  # it isn't asked for pages Bodega can't open
+    assert opened == [it.link, "https://made-up.example/fx6", "https://electronics.sony.com/fx6"]
+    assert got.problems == []
+
+
+def test_a_store_that_turns_bodega_away_without_an_ai(monkeypatch):
+    def refuse(url, **_k):
+        raise web.Refused("B&H only lets web browsers read its pages.")
+
+    monkeypatch.setattr(web, "fetch", refuse)
+    it = Item(name="Sony FX6", link="https://www.bhphotovideo.com/c/product/1592483-REG/sony_fx6.html")
+    got = tasks.update_from_links(None, [it])
+    assert got.changes == [] and got.problems == [
+        "Sony FX6: B&H only lets web browsers read its pages. With an AI set up, Bodega looks for another page."
+    ]
+
+
+def test_a_price_in_another_currency_says_so(monkeypatch):
+    it = Item(name="Sony FX6", value="5000", link="https://shop.example.co.uk/fx6")
+    page = '<script type="application/ld+json">{"@type": "Product", "offers": {"price": "5200", "priceCurrency": "GBP"}}</script>'
+    monkeypatch.setattr(web, "fetch", lambda url, **k: web.Page(url, page))
+    (c,) = tasks.update_from_links(None, [it]).changes
+    assert (c.new, c.why) == ("5200.00", "shop.example.co.uk · in GBP")
+
+
 def test_applying_keeps_a_copy_first(data_folder):
     lib = sample.fill(Library(data_folder).load())
     it = next(iter(lib.items.values()))

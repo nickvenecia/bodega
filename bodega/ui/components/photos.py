@@ -1,5 +1,8 @@
 """Photos of gear: kept in the data folder's photos/ (Back Up takes them along), named by what's in them.
 
+They come from a file, a product page's link, or a picture pasted or dragged in (Copy Image in a browser: the
+way in for stores that let only web browsers read their pages).
+
 Every picture, from a file or a web page, is read and saved again by Bodega before it's kept: whatever else
 the file carried (camera details, location, anything odd) is left behind, and a file that isn't really a
 picture is refused. Pictures are scaled down to PHOTO_MAX_PX on their long side.
@@ -13,7 +16,7 @@ import hashlib
 from functools import lru_cache
 from pathlib import Path
 
-from PySide6.QtCore import QByteArray, QRectF, Qt
+from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QMimeData, QRectF, Qt
 from PySide6.QtGui import QImage, QPainter, QPainterPath, QPixmap
 
 from bodega.core import web
@@ -24,6 +27,7 @@ from bodega.ui.style import tokens
 PHOTO_MAX_PX = 1600
 MAX_FILE_BYTES = 40_000_000  # a photo file you pick, before it's scaled down
 JPEG_QUALITY = 88
+PICTURE_FILES = (".jpg", ".jpeg", ".png", ".webp", ".heic", ".gif")
 
 
 def keep(data: bytes) -> str:
@@ -39,7 +43,9 @@ def keep(data: bytes) -> str:
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation,
         )
-    clear = img.hasAlphaChannel()  # a cut-out product shot keeps its see-through background
+    clear = img.hasAlphaChannel() and not _solid(
+        img
+    )  # a cut-out product shot keeps its see-through background
     name = f"{hashlib.sha256(data).hexdigest()[:16]}.{'png' if clear else 'jpg'}"
     folder = photos_dir()
     folder.mkdir(parents=True, exist_ok=True)
@@ -53,6 +59,24 @@ def keep(data: bytes) -> str:
             raise OSError("Couldn't save the photo. Check that there's free space on this computer.")
         tmp.replace(dest)
     return name
+
+
+def _solid(img: QImage) -> bool:
+    """Whether every pixel is solid: a photo copied from a browser comes with see-through it doesn't use, and
+    is kept as a JPG like any photo."""
+    a = img.convertToFormat(QImage.Format.Format_Alpha8)
+    raw, w, line = bytes(a.constBits()), a.width(), a.bytesPerLine()
+    return all(raw[y * line : y * line + w].count(255) == w for y in range(a.height()))
+
+
+def keep_image(img: QImage) -> str:
+    """A picture pasted or dragged in as a picture (Copy Image in a browser, a screenshot), kept like any other."""
+    data = QByteArray()
+    buf = QBuffer(data)
+    buf.open(QIODevice.OpenModeFlag.WriteOnly)
+    img.save(buf, "PNG")
+    buf.close()
+    return keep(bytes(data))
 
 
 def keep_file(path: Path) -> str:
@@ -77,6 +101,57 @@ def from_link(link: str) -> str:
         return keep(web.fetch_image(url))
     except ValueError as e:
         raise OSError(str(e)) from e
+
+
+def from_any_link(link: str) -> str:
+    """A photo dragged out of a browser: its link, or the link of the page it's on. The picture either way.
+    Raises OSError with a plain message."""
+    try:
+        return keep(web.fetch_image(link))
+    except web.NotPicture:
+        return from_link(link)
+    except ValueError as e:
+        raise OSError(str(e)) from e
+
+
+# ---------------------------------------------------------------- pasted or dropped
+def picture_file(mime: QMimeData) -> Path | None:
+    """A picture file among what was copied or dropped (from Finder, Explorer, the desktop)."""
+    for url in mime.urls() if mime.hasUrls() else []:
+        if url.isLocalFile():
+            p = Path(url.toLocalFile())
+            if p.suffix.lower() in PICTURE_FILES:
+                return p
+    return None
+
+
+def picture_image(mime: QMimeData) -> QImage | None:
+    """The picture itself, when it came as one (Copy Image in a browser, a screenshot)."""
+    if not mime.hasImage():
+        return None
+    img = mime.imageData()
+    if isinstance(img, QPixmap):
+        img = img.toImage()
+    return img if isinstance(img, QImage) and not img.isNull() else None
+
+
+def picture_link(mime: QMimeData) -> str:
+    """A web link among what was dragged in (a photo dragged out of a browser), or ""."""
+    for url in mime.urls() if mime.hasUrls() else []:
+        link = web.web_link(url.toString())
+        if link:
+            return link
+    return ""
+
+
+def has_picture(mime: QMimeData | None, links: bool = True) -> bool:
+    """Whether there's a picture in what was copied or dragged. `links`: a web link counts (a drag does; a
+    paste doesn't, since a link you copied is more likely meant for the Link field)."""
+    if mime is None:
+        return False
+    if picture_file(mime) is not None or mime.hasImage():
+        return True
+    return links and bool(picture_link(mime))
 
 
 def path_of(name: str) -> Path | None:

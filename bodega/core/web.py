@@ -7,7 +7,8 @@ A link can come from a shared spreadsheet or from an AI's answer, so it's treate
 - a size cap on what's downloaded and on what it unpacks to, and a timeout
 - pages are read with Python's HTML parser (it takes time in proportion to the page, so a hostile page
   can't freeze the app)
-Every failure is an OSError with a plain message.
+Every failure is an OSError with a plain message. Some stores (B&H among them) let only web browsers read their
+pages: that's Refused, and the app offers another way in (copy the photo in your browser, paste it in Bodega).
 """
 
 from __future__ import annotations
@@ -44,6 +45,34 @@ HEADERS = {
 
 class Blocked(OSError):
     """A link Bodega won't open or download."""
+
+
+class Refused(OSError):
+    """A site that turned Bodega away (many stores let only web browsers read their pages)."""
+
+
+class NotPicture(OSError):
+    """A link that leads to something other than a picture."""
+
+
+SITES = {
+    "bhphotovideo.com": "B&H",
+    "adorama.com": "Adorama",
+    "amazon.com": "Amazon",
+    "harborfreight.com": "Harbor Freight",
+    "homedepot.com": "Home Depot",
+    "guitarcenter.com": "Guitar Center",
+    "sweetwater.com": "Sweetwater",
+}
+
+
+def site_name(url: str) -> str:
+    """What to call a site in a message: "B&H" for bhphotovideo.com, else its address without www."""
+    host = (urlparse(url if "://" in url else "https://" + url).hostname or "").lower().removeprefix("www.")
+    for domain, name in SITES.items():
+        if host == domain or host.endswith("." + domain):
+            return name
+    return host
 
 
 # ---------------------------------------------------------------- links
@@ -190,15 +219,16 @@ def _fetch(url: str, max_bytes: int, timeout: float) -> tuple[str, _Reply, bytes
     url = _https(url)
     for _hop in range(MAX_REDIRECTS + 1):
         host = urlparse(url).hostname or ""
+        site = site_name(url)
         ip = check_public(host)
         try:
             r = _get(url, ip, timeout, max_bytes)
         except OSError as e:
             log.info("fetch failed for %s: %s", host, type(e).__name__)
-            raise OSError(f"Couldn't reach {host}.") from e
+            raise OSError(f"Couldn't reach {site}.") from e
         except Exception as e:  # http.client raises a few kinds of its own
             log.info("fetch failed for %s: %s", host, type(e).__name__)
-            raise OSError(f"Couldn't reach {host}.") from e
+            raise OSError(f"Couldn't reach {site}.") from e
         if r.status in (301, 302, 303, 307, 308) and r.headers.get("Location"):
             try:
                 url = _https(urljoin(url, r.headers["Location"]))
@@ -207,9 +237,11 @@ def _fetch(url: str, max_bytes: int, timeout: float) -> tuple[str, _Reply, bytes
             continue
         if r.status >= 400:
             log.info("fetch failed for %s: HTTP %s", host, r.status)
-            if r.status in (401, 403, 429, 503):
-                raise OSError(f"{host} didn't let Bodega read the page.")
-            raise OSError(f"{host} said no (error {r.status}).")
+            if r.status in (401, 403):
+                raise Refused(f"{site} only lets web browsers read its pages.")
+            if r.status in (429, 503):
+                raise Refused(f"{site} didn't let Bodega read the page.")
+            raise OSError(f"{site} said no (error {r.status}).")
         body = _unpack(r.body, (r.headers.get("Content-Encoding") or "").lower(), max_bytes)
         return url, r, body
     raise OSError("That link redirects too many times.")
@@ -235,7 +267,7 @@ def fetch_image(url: str, timeout: float = TIMEOUT_S) -> bytes:
     is refused, not cut short). The bytes still have to be read as a picture by whoever uses them."""
     _url, r, body = _fetch(url, MAX_IMAGE_BYTES + 1, timeout)
     if (r.headers.get_content_type() or "").lower() not in IMAGE_TYPES:
-        raise OSError("That link isn't a picture.")
+        raise NotPicture("That link isn't a picture.")
     if len(body) > MAX_IMAGE_BYTES:
         raise OSError("That picture is too big.")
     return body

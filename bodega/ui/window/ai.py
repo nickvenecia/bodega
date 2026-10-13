@@ -130,4 +130,6 @@ class AIMixin:
         if self.items.it is not None:
             self.items.load(self.items.it)
         self.refresh()
-        self.toast(f"Updated {n} thing{'s' if n != 1 else ''}. Your gear from before is kept in Backups.")
+        self.toast(
+            f"Updated {n} thing{'s' if n != 1 else ''}. Your gear from before is kept in Backups.", "done"
+        )

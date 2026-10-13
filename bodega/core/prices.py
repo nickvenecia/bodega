@@ -10,22 +10,11 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from urllib.parse import urlparse
 
 from bodega.core import web
 from bodega.core.log import get_logger
 
 log = get_logger(__name__)
-
-STORES = {
-    "bhphotovideo.com": "B&H",
-    "adorama.com": "Adorama",
-    "amazon.com": "Amazon",
-    "harborfreight.com": "Harbor Freight",
-    "homedepot.com": "Home Depot",
-    "guitarcenter.com": "Guitar Center",
-    "sweetwater.com": "Sweetwater",
-}
 
 
 @dataclass
@@ -33,14 +22,6 @@ class Found:
     price: Decimal
     store: str
     currency: str = "USD"
-
-
-def store_name(url: str) -> str:
-    host = urlparse(url if "://" in url else "https://" + url).netloc.lower().removeprefix("www.")
-    for domain, name in STORES.items():
-        if host == domain or host.endswith("." + domain):
-            return name
-    return host
 
 
 def _number(text) -> Decimal | None:
@@ -98,15 +79,10 @@ def parse(html: str) -> tuple[Decimal, str] | None:
 
 
 def fetch(url: str) -> Found | None:
-    """Download the page and read its price. Raises OSError when the page can't be reached (or the link
-    isn't a public web page: see core/web.py)."""
-    try:
-        page = web.fetch(url)
-    except web.Blocked:
-        raise
-    except OSError as e:
-        raise OSError(str(e).replace(urlparse(web.web_link(url)).hostname or "?", store_name(url))) from e
+    """Download the page and read its price. Raises OSError when the page can't be reached (web.Refused when
+    the store turns Bodega away; web.Blocked when the link isn't a public web page: see core/web.py)."""
+    page = web.fetch(url)
     got = parse(page.html)
     if got is None:
         return None
-    return Found(got[0], store_name(page.url), got[1])
+    return Found(got[0], web.site_name(page.url), got[1])

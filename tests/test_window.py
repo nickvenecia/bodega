@@ -169,6 +169,33 @@ def test_dividers_totals_and_attached(win):
     assert win.items.kids_lay.count() == len(pricing.children(win.lib, fx6.id))
 
 
+def test_toasts(win):
+    import time
+
+    t = win.toaster
+    win.toast("Copied 3 pieces.", "done")
+    assert t.isVisible() and (t.text, t.tone) == ("Copied 3 pieces.", "done")
+    pill = t._pill.translated(t.pos().x(), t.pos().y())
+    area = win._toast_area()
+    assert area.contains(pill.toRect()) and pill.center().x() == pytest.approx(area.center().x(), abs=2)
+    win.toast("Something odd.", "sparkly")  # an unknown tone is plain news
+    assert t.tone == ""
+
+    def wait(ms):
+        stop = time.monotonic() + ms / 1000
+        while time.monotonic() < stop:
+            QApplication.processEvents()
+            time.sleep(0.01)
+
+    t.dismiss()
+    win.toast("Saved.", "done")  # a new one while the last fades away stays up
+    wait(500)
+    assert t.isVisible() and t.text == "Saved."
+    t.dismiss()
+    wait(500)
+    assert not t.isVisible()
+
+
 def test_light_and_dark(win):
     from bodega.ui.style import tokens
 

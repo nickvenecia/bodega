@@ -109,7 +109,7 @@ class EditingMixin:
             self.lib.save_items()
             self.refresh()
             self.open("gear", it.id)
-            self.toast("Copied. Serial numbers start empty.")
+            self.toast("Copied. Serial numbers start empty.", "done")
         elif kind == "packages":
             src = self.lib.packages.get(obj_id)
             if src is None:
@@ -128,7 +128,7 @@ class EditingMixin:
             r = self.lib.duplicate_rental(src)
             self.refresh()
             self.open("rentals", r.id)
-            self.toast(f"Made {r.number}, as a quote.")
+            self.toast(f"Made {r.number}, as a quote.", "done")
 
     def delete(self, kind: str, obj_id: str) -> None:
         self.flush()
@@ -187,7 +187,7 @@ class EditingMixin:
         log.info("deleted %d items", n)
         self.items.it = None
         self.go(self.view_key)
-        self.toast(f"Deleted {n} pieces." if n != 1 else "Deleted it.")
+        self.toast(f"Deleted {n} pieces." if n != 1 else "Deleted it.", "done")
 
     def _selection_count(self) -> None:
         t = self._table()
@@ -228,7 +228,7 @@ class EditingMixin:
         self.refresh()
         self.items.refresh_attached()
         n = len(d.picked)
-        self.toast(f"Attached {n} to {it.name}.")
+        self.toast(f"Attached {n} to {it.name}.", "done")
 
     def detach(self, item_id: str) -> None:
         it = self.lib.items.get(item_id)
@@ -295,7 +295,7 @@ class EditingMixin:
         self.lib.save_rental(r)
         self.go("upcoming")
         self.open("rentals", r.id)
-        self.toast(f"Started {r.number}. Pick the renter and dates.")
+        self.toast(f"Started {r.number}. Pick the renter and dates.", "done")
 
     def _item_edited(self, it: Item) -> None:
         it.updated = now_iso()
@@ -335,7 +335,7 @@ class EditingMixin:
                 self._dirty_rentals.discard(rid)
         except OSError:
             log.warning("couldn't save", exc_info=True)
-            self.toast("Couldn't save. Check that there's free space on this computer.")
+            self.toast("Couldn't save. Check that there's free space on this computer.", "problem")
         if self.history is not None:
             self.history.mark()
 
@@ -357,7 +357,7 @@ class EditingMixin:
         if r is not None and assign:
             self.rentals.use_client(c)
         else:
-            self.toast(f"Saved {c.name or c.company}.")
+            self.toast(f"Saved {c.name or c.company}.", "done")
             self.rentals.refresh_clients()
         self.refresh()
 
@@ -430,7 +430,7 @@ class EditingMixin:
 
     def _defaults_saved(self, b: Business) -> None:
         self.lib.save_businesses()
-        self.toast("New rentals will start with these terms.")
+        self.toast("New rentals will start with these terms.", "done")
 
     def _groups_changed(self, key: str, state: dict) -> None:
         groups = self.lib.settings.get("groups", {})
@@ -449,7 +449,7 @@ class EditingMixin:
             return
         self.flush()
         if not r.lines:
-            self.toast("Add gear to the rental first.")
+            self.toast("Add gear to the rental first.", "problem")
             return
         d = CheckDialog(self.lib, r, back, self)
         if d.exec() != CheckDialog.DialogCode.Accepted:
@@ -466,4 +466,4 @@ class EditingMixin:
             self.rentals.load(r)
         self.refresh()
         if d.mark:
-            self.toast(f"{r.number} is {'back' if back else 'out'}.")
+            self.toast(f"{r.number} is {'back' if back else 'out'}.", "done")

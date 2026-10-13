@@ -43,7 +43,7 @@ class GroupsMixin:
         if ids:
             self.gear_table.select_id(ids[0])
         where = group or "No Group"
-        self.toast(f"Moved {n} to {where}." if n != 1 else f"Moved it to {where}.")
+        self.toast(f"Moved {n} to {where}." if n != 1 else f"Moved it to {where}.", "done")
 
     def _reordered(self, ids: list[str], anchor: str, after: bool) -> None:
         """Rows dragged by their grip: your order changes (and the list shows your order)."""
@@ -110,7 +110,7 @@ class GroupsMixin:
         if self.items.it is not None:
             self.items.load(self.items.it)
         if toast:
-            self.toast(toast)
+            self.toast(toast, "done")
 
     def new_group(self) -> None:
         from bodega.ui.dialogs.common import ask_name
