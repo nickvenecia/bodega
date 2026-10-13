@@ -117,6 +117,11 @@ Icons made with `theme.icon()` redraw themselves; the table refills. The table b
 **The accent is yours to pick** (Settings › General › Accent Color: `widgets.AccentPicker`, settings "accent";
 empty means Bodega's own blue). `tokens.ACCENTS` lists the choices (never red); `tokens.accent_set()` builds
 every accent shade from one color for dark or light, with dark words on the accent wherever white wouldn't read.
+
+**The light look is the Mac's**: the main area, dialogs and Settings' pages are pure white; the sidebar, the right
+panel and Settings' sidebar are a soft gray glass; cards on that glass are white (`BLOCK`); lines and shadows are
+neutral gray. Something soft on the white page (a switch's track, weekends, a photo placeholder, checklist rows)
+uses `FILL`, never `BLOCK`.
 The blue's shades are hand-set in `DARK` / `LIGHT`. The app icon and the paper keep their own colors.
 
 | Token | Use |
@@ -222,7 +227,8 @@ Bodega talks like a helpful person, not like software.
 ## 8. Layout of the main window
 
 **The glass** (`ui/components/glass.py`), after Apple's Liquid Glass (iOS 26/27, macOS 26+): the window is a flat,
-quiet backdrop (`WINDOW_TOP`, a step darker than the panels, so the accent's group rows stand out on it), the content sits on it, and the tools float above it on rounded, see-through
+quiet backdrop (`WINDOW_TOP`: pure white in the light look, like a Mac app's main area; a step darker than the panels
+in dark), the content sits on it, and the tools float above it on rounded, see-through
 panels (`GLASS`, `GLASS_EDGE`, `GLASS_R`, a painted shadow). Search, dropdowns and buttons are capsules; the
 + and export buttons are circles; "add" buttons are tinted capsules (`widgets.add_chip`). Table rows highlight
 as one rounded shape across the row (`tables.RowPainter`); a divider under the mouse goes a step brighter

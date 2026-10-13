@@ -152,7 +152,7 @@ QToolButton#Circle[active="true"] {{ background: {tokens.ACCENT_TINT}; border-co
 #AlertTitle {{ font-size: {TEXT_LG}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 QPushButton#DangerFill {{ background: {tokens.BAD}; border: 1px solid {tokens.BAD}; color: {tokens.ON_ACCENT}; font-weight: {WEIGHT_SEMIBOLD}; }}
 QPushButton#DangerFill:hover {{ background: {tokens.BAD}; border-color: {tokens.BAD}; }}
-QFrame#CheckRow {{ background: {tokens.BLOCK}; border-radius: {RADIUS_LG}px; }}
+QFrame#CheckRow {{ background: {tokens.FILL}; border-radius: {RADIUS_LG}px; }}
 QLabel#Due {{ color: {tokens.MUTED}; }}
 QLabel#Due[tone="out"] {{ color: {tokens.WARN}; font-weight: {WEIGHT_SEMIBOLD}; }}
 QLabel#Due[tone="late"] {{ color: {tokens.BAD}; font-weight: {WEIGHT_SEMIBOLD}; }}
@@ -188,7 +188,7 @@ QComboBox QAbstractItemView::item:selected, QListView#Suggestions::item:selected
 QComboBox QAbstractItemView::separator {{ height: 1px; background: {tokens.BORDER_STRONG}; margin: {SPACE_1}px {SPACE_2}px; }}
 
 /* ---------- segmented control: CONTROL_H tall overall */
-#Seg {{ background: {tokens.BLOCK}; border: 1px solid {tokens.FIELD_BORDER}; border-radius: {RADIUS}px; }}
+#Seg {{ background: {tokens.FILL}; border: 1px solid {tokens.FIELD_BORDER}; border-radius: {RADIUS}px; }}
 #SegBtn {{ background: transparent; border: none; border-radius: {RADIUS_SM}px; padding: 0 {SPACE_2}px;
     min-height: {_SEG_INNER}px; max-height: {_SEG_INNER}px; color: {tokens.MUTED}; font-weight: {WEIGHT_MEDIUM}; }}
 #SegBtn:hover {{ color: {tokens.TEXT}; }}
@@ -237,7 +237,7 @@ QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::su
 QPlainTextEdit#BigName {{ font-size: {TEXT_XL}px; font-weight: {WEIGHT_BOLD}; color: {tokens.TEXT};
     background: transparent; border: 1px solid transparent; border-radius: {RADIUS}px; padding: 0 {SPACE_1}px;
     selection-background-color: {tokens.ACCENT}; selection-color: {tokens.ON_ACCENT}; }}
-QPlainTextEdit#BigName:hover {{ background: {tokens.BLOCK}; }}
+QPlainTextEdit#BigName:hover {{ background: {tokens.FILL}; }}
 QPlainTextEdit#BigName:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT}; }}
 #Totals {{ background: transparent; border-top: 1px solid {tokens.BORDER}; }}
 #TotalLabel {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The light look is the Mac's: a white main area with soft gray side panels and white cards on them.
 - Menus, dropdown lists, pickers and suggestions look like the sidebar and Settings: the same rounded rows, spacing
   and soft highlight.
 

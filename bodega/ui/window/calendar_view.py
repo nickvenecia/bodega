@@ -270,7 +270,7 @@ class MonthCalendar(QWidget):
                 d = dates.plus(start, w * 7 + c)
                 cell = QRectF(c * cw, head + w * ch, cw, ch)
                 if c in (0, 6):  # the weekend, a touch quieter
-                    p.fillRect(cell, theme.qcolor(tokens.BLOCK))
+                    p.fillRect(cell, theme.qcolor(tokens.FILL))
                 p.setPen(grid)
                 p.setBrush(Qt.BrushStyle.NoBrush)
                 p.drawRect(cell)

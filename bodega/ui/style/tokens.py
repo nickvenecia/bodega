@@ -217,24 +217,25 @@ DARK = {
     "FIELD": "rgba(255, 255, 255, 0.07)",  # a text field or dropdown: lightly frosted
     "FIELD_BORDER": "rgba(255, 255, 255, 0.08)",
     "BLOCK": "rgba(255, 255, 255, 0.045)",  # a card inside a glass panel: a soft tint, no outline
+    "FILL": "rgba(255, 255, 255, 0.045)",  # a soft fill on the page: a switch's track, weekends, a placeholder
 }
 LIGHT = {
-    "BG": "#F6F5F4",
-    "PANEL": "#EFEDEC",
+    "BG": "#FFFFFF",
+    "PANEL": "#FFFFFF",
     "CARD": "#FFFFFF",
-    "CARD_HOVER": "#F2F0EF",
+    "CARD_HOVER": "#F2F2F4",
     "CARD_SELECTED": "#E8F0FD",
     "RAISED": "#FFFFFF",
-    "RAISED_HOVER": "#F4F2F1",
-    "RAISED_PRESS": "#E8E5E4",
-    "BORDER": "#E5E2E0",
-    "BORDER_STRONG": "#D6D2D0",
-    "BORDER_HOVER": "#B8B3B1",
-    "BORDER_CHECK": "#A39E9C",
-    "TEXT": "#1D1B1B",
-    "MUTED": "#696464",
-    "FAINT": "#9D9897",
-    "WELL": "#E8E5E3",
+    "RAISED_HOVER": "#F5F5F7",
+    "RAISED_PRESS": "#E8E8EC",
+    "BORDER": "#E5E5EA",
+    "BORDER_STRONG": "#D8D8DD",
+    "BORDER_HOVER": "#B8B8BF",
+    "BORDER_CHECK": "#A2A2AA",
+    "TEXT": "#1D1D1F",
+    "MUTED": "#6E6E73",
+    "FAINT": "#A1A1A6",
+    "WELL": "#EDEDF0",
     "ACCENT": "#2F6FDB",
     "ACCENT_HOVER": "#3D7DE8",
     "ACCENT_PRESS": "#245CC0",
@@ -253,19 +254,20 @@ LIGHT = {
     "DIVIDER": "#DCE7FA",
     "DIVIDER_TEXT": "#245CC0",
     "DIVIDER_HOVER": "#CDDDF7",
-    "ROW_HOVER": "rgba(30, 60, 120, 0.05)",
-    "WINDOW_TOP": "#F0EEED",
-    "WINDOW_BOTTOM": "#F0EEED",
-    "GLASS_TOP": "rgba(255, 255, 255, 0.94)",
-    "GLASS": "rgba(255, 255, 255, 0.76)",
-    "GLASS_STROKE": "rgba(25, 45, 100, 0.13)",
+    "ROW_HOVER": "rgba(0, 0, 0, 0.04)",
+    "WINDOW_TOP": "#FFFFFF",
+    "WINDOW_BOTTOM": "#FFFFFF",
+    "GLASS_TOP": "rgba(246, 246, 248, 0.96)",
+    "GLASS": "rgba(240, 240, 243, 0.92)",
+    "GLASS_STROKE": "rgba(0, 0, 0, 0.08)",
     "GLASS_EDGE": "rgba(255, 255, 255, 1.0)",
-    "GLASS_SHADOW": "rgba(20, 35, 80, 0.16)",
+    "GLASS_SHADOW": "rgba(0, 0, 0, 0.10)",
     "CHIP": "rgba(47, 111, 219, 0.10)",
     "CHIP_HOVER": "rgba(47, 111, 219, 0.18)",
-    "FIELD": "rgba(255, 255, 255, 0.92)",
-    "FIELD_BORDER": "rgba(30, 60, 120, 0.12)",
-    "BLOCK": "rgba(50, 100, 200, 0.05)",
+    "FIELD": "rgba(255, 255, 255, 1.0)",
+    "FIELD_BORDER": "rgba(0, 0, 0, 0.10)",
+    "BLOCK": "rgba(255, 255, 255, 0.85)",  # white cards on the gray glass
+    "FILL": "rgba(0, 0, 0, 0.045)",  # light gray on white
 }
 # ---------------------------------------------------------------- the accent you pick (Settings › General)
 # Bodega's own is blue, hand-set in DARK / LIGHT above. The others are built from one color by accent_set().
@@ -327,7 +329,6 @@ def accent_set(base: str, scheme: str) -> dict[str, str]:
     light = scheme == "light"
     on = "#FFFFFF" if contrast("#FFFFFF", base) >= 3 else DARK_ON_ACCENT
     if light:
-        ink = _mix(base, "#000000", 0.45)  # the accent's own dark, for the faint lines and tints
         return {
             "ACCENT": base,
             "ACCENT_HOVER": _mix(base, "#FFFFFF", 0.9),
@@ -343,11 +344,6 @@ def accent_set(base: str, scheme: str) -> dict[str, str]:
             "DIVIDER_HOVER": _mix(base, "#FFFFFF", 0.22),
             "CHIP": _rgba(base, 0.10),
             "CHIP_HOVER": _rgba(base, 0.18),
-            "ROW_HOVER": _rgba(ink, 0.05),
-            "GLASS_STROKE": _rgba(ink, 0.13),
-            "GLASS_SHADOW": _rgba(_mix(base, "#000000", 0.3), 0.16),
-            "FIELD_BORDER": _rgba(ink, 0.12),
-            "BLOCK": _rgba(base, 0.05),
         }
     return {
         "ACCENT": base,

@@ -122,7 +122,7 @@ class PhotoBox(QFrame):
         r = QRectF(self.rect())
         clip = QPainterPath()
         clip.addRoundedRect(r, tokens.RADIUS_LG, tokens.RADIUS_LG)
-        p.fillPath(clip, theme.qcolor(tokens.BLOCK))
+        p.fillPath(clip, theme.qcolor(tokens.FILL))
         pix = photos.fitted(self.name, self.width(), self.height(), self.devicePixelRatioF())
         if pix is not None and not pix.isNull():
             w, h = pix.width() / pix.devicePixelRatio(), pix.height() / pix.devicePixelRatio()
