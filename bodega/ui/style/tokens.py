@@ -97,7 +97,6 @@ LIFT_STEP_MS = 16  # dragging a row: how often the other rows move (about 60 a s
 LIFT_EASE = 0.3  # …and how far towards their new place each step (smaller is slower)
 LIFT_ROWS_SHOWN = 3  # rows drawn on the lifted card when several move
 LIFT_SHADOW_STEPS = 6
-GLASS_SHEEN_H = 140  # a panel's top sheen fades out over this many pixels
 GLASS_EDGE_FADE = 60  # its bright inner edge fades over this many
 GLASS_EDGE_REST = 0.35  # …to this much of its strength
 QUIT_WAIT_MS = 1500  # how long quitting waits for a price or update check to finish
@@ -170,8 +169,8 @@ MONTH_CELL_MIN_H = 96
 # The app follows the system (or View → Appearance). Read colors as tokens.X when drawing, never copy them
 # into a constant at import: use() swaps them.
 DARK = {
-    "BG": "#121112",  # window background
-    "PANEL": "#19181A",  # sidebar, footer, dialogs
+    "BG": "#1E1E1E",  # window background: the Mac's dark charcoal, not black
+    "PANEL": "#1E1E1E",  # dialogs, footers
     "CARD": "#1F1E20",  # cards, fields
     "CARD_HOVER": "#262527",
     "CARD_SELECTED": "#1C2333",  # a selected card (a hint of the accent)
@@ -201,14 +200,13 @@ DARK = {
     "WARN": "#E9B949",
     "PAPER": "#FFFFFF",  # the paper (and logo thumbnails) in the preview
     "SHADOW": "rgba(0, 0, 0, 0.55)",  # the paper's shadow on the dark preview
-    "DIVIDER": "#1C2638",  # a department or group divider in the gear table: a blue band
+    "DIVIDER": "#252F3F",  # a department or group divider in the gear table: a blue band
     "DIVIDER_TEXT": "#9CC2FF",  # its name and totals
-    "DIVIDER_HOVER": "#233049",  # a divider under the mouse: the same blue, a step brighter
+    "DIVIDER_HOVER": "#2A3646",  # a divider under the mouse: the same blue, a step brighter
     "ROW_HOVER": "rgba(255, 255, 255, 0.05)",  # a table row under the mouse
-    "WINDOW_TOP": "#131213",  # the window's backdrop: flat, a step darker than the panels
-    "WINDOW_BOTTOM": "#131213",
-    "GLASS_TOP": "rgba(80, 75, 77, 0.74)",  # a floating panel's sheen at the top…
-    "GLASS": "rgba(40, 38, 40, 0.80)",  # …fading to this at the bottom (sidebar, inspector)
+    "WINDOW_TOP": "#1E1E1E",  # the window's backdrop: flat, darker than the panels (as on the Mac)
+    "WINDOW_BOTTOM": "#1E1E1E",
+    "GLASS": "rgba(48, 47, 50, 0.92)",  # a floating panel (sidebar, inspector): one even tone, lighter than the page
     "GLASS_STROKE": "rgba(255, 255, 255, 0.09)",  # its outline, so it reads as its own sheet
     "GLASS_EDGE": "rgba(255, 255, 255, 0.08)",  # the bright line just inside it (strongest along the top)
     "GLASS_SHADOW": "rgba(0, 0, 0, 0.60)",
@@ -257,8 +255,7 @@ LIGHT = {
     "ROW_HOVER": "rgba(0, 0, 0, 0.04)",
     "WINDOW_TOP": "#FFFFFF",
     "WINDOW_BOTTOM": "#FFFFFF",
-    "GLASS_TOP": "rgba(246, 246, 248, 0.96)",
-    "GLASS": "rgba(240, 240, 243, 0.92)",
+    "GLASS": "rgba(242, 242, 245, 0.94)",
     "GLASS_STROKE": "rgba(0, 0, 0, 0.08)",
     "GLASS_EDGE": "rgba(255, 255, 255, 1.0)",
     "GLASS_SHADOW": "rgba(0, 0, 0, 0.10)",

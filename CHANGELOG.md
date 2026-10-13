@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2
+
+- The side panels are one even tone, like Apple's glass (no more gradient), in light and dark.
+- Dark mode uses the Mac's charcoal for the main area, with the panels a step lighter on top.
+
 ## 1.1.1
 
 - The light look is the Mac's: a white main area with soft gray side panels and white cards on them.

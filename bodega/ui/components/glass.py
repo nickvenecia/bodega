@@ -24,7 +24,6 @@ def _look() -> tuple:
     return (
         tokens.WINDOW_TOP,
         tokens.WINDOW_BOTTOM,
-        tokens.GLASS_TOP,
         tokens.GLASS,
         tokens.GLASS_STROKE,
         tokens.GLASS_EDGE,
@@ -68,15 +67,12 @@ def paint_shadow(p: QPainter, r: QRectF) -> None:
 
 
 def paint_glass(p: QPainter, r: QRectF) -> None:
-    """The panel itself: brighter at the top like light catching it, an outline, a bright line just inside."""
+    """The panel itself, like Apple's glass: one even tone (no gradient), an outline, and a thin bright rim just
+    inside, strongest along the top edge where the light catches it."""
     rad = tokens.GLASS_R
     path = QPainterPath()
     path.addRoundedRect(r, rad, rad)
-    sheen = QLinearGradient(r.topLeft(), r.bottomLeft())
-    sheen.setColorAt(0, theme.qcolor(tokens.GLASS_TOP))
-    sheen.setColorAt(min(1.0, tokens.GLASS_SHEEN_H / max(1.0, r.height())), theme.qcolor(tokens.GLASS))
-    sheen.setColorAt(1, theme.qcolor(tokens.GLASS))
-    p.fillPath(path, sheen)
+    p.fillPath(path, theme.qcolor(tokens.GLASS))
     p.setBrush(Qt.BrushStyle.NoBrush)
     p.setPen(QPen(theme.qcolor(tokens.GLASS_STROKE), 1))
     p.drawPath(path)
