@@ -191,6 +191,8 @@ button is a capsule CONTROL_H tall; every icon button is a circle:
 | Rental line | `rental_panel.LineEditor` | A header row (what it is, its amount, ⋯) that folds its fields away. One open at a time |
 | Picking gear | `gear_picker.GearPicker` | Search and tick: attaching, filling a package, adding to a rental |
 | Long one-line text | `widgets.ElidedLabel` | Text that may not fit (gear names!): cut short with "…", the full text in its tooltip |
+| Long one-line button | `widgets.ElidedButton` | A button whose words may not fit (the Booked · renter · dates line on gear): cut short with "…", the whole text in its tooltip above its usual one |
+| A value beside its label | `widgets.WrapLabel` | Sums in the panels ("Earned", "Day Rate"): one line while there's room, onto more lines when there isn't (a plain word-wrapping label breaks early) |
 | Empty page | `empty.EmptyPage` | Where a table would be with nothing in it: only its start tiles, centred (no headline above them; the page title says where you are) |
 | Start tile | `empty.StartTile` (`#StartTile`) | Every way to begin on an empty page (empty gear: Add Manually, Import Spreadsheet…, Google Sheets…; a kit or rental page: just its New, with the place's sidebar icon): a raised `RADIUS_LG` tile, its icon in a small tinted circle, a name and a few words, all centred |
 | Toast | `widgets.Toast`, through `MainWindow.toast(text, tone)` | A short message, centred over the page just above the totals: it rises and fades in, the pointer resting on it keeps it, and it never takes a click (what's under it still works). `tone`: "done" (a green check: Copied, Saved, Moved), "problem" (amber: it didn't work, and the words say what to do), or "" for news (an info sign: Getting photos…) |
@@ -230,6 +232,12 @@ Bodega talks like a helpful person, not like software.
 - Errors say what happened and what to do, without jargon: "Bodega can't read logo.gif. Use a PNG, JPG or SVG file."
 - Promise safety where it matters: "PDFs you saved stay where they are." "Rentals that had it keep its name."
 - No exclamation marks, no emoji in the UI.
+- **Words are never cut off.** Text that might not fit wraps onto another line or ends in "…" with the whole text in
+  its tooltip; fonts are wider on a Mac. In a fixed width (a card, a tile, a sidebar) a label wraps
+  (`setWordWrap(True)`, the box grows taller); one line that must stay one line is an `ElidedLabel` or
+  `ElidedButton`; only if neither suits, more room or fewer words. Never a smaller font. `tests/cut_off.py` checks
+  every screen, at the window's usual size and its smallest, and with letters 10% wider; a new screen gets a line
+  in tests/test_cut_off.py.
 
 ---
 

@@ -6,7 +6,7 @@ start), set your own day rate, or charge what it adds up to. The numbers under i
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QLabel, QLineEdit, QMenu, QToolButton, QWidget
 
 from bodega.core import money, pricing
@@ -18,6 +18,7 @@ from bodega.ui.components.widgets import (
     Section,
     TextBox,
     TitleEdit,
+    WrapLabel,
     add_chip,
     combo,
     hbox,
@@ -105,8 +106,9 @@ class PackagePanel(DetailsBase):
             r = hbox(spacing=tokens.SPACE_2)
             k = QLabel(label)
             k.setObjectName("SumLabel")
-            v = QLabel()
+            v = WrapLabel()
             v.setObjectName("Sum" if key == "rate" else "SumValue")
+            v.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             r.addWidget(k, 1)
             r.addWidget(v)
             sl.addLayout(r)

@@ -35,6 +35,7 @@ from bodega.core.store import Library
 from bodega.ui.components import photos
 from bodega.ui.components.widgets import (
     Card,
+    ElidedButton,
     ElidedLabel,
     FlowLayout,
     MoneyField,
@@ -42,6 +43,7 @@ from bodega.ui.components.widgets import (
     TextBox,
     TitleEdit,
     ToggleRow,
+    WrapLabel,
     add_chip,
     circle_button,
     combo,
@@ -166,7 +168,7 @@ class ItemPanel(DetailsBase):
         self.rent = self.footer_button("Rent This…", "receipt")
         self.rent.clicked.connect(lambda: self.it and self.rent_wanted.emit(self.it.id))
 
-        self.where = QPushButton()
+        self.where = ElidedButton()
         self.where.setObjectName("Where")
         self.where.setCursor(Qt.CursorShape.PointingHandCursor)
         self.where.clicked.connect(lambda: self._where_id and self.open_rental.emit(self._where_id))
@@ -248,8 +250,9 @@ class ItemPanel(DetailsBase):
             rl = hbox(r, 0, tokens.SPACE_2)
             k = QLabel()
             k.setObjectName("SumLabel")
-            v = QLabel()
+            v = WrapLabel()
             v.setObjectName("SumValue")
+            v.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             rl.addWidget(k, 1)
             rl.addWidget(v)
             sl.addWidget(r)
@@ -908,8 +911,7 @@ class ItemPanel(DetailsBase):
                 text = f"Out · {who}" + (f" · back {dates.fmt_short(z)}" if z else "")
             else:
                 text = f"Booked · {who} · {dates.span(a, z)}"
-            self.where.setText(text)
-            self.where.setToolTip(theme.plain_tip(f"Open {r.number}"))
+            self.where.set_full_text(text, f"Open {r.number}")
             self.where.setProperty("tone", "late" if pricing.late(r) else r.status)
             repolish(self.where)
             self.where.show()

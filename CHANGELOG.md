@@ -6,6 +6,10 @@
   line of its own. Under the link you see only "Checking B&H…" and then the price it found, with Use It.
 - When Check Price can't read a page (B&H turns it away, say), it tells you in a short message at the bottom of the
   window, like the app's other messages, instead of a long note under the link.
+- Words no longer get cut off at an edge, even on computers whose fonts run wider. The start tiles' names go onto a
+  second line when they need to, the "Booked · renter · dates" line on a piece of gear ends in "…" (rest the
+  pointer on it to read it all), what a piece has earned wraps instead of running off its card, and Settings ›
+  Profiles fits with its Save button in view when the Settings window is at its smallest.
 
 ## 1.2.0
 

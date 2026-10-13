@@ -28,7 +28,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QStyle,
     QStyledItemDelegate,
+    QStyleOptionButton,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -135,6 +137,67 @@ class ElidedLabel(QLabel):
 
     def minimumSizeHint(self) -> QSize:  # …but it gives way to everything else first
         return QSize(0, super().minimumSizeHint().height())
+
+
+class WrapLabel(QLabel):
+    """Words that stay on one line while there's room and go onto more lines when there isn't: never cut off.
+    (A plain word-wrapping QLabel breaks its lines early, even with room to spare.)"""
+
+    def __init__(self, text: str = "", parent: QWidget | None = None):
+        super().__init__(text, parent)
+        self.setWordWrap(True)
+
+    def _sides(self) -> int:
+        m = self.contentsMargins()
+        return m.left() + m.right() + 2 * self.margin() + 1
+
+    def sizeHint(self) -> QSize:  # as wide as its longest line, when there's room
+        fm = self.fontMetrics()
+        w = max((fm.horizontalAdvance(line) for line in self.text().split("\n")), default=0) + self._sides()
+        return QSize(w, self.heightForWidth(w))
+
+    def minimumSizeHint(self) -> QSize:  # …down to its longest word
+        fm = self.fontMetrics()
+        w = max((fm.horizontalAdvance(word) for word in self.text().split()), default=0) + self._sides()
+        return QSize(w, super().minimumSizeHint().height())
+
+
+class ElidedButton(QPushButton):
+    """A one-line button that cuts long text short with "…" instead of widening its panel; the whole text is
+    in its tooltip (above `tip`, its usual one)."""
+
+    def __init__(self, text: str = "", parent: QWidget | None = None):
+        super().__init__(parent)
+        self._full, self._tip = "", ""
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
+        self.set_full_text(text)
+
+    def set_full_text(self, text: str, tip: str = "") -> None:
+        self._full, self._tip = text, tip
+        self._elide()
+
+    def full_text(self) -> str:
+        return self._full
+
+    def _elide(self) -> None:
+        opt = QStyleOptionButton()
+        self.initStyleOption(opt)  # the room inside its padding
+        room = self.style().subElementRect(QStyle.SubElement.SE_PushButtonContents, opt, self).width()
+        shown = self.fontMetrics().elidedText(self._full, Qt.TextElideMode.ElideRight, max(1, room))
+        self.setText(shown)
+        whole = self._full if shown != self._full else ""
+        self.setToolTip(theme.plain_tip("\n".join(t for t in (whole, self._tip) if t)))
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self._elide()
+
+    def sizeHint(self) -> QSize:  # as wide as the whole text, when there's room
+        hint = super().sizeHint()
+        fm = self.fontMetrics()
+        return QSize(
+            hint.width() + fm.horizontalAdvance(self._full) - fm.horizontalAdvance(self.text()), hint.height()
+        )
 
 
 class _FoldHeader(QPushButton):
@@ -524,6 +587,7 @@ class Embeddable:
     def embed(self) -> None:
         self.embedded = True
         self.setWindowFlags(Qt.WindowType.Widget)
+        self.setMinimumWidth(0)  # inside a window it takes the room it's given (its own minimum is for alone)
         self.setObjectName("Embedded")  # no background of its own: the window's shows through
         for name in ("title_label", "cancel_btn"):
             w = getattr(self, name, None)

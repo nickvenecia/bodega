@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from PySide6.QtCore import QTimer, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import QFrame, QLabel, QLineEdit, QMenu, QPushButton, QToolButton, QWidget
 
 from bodega.core import dates, money, pricing
@@ -22,6 +22,7 @@ from bodega.ui.components.widgets import (
     Section,
     TextBox,
     ToggleRow,
+    WrapLabel,
     add_chip,
     combo,
     date_field,
@@ -456,8 +457,9 @@ class RentalPanel(DetailsBase):
             r = hbox(spacing=tokens.SPACE_2)
             k = QLabel()
             k.setObjectName("SumLabel")
-            v = QLabel()
+            v = WrapLabel()
             v.setObjectName("Sum" if key == "total" else "SumValue")
+            v.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             r.addWidget(k, 1)
             r.addWidget(v)
             sl.addLayout(r)

@@ -79,6 +79,8 @@ bodega/
                    panels.py (LeftPanel: every list of places on the left, with NavRow; SidePanel: every
                    panel on the right, one header: title, round buttons, ⋯, ✕ at the far right),
                    widgets.py (Card, Disclosure, Section, TitleEdit, IconLabel, SearchField, button_row, fields…,
+                   ElidedLabel / ElidedButton (one line, "…" and the whole text in the tooltip), WrapLabel (one
+                   line while there's room, more lines when there isn't),
                    Toast: MainWindow.toast(text, tone) with "done" / "problem" / "" for news), glass.py
                    (GlassRoot backdrop drawn once and reused; Dock: the inspector floats and slides, the content
                    makes room through the row's right margin, a Table slides as two pictures: freeze/thaw),
@@ -117,6 +119,7 @@ bodega/
 scripts/make_icon.py   draws bodega/assets/icon.png ("b." on the dark tile, the full stop in sky blue)
 scripts/release_notes.py   a Release's text: the version's CHANGELOG entries, then the downloads
 tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR [SHEET.xlsx]
+tests/cut_off.py       cut_off(window): every label, button and tab whose words don't fit (test_cut_off.py: every screen)
 ```
 
 ## Rules that matter
@@ -148,6 +151,11 @@ tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTD
 - Every number in the UI is a token; every font comes from theme.font(); dialogs end with widgets.button_row().
 - Every list of choices (menus, dropdowns, pickers, suggestions) uses the LIST_* tokens: the sidebar's and
   Settings' corners, inset, row height and highlight. Never a list with its own sizes.
+- **Words are never cut off.** Text that might not fit wraps onto another line or ends in "…" with the
+  whole text in its tooltip; fonts are wider on a Mac. `tests/cut_off.py` checks every screen; a new
+  screen gets a line in that test (tests/test_cut_off.py, which also checks with letters 10% wider).
+  In a fixed width (a card, a tile, a sidebar): `setWordWrap(True)`; one line that must stay one line:
+  widgets.ElidedLabel / ElidedButton; a value beside its label: widgets.WrapLabel. Never a smaller font.
 
 ## Commands
 ```bash
