@@ -261,7 +261,8 @@ rentals are the plus underneath.
 - **The middle is one table** (`ui/tables.py`): a toolbar (`TOOLBAR_H`) with the place's name and count, Search,
   the filter icon (`filters.FilterButton`: Divide By, Show, Company, Missing, Clear Filters; the accent while on),
   the share button (import, Google Sheets, inventory list, rate card, labels, CSV), the assistant, then **one
-  primary round +**: New Gear or New Group / New Kit / New Rental. Columns sort by clicking their header.
+  primary round +**: New Gear or New Group / New Kit / New Rental. (A sidebar section's own + is the Mac's: a small
+  plain gray glyph, `SectionAdd`, shown while the pointer is over the sidebar.) Columns sort by clicking their header.
   The Calendar (`ui/calendar_view.py`) replaces the table for rentals: one row per rental, a bar per stretch of dates.
 - **Gear is divided** by group in All Gear and by company inside a group (or not at all): an accent band (`DIVIDER`,
   painted by `tables._DividerBand`; the stylesheet ignores a row's own background) with its name and totals in

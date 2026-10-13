@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.4
+
+- The sidebar's + buttons are the Mac's: a small gray + beside each section's title, shown while the pointer is over the
+  sidebar.
+
 ## 1.1.3
 
 - Panels have one thin edge and a soft, wide shadow, like the Mac's (no more dark smudge in dark mode).

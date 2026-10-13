@@ -16,6 +16,7 @@ SPACE_5 = 24  # padding of dialogs and the empty-state drop zone
 # ---------------------------------------------------------------- control sizes
 CONTROL_H = 34  # EVERY button, dropdown, text field and segmented control
 SMALL_H = 24  # chips, token buttons, icon-only buttons
+SECTION_ADD = 20  # a sidebar section's plain + (a gray glyph, the Mac's size)
 INDICATOR = 16  # standard icon size
 TOGGLE_ROW_H = 32  # an on/off setting: label left, switch right
 TOGGLE_W, TOGGLE_H = 36, 20  # the switch

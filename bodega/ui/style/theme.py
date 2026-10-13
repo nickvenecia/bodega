@@ -122,9 +122,10 @@ QPushButton#Ghost:hover {{ background: {tokens.CARD_HOVER}; color: {tokens.TEXT}
 QPushButton#AddChip {{ background: {tokens.CHIP}; border: 1px solid transparent; color: {tokens.ACCENT}; padding: 0 {SPACE_3}px 0 {SPACE_2}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 QPushButton#AddChip:hover {{ background: {tokens.CHIP_HOVER}; }}
 QPushButton#AddChip:pressed {{ background: {tokens.ACCENT_TINT}; }}
-QToolButton#ChipRound {{ background: {tokens.CHIP}; border: none; border-radius: {SMALL_H // 2}px;
-    min-width: {SMALL_H}px; max-width: {SMALL_H}px; min-height: {SMALL_H}px; max-height: {SMALL_H}px; }}
-QToolButton#ChipRound:hover {{ background: {tokens.CHIP_HOVER}; }}
+QToolButton#SectionAdd {{ background: transparent; border: none; border-radius: {tokens.SECTION_ADD // 2}px;
+    min-width: {tokens.SECTION_ADD}px; max-width: {tokens.SECTION_ADD}px;
+    min-height: {tokens.SECTION_ADD}px; max-height: {tokens.SECTION_ADD}px; }}
+QToolButton#SectionAdd:hover {{ background: {tokens.CARD_HOVER}; }}
 *[capsule="true"] {{ border-radius: {_INNER // 2}px; padding-left: {SPACE_4}px; }}
 QPushButton#LinkBtn {{ background: transparent; border: none; padding: 0; color: {tokens.ACCENT}; text-align: left; }}
 QPushButton#LinkBtn:hover {{ color: {tokens.ACCENT_HOVER}; }}

@@ -35,7 +35,9 @@ class SectionHead(QFrame):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.folded = False
-        self.lay = hbox(self, (tokens.SPACE_2, tokens.SPACE_1, 0, tokens.SPACE_1), tokens.SPACE_1)
+        self.lay = hbox(
+            self, (tokens.SPACE_2, tokens.SPACE_1, tokens.SPACE_1, tokens.SPACE_1), tokens.SPACE_1
+        )
         self.label = section_label(text)
         self.chevron = IconLabel("chevron", "FAINT")
         self.lay.addWidget(self.label)
@@ -159,14 +161,32 @@ class Sidebar(LeftPanel):
         self.add_to_foot(self.profile_card)
         self.refresh()
 
-    @staticmethod
-    def _plus(tip: str) -> QToolButton:
+    def _plus(self, tip: str) -> QToolButton:
+        """A section's add button, as on the Mac: a small plain gray +, shown while the pointer is over the
+        sidebar (its room is kept while hidden, so nothing shifts)."""
         b = QToolButton()
-        b.setObjectName("ChipRound")
-        b.setIcon(theme.icon("plus", theme.ACCENT, tokens.ICON_SM))
+        b.setObjectName("SectionAdd")
+        b.setIcon(theme.icon("plus", theme.MUTED, tokens.ICON_SM))
         b.setToolTip(tip)
         b.setCursor(Qt.CursorShape.PointingHandCursor)
+        keep = b.sizePolicy()
+        keep.setRetainSizeWhenHidden(True)
+        b.setSizePolicy(keep)
+        b.hide()
+        self._pluses = [*getattr(self, "_pluses", []), b]
         return b
+
+    def _show_pluses(self, on: bool) -> None:
+        for b in getattr(self, "_pluses", []):
+            b.setVisible(on or b.hasFocus())
+
+    def enterEvent(self, e):
+        self._show_pluses(True)
+        super().enterEvent(e)
+
+    def leaveEvent(self, e):
+        self._show_pluses(False)
+        super().leaveEvent(e)
 
     def _section(self, key: str, text: str, extra: QWidget | None = None):
         """A heading and the list under it; returns the list's layout."""
@@ -206,7 +226,7 @@ class Sidebar(LeftPanel):
         for r in self.rows.values():
             r.recolor()
         for b in (self.btn_new_dep, self.btn_new_rental):
-            b.setIcon(theme.icon("plus", theme.ACCENT, tokens.ICON_SM))
+            b.setIcon(theme.icon("plus", theme.MUTED, tokens.ICON_SM))
 
     def _show_fold(self, key: str, folded: bool) -> None:
         self.boxes[key].setVisible(not folded)
