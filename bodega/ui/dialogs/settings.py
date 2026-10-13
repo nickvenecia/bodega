@@ -230,7 +230,7 @@ class SettingsDialog(QDialog):
         self._adding = False
         self._profile_id = saved or None
         self._build_profiles()
-        self.win.toast("Profile deleted." if not saved else "Profile saved.")
+        self.win.toast("Profile deleted." if not saved else "Profile saved.", "done")
 
     # ------------------------------------------------------------------ AI
     def _build_ai(self) -> None:
@@ -273,7 +273,7 @@ class SettingsDialog(QDialog):
         try:
             account.sign_out()
         except OSError as e:
-            self.win.toast(str(e))
+            self.win.toast(str(e), "problem")
         self._build_account()
         self.win.sidebar.show_who()
 

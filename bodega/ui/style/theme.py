@@ -343,8 +343,7 @@ QCalendarWidget QToolButton:hover {{ background: {tokens.RAISED_HOVER}; border-r
 #PanelFoot {{ background: transparent; border: none; }}
 #PanelBottom {{ background: {tokens.PANEL}; border-top: 1px solid {tokens.BORDER}; }}
 
-/* ---------- popups, toasts */
-#Toast {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {RADIUS_LG}px; padding: {SPACE_2}px {SPACE_4}px; }}
+/* ---------- popups */
 QTextBrowser#Notes {{ background: {tokens.WELL}; color: {tokens.TEXT}; border: 1px solid {tokens.BORDER}; border-radius: {RADIUS}px;
     padding: {SPACE_2}px; }}
 QTextBrowser#WhatsNew {{ background: {tokens.FILL}; color: {tokens.TEXT}; border: none; border-radius: {RADIUS_LG}px; }}

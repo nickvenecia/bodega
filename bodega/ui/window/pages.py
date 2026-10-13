@@ -155,7 +155,7 @@ class PagesMixin:
             export.to_pdf(pages, path, title=f"{v[0].title} {v[0].number}".strip() if v else "")
         except OSError as e:
             log.warning("PDF not saved", exc_info=True)
-            self.toast(str(e) or "Couldn't save the PDF.")
+            self.toast(str(e) or "Couldn't save the PDF.", "problem")
             return
         self._exported(path)
 
@@ -170,7 +170,7 @@ class PagesMixin:
             files = export.to_png(pages, path)
         except OSError as e:
             log.warning("PNG not saved", exc_info=True)
-            self.toast(str(e) or "Couldn't save the picture.")
+            self.toast(str(e) or "Couldn't save the picture.", "problem")
             return
         self._exported(files[0])
 
@@ -181,7 +181,7 @@ class PagesMixin:
         try:
             from PySide6.QtPrintSupport import QPrintDialog, QPrinter
         except ImportError:
-            self.toast("Printing isn't available here. Save a PDF and print that.")
+            self.toast("Printing isn't available here. Save a PDF and print that.", "problem")
             return
         printer = QPrinter(QPrinter.PrinterMode.HighResolution)
         v = self.view()
@@ -193,7 +193,7 @@ class PagesMixin:
             export.print_pages(printer, pages)
         except OSError as e:
             log.warning("print failed", exc_info=True)
-            self.toast(str(e))
+            self.toast(str(e), "problem")
 
     def _page_rental(self) -> Rental | None:
         kind, ref = self.page_ctx

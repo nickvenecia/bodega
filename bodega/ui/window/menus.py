@@ -213,7 +213,7 @@ class MenusMixin:
             self.toast("Nothing to undo.")
             return
         self._after_history()
-        self.toast(f"Undid the last change to {what}.")
+        self.toast(f"Undid the last change to {what}.", "done")
 
     def redo(self) -> None:
         if self._text_can_undo(redo=True):
@@ -225,7 +225,7 @@ class MenusMixin:
             self.toast("Nothing to redo.")
             return
         self._after_history()
-        self.toast(f"Redid the change to {what}.")
+        self.toast(f"Redid the change to {what}.", "done")
 
     def _edit_menu_state(self) -> None:
         h = self.history
@@ -265,7 +265,7 @@ class MenusMixin:
                     rows.append("\t".join([it.name, it.brand, str(it.qty)]))
             if rows:
                 QApplication.clipboard().setText("\n".join(rows))
-                self.toast(f"Copied {len(rows)} piece{'s' if len(rows) != 1 else ''}.")
+                self.toast(f"Copied {len(rows)} piece{'s' if len(rows) != 1 else ''}.", "done")
 
     def paste(self) -> None:
         """⌘V: into the text box you're typing in; otherwise a picture you copied becomes the open gear's photo."""

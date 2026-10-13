@@ -46,7 +46,7 @@ class TransferMixin:
         if not link:
             return
         if importer.google_export_url(link) is None:
-            self.toast("That isn't a Google Sheets link.")
+            self.toast("That isn't a Google Sheets link.", "problem")
             return
         with tempfile.TemporaryDirectory(prefix="bodega-sheet-") as folder:  # gone once it's read
             QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
@@ -67,7 +67,7 @@ class TransferMixin:
             rows = importer.load_rows(path)
         except OSError as e:
             log.warning("import failed", exc_info=True)
-            self.toast(str(e) or "Couldn't read that file.")
+            self.toast(str(e) or "Couldn't read that file.", "problem")
             return 0
         have = {(i.name.casefold(), i.department.casefold()): i.id for i in self.lib.items.values()}
         if ask:
@@ -88,7 +88,7 @@ class TransferMixin:
             if linked:
                 self.lib.save_items()
                 self.refresh()
-                self.toast(f"Added links to {linked} items.")
+                self.toast(f"Added links to {linked} items.", "done")
             else:
                 self.toast(f"Nothing new in {path.name}." if everything else f"No gear found in {path.name}.")
             return 0
@@ -117,7 +117,7 @@ class TransferMixin:
         self.lib.save_items()
         log.info("imported %d items from %s", len(chosen), path.name)
         self.go("gear")
-        self.toast(f"Added {len(chosen)} items." + (f" Links for {linked} more." if linked else ""))
+        self.toast(f"Added {len(chosen)} items." + (f" Links for {linked} more." if linked else ""), "done")
         return len(chosen)
 
     def _fill_links(self, sheet: list[Item], have: dict) -> int:
@@ -145,10 +145,10 @@ class TransferMixin:
             importer.write_csv(self.lib.ordered_items(), self.lib.items, p)
         except OSError:
             log.warning("CSV not saved", exc_info=True)
-            self.toast("Couldn't save the CSV.")
+            self.toast("Couldn't save the CSV.", "problem")
             return
         self.last_export = p
-        self.toast(f"Saved {p.name}.")
+        self.toast(f"Saved {p.name}.", "done")
 
     def open_data_folder(self) -> None:
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(data_dir())))
@@ -169,7 +169,7 @@ class TransferMixin:
         except OSError as e:
             notice(self, "Couldn't back up", str(e))
             return
-        self.toast("Backed up")
+        self.toast("Backed up", "done")
 
     # ------------------------------------------------------------------ photos from links
     def get_photos_from_links(self) -> None:
@@ -213,7 +213,7 @@ class TransferMixin:
         w = Worker(job, self)
         w.progress.connect(lambda i, total: self.toast(f"Getting photos… {i + 1} of {total}"))
         w.done.connect(self._photos_came)
-        w.failed.connect(self.toast)
+        w.failed.connect(lambda e: self.toast(e, "problem"))
         self._photo_worker = w
         w.start()
 
@@ -229,7 +229,10 @@ class TransferMixin:
                 self.items.load(self.items.it)
             self.refresh()
         n = len(found)
-        self.toast(f"Added {n} photo{'s' if n != 1 else ''}." if n else "None of those pages shared a photo.")
+        if n:
+            self.toast(f"Added {n} photo{'s' if n != 1 else ''}.", "done")
+        else:
+            self.toast("None of those pages shared a photo.", "problem")
 
     # ------------------------------------------------------------------ calendars
     def add_to_calendar(self, rental_id: str = "") -> None:
@@ -249,7 +252,7 @@ class TransferMixin:
             if r is None:
                 return
             if not (r.pickup or r.return_date):
-                self.toast("Give the rental its dates first.")
+                self.toast("Give the rental its dates first.", "problem")
                 return
             rentals, name = [r], f"{r.number or 'Rental'}.ics"
         text = ics.calendar(self.lib, rentals)
@@ -260,10 +263,12 @@ class TransferMixin:
         try:
             write_text(path, text)
         except OSError:
-            self.toast("Couldn't write the calendar file. Check that there's free space on this computer.")
+            self.toast(
+                "Couldn't write the calendar file. Check that there's free space on this computer.", "problem"
+            )
             return
         if QDesktopServices.openUrl(QUrl.fromLocalFile(str(path))):
-            self.toast("Opened in your calendar app. For Google Calendar: File › Save Calendar File…")
+            self.toast("Opened in your calendar app. For Google Calendar: File › Save Calendar File…", "done")
         else:
             self.save_calendar()
 
@@ -283,7 +288,7 @@ class TransferMixin:
         except OSError as e:
             notice(self, "Couldn't save", str(e))
             return
-        self.toast("Saved. In Google Calendar: Settings › Import & Export › Import.")
+        self.toast("Saved. In Google Calendar: Settings › Import & Export › Import.", "done")
 
     # ------------------------------------------------------------------ Cobro
     def send_to_cobro(self, rental_id: str) -> None:
@@ -296,7 +301,7 @@ class TransferMixin:
             return
         self.flush()
         if not r.lines:
-            self.toast("Add gear to the rental first.")
+            self.toast("Add gear to the rental first.", "problem")
             return
         if not cobro.installed():
             notice(
@@ -317,4 +322,4 @@ class TransferMixin:
         except OSError as e:
             notice(self, "Couldn't send it to Cobro", str(e))
             return
-        self.toast(f"Cobro has draft invoice {number}. Open Cobro to send it.")
+        self.toast(f"Cobro has draft invoice {number}. Open Cobro to send it.", "done")

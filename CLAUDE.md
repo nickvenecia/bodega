@@ -78,7 +78,8 @@ bodega/
                    pasted (Copy Image in a browser) or dropped: picture_file/image/link, has_picture; thumbnails),
                    panels.py (LeftPanel: every list of places on the left, with NavRow; SidePanel: every
                    panel on the right, one header: title, round buttons, ⋯, ✕ at the far right),
-                   widgets.py (Card, Disclosure, Section, TitleEdit, IconLabel, SearchField, button_row, fields…), glass.py
+                   widgets.py (Card, Disclosure, Section, TitleEdit, IconLabel, SearchField, button_row, fields…,
+                   Toast: MainWindow.toast(text, tone) with "done" / "problem" / "" for news), glass.py
                    (GlassRoot backdrop drawn once and reused; Dock: the inspector floats and slides, the content
                    makes room through the row's right margin, a Table slides as two pictures: freeze/thaw),
                    empty.py (EmptyPage: where a table would be with nothing in it: tiles, the ways to start;

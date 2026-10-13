@@ -11,7 +11,10 @@
 - AI › Update from Links works for gear linked to B&H too: when a store won't let Bodega read its page, your AI
   finds another page about that piece (usually the maker's), Bodega checks it's really about it, and you get its price
   and a tidier name to approve. Your B&H link stays as it is. A price in another currency says so in Review.
-- Long messages along the bottom of the window stay up long enough to read.
+- Messages are easier to notice. They float over your list, just above the totals, and rise in and fade away: a green
+  check when something worked, an amber sign on an amber card when it didn't, and a dark card on the white page in
+  the light look. Long ones stay up long enough to read, resting the pointer on one keeps it up, and they never get
+  in the way of a click.
 
 ## 1.1.7
 

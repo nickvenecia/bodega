@@ -171,11 +171,14 @@ def test_a_store_that_turns_bodega_away_says_what_to_do(qapp, data_folder, monke
     it.link = "https://www.bhphotovideo.com/c/product/1592483-REG/sony_fx6.html"
     win.open("gear", it.id)
     said = []
-    win.items.toast_wanted.connect(said.append)
+    win.items.toast_wanted.connect(lambda text, tone: said.append((text, tone)))
     win.items.photo_from_link()
     win.items._photo_job.wait(5000)
     QApplication.processEvents()
-    assert said[-1] == f"B&H only lets web browsers read its pages. {PASTE_INSTEAD}" and not it.photo
+    assert (
+        said[-1] == (f"B&H only lets web browsers read its pages. {PASTE_INSTEAD}", "problem")
+        and not it.photo
+    )
     got = []
     check = PriceCheck(it.id, it.link)
     check.done.connect(lambda *a: got.append(a))

@@ -147,7 +147,7 @@ class ItemPanel(DetailsBase):
     duplicate_wanted = Signal(str)
     rent_wanted = Signal(str)
     open_rental = Signal(str)
-    toast_wanted = Signal(str)  # a short message for the window to show
+    toast_wanted = Signal(str, str)  # a short message for the window to show, and its tone (MainWindow.toast)
     ai_wanted = Signal(str)  # Update with AI (this piece)
 
     def __init__(self, lib: Library, parent: QWidget | None = None):
@@ -509,7 +509,7 @@ class ItemPanel(DetailsBase):
         if url:  # only web pages open: never file://, smb:// or an app's own links
             QDesktopServices.openUrl(QUrl(url))
         elif self.link.text().strip():
-            self.toast_wanted.emit("Only web links (https://…) open from here.")
+            self.toast_wanted.emit("Only web links (https://…) open from here.", "problem")
 
     def _check_price(self) -> None:
         if self.it is None or not self.it.link.strip() or self._price_thread is not None:
@@ -648,7 +648,7 @@ class ItemPanel(DetailsBase):
         try:
             self._use_photo(photos.keep_file(path))
         except (OSError, ValueError) as e:
-            self.toast_wanted.emit(str(e))
+            self.toast_wanted.emit(str(e), "problem")
 
     def photo_from_link(self) -> None:
         if self.it is not None and web.web_link(self.it.link):
@@ -666,10 +666,10 @@ class ItemPanel(DetailsBase):
             except web.Refused as e:  # the store lets only browsers in: the browser can hand it over
                 raise OSError(f"{e} {PASTE_INSTEAD}") from e
 
-        self.toast_wanted.emit(message)
+        self.toast_wanted.emit(message, "")
         w = Worker(job, self)
         w.done.connect(lambda name: self._photo_came(item_id, name))
-        w.failed.connect(self.toast_wanted.emit)
+        w.failed.connect(lambda e: self.toast_wanted.emit(e, "problem"))
         self._photo_job = w
         w.start()
 
@@ -709,7 +709,7 @@ class ItemPanel(DetailsBase):
             try:
                 self._use_photo(photos.keep_image(img))
             except (OSError, ValueError) as e:
-                self.toast_wanted.emit(str(e))
+                self.toast_wanted.emit(str(e), "problem")
             return True
         link = photos.picture_link(mime) if links else ""
         if link:
