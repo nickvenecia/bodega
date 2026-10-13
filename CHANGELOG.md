@@ -1,11 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.1.6
 
 - A new look when there's nothing yet: the ways to start, as tiles. Empty gear offers three (Add Manually, Import
   Spreadsheet…, Google Sheets…), and a spreadsheet dragged onto the window comes in too; empty kits and rentals offer
-  New Kit or New Rental the same way. Search and the filter stay hidden until
-  there's something to search.
+  New Kit or New Rental the same way. Search and the filter stay hidden until there's something to search.
 
 ## 1.1.5
 
