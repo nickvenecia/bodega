@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Menus, dropdown lists, pickers and suggestions look like the sidebar and Settings: the same rounded rows, spacing
+  and soft highlight.
+
 ## 1.1.0
 
 - Bodega is blue now: a blue accent across the app and on the paper (new profiles; your profile's paper color is
