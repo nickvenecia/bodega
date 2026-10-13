@@ -61,7 +61,6 @@ TITLEBAR_H = 32  # Bodega's own Mac title bar (fitted to the real one once the w
 SEG_INSET = 2  # gap between a segmented control's frame and its buttons
 ROW_INDENT = 18  # attached gear in the list, per level
 TEXT_BOX_H = 2 * CONTROL_H - SPACE_2  # a two-line text box (addresses, notes)
-MENU_ROW_H = CONTROL_H - SPACE_2  # a row in a menu, a dropdown's list or a picker
 CHIP_SM_H = SMALL_H - 6  # the small status chip
 SCROLL_INSET = 2  # a scrollbar's handle sits this far inside its track
 TEXT_BOX_TALL = 4 * CONTROL_H - SPACE_3  # notes
@@ -141,6 +140,13 @@ NAV_H = 30  # one row in the sidebar
 NAV_INSET = SCROLL_GUTTER  # a sidebar row's gap from the glass edge (the scroll bar's room on the right)
 NAV_R = GLASS_R - NAV_INSET  # its corners: concentric with the glass (the curves run parallel)
 MENU_GAP = 6  # between a button and the menu it opens
+# ---- every list of choices looks like the sidebar and Settings: menus, dropdown lists, pickers, suggestions.
+# Rows sit LIST_INSET inside a list whose corners are LIST_R, so their corners (LIST_ROW_R) run parallel to it.
+LIST_R = GLASS_R
+LIST_INSET = NAV_INSET
+LIST_ROW_R = NAV_R
+LIST_ROW_H = NAV_H
+LIST_GAP = NAV_GAP
 AVATAR = 32  # your profile's initials, bottom of the sidebar
 ASSISTANT_ICON = 28  # the assistant's face next to its title
 ASSISTANT_ICON_BIG = 64  # and saying hi in an empty chat

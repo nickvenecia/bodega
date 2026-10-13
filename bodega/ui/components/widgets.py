@@ -452,11 +452,22 @@ def disable_item(c: QComboBox, key: str, why: str) -> None:
         item.setToolTip(why)
 
 
+def suggestions(c):
+    """A type-ahead list (QCompleter) in the shared list look: rounded, rows inset like the sidebar's."""
+    pop = c.popup()
+    pop.setObjectName("Suggestions")
+    pop.setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
+    pop.setWindowFlag(Qt.WindowType.NoDropShadowWindowHint, True)
+    pop.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+    pop.setItemDelegate(ComboItemDelegate(pop))
+    return c
+
+
 class ComboItemDelegate(QStyledItemDelegate):
     """Draws dropdown rows: rounded highlight from the stylesheet, standard row height,
     and a thin line for separators (Qt's default painter ignores the stylesheet on macOS)."""
 
-    ROW_H = tokens.MENU_ROW_H
+    ROW_H = tokens.LIST_ROW_H + tokens.LIST_GAP
     SEP_H = tokens.SPACE_2 + 1
 
     @staticmethod

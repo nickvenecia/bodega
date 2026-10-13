@@ -44,7 +44,7 @@ an icon once with a color and keep the picture. Add new icons there; don't load 
 `SIDEBAR_W`, `INSPECTOR_W`, `TOOLBAR_H`, `SEARCH_W`, `TABLE_ROW_H`, `NAV_H`, `ROW_INDENT`, `TEXT_BOX_H`, `TEXT_BOX_TALL`, `TEXT_BOX_TERMS`,
 `NUM_FIELD_W`, `QTY_FIELD_W`, `LOGO_THUMB`, `PAGE_GAP`, `PAGE_SHADOW`, `DIALOG_W` (and `DIALOG_W_WIDE`, `DIALOG_W_XWIDE`),
 `PROFILE_DIALOG_H`, `PICKER_SIZE`, `PAGE_DIALOG_SIZE`, `CAL_*`, `DAY_W`, `WINDOW_SIZE`, `WINDOW_MIN`, `COL_W` (every
-table column), `MENU_ROW_H`, `NAV_GAP`, `ROW_INSET`, `NOTES_H`. Timings too: `DOCK_MS`, `SAVE_DELAY_MS`,
+table column), `LIST_ROW_H`, `NAV_GAP`, `ROW_INSET`, `NOTES_H`. Timings too: `DOCK_MS`, `SAVE_DELAY_MS`,
 `TABLE_DELAY_MS`, `TOAST_MS`, `UPDATE_CHECK_DELAY_MS`, `QUIT_WAIT_MS`. Use these names, never the numbers.
 
 **Fonts:** one family (Inter, `looks.FONT`, shared with the paper), loaded once in `app.py`. Every size is a
@@ -94,14 +94,16 @@ Weights: `WEIGHT_REGULAR` 400 for text, `WEIGHT_MEDIUM` 500 for controls,
 | Token | px | Used for |
 |---|---|---|
 | `RADIUS_XS` | 4 | Small inner corners |
-| `RADIUS_SM` | 6 | Chips, menu and list rows, small buttons |
+| `RADIUS_SM` | 6 | Chips, small buttons |
 | `RADIUS` | 8 | Buttons, fields, dropdowns, segmented controls |
-| `RADIUS_LG` | 12 | Package and rental cards, line boxes, popups and menus |
+| `RADIUS_LG` | 12 | Package and rental cards, line boxes |
 
-Menus and dropdown lists are **always rounded**, with transparent corners, and so is the highlighted
-row inside them. `app._RoundPopups` handles this for every `QMenu` and dropdown automatically: it makes
-the popup window see-through and gives every dropdown `widgets.ComboItemDelegate` (rounded highlight,
-`MENU_ROW_H` rows, thin separator lines). Don't create popups that bypass it.
+**Every list of choices looks the same as the sidebar and Settings**: menus, dropdown lists, pickers and
+type-ahead suggestions. The list's corners are `LIST_R` (= `GLASS_R`, 18), rows sit `LIST_INSET` (10) inside it
+with corners `LIST_ROW_R` (8, concentric), `LIST_ROW_H` (30) tall, `LIST_GAP` (2) apart. Hover is `CARD_HOVER`; the
+highlighted or picked row is `ACCENT_TINT` with its words and icon in `ACCENT_HOVER`. This is a must: never give a
+list its own sizes. `app._RoundPopups` makes every `QMenu` and dropdown window see-through and gives dropdowns
+`widgets.ComboItemDelegate`; type-ahead lists go through `widgets.suggestions()`. Don't create popups that bypass them.
 
 ---
 

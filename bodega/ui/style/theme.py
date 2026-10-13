@@ -20,7 +20,6 @@ from bodega.ui.style.tokens import (
     ICON,
     ICON_STROKE,
     INDICATOR,
-    MENU_ROW_H,
     RADIUS,
     RADIUS_LG,
     RADIUS_SM,
@@ -173,12 +172,19 @@ QLineEdit:focus, QComboBox:focus {{ border-color: {tokens.ACCENT}; }}
 QComboBox::drop-down {{ border: none; width: {SPACE_5}px; }}
 QComboBox::down-arrow {{ image: url(__CHEVRON__); width: {SPACE_3}px; height: {SPACE_3}px; }}
 QComboBoxPrivateContainer {{ background: transparent; border: none; }}
-QComboBox QAbstractItemView {{
-    background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {RADIUS_LG}px; padding: {SPACE_1}px;
-    selection-background-color: {tokens.ACCENT}; selection-color: {tokens.ON_ACCENT}; outline: none;
+QComboBox QAbstractItemView, QListView#Suggestions {{
+    background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {tokens.LIST_R}px;
+    padding: {tokens.LIST_INSET - 1}px; outline: none;
+    selection-background-color: {tokens.ACCENT_TINT}; selection-color: {tokens.ACCENT_HOVER};
 }}
-QComboBox QAbstractItemView::item {{ padding: 0 {SPACE_3}px; min-height: {MENU_ROW_H}px; border-radius: {RADIUS_SM}px; }}
-QComboBox QAbstractItemView::item:selected {{ background: {tokens.ACCENT}; color: {tokens.ON_ACCENT}; }}
+QComboBox QAbstractItemView::item, QListView#Suggestions::item {{
+    padding: 0 {SPACE_2}px; min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px;
+    margin: {tokens.LIST_GAP // 2}px 0;
+}}
+QComboBox QAbstractItemView::item:hover, QListView#Suggestions::item:hover {{ background: {tokens.CARD_HOVER}; }}
+QComboBox QAbstractItemView::item:selected, QListView#Suggestions::item:selected {{
+    background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_HOVER};
+}}
 QComboBox QAbstractItemView::separator {{ height: 1px; background: {tokens.BORDER_STRONG}; margin: {SPACE_1}px {SPACE_2}px; }}
 
 /* ---------- segmented control: CONTROL_H tall overall */
@@ -236,10 +242,12 @@ QPlainTextEdit#BigName:focus {{ background: {tokens.FIELD}; border-color: {token
 #Totals {{ background: transparent; border-top: 1px solid {tokens.BORDER}; }}
 #TotalLabel {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}
 #TotalValue {{ font-size: {TEXT_LG}px; font-weight: {WEIGHT_SEMIBOLD}; }}
-QListWidget#Picker {{ background: {tokens.CARD}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {RADIUS}px; padding: {SPACE_1}px; outline: none; }}
-QListWidget#Picker::item {{ min-height: {MENU_ROW_H}px; border-radius: {RADIUS_SM}px; padding: 0 {SPACE_2}px; }}
+QListWidget#Picker {{ background: {tokens.CARD}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {tokens.LIST_R}px;
+    padding: {tokens.LIST_INSET - 1}px; outline: none; }}
+QListWidget#Picker::item {{ min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px; padding: 0 {SPACE_2}px;
+    margin: {tokens.LIST_GAP // 2}px 0; }}
 QListWidget#Picker::item:hover {{ background: {tokens.CARD_HOVER}; }}
-QListWidget#Picker::item:selected {{ background: {tokens.CARD_SELECTED}; color: {tokens.TEXT}; }}
+QListWidget#Picker::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_HOVER}; }}
 QListWidget#Picker::indicator {{ width: {INDICATOR}px; height: {INDICATOR}px; border-radius: {RADIUS_XS}px;
     border: 1px solid {tokens.BORDER_CHECK}; background: {tokens.CARD}; }}
 QListWidget#Picker::indicator:checked {{ background: {tokens.ACCENT}; border-color: {tokens.ACCENT}; image: url(__CHECK__); }}
@@ -331,9 +339,11 @@ QCalendarWidget QToolButton:hover {{ background: {tokens.RAISED_HOVER}; border-r
 #Toast {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {RADIUS_LG}px; padding: {SPACE_2}px {SPACE_4}px; }}
 QTextBrowser#Notes {{ background: {tokens.WELL}; color: {tokens.TEXT}; border: 1px solid {tokens.BORDER}; border-radius: {RADIUS}px;
     padding: {SPACE_2}px; }}
-QMenu {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {RADIUS_LG}px; padding: {SPACE_1}px; }}
-QMenu::item {{ padding: 0 {SPACE_4}px 0 {SPACE_2}px; min-height: {MENU_ROW_H}px; border-radius: {RADIUS_SM}px; }}
-QMenu::item:selected {{ background: {tokens.ACCENT}; color: {tokens.ON_ACCENT}; }}
+QMenu {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {tokens.LIST_R}px;
+    padding: {tokens.LIST_INSET - 1}px; }}
+QMenu::item {{ padding: 0 {SPACE_4}px 0 {SPACE_2}px; min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px;
+    margin: {tokens.LIST_GAP // 2}px 0; }}
+QMenu::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_HOVER}; }}
 QMenu::item:disabled {{ color: {tokens.FAINT}; }}
 QMenu::icon {{ padding-left: {SPACE_2}px; }}
 QMenu::separator {{ height: 1px; background: {tokens.BORDER_STRONG}; margin: {SPACE_1}px {SPACE_2}px; }}
@@ -457,7 +467,7 @@ class _Themed(QIconEngine):
 
     def _color(self, mode) -> str:
         if self.menu and mode in (QIcon.Mode.Active, QIcon.Mode.Selected):
-            return tokens.ON_ACCENT
+            return tokens.ACCENT_HOVER
         return getattr(tokens, self.key) if self.key else self.color
 
     def pixmap(self, size, mode, state):
@@ -477,7 +487,7 @@ def icon(name: str, color: str = "", size: int = ICON) -> QIcon:
 
 
 def menu_icon(name: str, color: str = "", size: int = ICON) -> QIcon:
-    """For menu rows: the highlighted row is the accent, so its icon switches there."""
+    """For menu rows: on the highlighted row (the accent's tint) the icon takes the accent, like its words."""
     color = color or tokens.MUTED
     return QIcon(_Themed(name, _token_of(color), color, size, True))
 

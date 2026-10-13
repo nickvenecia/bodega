@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.ui.components.widgets import button_row, hbox, hint, vbox
+from bodega.ui.components.widgets import button_row, hbox, hint, suggestions, vbox
 from bodega.ui.style import tokens
 from bodega.ui.style.tokens import DIALOG_W, SPACE_3, SPACE_5
 from bodega.ui.style.tokens import IMPORT_LIST_H as PICKER_LIST_H
@@ -110,7 +110,7 @@ def ask_name(
     if known:
         c = QCompleter(known, field)
         c.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        field.setCompleter(c)
+        field.setCompleter(suggestions(c))
     lay.addWidget(field)
     row = button_row()
     cancel = QPushButton("Cancel")

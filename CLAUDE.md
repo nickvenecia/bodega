@@ -138,6 +138,8 @@ tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTD
 - One popup at a time: a window never opens another on top (Settings edits in place; Review and alerts are
   the exceptions, and close before anything else opens).
 - Every number in the UI is a token; every font comes from theme.font(); dialogs end with widgets.button_row().
+- Every list of choices (menus, dropdowns, pickers, suggestions) uses the LIST_* tokens: the sidebar's and
+  Settings' corners, inset, row height and highlight. Never a list with its own sizes.
 
 ## Commands
 ```bash

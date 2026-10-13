@@ -52,6 +52,7 @@ from bodega.ui.components.widgets import (
     qty_field,
     repolish,
     set_combo,
+    suggestions,
     to_qdate,
     vbox,
 )
@@ -365,7 +366,7 @@ class ItemPanel(DetailsBase):
         c.setModel(model)
         c.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         c.setFilterMode(Qt.MatchFlag.MatchContains)
-        return c
+        return suggestions(c)
 
     # ------------------------------------------------------------------ wiring
     def _connect(self) -> None:
