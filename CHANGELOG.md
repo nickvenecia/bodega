@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.5
+
+- A sidebar section's + fades in only while the pointer is over that section.
+
 ## 1.1.4
 
 - The sidebar's + buttons are the Mac's: a small gray + beside each section's title, shown while the pointer is over the

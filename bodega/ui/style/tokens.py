@@ -94,6 +94,7 @@ GLASS_SHADOW_STEPS = 16  # layers of a panel's shadow (soft, like the Mac's)
 GLASS_SHADOW_SPREAD = 24  # how far it reaches: wide and faint, never a dark smudge
 GLASS_SHADOW_DROP = 3  # how far below the panel it sits: barely
 DOCK_MS = 240  # the inspector sliding in or out
+FADE_MS = 150  # small things appearing or going (a sidebar section's +): a quick fade, never a pop
 LIFT_STEP_MS = 16  # dragging a row: how often the other rows move (about 60 a second)
 LIFT_EASE = 0.3  # …and how far towards their new place each step (smaller is slower)
 LIFT_ROWS_SHOWN = 3  # rows drawn on the lifted card when several move

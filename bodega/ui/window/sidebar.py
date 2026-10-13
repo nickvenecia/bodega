@@ -6,8 +6,9 @@ Each row shows a count. Import and the tools menu (⋯) sit at the bottom.
 
 from __future__ import annotations
 
-from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QToolButton, QWidget
+from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, Qt, QTimer, Signal
+from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import QFrame, QGraphicsOpacityEffect, QLabel, QPushButton, QToolButton, QWidget
 
 from bodega.core import dates, pricing
 from bodega.core.store import Library
@@ -162,30 +163,54 @@ class Sidebar(LeftPanel):
         self.refresh()
 
     def _plus(self, tip: str) -> QToolButton:
-        """A section's add button, as on the Mac: a small plain gray +, shown while the pointer is over the
-        sidebar (its room is kept while hidden, so nothing shifts)."""
+        """A section's add button, as on the Mac: a small plain gray +, faded in while the pointer is over its
+        own section (heading or rows) and faded out when it leaves. Always there for the layout, so nothing shifts."""
         b = QToolButton()
         b.setObjectName("SectionAdd")
         b.setIcon(theme.icon("plus", theme.MUTED, tokens.ICON_SM))
         b.setToolTip(tip)
         b.setCursor(Qt.CursorShape.PointingHandCursor)
-        keep = b.sizePolicy()
-        keep.setRetainSizeWhenHidden(True)
-        b.setSizePolicy(keep)
-        b.hide()
-        self._pluses = [*getattr(self, "_pluses", []), b]
+        b.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # the same commands are in the menus, with keys
+        fx = QGraphicsOpacityEffect(b)
+        fx.setOpacity(0.0)
+        b.setGraphicsEffect(fx)
+        anim = QPropertyAnimation(fx, b"opacity", b)
+        anim.setDuration(tokens.FADE_MS)
+        anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+        b._fade = anim
         return b
 
-    def _show_pluses(self, on: bool) -> None:
-        for b in getattr(self, "_pluses", []):
-            b.setVisible(on or b.hasFocus())
+    @staticmethod
+    def _fade(b: QToolButton, on: bool) -> None:
+        fx, anim = b.graphicsEffect(), b._fade
+        target = 1.0 if on else 0.0
+        if anim.endValue() == target and anim.state() == QPropertyAnimation.State.Running:
+            return
+        if abs(fx.opacity() - target) < 0.01:
+            return
+        anim.stop()
+        anim.setStartValue(fx.opacity())
+        anim.setEndValue(target)
+        anim.start()
 
-    def enterEvent(self, e):
-        self._show_pluses(True)
-        super().enterEvent(e)
+    def _hover_check(self) -> None:
+        """Show the + of the section under the pointer, and only that one."""
+        at = QCursor.pos()
+        for key, plus in getattr(self, "_section_plus", {}).items():
+            head, box = self.heads[key], self.boxes[key]
+            area = QRect(head.mapToGlobal(QPoint(0, 0)), head.size())
+            if box.isVisible():
+                area = area.united(QRect(box.mapToGlobal(QPoint(0, 0)), box.size()))
+            self._fade(plus, self.underMouse() and area.contains(at))
+
+    def eventFilter(self, obj, e):
+        if e.type() in (QEvent.Type.Enter, QEvent.Type.Leave, QEvent.Type.HoverMove):
+            QTimer.singleShot(0, self._hover_check)
+        return super().eventFilter(obj, e)
 
     def leaveEvent(self, e):
-        self._show_pluses(False)
+        for plus in getattr(self, "_section_plus", {}).values():
+            self._fade(plus, False)
         super().leaveEvent(e)
 
     def _section(self, key: str, text: str, extra: QWidget | None = None):
@@ -194,6 +219,11 @@ class Sidebar(LeftPanel):
         if extra is not None:
             head.lay.addWidget(extra)
         box = QWidget()
+        if isinstance(extra, QToolButton) and extra.objectName() == "SectionAdd":
+            self._section_plus = {**getattr(self, "_section_plus", {}), key: extra}
+            for w in (head, box):
+                w.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+                w.installEventFilter(self)
         lay = vbox(box, (0, 0, 0, tokens.SPACE_3), tokens.NAV_GAP)
         head.toggled.connect(lambda folded, k=key: self._fold(k, folded))
         self.lay.addWidget(head)

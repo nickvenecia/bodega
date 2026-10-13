@@ -72,3 +72,23 @@ def test_the_plus_buttons(qapp, data_folder):
         "New Kit",
     ]
     win.close()
+
+
+def test_only_the_hovered_sections_plus_fades_in(qapp, data_folder, monkeypatch):
+    from PySide6.QtCore import QPoint
+    from PySide6.QtGui import QCursor
+
+    from bodega.core import sample
+    from bodega.core.store import Library
+    from bodega.ui.window.main_window import MainWindow
+
+    win = MainWindow(sample.fill(Library(data_folder).load()))
+    win.show()
+    sb = win.sidebar
+    head = sb.heads["rental-section"]
+    monkeypatch.setattr(sb, "underMouse", lambda: True)
+    monkeypatch.setattr(QCursor, "pos", staticmethod(lambda: head.mapToGlobal(QPoint(4, 4))))
+    sb._hover_check()
+    assert sb.btn_new_rental._fade.endValue() == 1.0  # Rentals' + fades in
+    assert sb.btn_new_dep.graphicsEffect().opacity() == 0.0  # Inventory's stays away
+    win.close()
