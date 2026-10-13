@@ -87,8 +87,8 @@ Cmd-click) picks many; **Delete** deletes them, after a warning.
 
 **Links and prices.** Links on your sheet's names come in with the gear (import the sheet again to add them to
 gear you already have). **Import… → Google Sheets Link…** reads a Google Sheet straight from its link, links and
-all (share it as *Anyone with the link* first). **Check Price** reads today's price from the link and offers to use it. Some stores
-don't let apps read their pages; then it says so.
+all (share it as *Anyone with the link* first). **Check Price** (the circle arrow beside a link) reads today's price from
+the page and offers to use it. Some stores, B&H among them, don't let apps read their pages; then it says so.
 
 **Every piece:** department and group, how many you own with a **serial number per unit**, what you paid, its
 **replacement value** (with your sales tax), its day rate (automatic, or your own), a link, notes, and whether it's
