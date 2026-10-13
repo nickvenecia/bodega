@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1
+
+- Check Price is now a small circle arrow beside the link, next to the arrow that opens it, so it no longer takes a
+  line of its own. Under the link you see only "Checking B&H…" and then the price it found, with Use It.
+- When Check Price can't read a page (B&H turns it away, say), it tells you in a short message at the bottom of the
+  window, like the app's other messages, instead of a long note under the link.
+
 ## 1.2.0
 
 - Some stores, B&H among them, let only web browsers read their pages, so Bodega can't read their links. Now it says

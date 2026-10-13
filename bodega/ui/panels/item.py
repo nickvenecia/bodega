@@ -274,26 +274,31 @@ class ItemPanel(DetailsBase):
         b.add(arow)
 
         b = self._block("link", "Link")
-        lrow = hbox(spacing=tokens.SPACE_2)
+        lrow = hbox(spacing=tokens.SPACE_1)
         self.link = QLineEdit()
         self.link.setPlaceholderText("https://")
+        self.check_price = icon_button("retry", "Check Price: read the price on this page")
         self.open_link = icon_button("reveal", "Open in your browser")
         lrow.addWidget(self.link, 1)
+        lrow.addWidget(self.check_price)
         lrow.addWidget(self.open_link)
         b.add(lrow)
-        prow = hbox(spacing=tokens.SPACE_2)
-        self.check_price = QPushButton("Check Price")
-        self.check_price.setObjectName("LinkBtn")
-        self.check_price.setCursor(Qt.CursorShape.PointingHandCursor)
+        # under the link only while there's something to say: Checking…, then the price found (a problem is a toast)
+        self.price_row = QWidget()
+        prow = hbox(self.price_row, spacing=tokens.SPACE_2)
         self.price_found = QLabel()
         self.price_found.setObjectName("Meta")
         self.price_found.setWordWrap(True)
         self.use_price = QPushButton("Use It")
+        self.use_price.setObjectName("LinkBtn")
+        self.use_price.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.use_price.setToolTip("Put this price in Paid Each")
         self.use_price.hide()
-        prow.addWidget(self.check_price)
         prow.addWidget(self.price_found, 1)
         prow.addWidget(self.use_price)
-        b.add(prow)
+        self.price_row.setMinimumHeight(tokens.CONTROL_H)  # as tall with Use It as without: no jump
+        self.price_row.hide()
+        b.add(self.price_row)
         self._found_price = ""
         self._price_thread: PriceCheck | None = None
 
@@ -394,7 +399,9 @@ class ItemPanel(DetailsBase):
             lambda t: self._set("day_rate", t.replace("$", "").replace(",", "").strip())
         )
         self.rentable.toggled.connect(lambda on: self._set("rentable", on, True))
-        self.link.textEdited.connect(lambda t: (self._set("link", t.strip()), self._parts()))
+        self.link.textEdited.connect(
+            lambda t: (self._set("link", t.strip()), self._parts(), self._link_state())
+        )
         self.open_link.clicked.connect(self._open_link)
         self.check_price.clicked.connect(self._check_price)
         self.use_price.clicked.connect(self._use_price)
@@ -511,41 +518,52 @@ class ItemPanel(DetailsBase):
         elif self.link.text().strip():
             self.toast_wanted.emit("Only web links (https://…) open from here.", "problem")
 
+    def _link_state(self) -> None:
+        """Check Price works once there's a link, one check at a time."""
+        self.check_price.setEnabled(bool(self.link.text().strip()) and self._price_thread is None)
+
+    def _show_price(self, text: str = "", use: bool = False) -> None:
+        self.price_found.setText(text)
+        self.use_price.setVisible(use)
+        self.price_row.setVisible(bool(text))
+
     def _check_price(self) -> None:
         if self.it is None or not self.it.link.strip() or self._price_thread is not None:
             return
-        self.check_price.setEnabled(False)
-        self.price_found.setText("Checking…")
-        self.use_price.hide()
+        self._show_price(f"Checking {web.site_name(self.it.link) or 'the page'}…")
         t = PriceCheck(self.it.id, self.it.link, self)
         t.done.connect(self._price_done)
-        t.finished.connect(lambda: setattr(self, "_price_thread", None))
+        t.finished.connect(self._price_checked)
         self._price_thread = t
+        self._link_state()
         t.start()
 
+    def _price_checked(self) -> None:
+        self._price_thread = None
+        self._link_state()
+
     def _price_done(self, item_id: str, price: str, store: str, error: str) -> None:
-        self.check_price.setEnabled(True)
         if self.it is None or self.it.id != item_id:
             return
-        if error or not price:
-            self.price_found.setText(error or "No price on that page.")
-            self.use_price.hide()
+        if error or not price:  # a problem is a toast; the line under the link is only for a price found
+            self._show_price()
+            self.toast_wanted.emit(error or "No price on that page.", "problem")
             return
         b = self.b()
         cur = (b.currency if b else "$") or "$"
         self._found_price = price
-        self.price_found.setText(f"{store}: {money.fmt(money.parse(price), cur)}")
-        same = money.parse(price) == money.parse(self.it.value)
-        self.use_price.setVisible(not same)
-        if same:
-            self.price_found.setText(self.price_found.text() + " · same")
+        found = f"{store}: {money.fmt(money.parse(price), cur)}"
+        if money.parse(price) == money.parse(self.it.value):
+            self._show_price(found + " · same as yours")
+        else:
+            self._show_price(found, use=True)
 
     def _use_price(self) -> None:
         if self.it is None or not self._found_price:
             return
         self.value.set_value(self._found_price)
         self._set("value", self._found_price)
-        self.use_price.hide()
+        self._show_price(self.price_found.text() + " · same as yours")
 
     # ------------------------------------------------------------------ maintenance
     def _show_care(self) -> None:
@@ -752,8 +770,8 @@ class ItemPanel(DetailsBase):
         self.link.setText(it.link)
         self.link.setCursorPosition(0)
         self.notes.set_text(it.notes)
-        self.price_found.clear()
-        self.use_price.hide()
+        self._show_price()
+        self._link_state()
         self._build_serials()
         self._show_works()
         self._show_photo()
@@ -991,8 +1009,11 @@ class PriceCheck(QThread):
     def run(self) -> None:
         try:
             got = prices.fetch(self.url)
-        except web.Refused as e:
-            self.done.emit(self.item_id, "", "", f"{e} Open the link to see the price.")
+        except web.Refused:
+            site = web.site_name(self.url) or "That store"
+            self.done.emit(
+                self.item_id, "", "", f"{site} won't let Bodega read its price. Open the link instead."
+            )
             return
         except OSError as e:
             self.done.emit(self.item_id, "", "", str(e))

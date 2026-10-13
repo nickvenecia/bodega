@@ -179,13 +179,19 @@ def test_a_store_that_turns_bodega_away_says_what_to_do(qapp, data_folder, monke
         said[-1] == (f"B&H only lets web browsers read its pages. {PASTE_INSTEAD}", "problem")
         and not it.photo
     )
+    said_price = "B&H won't let Bodega read its price. Open the link instead."
     got = []
     check = PriceCheck(it.id, it.link)
     check.done.connect(lambda *a: got.append(a))
     check.run()  # (in this thread)
-    assert got == [
-        (it.id, "", "", "B&H only lets web browsers read its pages. Open the link to see the price.")
-    ]
+    assert got == [(it.id, "", "", said_price)]
+    # Check Price: the problem is a toast, and nothing is left under the link
+    win.items._check_price()
+    assert win.items.price_found.text() == "Checking B&H…" and not win.items.check_price.isEnabled()
+    win.items._price_thread.wait(5000)
+    QApplication.processEvents()
+    assert said[-1] == (said_price, "problem")
+    assert win.items.price_row.isHidden() and win.items.check_price.isEnabled()
     win.close()
 
 
