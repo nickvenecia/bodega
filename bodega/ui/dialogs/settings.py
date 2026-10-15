@@ -118,6 +118,9 @@ class SettingsDialog(QDialog):
         while lay.count():
             old = lay.takeAt(0).widget()
             if old is not None:
+                # hidden first, while it's whole, so the focus leaves it now: a form thrown away while it shows
+                # with the focus in it (on a Mac, the field you typed in) crashes Bodega as it goes
+                old.hide()
                 old.deleteLater()
         inner = w
         if scroll:

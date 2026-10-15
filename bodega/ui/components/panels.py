@@ -12,7 +12,7 @@ Subclass them; change what's inside, never the frame.
 
 from __future__ import annotations
 
-from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtWidgets import QFrame, QLabel, QMenu, QPushButton, QToolButton, QWidget
 
 from bodega.ui.components.glass import glass
@@ -111,7 +111,10 @@ class NavRow(QFrame):
         super().mousePressEvent(e)
 
     def contextMenuEvent(self, e):
-        self.menu_wanted.emit(self.key, e.globalPos())
+        # the menu opens once the right-click is over: Rename Group… or Remove Group there takes this very row
+        # away, and a row still busy with its right-click when that happens would crash
+        pos = e.globalPos()
+        QTimer.singleShot(0, self, lambda: self.menu_wanted.emit(self.key, pos))
 
     def dragEnterEvent(self, e):
         from bodega.ui.window.tables import GearTable

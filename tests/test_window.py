@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+
 import pytest
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QLabel
+import shiboken6
+from PySide6.QtCore import Qt, QThread, QTimer
+from PySide6.QtGui import QContextMenuEvent
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QApplication, QLabel, QWidget
 
 from bodega.core import sample
 from bodega.core.model import RentalLine
@@ -19,6 +24,53 @@ def win(qapp, data_folder):
     w.show()
     yield w
     w.close()
+
+
+def when_open(kind, do) -> None:
+    """`do(window)` once a window of this kind shows (it may open from inside a click and wait there)."""
+    tries = [500]
+
+    def look() -> None:
+        shown = [w for w in QApplication.topLevelWidgets() if isinstance(w, kind) and w.isVisible()]
+        if shown:
+            do(shown[0])
+        elif tries[0]:
+            tries[0] -= 1
+            QTimer.singleShot(10, look)
+
+    QTimer.singleShot(0, look)
+
+
+def wait_for(done, ms: int = 5000) -> None:
+    for _ in range(ms // 10):
+        if done():
+            return
+        QTest.qWait(10)
+    raise AssertionError("never happened")
+
+
+@contextmanager
+def still_there_after(widget: QWidget):
+    """A click on `widget` may open a window or a menu; anything that window throws away while it's open is
+    gone before the click is over. If that's `widget` itself, Bodega crashes (on a Mac, at once). Fails if it
+    happens during the `with`."""
+    start = QThread.currentThread().loopLevel()
+    thrown = []
+    original = QWidget.deleteLater
+
+    def delete_later(w: QWidget) -> None:
+        if QThread.currentThread().loopLevel() > start and (w is widget or w.isAncestorOf(widget)):
+            thrown.append(type(widget).__name__)
+        original(w)
+
+    QWidget.deleteLater = delete_later
+    name = type(widget).__name__
+    try:
+        yield
+    finally:
+        QWidget.deleteLater = original
+    assert shiboken6.isValid(widget), f"the {name} was gone before its own click was over"
+    assert not thrown, f"the {thrown[0]} was thrown away in the middle of its own click"
 
 
 def test_first_launch_is_empty(qapp, data_folder):
@@ -79,6 +131,90 @@ def test_empty_gear_page_starts_and_takes_a_dropped_sheet(qapp, data_folder, tmp
     w.go("kits")  # only the gear page takes spreadsheets
     assert drop("Gear.csv") == []
     w.close()
+
+
+def test_saving_your_profile_with_the_cursor_in_a_field(qapp, data_folder):
+    """Saving in Settings › Profiles puts a fresh form in place of the old one. The old one used to be thrown
+    away while it still showed with the focus in it (on a Mac, the field you typed in), and Bodega crashed."""
+    from bodega.ui.dialogs.settings import SettingsDialog
+    from bodega.ui.window.main_window import MainWindow
+
+    w = MainWindow(Library(data_folder).load())
+    w.show()
+    done = []
+
+    def type_and_save(settings, field: str, text: str, then) -> None:
+        f = getattr(settings.profile_editor, field)
+        f.setFocus()
+        QTest.keyClicks(f, text)
+        QTest.mouseClick(settings.profile_editor.save, Qt.MouseButton.LeftButton)
+        QTimer.singleShot(100, then)  # Settings stays open after Save, going about its business
+
+    def add(settings) -> None:
+        settings.activateWindow()
+        QTest.qWaitForWindowActive(settings)  # typing leaves the focus in the field, as it does for you
+        type_and_save(settings, "name", "Juniper Lane Films", lambda: change(settings))  # a new profile
+
+    def change(settings) -> None:
+        type_and_save(
+            settings, "tagline", "Camera · Lighting · Grip", lambda: (done.append(1), settings.close())
+        )
+
+    when_open(SettingsDialog, add)
+    w.edit_business(True)
+    assert done
+    b = next(iter(Library(data_folder).load().businesses.values()))
+    assert (b.name, b.tagline) == ("Juniper Lane Films", "Camera · Lighting · Grip")
+    w.close()
+
+
+def test_a_new_rental_from_its_tile_before_there_is_a_profile(qapp, data_folder):
+    """With no profile yet, the New Rental tile opens Settings › Profiles first. On Coming Up the page swaps its
+    tiles meanwhile, and the tile used to be gone before its own click was over."""
+    from bodega.ui.dialogs.settings import SettingsDialog
+    from bodega.ui.window.main_window import MainWindow
+
+    w = MainWindow(Library(data_folder).load())
+    w.show()
+    w.go("upcoming")
+    tile = w.empty.tiles[0]
+
+    def add(settings) -> None:
+        settings.profile_editor.name.setText("Juniper Lane Films")
+        settings.profile_editor.save.click()
+        settings.close()
+
+    when_open(SettingsDialog, add)
+    with still_there_after(tile):
+        QTest.mouseClick(tile, Qt.MouseButton.LeftButton)
+    wait_for(lambda: w.rentals.r is not None)  # and the first rental is open
+    assert [b.name for b in Library(data_folder).load().businesses.values()] == ["Juniper Lane Films"]
+    w.close()
+
+
+def test_renaming_a_group_from_its_row_in_the_sidebar(win, monkeypatch, data_folder):
+    """Right-click › Rename Group… takes away the very row that was right-clicked. That used to crash."""
+    from PySide6.QtWidgets import QMenu
+
+    from bodega.ui.dialogs import common
+
+    monkeypatch.setattr(common, "ask_name", lambda *a, **k: "Grip & Rigging")
+    group = win.lib.groups()[0]
+    row = win.sidebar.rows[f"grp:{group}"]
+
+    def rename(menu) -> None:
+        next(a for a in menu.actions() if a.text() == "Rename Group…").trigger()
+        menu.close()
+
+    when_open(QMenu, rename)
+    at = row.rect().center()
+    with still_there_after(row):
+        QApplication.sendEvent(
+            row, QContextMenuEvent(QContextMenuEvent.Reason.Mouse, at, row.mapToGlobal(at))
+        )
+    wait_for(lambda: "Grip & Rigging" in win.lib.groups())
+    assert "grp:Grip & Rigging" in win.sidebar.rows and f"grp:{group}" not in win.sidebar.rows
+    assert "Grip & Rigging" in Library(data_folder).load().groups()
 
 
 def test_sidebar_places(win):

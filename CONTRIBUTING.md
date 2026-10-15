@@ -79,6 +79,16 @@ packaging/     Installer files per OS
 15. Messages shown to the user are plain English and say what to do next (see DESIGN.md §7).
     Technical details go to the log (`core/log.py`, `bodega.log` in the data folder).
 
+**The window**
+16. Anything a refresh can rebuild (start tiles, the sidebar's rows, line items) acts once its click is over
+    (`QTimer.singleShot(0, self, …)`, `DetailsBase.later`, `LineEditor._later`), never inside it. Its click may
+    open a window or a menu, and whatever that window throws away is gone before the click is over: if it's the
+    very thing that was clicked, Bodega crashes (on a Mac, every time). `still_there_after` in
+    `tests/test_window.py` catches it.
+17. A part of a window that's thrown away while the window stays open is hidden first, then `deleteLater()`
+    (Settings' `_fill`). Destroyed while it still shows with the focus in it (on a Mac, the field you just typed
+    in), a form takes Bodega down with it.
+
 ---
 
 ## 4. Threads

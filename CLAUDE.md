@@ -143,6 +143,9 @@ tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTD
   where undo marks it). New commands go in the menus with their standard key (the shortcuts list reads them).
 - Every left list is a components.panels.LeftPanel and every right panel a SidePanel: subclass them, never
   build a panel's frame by hand.
+- **Act once the click is over.** A tile, a sidebar row or a line item a refresh can rebuild never opens a window or
+  a menu inside its own click (CONTRIBUTING rule 16): the window can throw it away mid-click, which crashes Bodega.
+  A part of a window thrown away while the window stays open is hidden first (rule 17).
 - One popup at a time: a window never opens another on top (Settings edits in place; Review and alerts are
   the exceptions, and close before anything else opens).
 - Every number in the UI is a token; every font comes from theme.font(); dialogs end with widgets.button_row().

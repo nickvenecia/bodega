@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2
+
+- Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
+  could close Bodega, every time on a Mac.
+- Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.
+
 ## 1.2.1
 
 - Check Price is now a small circle arrow beside the link, next to the arrow that opens it, so it no longer takes a
