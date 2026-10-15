@@ -587,14 +587,17 @@ class MainWindow(
     def _load(self, kind: str, obj_id: str) -> None:
         self.flush()
         self._drop_fresh(keep=obj_id)
+        # something else opening in a panel starts at its top (not where the last one was scrolled to)
         if kind == "gear":
             it = self.lib.items.get(obj_id)
             if it is not None and (self.items.it is not it or not self.items.form.isVisible()):
                 self.items.load(it)
+                self.items.to_top()
         elif kind == "packages":
             p = self.lib.packages.get(obj_id)
             if p is not None and (self.packages.pkg is not p or not self.packages.form.isVisible()):
                 self.packages.load(p)
+                self.packages.to_top()
         else:
             r = self.lib.rentals.get(obj_id)
             if r is not None:
@@ -602,6 +605,7 @@ class MainWindow(
                     r.business_id = next(iter(self.lib.businesses))
                 if self.rentals.r is not r or not self.rentals.form.isVisible():
                     self.rentals.load(r)
+                    self.rentals.to_top()
         self.inspector.setCurrentWidget(
             {"gear": self.items, "packages": self.packages}.get(kind, self.rentals)
         )

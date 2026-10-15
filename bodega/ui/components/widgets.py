@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from PySide6.QtCore import (
     QEasingCurve,
     QPoint,
@@ -792,15 +794,16 @@ class TitleEdit(QPlainTextEdit):
         self.textEdited.emit(t)
 
     def _fit(self) -> None:
+        """As tall as its lines are laid out (a line is a fraction taller than the font's whole-pixel line
+        spacing): a box a pixel short could scroll inside itself, hiding the first line of a two-line name."""
         doc = self.document()
-        lines = 0
+        h = 0.0
         block = doc.begin()
         while block.isValid():
-            lines += max(1, block.layout().lineCount())
+            h += self.blockBoundingRect(block).height()  # the last one takes the bottom margin
             block = block.next()
         m = self.contentsMargins()
-        h = lines * self.fontMetrics().lineSpacing() + 2 * doc.documentMargin() + m.top() + m.bottom()
-        self.setFixedHeight(int(h) + 2)
+        self.setFixedHeight(math.ceil(h + doc.documentMargin()) + 1 + m.top() + m.bottom())  # the top margin
 
     def text(self) -> str:
         return self.toPlainText()
@@ -821,6 +824,9 @@ class TitleEdit(QPlainTextEdit):
             self.clearFocus()
             return
         super().keyPressEvent(e)
+
+    def wheelEvent(self, e):
+        e.ignore()  # it shows all of itself, so the wheel scrolls the panel it's in
 
     def resizeEvent(self, e):
         super().resizeEvent(e)

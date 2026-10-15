@@ -106,7 +106,9 @@ class _RoundPopups(QObject):
     """Qt gives menus and dropdown lists square windows; make them see-through so the
     stylesheet's rounded corners are what you actually see. A button's menu opens just below it, with a
     little air (place_menu); so does a dropdown's list. Also: scrolling never changes a value
-    (dropdowns, dates and sliders pass the wheel on to the panel, which scrolls instead)."""
+    (dropdowns, dates and sliders pass the wheel on to the panel, which scrolls instead), and never moves the
+    cursor (Qt gives dropdowns and dates the focus as the wheel goes over them: they take it from a click or Tab
+    only, so the field you're typing in keeps it while you scroll past)."""
 
     @staticmethod
     def _see_through(win: QWidget) -> None:
@@ -139,6 +141,8 @@ class _RoundPopups(QObject):
                 if obj.y() >= below.y() - 1:  # opened below the box: leave the same air
                     obj.move(obj.x(), below.y() + tokens.MENU_GAP)
         if ev.type() == QEvent.Type.Polish and isinstance(obj, QWidget):
+            if obj.focusPolicy() == Qt.FocusPolicy.WheelFocus:
+                obj.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
             if (
                 isinstance(obj, QLabel)
                 and obj.textFormat() == Qt.TextFormat.AutoText

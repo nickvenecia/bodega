@@ -217,6 +217,73 @@ def test_renaming_a_group_from_its_row_in_the_sidebar(win, monkeypatch, data_fol
     assert "Grip & Rigging" in Library(data_folder).load().groups()
 
 
+def test_a_panel_shows_something_else_from_its_top(win):
+    """Scrolled down one rental, then opening another: it starts at its top, not where the last one was."""
+    lib = win.lib
+    gear = list(lib.items.values())
+    a = next(iter(lib.rentals.values()))
+    b = lib.new_rental(win.business())
+    for r in (a, b):
+        r.lines = [RentalLine("item", gear[n % len(gear)].id, 1) for n in range(12)]
+        lib.save_rental(r)
+    win.go("rentals")
+    win.open("rentals", a.id)
+    bar = win.rentals.scroll.verticalScrollBar()
+    QTest.qWait(10)
+    bar.setValue(bar.maximum())
+    assert bar.value() > 0
+    win.open("rentals", a.id)  # the same one again: it stays where you were
+    assert bar.value() == bar.maximum()
+    win.open("rentals", b.id)
+    assert bar.value() == 0
+    win.open("gear", gear[0].id)
+    bar = win.items.scroll.verticalScrollBar()
+    bar.setValue(bar.maximum())
+    win.open("gear", gear[1].id)
+    assert bar.value() == 0
+
+
+def test_a_long_name_shows_all_of_itself(qapp):
+    """A name on two lines or more fits its box exactly, so it never scrolls inside it (hiding its first line)
+    and the wheel over it scrolls the panel."""
+    from PySide6.QtCore import QPoint, QPointF
+    from PySide6.QtGui import QWheelEvent
+
+    from bodega.ui.components.widgets import TitleEdit, vbox
+
+    host = QWidget()
+    vbox(host, 0, 0).addWidget(t := TitleEdit())
+    host.resize(240, 400)
+    host.show()
+    for words in (1, 6, 30):
+        t.setText(" ".join(["Sony FX6 Cinema Camera"] * words))
+        QApplication.processEvents()
+        assert t.verticalScrollBar().maximum() == 0, t.document().blockCount()
+    assert t.document().firstBlock().layout().lineCount() > 2
+    e = QWheelEvent(
+        QPointF(10, 10), QPointF(10, 10), QPoint(), QPoint(0, -120), Qt.MouseButton.NoButton,
+        Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.NoScrollPhase, False,
+    )  # fmt: skip
+    QApplication.sendEvent(t.viewport(), e)
+    assert not e.isAccepted()  # passed on to the panel
+    host.close()
+
+
+def test_scrolling_past_dropdowns_and_dates_leaves_the_cursor_alone(win):
+    """Qt gives dropdowns and dates the focus as the wheel goes over them, taking it from the field you're
+    typing in. In Bodega they take it from a click or Tab only."""
+    from PySide6.QtWidgets import QComboBox, QDateEdit
+
+    win.go("rentals")
+    win.open("rentals", next(iter(win.lib.rentals)))
+    QApplication.processEvents()
+    controls = [
+        w for w in win.findChildren(QWidget) if isinstance(w, (QComboBox, QDateEdit)) and w.isVisible()
+    ]
+    assert controls
+    assert all(w.focusPolicy() == Qt.FocusPolicy.StrongFocus for w in controls)
+
+
 def test_sidebar_places(win):
     for key in ("gear", "kits", "out", "upcoming", "rentals", "calendar"):
         win.go(key)  # direct: an error inside a signal wouldn't fail the test

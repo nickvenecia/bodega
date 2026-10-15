@@ -5,6 +5,11 @@
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.
+- Opening another rental, piece of gear or kit shows it from the top, instead of as far down as you'd scrolled the
+  last one.
+- Scrolling over a name long enough to take two lines scrolls the panel. Before, it could scroll the name inside its
+  box instead, hiding its first line.
+- Scrolling past a dropdown or a date no longer moves your cursor into it, so the field you're typing in keeps it.
 
 ## 1.2.1
 
