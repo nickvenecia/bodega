@@ -129,3 +129,53 @@ def test_the_shortcuts_list_names_every_single_key(win):
     caps = {w.text() for w in shown.findChildren(QLabel) if w.objectName() == "KeyCap"}
     assert {key for key, _what, _do in SINGLE_KEYS} <= caps
     shown.deleteLater()
+
+
+def test_every_key_the_shortcuts_list_shows_reaches_its_command(win):
+    """The standard's I-15: every key the menus and the single keys list is bound where it's shown, pressed for real
+    on the list (each command is held back as its key reaches it, so Quit doesn't quit)."""
+    from PySide6.QtCore import QEvent, QObject
+
+    class Hold(QObject):
+        reached: list = []
+
+        def eventFilter(self, obj, e):
+            if e.type() == QEvent.Type.Shortcut:
+                self.reached.append(obj)
+                return True
+            return False
+
+    hold = Hold()
+    menus = [top.menu() for top in win.menuBar().actions() if top.menu() is not None]
+    keyed = [a for m in menus for a in m.actions() if a.shortcuts() and not a.shortcuts()[0].isEmpty()]
+    keyed += win.single_acts
+    for a in keyed:
+        a.installEventFilter(hold)
+    t = on_the_list(win)
+    missed = []
+    for a in keyed:
+        for seq in a.shortcuts():
+            hold.reached.clear()
+            t.setFocus()
+            QTest.keyClick(t, seq[0].key(), seq[0].keyboardModifiers())
+            if hold.reached != [a]:
+                missed.append((a.text(), seq.toString()))
+    assert not missed
+    assert len(keyed) >= 25  # (the menus have 19 keys; the single keys, 6)
+
+
+def test_the_anywhere_keys_do_what_the_list_says(win):
+    """Settings › Keyboard Shortcuts › Anywhere: Delete (Backspace) deletes what's picked, Esc closes the panel."""
+    from bodega.ui.dialogs.shortcuts import EXTRA
+
+    assert [t for t, _k in EXTRA] == ["Delete What's Picked", "Close Panel"]
+    t = on_the_list(win)
+    free = next(i for i in win.lib.items.values() if not win.lib.rentals_with(i.id) and not i.parent)
+    win.open("gear", free.id)
+    t.setFocus()
+    QTest.keyClick(t, Qt.Key.Key_Backspace)
+    assert free.id not in win.lib.items
+    win.open("gear", next(iter(win.lib.items)))
+    t.setFocus()
+    QTest.keyClick(t, Qt.Key.Key_Escape)
+    assert not win.dock.opened

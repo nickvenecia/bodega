@@ -31,7 +31,7 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **192 fixed, 21 partly, 23 not
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **193 fixed, 20 partly, 23 not
 started (larger redesigns), 16 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
@@ -62,7 +62,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 192 · Partly 21 · Open 23 · Waiting on the owner 16 · No longer applies 1.**
+**Of the 253 failures: Fixed 193 · Partly 20 · Open 23 · Waiting on the owner 16 · No longer applies 1.**
 
 ### Partly: what's left
 
@@ -81,7 +81,6 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | C-70 | S3 | No account card at the top of Settings: there's no account service to show yet (accounts.REQUIRED is off). |
 | C-90 | S3 | The profile form is sized by kind; the side panels' fields still stretch to the panel's width. |
 | G-01 | S2 | No overview of what's built that names its commit, and no map of what's in scope. |
-| I-15 | S2 | Many keys are pressed end to end in tests, but not every key in the shortcuts list in its own context. |
 | K-09 | S2 | Each tick is saved as it's made, with its time; who ticked it waits on accounts (D-41). |
 | S-21 | S1 | No lockfile with hashes for every dependency, the Windows installer tool is unpinned, no SBOM. |
 | T-04 | S2 | Tests still reach some controls through private names (about 48 in test_window.py). |
@@ -152,7 +151,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 - **C**: C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-19, C-21, C-23, C-24, C-27, C-28, C-29, C-31, C-32, C-34, C-38, C-39, C-42, C-45, C-47, C-50, C-51, C-54, C-58, C-59, C-66, C-67, C-69, C-72, C-82, C-100, C-105, C-106, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
 - **D**: D-01, D-02, D-03, D-05, D-06, D-07, D-10, D-11, D-12, D-15, D-16, D-18, D-21, D-23, D-24, D-25, D-26, D-31, D-32, D-34, D-42, D-49, D-51
 - **G**: G-02
-- **I**: I-01, I-02, I-03, I-04, I-06, I-07, I-08, I-10, I-11, I-12, I-13, I-14, I-19, I-20, I-21, I-23, I-24, I-25, I-26, I-29, I-30, I-31
+- **I**: I-01, I-02, I-03, I-04, I-06, I-07, I-08, I-10, I-11, I-12, I-13, I-14, I-15, I-19, I-20, I-21, I-23, I-24, I-25, I-26, I-29, I-30, I-31
 - **K**: K-02, K-03, K-04, K-06, K-07, K-10, K-12
 - **N**: N-01, N-02, N-03, N-04, N-05, N-06, N-15, N-17
 - **O**: O-04, O-05, O-07, O-09, O-11
