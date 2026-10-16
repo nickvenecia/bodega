@@ -8,19 +8,23 @@ from pathlib import Path
 
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QDialog, QFileDialog
 
 from bodega.core import dates, errors, importer, settings, words
 from bodega.core.history import History
 from bodega.core.log import get_logger
 from bodega.core.model import Item
 from bodega.core.paths import data_dir, documents_dir
-from bodega.ui.dialogs.common import notice
+from bodega.ui.dialogs.common import Alert, notice
 from bodega.ui.style import tokens
 from bodega.ui.window.common import kind_of
 from bodega.ui.window.tables import ID
 
 log = get_logger(__name__)
+
+
+# where Google Calendar takes a calendar file in (its Settings, Import & Export)
+GOOGLE_CALENDAR_IMPORT = "https://calendar.google.com/calendar/r/settings/export"
 
 
 class TransferMixin:
@@ -318,9 +322,6 @@ class TransferMixin:
     def add_to_calendar(self, rental_id: str = "") -> None:
         """Add Rentals to Calendar (or one rental's, from its ⋯): a calendar file, opened in your calendar app
         (Apple Calendar on a Mac). Adding it again updates the same events."""
-        from PySide6.QtCore import QUrl
-        from PySide6.QtGui import QDesktopServices
-
         from bodega.core import ics
         from bodega.core.store import write_text
 
@@ -346,12 +347,12 @@ class TransferMixin:
             notice(self, "Couldn't Make the Calendar File", errors.plain(e, "write the calendar file"))
             return
         if QDesktopServices.openUrl(QUrl.fromLocalFile(str(path))):
-            self.toast("Opened in your calendar app. For Google Calendar: File › Save Calendar File…", "done")
+            self.toast("Opened in your calendar app.", "done")
         else:
             self.save_calendar()
 
     def save_calendar(self) -> None:
-        """Save Calendar File…: the same file, wherever you like (Google Calendar: Settings › Import)."""
+        """Save Calendar File…: the same file, wherever you like, then the way into Google Calendar's import."""
         from bodega.core import ics
         from bodega.core.store import write_text
 
@@ -366,7 +367,16 @@ class TransferMixin:
         except OSError as e:
             notice(self, "Couldn't Save the Calendar File", errors.plain(e, "save the calendar file"))
             return
-        self.toast("Saved. In Google Calendar: Settings › Import & Export › Import.", "done")
+        ask = Alert(
+            self,
+            "Calendar File Saved",
+            "To see your rentals in Google Calendar, import this file there.",
+            "Open Google Calendar",
+            "Done",
+            safe=True,
+        )
+        if ask.exec() == QDialog.DialogCode.Accepted:
+            QDesktopServices.openUrl(QUrl(GOOGLE_CALENDAR_IMPORT))
 
     # Saldo
     def send_to_saldo(self, rental_id: str) -> None:

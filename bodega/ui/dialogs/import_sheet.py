@@ -341,7 +341,8 @@ class ImportDialog(QDialog):
         attached = sum(1 for i in keep if i.parent)
         found = len(self.got.items)
         if not found:
-            self.count.setText("No gear found. Check which column is the Name under Columns.")
+            self.count.setText("No gear found. Which column holds the names?")
+            self.columns.set_open(True)  # the place to fix it, open
         else:
             self.count.setText(
                 f"{len(keep):,} of {words.count(found, 'item')}, {words.count(pieces, 'piece')}"

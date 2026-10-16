@@ -238,7 +238,7 @@ class ItemPanel(DetailsBase):
         row.addWidget(sec, 1)
         sec = Section("Day Rate Each")
         self.rate = MoneyField()
-        self.rate.setToolTip("Leave blank and Bodega works it out from the value (your profile's Pricing)")
+        self.rate.setToolTip("Leave blank and Bodega works it out from the value, at your profile's day rate percent")
         sec.add(self.rate)
         row.addWidget(sec, 1)
         b.add(row)

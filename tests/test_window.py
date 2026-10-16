@@ -1604,3 +1604,20 @@ def test_return_moves_through_a_form_and_command_return_saves(win):
     assert saved == [True]
     d.settled()  # (closing without asking about what was typed)
     d.done(0)
+
+
+def test_a_saved_calendar_file_offers_the_way_into_google_calendar(win, tmp_path, monkeypatch):
+    from PySide6.QtWidgets import QDialog, QFileDialog
+
+    from bodega.ui.window import transfer
+
+    out = tmp_path / "Rentals.ics"
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (str(out), ""))
+    asked, opened = [], []
+    monkeypatch.setattr(
+        transfer.Alert, "exec", lambda self: asked.append(self.windowTitle()) or QDialog.DialogCode.Accepted
+    )
+    monkeypatch.setattr(transfer.QDesktopServices, "openUrl", lambda url: opened.append(url.toString()) or True)
+    win.save_calendar()
+    assert out.read_text().startswith("BEGIN:VCALENDAR")
+    assert asked == ["Calendar File Saved"] and opened == [transfer.GOOGLE_CALENDAR_IMPORT]
