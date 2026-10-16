@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import sys
 
-from PySide6.QtCore import QPoint
+from PySide6.QtCore import QPoint, QTimer
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QApplication, QLineEdit, QMenu, QPlainTextEdit, QTextEdit, QToolButton
 
@@ -16,12 +16,6 @@ from bodega.core.paths import data_dir, log_dir
 from bodega.ui.dialogs.common import about
 from bodega.ui.style import theme, tokens
 from bodega.ui.window.common import PLACES, kind_of
-
-
-def _titled(words: str) -> str:
-    """A menu item's title case: "2 pieces of gear" -> "2 Pieces of Gear"."""
-    small = {"of", "and", "to", "a", "the"}
-    return " ".join(w if w in small and n else w[:1].upper() + w[1:] for n, w in enumerate(words.split()))
 
 
 class MenusMixin:
@@ -252,7 +246,7 @@ class MenusMixin:
             self.toast("Nothing to undo.")
             return
         self._after_history()
-        self.toast(f"Undid the last change to {what}.", "done")
+        self.toast(f"Undid {what[0].lower() + what[1:]}.", "done")
 
     def redo(self) -> None:
         if self._text_can_undo(redo=True):
@@ -264,7 +258,7 @@ class MenusMixin:
             self.toast("Nothing to redo.")
             return
         self._after_history()
-        self.toast(f"Redid the change to {what}.", "done")
+        self.toast(f"Redid {what[0].lower() + what[1:]}.", "done")
 
     def _with_open_piece(self, do) -> None:
         if kind_of(self.view_key) == "gear" and self.items.it is not None and self.dock.opened:
@@ -304,8 +298,8 @@ class MenusMixin:
         redo = "" if typed_again or h is None else h.redo_names()
         self.act_undo.setEnabled(typing or bool(undo))
         self.act_redo.setEnabled(typed_again or bool(redo))
-        self.act_undo.setText("Undo Typing" if typing else f"Undo Change to {_titled(undo)}" if undo else "Undo")
-        self.act_redo.setText("Redo Typing" if typed_again else f"Redo Change to {_titled(redo)}" if redo else "Redo")
+        self.act_undo.setText("Undo Typing" if typing else f"Undo {undo}" if undo else "Undo")
+        self.act_redo.setText("Redo Typing" if typed_again else f"Redo {redo}" if redo else "Redo")
 
     def _after_history(self) -> None:
         """Undo/redo put new copies of everything in the library: open them again in the panel."""
@@ -326,6 +320,10 @@ class MenusMixin:
                     self.dock.set_open(False)
         self.sidebar.show_who()
         self.refresh()
+        shown = self.history.shown if self.history is not None else None
+        if shown is not None:  # what the undo brought back or changed, in view
+            kind, obj_id = shown
+            QTimer.singleShot(0, self, lambda: self.open(kind, obj_id))
 
     def copy(self) -> None:
         """⌘C: text you've selected, or the gear you've picked as a plain list (name, company, how many)."""

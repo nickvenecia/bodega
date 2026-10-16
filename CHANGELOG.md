@@ -194,6 +194,8 @@
 - The words follow Bodega's own: the inventory list and rate card say Gear where they said Item, the Import button
   counts rows ("Import 12 Rows"), and a few labels are shorter (Choose File…, From Link, Use Sheet Pricing, Gear
   Discount, Own Day Rate, a group of None). In AI Settings, what's sent and what it costs now sit under the form.
+- Undo says what it takes back ("Undo Delete Sony FX6", "Undo Change to JLF-2026-001") and shows you the piece,
+  kit or rental it brought back.
 - File › Export Kits as CSV… and Export Rentals as CSV… (also in Settings › Your Data): each kit with its prices and
   gear, each rental with its renter, dates, status and money, for what the list shows.
 - While you're in a group, the Gear menu has Rename Group…, Move Group Up, Move Group Down and Remove Group… (they

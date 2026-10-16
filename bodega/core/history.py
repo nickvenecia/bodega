@@ -48,25 +48,45 @@ def shared(new: State, old: State) -> State:
     return out
 
 
-PARTS = [  # (key, a few words for a toast)
-    ("items", "gear"),
-    ("packages", "kits"),
-    ("rentals", "rentals"),
-    ("clients", "renters"),
-    ("businesses", "profiles"),
-    ("groups", "groups"),
+KINDS = [  # (key, kind as the window opens it, one, many, its name in a record) in the order an action is named by
+    ("items", "gear", "piece", "pieces", lambda d: d.get("name") or "Untitled Piece"),
+    ("rentals", "rentals", "rental", "rentals", lambda d: d.get("number") or "Rental"),
+    ("packages", "packages", "kit", "kits", lambda d: d.get("name") or "Untitled Kit"),
+    ("clients", "", "renter", "renters", lambda d: d.get("company") or d.get("name") or "Renter"),
+    ("businesses", "", "profile", "profiles", lambda d: d.get("name") or "Profile"),
 ]
+NAME_MAX = 32  # a record's name in Undo's menu item is cut to this
 
 
-def describe(a: State, b: State) -> str:
-    """What differs between two states, in a few words: "gear", "gear and rentals"."""
-    parts = [words for key, words in PARTS if a.get(key) != b.get(key)]
-    if not parts:
-        return "a change"
-    if a["items"] != b["items"] and len(a["items"]) != len(b["items"]):
-        n = abs(len(a["items"]) - len(b["items"]))
-        parts[parts.index("gear")] = f"{n} piece{'s' if n != 1 else ''} of gear"
-    return parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1]
+def _by_id(s: State, key: str) -> dict:
+    got = s.get(key) or {}
+    return dict(got) if isinstance(got, dict) else {d.get("id"): d for d in got}
+
+
+def action(before: State, after: State) -> tuple[str, tuple[str, str] | None]:
+    """What was done to go from `before` to `after`, as Undo names it ("Delete Sony FX6", "Change to JLF-2026-001",
+    "Add 3 Pieces", "Change to Groups"), and the one record it was about (kind, id) when there was one."""
+    found = []
+    for key, kind, one, many, name_of in KINDS:
+        a, b = _by_id(before, key), _by_id(after, key)
+        added = [i for i in b if i not in a]
+        gone = [i for i in a if i not in b]
+        changed = [i for i in b if i in a and a[i] != b[i]]
+        for verb, ids, where in (("Delete", gone, a), ("Add", added, b), ("Change to", changed, b)):
+            if ids:
+                found.append((verb, ids, where, kind, one, many, name_of))
+    if not found:
+        return ("Change to Groups" if before.get("groups") != after.get("groups") else "Change"), None
+    # what you did first, the rest following from it: a deletion or an addition before a change it made elsewhere
+    verb, ids, where, kind, one, many, name_of = next((f for f in found if f[0] != "Change to"), found[0])
+    if len(ids) == 1:
+        name = " ".join(name_of(where[ids[0]]).split())
+        name = name if len(name) <= NAME_MAX else name[: NAME_MAX - 1].rstrip() + "…"
+        return f"{verb} {name}", ((kind, ids[0]) if kind and verb != "Delete" else None)
+    return (
+        f"{verb} {len(ids):,} {many.title()}" if verb != "Change to" else f"Changes to {len(ids):,} {many.title()}",
+        None,
+    )
 
 
 class History:
@@ -75,6 +95,7 @@ class History:
         self.undos: list[State] = []
         self.redos: list[State] = []
         self.last = state_of(lib)
+        self.shown: tuple[str, str] | None = None  # the record the last undo or redo brought back, to show it
 
     def mark(self) -> bool:
         """Note where things stand. True if that made a new undo step."""
@@ -98,14 +119,15 @@ class History:
         return bool(self.redos)
 
     def undo_names(self) -> str:
-        """What Undo would change back ("gear", "2 pieces of gear"), or '' if nothing."""
+        """What Undo would take back ("Delete Sony FX6", "Change to 3 Pieces"), or '' if nothing."""
         now = state_of(self.lib)
         if now != self.last:
-            return describe(now, self.last)
-        return describe(self.last, self.undos[-1]) if self.undos else ""
+            return action(self.last, now)[0]
+        return action(self.undos[-1], self.last)[0] if self.undos else ""
 
     def redo_names(self) -> str:
-        return describe(self.last, self.redos[-1]) if self.redos else ""
+        """What Redo would do again, or ''."""
+        return action(self.last, self.redos[-1])[0] if self.redos else ""
 
     def undo(self) -> str | None:
         """Go back one step; what changed back (for a toast), or None if there's nothing to undo."""
@@ -114,7 +136,12 @@ class History:
             return None
         before = self.undos.pop()
         self.redos.append(self.last)
-        what = describe(self.last, before)
+        what, about = action(before, self.last)
+        if what.startswith("Delete "):  # a deletion taken back: what came back is the thing to show
+            about = action(self.last, before)[1]
+        elif what.startswith("Add "):  # an addition taken back: it's gone, nothing to show
+            about = None
+        self.shown = about
         self._put(before)
         return what
 
@@ -126,7 +153,7 @@ class History:
             return None
         after = self.redos.pop()
         self.undos.append(self.last)
-        what = describe(self.last, after)
+        what, self.shown = action(self.last, after)
         self._put(after)
         return what
 
