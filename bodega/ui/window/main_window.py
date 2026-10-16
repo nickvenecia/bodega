@@ -26,13 +26,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.core import backups, dates, document, money, pricing, settings, update, words
+from bodega.core import backups, dates, document, figures, money, pricing, settings, update, words
 from bodega.core.history import History
 from bodega.core.log import get_logger
 from bodega.core.model import Business
 from bodega.core.store import Library
 from bodega.ui.components import titlebar
 from bodega.ui.components.empty import EmptyPage, NoResults
+from bodega.ui.components.figures import FigureRow
 from bodega.ui.components.glass import Dock, GlassRoot, glass
 from bodega.ui.components.panels import SelectionBar
 from bodega.ui.components.widgets import Banner, ElidedLabel, SearchField, Toast, hbox, vbox
@@ -264,6 +265,9 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         grid.addLayout(right, 0, 2)
         lay.addWidget(bar)
         self.toolbar = bar
+        self.figure_row = FigureRow()  # three or four figures about the whole list; a slice filters it
+        self.figure_row.pressed.connect(self._figure_pressed)
+        lay.addWidget(self.figure_row)
         self.filter_chips = FilterChips()  # what the filter's hiding, each with its ✕
         self.filter_chips.removed.connect(self._filter_off)
         lay.addWidget(self.filter_chips)
@@ -518,8 +522,29 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.view_menu.setVisible(kind == "gear" and not empty)
         if empty and not self.assistant_showing():
             self.dock.set_open(False)
+        self._show_figures(empty)
         self._apply_search()
         self.mark_soon()
+
+    def _show_figures(self, empty: bool) -> None:
+        """The figure row for this list (none on the calendar or an empty page); the slice showing is marked on."""
+        view, kind = self.view_key, kind_of(self.view_key)
+        if empty or view == "calendar":
+            self.figure_row.show_for([])
+        elif kind == "gear":
+            self.figure_row.show_for(figures.gear(self.lib, self._grp()), self.view_menu.filter.show)
+        elif kind == "packages":
+            self.figure_row.show_for(figures.kits(self.lib))
+        else:
+            self.figure_row.show_for(figures.rentals(self.lib), view)
+
+    def _figure_pressed(self, part: str) -> None:
+        """A figure that's a slice: gear shows only that slice (Out, In Repair), rentals go to that place (Out Now,
+        Coming Up); pressed again, the whole list again."""
+        if kind_of(self.view_key) == "gear":
+            self.set_gear_filter("all" if self.view_menu.filter.show == part else part)
+        else:
+            self.go("rentals" if self.view_key == part else part)
 
     def mark_soon(self) -> None:
         """Every change ends in flush() or refresh(); undo notes it once the moment is over (see _mark_timer)."""

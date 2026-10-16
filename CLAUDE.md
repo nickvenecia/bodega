@@ -72,6 +72,8 @@ bodega/
     sample.py      the made-up Juniper Lane Films rental house (tests, smoke test, screenshots)
     earnings.py    what each piece has earned: its share of Out/Returned rentals (by own day rate), coming (Booked),
                    paid_off()
+    figures.py     the figure row above each list: gear(lib, group), kits(lib), rentals(lib) -> [Figure] (a slice
+                   filters the list when pressed; a tone colours the number only)
     maintenance.py service reminders: Item.service_days after the last "service" in Item.log; due(), needs_service()
     checks.py      Check Out / Check In rows: pieces() a rental sends out, rows() kept ticks/notes/photos, progress()
     ics.py         rentals as a calendar file: pickup + return events per date range, stable UIDs, SEQUENCE grows
@@ -124,6 +126,7 @@ bodega/
                    datefield.py (DateField: typed or picked from its month popover, the standard's G.22),
                    empty.py (EmptyPage: where a table would be with nothing in it: tiles, the ways to start;
                    empty gear takes a dropped spreadsheet),
+                   figures.py (FigureRow: core/figures' tiles, the G.10.5 strip),
                    titlebar.py (Mac: macOS moves the window; double-click fills the screen or shrinks it, animated
                    via NSWindow setFrame:animate:), worker.py (Worker: background jobs with progress and stop)
     window/        main_window.py (MainWindow: building, navigation, opening, size and place) made of parts: menus.py

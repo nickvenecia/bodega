@@ -258,6 +258,15 @@ QFrame#Banner {{ background: {tokens.BANNER}; border: 1px solid {tokens.BANNER_E
 #Pager QToolButton#Circle {{ background: transparent; border-color: transparent; }}
 #Pager QToolButton#Circle:hover {{ background: {tokens.FILL}; }}
 #PagerText {{ color: {tokens.MUTED}; font-weight: {WEIGHT_MEDIUM}; }}
+#FigureTile {{ background: {tokens.BLOCK}; border: {tokens.FOCUS_RING}px solid transparent; border-radius: {RADIUS_LG}px; }}
+#FigureTile[slice="true"]:hover {{ background: {tokens.CARD_HOVER}; }}
+#FigureTile[on="true"] {{ background: {tokens.CARD_SELECTED}; border-color: {tokens.ACCENT_EDGE}; }}
+#FigureTile[on="true"] QLabel#FigureLabel {{ color: {tokens.ACCENT_TEXT}; }}
+#FigureTile:focus {{ border-color: {tokens.ACCENT}; }}  /* (its edge is there at rest, clear: nothing moves) */
+#FigureValue {{ font-size: {tokens.TEXT_TITLE1}px; font-weight: {WEIGHT_BOLD}; }}  /* (G.10.5) Title 1, tabular */
+#FigureValue[tone="warn"] {{ color: {tokens.WARN}; }}
+#FigureValue[tone="bad"] {{ color: {tokens.BAD}; }}
+#FigureLabel {{ color: {tokens.MUTED}; font-size: {tokens.TEXT_CALLOUT}px; }}
 #SelectionBar {{ background: {tokens.RAISED}; border: 1px solid {tokens.GLASS_STROKE}; border-radius: {tokens.SELBAR_H // 2}px; }}
 #SelectionCount {{ font-weight: {WEIGHT_SEMIBOLD}; }}
 #SelectionBar QPushButton#BarAction {{ background: {tokens.FILL}; border: none; border-radius: {CONTROL_H // 2}px;
