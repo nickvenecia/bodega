@@ -207,7 +207,7 @@ def write_bytes(path: Path, data: bytes) -> None:
         try:
             tmp.unlink(missing_ok=True)
         except OSError:
-            log.warning("couldn't remove %s", tmp, exc_info=True)
+            log.warning("couldn't remove %s", tmp.name, exc_info=True)
         raise
 
 

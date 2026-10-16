@@ -59,7 +59,7 @@ def to_pdf(pages: list[Page], path: Path, title: str = "") -> Path:
     except BaseException:
         tmp.unlink(missing_ok=True)
         raise
-    log.info("saved PDF %s (%d pages)", path, len(pages))
+    log.info("saved a PDF (%d pages)", len(pages))  # its name carries the renter's
     return path
 
 
@@ -100,7 +100,7 @@ def to_png(pages: list[Page], path: Path, dpi: int = 200) -> list[Path]:
             tmp.unlink(missing_ok=True)
             raise
         out.append(target)
-    log.info("saved PNG %s (%d pages)", path, len(pages))
+    log.info("saved PNGs (%d pages)", len(pages))
     return out
 
 

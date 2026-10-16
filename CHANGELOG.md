@@ -36,6 +36,14 @@
   be booked and is left off your inventory, rate card and labels, and you can bring it back.
 - Booking or marking out a rental whose gear is already promised (or in repair) asks first, and says what's short,
   instead of only showing a hint. Go ahead if you're renting more in to cover it.
+- Importing a sheet no longer replaces your profile's pricing unless you turn on Use the Sheet's Pricing (it starts
+  off once you have a profile). The Import window now says what it filled in where the sheet was blank (a quantity
+  of 1, for rent, a company from the name), lets you turn off the company guess, and asks before adding the
+  sheet's links to gear you already have (only where it has none).
+- SVG logos are kept as their drawing only: a logo can no longer pull a picture from your computer onto your
+  agreements. Logos you added before are drawn the same safe way.
+- A sheet too big to be a gear list, or one with a cell far too long, now says so in plain words instead of
+  failing quietly. A web page that trickles in is given up on after 30 seconds, so Stop never waits on it.
 - Bodega keeps safety copies of your gear, kits, rentals, renters and profiles: one each day you open it (the last
   14 days), and one before each import, Tidy Up Groups, AI change or restore (the last 20).
 - File › Restore from Backup… (also in Settings › Your Data) puts a Back Up zip or a safety copy back. It shows

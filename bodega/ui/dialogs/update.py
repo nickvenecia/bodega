@@ -45,9 +45,13 @@ log = get_logger(__name__)
 
 
 def open_url(url: str) -> None:
-    """Open a web page in the browser (only https: release notes are written by other people too)."""
-    if QUrl(url).scheme() == "https":
-        QDesktopServices.openUrl(QUrl(url))
+    """Open a web page in the browser: only a plain https web link (core/web.web_link, the one test of a web
+    link), since release notes are written by other people too."""
+    from bodega.core import web
+
+    link = web.web_link(url)
+    if link and link.startswith("https://") and url.strip().lower().startswith("https://"):
+        QDesktopServices.openUrl(QUrl(link))
 
 
 class CheckThread(QThread):

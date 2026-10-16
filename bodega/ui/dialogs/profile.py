@@ -51,23 +51,28 @@ from bodega.ui.style.tokens import (
 log = get_logger(__name__)
 
 LOGO_MAX_PX = 1600  # bigger pictures are scaled down when added (keeps PDFs small)
+LOGO_MAX_BYTES = 40_000_000  # a picture bigger than this isn't a logo
 
 
 def import_logo(src: Path) -> str:
     """Copy a logo into Bodega's own folder (so moving or deleting the original never breaks a rental agreement).
     Returns the stored file name. Raises ValueError if it isn't a picture Bodega can read."""
+    from bodega.core import svg
     from bodega.doc.render import logo_size
 
-    if logo_size(src) is None:
-        raise ValueError(f"Bodega can't read {src.name}. Use a PNG, JPG or SVG file.")
+    if src.stat().st_size > LOGO_MAX_BYTES:
+        raise ValueError(f"{src.name} is too big to be a logo. Use a smaller picture.")
     data = src.read_bytes()
-    digest = hashlib.sha256(data).hexdigest()[:16]
     folder = logos_dir()
     folder.mkdir(parents=True, exist_ok=True)
-    if src.suffix.lower() == ".svg":
-        name = f"{digest}.svg"
+    if src.suffix.lower() == ".svg":  # only its drawing is kept: nothing it points at outside itself
+        data = svg.clean(data)
+        name = f"{hashlib.sha256(data).hexdigest()[:16]}.svg"
         (folder / name).write_bytes(data)
+        if logo_size(folder / name) is None:
+            raise ValueError(f"Bodega can't read {src.name}. Use a PNG, JPG or SVG file.")
         return name
+    digest = hashlib.sha256(data).hexdigest()[:16]
     img = QImage(str(src))
     if img.isNull():
         raise ValueError(f"Bodega can't read {src.name}. Use a PNG, JPG or SVG file.")
@@ -88,9 +93,11 @@ def logo_thumbnail(path: Path, height: int) -> QPixmap:
     """A sharp little picture of a logo file, `height` px tall (empty if it can't be read)."""
     dpr = 2
     if path.suffix.lower() == ".svg":
-        from PySide6.QtSvg import QSvgRenderer
+        from bodega.doc.render import svg_logo
 
-        r = QSvgRenderer(str(path))
+        r = svg_logo(path)
+        if r is None:
+            return QPixmap()
         size = r.defaultSize()
         h = height * dpr
         w = max(1, round(h * size.width() / max(1, size.height())))

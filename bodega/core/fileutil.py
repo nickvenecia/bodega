@@ -31,7 +31,7 @@ def reveal(path: str | Path) -> None:
             target = path if os.path.isdir(path) else os.path.dirname(path)
             subprocess.Popen(["xdg-open", target])
     except OSError:
-        log.warning("couldn't show %s", path, exc_info=True)
+        log.warning("couldn't show %s", os.path.basename(path), exc_info=True)
 
 
 def zip_folder(folder: Path, dest: Path, skip: tuple[str, ...] = ()) -> int:

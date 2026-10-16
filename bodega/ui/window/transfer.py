@@ -75,17 +75,19 @@ class TransferMixin:
         if ask:
             from bodega.ui.dialogs.import_sheet import ImportDialog
 
-            d = ImportDialog(path, rows, set(have), self)
+            d = ImportDialog(path, rows, set(have), self, has_profile=bool(self.lib.businesses))
             if d.exec() != ImportDialog.DialogCode.Accepted:
                 return 0
             chosen, everything, pricing_found = d.items, d.got.items, d.pricing
+            fill_links = d.fill_links
         else:
             got = importer.parse_rows(rows)
             importer.attach_guesses(got.items)
             everything = got.items
             chosen = [i for i in everything if (i.name.casefold(), i.department.casefold()) not in have]
             pricing_found = (got.rate_pct, got.value_tax) if (got.rate_pct or got.value_tax) else None
-        linked = self._fill_links(everything, have)
+            fill_links = True
+        linked = self._fill_links(everything, have) if fill_links else 0
         if not chosen:
             if linked:
                 self.lib.save_items()

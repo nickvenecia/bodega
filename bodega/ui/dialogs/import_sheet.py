@@ -5,7 +5,11 @@ Import is clicked. Here you can:
 - fix which column is which (Bodega guesses from the header words),
 - leave out whole departments, or single pieces,
 - choose whether gear that says what it's for gets attached to it,
-- choose whether your profile takes the sheet's day-rate percent and tax,
+- choose whether your profile takes the sheet's day-rate percent and tax (off when you have a profile:
+  it would replace yours),
+- see what the sheet left blank and was filled in (a quantity of 1, for rent, a company guessed from the
+  name), and turn the company guess off,
+- choose whether gear you already have takes the sheet's links (only where it has none),
 - skip what's already in Bodega (so importing the same sheet twice doesn't double it).
 """
 
@@ -35,12 +39,19 @@ REF = Qt.ItemDataRole.UserRole
 
 
 class ImportDialog(QDialog):
-    """After Import: `.items` (what to add, parents tidied) and `.pricing` ((rate %, tax %) or None)."""
+    """After Import: `.items` (what to add, parents tidied), `.pricing` ((rate %, tax %) or None) and
+    `.fill_links` (gear you have takes the sheet's links where it has none)."""
 
     def __init__(
-        self, path: Path, rows: list[list], have: set[tuple[str, str]], parent: QWidget | None = None
+        self,
+        path: Path,
+        rows: list[list],
+        have: set[tuple[str, str]],
+        parent: QWidget | None = None,
+        has_profile: bool = False,
     ):
         super().__init__(parent)
+        self.fill_links = False
         self.path = path
         self.rows = rows
         self.have = have  # (name, department) already in Bodega, casefolded
@@ -95,9 +106,36 @@ class ImportDialog(QDialog):
         self.tidy.setToolTip("SD Cards becomes Media, 1000c becomes Lights… You can rename anything after.")
         self.tidy.toggled.connect(lambda _on: self.reread())
         self.options.add(self.tidy)
-        self.use_pricing = ToggleRow("Use the Sheet's Pricing", True)
+        self.use_pricing = ToggleRow(
+            "Use the Sheet's Pricing", not has_profile
+        )  # never replaces yours unasked
+        self.use_pricing.setToolTip(
+            "Your profile's day-rate percent and tax become the sheet's"
+            if has_profile
+            else "Your profile starts with the sheet's day-rate percent and tax"
+        )
         self.use_pricing.toggled.connect(lambda _on: self._summary())
         self.options.add(self.use_pricing)
+        self.guess = ToggleRow("Fill In the Company From the Name", True)
+        self.guess.setToolTip('"Aputure STORM 80c" gets Aputure. You can change any of it after.')
+        self.guess.toggled.connect(lambda _on: self.reread())
+        self.options.add(self.guess)
+        known_links = {
+            (i.name.casefold(), i.department.casefold())
+            for i in importer.parse_rows(rows, self.layout_guess, guess_brands=False).items
+            if i.link
+        } & have
+        self.links = ToggleRow(
+            f"Add the Sheet's Links to {len(known_links)} Piece{'s' if len(known_links) != 1 else ''} You Have",
+            True,
+        )
+        self.links.setToolTip("Only where that piece has no link yet: a link you have stays as it is")
+        self.links.setVisible(bool(known_links))
+        self.options.add(self.links)
+        self.filled = QLabel()  # what the sheet left blank, filled in
+        self.filled.setObjectName("Hint")
+        self.filled.setWordWrap(True)
+        self.options.add(self.filled)
         self.skip_have = ToggleRow("Skip What's Already in Bodega", True)
         self.skip_have.setToolTip("Same name in the same department. Turn off to bring in a second copy.")
         self.skip_have.toggled.connect(lambda _on: self.fill())
@@ -167,7 +205,7 @@ class ImportDialog(QDialog):
     def reread(self) -> None:
         """Read the sheet again with the columns and options as they are now."""
         layout = self._layout()
-        self.got = importer.parse_rows(self.rows, layout)
+        self.got = importer.parse_rows(self.rows, layout, guess_brands=self.guess.isChecked())
         if self.attach.isChecked():
             self.got.attached = importer.attach_guesses(self.got.items)
         if self.tidy.isChecked():
@@ -184,6 +222,16 @@ class ImportDialog(QDialog):
         )
         self.use_pricing.setVisible(bool(bits))
         self._has_pricing = bool(bits)
+        g = self.got
+        said = [
+            f"{n:,} with {what}" for n, what in (
+                (g.assumed_qty, "no quantity count as 1"),
+                (g.assumed_rent, "no Rent? say are for rent"),
+                (g.guessed_brand, "no company got one from the name"),
+            ) if n
+        ]  # fmt: skip
+        self.filled.setText("Filled in for you: " + "; ".join(said) + "." if said else "")
+        self.filled.setVisible(bool(said))
         names = [label for key, label in importer.FIELDS if key in layout.cols]
         self.columns.set_summary(
             " · ".join(names[:5]) + (" …" if len(names) > 5 else "") if names else "Pick the Name column"
@@ -289,6 +337,7 @@ class ImportDialog(QDialog):
 
     def _done(self) -> None:
         self.items = self.chosen()
+        self.fill_links = not self.links.isHidden() and self.links.isChecked()
         if self._has_pricing and self.use_pricing.isChecked():
             self.pricing = (self.got.rate_pct, self.got.value_tax)
         self.accept()

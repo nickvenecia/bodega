@@ -1,11 +1,14 @@
-"""Troubleshooting log: a small rotating file in Bodega's data folder.
+"""Troubleshooting log: a small rotating file in Bodega's data folder, one JSON object a line
+({"time", "level", "where", "what", and "error" with the traceback when there is one}).
 
-Use ``log = get_logger(__name__)`` in any module. Nothing is ever sent anywhere.
-Started from a terminal (`python -m bodega`), the same lines also print there.
+Use ``log = get_logger(__name__)`` in any module. Nothing is ever sent anywhere. Lines say what happened and how
+many, never a renter's name, a profile's name or a full path (file names only). Started from a terminal
+(`python -m bodega`), the same lines also print there, as plain text.
 """
 
 from __future__ import annotations
 
+import json
 import logging
 import logging.handlers
 import sys
@@ -13,6 +16,21 @@ import sys
 from bodega.core.paths import log_dir
 
 _configured = False
+
+
+class _Lines(logging.Formatter):
+    """One JSON object a line, so the log can be read by a program as well as a person."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        line = {
+            "time": self.formatTime(record, "%Y-%m-%dT%H:%M:%S"),
+            "level": record.levelname.lower(),
+            "where": record.name,
+            "what": record.getMessage(),
+        }
+        if record.exc_info:
+            line["error"] = self.formatException(record.exc_info)
+        return json.dumps(line, ensure_ascii=False)
 
 
 def setup_logging(level: int = logging.INFO, filename: str = "bodega.log") -> None:
@@ -30,7 +48,7 @@ def setup_logging(level: int = logging.INFO, filename: str = "bodega.log") -> No
         )
     except OSError:
         handler = logging.NullHandler()  # read-only home folder etc. — logging is optional
-    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+    handler.setFormatter(_Lines())
     root.addHandler(handler)
     stream = sys.stderr
     if stream is not None and hasattr(stream, "isatty") and stream.isatty():

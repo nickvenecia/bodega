@@ -535,7 +535,7 @@ class EditingMixin:
         b = d.business
         if current is None:
             self.lib.add_business(b)
-            log.info("added profile %s", b.name)
+            log.info("added a profile")
         else:
             self.lib.businesses[b.id] = b
             self.lib.save_businesses()

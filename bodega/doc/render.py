@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
-from PySide6.QtCore import QPointF, QRectF, Qt
+from PySide6.QtCore import QByteArray, QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QImage, QImageReader, QPainter, QPainterPath, QPen
 from PySide6.QtSvg import QSvgRenderer
 
@@ -99,12 +99,35 @@ class Page:
 
 
 # ---------------------------------------------------------------------------- logo files
+@lru_cache(maxsize=16)
+def _clean_svg(path: str, mtime: float) -> bytes | None:
+    from bodega.core import svg
+
+    try:
+        return svg.clean(Path(path).read_bytes())
+    except (OSError, ValueError):
+        return None
+
+
+def svg_logo(path: Path) -> QSvgRenderer | None:
+    """An SVG logo, drawn from only its drawing (core/svg.py: nothing it points at outside itself is read).
+    None if it can't be used."""
+    try:
+        data = _clean_svg(str(path), path.stat().st_mtime)
+    except OSError:
+        return None
+    if data is None:
+        return None
+    r = QSvgRenderer(QByteArray(data))
+    return r if r.isValid() else None
+
+
 def logo_size(path: Path) -> tuple[float, float] | None:
     if not path.is_file():
         return None
     if path.suffix.lower() == ".svg":
-        r = QSvgRenderer(str(path))
-        if not r.isValid():
+        r = svg_logo(path)
+        if r is None:
             return None
         s = r.defaultSize()
         return (float(s.width()), float(s.height())) if s.width() > 0 and s.height() > 0 else (1.0, 1.0)
@@ -114,8 +137,8 @@ def logo_size(path: Path) -> tuple[float, float] | None:
 
 def _draw_logo(p: QPainter, step: Logo) -> None:
     if step.path.suffix.lower() == ".svg":
-        r = QSvgRenderer(str(step.path))
-        if r.isValid():
+        r = svg_logo(step.path)
+        if r is not None:
             r.setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
             r.render(p, step.rect)
         return

@@ -164,6 +164,11 @@ class Imported:
     rate_pct: str = ""  # found in the sheet ("4")
     value_tax: str = ""  # found in the sheet ("8.25")
     skipped: int = 0
+    # what the sheet didn't say, filled in (the Import window shows it): no quantity counts as 1, nothing
+    # under Rent? means for rent, and a company guessed from the name
+    assumed_qty: int = 0
+    assumed_rent: int = 0
+    guessed_brand: int = 0
 
 
 def _clean(v) -> str:
@@ -283,6 +288,9 @@ def download_google_sheet(link: str, folder: Path) -> Path:
 
 MAX_FILE_BYTES = 50_000_000  # a gear list is kilobytes; anything this big isn't one
 MAX_UNPACKED_BYTES = 200_000_000  # an .xlsx is a zip: what it unpacks to, at most
+MAX_ROWS = 50_000  # rows in all of a sheet's tabs: a gear list has hundreds
+MAX_COLUMNS = 500
+TOO_BIG = "{name} is too big to be a gear list ({why}). Split it, or import only the part with your gear."
 
 
 def _check_size(path: Path) -> None:
@@ -338,6 +346,10 @@ def _rows_xlsx(path: Path) -> Rows:
         raise OSError(f"Bodega can't read {path.name}. Check that it's an Excel file (.xlsx).") from e
     rows = Rows()
     try:
+        if sum(ws.max_row or 0 for ws in wb.worksheets) > MAX_ROWS:
+            raise OSError(TOO_BIG.format(name=path.name, why=f"more than {MAX_ROWS:,} rows"))
+        if any((ws.max_column or 0) > MAX_COLUMNS for ws in wb.worksheets):
+            raise OSError(TOO_BIG.format(name=path.name, why=f"more than {MAX_COLUMNS:,} columns"))
         for ws in wb.worksheets:
             for row in ws.iter_rows():
                 link = next((c.hyperlink.target for c in row if c.hyperlink and c.hyperlink.target), "")
@@ -366,8 +378,17 @@ def _rows_csv(path: Path) -> list[list]:
         text = path.read_text(encoding="latin-1")
     except OSError as e:
         raise OSError(f"Bodega can't open {path.name}.") from e
-    rows = csv.reader(io.StringIO(text, newline=""))  # keeps line breaks inside cells
-    return [[_unquote(c) for c in r] for r in rows]
+    out = []
+    try:
+        for r in csv.reader(io.StringIO(text, newline="")):  # keeps line breaks inside cells
+            if len(out) >= MAX_ROWS:
+                raise OSError(TOO_BIG.format(name=path.name, why=f"more than {MAX_ROWS:,} rows"))
+            if len(r) > MAX_COLUMNS:
+                raise OSError(TOO_BIG.format(name=path.name, why=f"more than {MAX_COLUMNS:,} columns"))
+            out.append([_unquote(c) for c in r])
+    except csv.Error as e:  # a cell far longer than any gear list's, or a broken quote
+        raise OSError(f"Bodega can't read {path.name}: part of it isn't laid out as a sheet.") from e
+    return out
 
 
 def load_rows(path: Path) -> list[list]:
@@ -469,8 +490,9 @@ def _find_header(rows: list[list]) -> tuple[int, dict[str, int]]:
     return -1, {}
 
 
-def parse_rows(rows: list[list], layout: Layout | None = None) -> Imported:
-    """Turn rows into items. `layout` says which column is which (detect() guesses it)."""
+def parse_rows(rows: list[list], layout: Layout | None = None, guess_brands: bool = True) -> Imported:
+    """Turn rows into items. `layout` says which column is which (detect() guesses it). What the sheet
+    leaves blank is filled in and counted (Imported.assumed_*); `guess_brands`: a blank company is guessed."""
     out = Imported()
     layout = layout or detect(rows)
     head, cols = layout.head, dict(layout.cols)
@@ -532,9 +554,11 @@ def parse_rows(rows: list[list], layout: Layout | None = None) -> Imported:
         it.brand = _clean(get("brand"))
         it.series = _clean(get("series"))
         it.qty = clamp_qty(qty) if qty is not None else 1
+        out.assumed_qty += qty is None
         it.value = _value_text(value)
         rent = _truthy(get("rentable"))
         it.rentable = True if rent is None else rent
+        out.assumed_rent += rent is None
         serial_text = _clean(get("serials"))
         if serial_text:
             it.serials = [s.strip() for s in re.split(r"[;,\n]| / ", serial_text) if s.strip()]
@@ -558,7 +582,7 @@ def parse_rows(rows: list[list], layout: Layout | None = None) -> Imported:
         if it.parent.startswith("name:"):
             p = by_name.get(it.parent[5:].casefold())
             it.parent = p.id if p is not None and p is not it else ""
-    fill_brands(out.items)
+    out.guessed_brand = fill_brands(out.items) if guess_brands else 0
     return out
 
 

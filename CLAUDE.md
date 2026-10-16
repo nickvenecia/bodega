@@ -51,6 +51,8 @@ bodega/
     backups.py     safety copies (backups/: one a day, and before an import, Tidy Up, AI changes or a restore)
                    and Restore: read_backup() checks a zip as untrusted, put_back(); Library.restore() keeps a copy
                    first and every number spent; photos and logos are only ever added
+    svg.py         SVG logos as untrusted: clean() keeps only the drawing (no outside pictures, links, scripts,
+                   DOCTYPE); every SVG logo is drawn through doc/render.svg_logo, which cleans it
     tidy.py        Tidy Up Groups: GROUPS, RULES (by name), RENAMES (by old group); suggest(), changes()
     prices.py      Check Price: fetch a product page, read its price (JSON-LD offers, price meta tags). Stores
                    may block it; that's web.Refused, with a plain message
@@ -63,7 +65,7 @@ bodega/
     ics.py         rentals as a calendar file: pickup + return events per date range, stable UIDs, SEQUENCE grows
     history.py     undo/redo: History.mark() after saves and refreshes keeps the state before each change;
                    undo()/redo() put a state back and save it (window state and settings aren't undone)
-    update.py, paths.py, log.py, net.py, fileutil.py, dates.py, money.py   shared helpers
+    update.py, paths.py, log.py (JSON lines; no renter or profile names, no full paths), net.py, fileutil.py, dates.py, money.py   shared helpers
     web.py         safe web fetching for anything a link points at: https only, public addresses only (checked
                    on every redirect, connecting to the checked address), size caps, a linear HTML reader
                    (read() -> PageInfo); image_of() a page's main picture, fetch_image() pictures only, whole or

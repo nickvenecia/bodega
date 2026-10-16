@@ -68,7 +68,7 @@ def write_text(path: Path, text: str) -> None:
         try:
             os.unlink(tmp)
         except OSError:
-            log.warning("couldn't remove %s", tmp, exc_info=True)
+            log.warning("couldn't remove %s", os.path.basename(tmp), exc_info=True)
         raise
 
 
@@ -90,14 +90,14 @@ def set_aside(path: Path, why: str, copy: bool = False) -> None:
     """Keep a file we couldn't use as <name>.<why>-<time>, so nothing is ever lost. `copy` leaves the
     original in place (when the good parts of it are still being used)."""
     aside = path.with_name(f"{path.name}.{why}-{int(time.time())}")
-    log.warning("couldn't use all of %s; kept a copy as %s", path, aside.name)
+    log.warning("couldn't use all of %s; kept a copy as %s", path.name, aside.name)
     try:
         if copy:
             aside.write_bytes(path.read_bytes())
         else:
             path.replace(aside)
     except OSError:
-        log.warning("couldn't set %s aside", path, exc_info=True)
+        log.warning("couldn't set %s aside", path.name, exc_info=True)
 
 
 def read_json(path: Path, default: Any) -> Any:
@@ -106,7 +106,7 @@ def read_json(path: Path, default: Any) -> Any:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        log.warning("couldn't read %s", path, exc_info=True)
+        log.warning("couldn't read %s", path.name, exc_info=True)
         set_aside(path, "unreadable")
         return default
 
@@ -212,8 +212,8 @@ class Library:
         self._settle_rentals()
         self._as_saved = {r.id: (r.status, r.number) for r in self.rentals.values()}
         log.info(
-            "loaded %d items, %d packages, %d rentals, %d renters from %s",
-            len(self.items), len(self.packages), len(self.rentals), len(self.clients), self.root,
+            "loaded %d items, %d packages, %d rentals, %d renters",
+            len(self.items), len(self.packages), len(self.rentals), len(self.clients),
         )  # fmt: skip
         return self
 
@@ -774,7 +774,7 @@ class Library:
         try:
             f.unlink(missing_ok=True)
         except OSError:
-            log.warning("couldn't remove %s", f, exc_info=True)
+            log.warning("couldn't remove %s", f.name, exc_info=True)
 
     def ordered_rentals(self) -> list[Rental]:
         """Soonest pickup first among what's coming up; the rest newest first."""

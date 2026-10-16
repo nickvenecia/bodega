@@ -17,6 +17,7 @@ import http.client
 import ipaddress
 import json
 import socket
+import time
 import urllib.request
 import zlib
 from dataclasses import dataclass, field
@@ -29,6 +30,7 @@ from bodega.core.net import ssl_context
 log = get_logger(__name__)
 
 TIMEOUT_S = 15
+DEADLINE_S = 30  # a whole page, however slowly it trickles in (so Stop is never stuck behind one)
 MAX_BYTES = 6_000_000  # downloaded, and again after unpacking
 MAX_REDIRECTS = 5
 MAX_TEXT = 20_000  # characters of a page's text handed on (to an AI, say)
@@ -206,10 +208,20 @@ def _get(url: str, ip: str, timeout: float, max_bytes: int) -> _Reply:
     u = urlparse(url)
     path = (u.path or "/") + (f"?{u.query}" if u.query else "")
     conn = _PinnedHTTPS(u.hostname or "", ip, u.port or 443, timeout)
+    deadline = time.monotonic() + DEADLINE_S
     try:
         conn.request("GET", path, headers=HEADERS)
         resp = conn.getresponse()
-        return _Reply(resp.status, resp.headers, resp.read(max_bytes))
+        chunks, got = [], 0
+        while got < max_bytes:
+            if time.monotonic() > deadline:
+                raise TimeoutError("the page took too long")
+            chunk = resp.read(min(64 * 1024, max_bytes - got))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            got += len(chunk)
+        return _Reply(resp.status, resp.headers, b"".join(chunks))
     finally:
         conn.close()
 

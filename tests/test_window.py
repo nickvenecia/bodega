@@ -602,7 +602,50 @@ def test_import_window_choices(qapp, data_folder, tmp_path):
     assert not d.chosen() and not d.go.isEnabled()
     d.pick_column("name", 1)
     d._done()
-    assert d.items and d.pricing == ("4", "8.25")
+    assert d.items and d.pricing == ("4", "8.25")  # no profile yet: it starts with the sheet's pricing
+
+
+def test_an_import_never_replaces_your_pricing_unasked_and_says_what_it_filled_in(
+    qapp, data_folder, tmp_path
+):
+    from bodega.core import importer
+    from bodega.ui.dialogs.import_sheet import ImportDialog
+
+    sheet = tmp_path / "list.csv"
+    sheet.write_text("Name,Qty,Price\nAputure STORM 80c,,500\nAputure STORM 1200x,2,2000\n")
+    d = ImportDialog(sheet, importer.load_rows(sheet), set(), has_profile=True)
+    assert not d.use_pricing.isChecked()  # you have a profile: its pricing stays yours
+    assert (
+        "1 with no quantity count as 1" in d.filled.text()
+        and "2 with no Rent? say are for rent" in d.filled.text()
+    )
+    assert "company" in d.filled.text() and all(i.brand == "Aputure" for i in d.chosen())
+    d.guess.setChecked(False)
+    assert not any(i.brand for i in d.chosen()) and "company" not in d.filled.text()
+
+
+def test_the_sheets_links_go_to_gear_you_have_only_if_you_say(win, tmp_path, monkeypatch):
+    from bodega.ui.dialogs import import_sheet
+
+    mic = next(i for i in win.lib.items.values() if i.name == "Shotgun Microphone")
+    mic.link = ""
+    sheet = tmp_path / "list.csv"
+    sheet.write_text(f"Name,Department,Link\n{mic.name},{mic.department},https://maker.example/mic\n")
+
+    def run(links_on: bool):
+        def exec_(d):
+            assert not d.links.isHidden()
+            d.links.setChecked(links_on)
+            d._done()
+            return import_sheet.ImportDialog.DialogCode.Accepted
+
+        monkeypatch.setattr(import_sheet.ImportDialog, "exec", exec_)
+        win.import_file(sheet)
+
+    run(False)
+    assert not win.lib.items[mic.id].link
+    run(True)
+    assert win.lib.items[mic.id].link == "https://maker.example/mic"
 
 
 def test_your_own_groups(win, monkeypatch):
