@@ -661,7 +661,8 @@ class Toast(QWidget):
         w = icon_w + min(widest, box.width()) + 2 * pad_x
         h = max(tokens.ICON, box.height()) + 2 * pad_y + self._bar_room()
         self._pill = QRectF(m, m, w, h)
-        self.setGeometry(
+        self._action_rect = self._action_at(self._pill)  # where a click takes it (set here, not when it's drawn:
+        self.setGeometry(  # a click can come before the first paint, or while it rises)
             round(area.center().x() - w / 2 - m),
             area.bottom() - tokens.TOAST_LIFT - h - m,
             w + 2 * m,
@@ -768,19 +769,25 @@ class Toast(QWidget):
         angle = float(self._turn.currentValue() or 0.0)
         p.drawArc(ring, int((90 - angle) * 16), -90 * 16)
 
+    def _action_at(self, r: QRectF) -> QRectF:
+        """Its capsule's place in a pill at `r` (none without an action)."""
+        if self._action is None:
+            return QRectF()
+        words_r = r.adjusted(0, 0, 0, -self._bar_room())
+        sw, sh = self._action_w(), tokens.SMALL_H + tokens.SPACE_1
+        return QRectF(r.right() - tokens.SPACE_4 - sw, words_r.center().y() - sh / 2, sw, sh)
+
     def _paint_action(self, p: QPainter, r: QRectF, words_r: QRectF) -> None:
         """Its capsule after the words (a job's Stop, a delete's Undo), in the toast's own light colors: on the
         dark toast the accent would be too faint to read."""
-        if self._action is None:
-            self._action_rect = QRectF()
+        cap_r = self._action_at(r)
+        if cap_r.isEmpty():
             return
-        sw, sh = self._action_w(), tokens.SMALL_H + tokens.SPACE_1
-        self._action_rect = QRectF(r.right() - tokens.SPACE_4 - sw, words_r.center().y() - sh / 2, sw, sh)
         cap = QPainterPath()
-        cap.addRoundedRect(self._action_rect, sh / 2, sh / 2)
+        cap.addRoundedRect(cap_r, cap_r.height() / 2, cap_r.height() / 2)
         p.fillPath(cap, theme.qcolor(tokens.TOAST_BUTTON))
         p.setPen(theme.qcolor(tokens.TOAST_TEXT))
-        p.drawText(self._action_rect, int(Qt.AlignmentFlag.AlignCenter), self._action_word)
+        p.drawText(cap_r, int(Qt.AlignmentFlag.AlignCenter), self._action_word)
 
     def _paint_bar(self, p: QPainter, words_r: QRectF, text: QRectF) -> None:
         """A job's bar under its words, when how far it is is known."""

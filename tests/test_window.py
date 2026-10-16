@@ -277,7 +277,9 @@ def test_scrolling_past_dropdowns_and_dates_leaves_the_cursor_alone(win):
     QApplication.processEvents()
     controls = [w for w in win.findChildren(QWidget) if isinstance(w, (QComboBox, DateField)) and w.isVisible()]
     assert controls
-    assert all(w.focusPolicy() == Qt.FocusPolicy.StrongFocus for w in controls)
+    # a click or Tab (a Mac gives dropdowns Tab only, unless Full Keyboard Access is on): never the wheel
+    taken = (Qt.FocusPolicy.StrongFocus, Qt.FocusPolicy.TabFocus)
+    assert all(w.focusPolicy() in taken for w in controls), [(w, w.focusPolicy()) for w in controls]
 
 
 def test_every_sidebar_place_opens_and_is_marked(win):
@@ -954,8 +956,10 @@ def test_blank_new_piece_goes_on_esc(win):
     n = len(win.lib.items)
     win.new("gear")
     assert len(win.lib.items) == n + 1
+    QApplication.processEvents()  # (undo notes it once the moment is over)
     steps = len(win.history.undos)
     win.deselect()  # Esc
+    QApplication.processEvents()
     assert len(win.lib.items) == n and len(Library(win.lib.root).load().items) == n
     assert len(win.history.undos) == steps - 1  # and it left no undo step
     win.new("gear")
@@ -1277,11 +1281,10 @@ def test_slow_work_says_how_far_it_is_and_offers_stop(win):
     assert t.isVisible() and t.lasts() and t._frac is None and t._turn.state() == t._turn.State.Running
     win.toast_job("Backing up: 3 of 10 files", 2, 10, lambda: stopped.append(1))
     assert t._frac == pytest.approx(0.2) and t._turn.state() != t._turn.State.Running
-    QApplication.processEvents()
-    t.repaint()
+    # Stop takes a click from the moment it shows, before it's drawn or while it's still rising
     assert not t._action_rect.isEmpty() and t._pill.contains(t._action_rect)
     QTest.mouseClick(t, Qt.MouseButton.LeftButton, pos=t._action_rect.center().toPoint())
-    assert t.text == "Stopping…" and t._action is None
+    assert t.text == "Stopping…" and t._action is None and t._action_rect.isEmpty()
     wait_for(lambda: stopped == [1])  # (once the click is over)
     win.toast("Stopped. Nothing was saved.")  # the job's own last word takes its place, and goes by itself
     assert not t.lasts() and t._t.isActive()

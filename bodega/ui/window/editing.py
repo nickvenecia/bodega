@@ -448,8 +448,7 @@ class EditingMixin:
         except OSError:
             pass  # the store kept what failed (lib.unsaved), and the banner says so
         self.show_save_state(had_problem)
-        if self.history is not None:
-            self.history.mark()
+        self.mark_soon()
 
     def show_save_state(self, had_problem: bool = False) -> None:
         """Not saved: a banner across the top (back each time a save fails again), "Not Saved" in the profile

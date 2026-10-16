@@ -203,7 +203,8 @@ class ItemPanel(DetailsBase):
         )
         self.photo.hide()
         self._photo_job: Worker | None = None
-        self.earned: dict | None = None  # what's earned, until the next change (None: work it out here)
+        self._all_earned: dict | None = None  # what every piece has earned, from the list (None: this one's, here)
+        self._one_earned: tuple[str, object] | None = None  # (piece, what it earned), until the next refresh
         self.setAcceptDrops(True)  # drop a picture anywhere on the panel (a file, or one out of a browser)
 
         # what it is
@@ -959,6 +960,24 @@ class ItemPanel(DetailsBase):
             "" if self.rent.isEnabled() else "Retired: it can't go on a rental" if it.is_retired() else "Not for rent"
         )
 
+    @property
+    def earned(self) -> dict | None:
+        return self._all_earned
+
+    @earned.setter
+    def earned(self, every: dict | None) -> None:
+        """Each refresh sets it (the list's sums, or None), and what was worked out here goes with it."""
+        self._all_earned, self._one_earned = every, None
+
+    def _earned(self, item_id: str):
+        """What this piece has earned: from the list's sums when it has them; else only its own rentals are added
+        up (a fraction of the work at a rental house's size), once until the next refresh."""
+        if self._all_earned is not None:
+            return self._all_earned.get(item_id)
+        if self._one_earned is None or self._one_earned[0] != item_id:
+            self._one_earned = (item_id, earnings.earnings(self.lib, only=item_id).get(item_id))
+        return self._one_earned[1]
+
     def _sums(self, b, cur: str) -> None:
         """A gear sheet's math: tax, each with tax, the total for all of them, the day rate."""
         it = self.it
@@ -987,9 +1006,7 @@ class ItemPanel(DetailsBase):
                 it.rentable and has_kids and bool(with_kids),
             ),
         }
-        if self.earned is None:  # worked out once until the next change (each refresh starts it again)
-            self.earned = earnings.earnings(self.lib)
-        e = self.earned.get(it.id)
+        e = self._earned(it.id)
         made = e.amount if e is not None else money.ZERO
         n = len(e.rentals) if e is not None else 0
         coming = e.coming if e is not None else money.ZERO

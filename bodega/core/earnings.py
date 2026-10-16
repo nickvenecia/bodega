@@ -36,10 +36,14 @@ def _shares(lib, line, b) -> list[tuple[str, Decimal]]:
 
 
 @pricing.one_pass
-def earnings(lib) -> dict[str, Earned]:
+def earnings(lib, only: str = "") -> dict[str, Earned]:
+    """What every piece has earned. `only`: one piece's id: just the rentals it's on are added up (what its panel
+    shows; at a rental house's size, a fraction of the whole), so only its own entry is whole."""
     out: dict[str, Earned] = {}
     for r in lib.rentals.values():
         if not (r.went_out() or r.is_booked()):
+            continue
+        if only and not any(it.id == only for line in r.lines for it, _u, _d in pricing.line_gear(lib, line)):
             continue
         b = lib.businesses.get(r.business_id) or lib.pricing()
         t = pricing.totals(lib, r, b)

@@ -119,6 +119,9 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
 
         self._save_timer = QTimer(self, singleShot=True, interval=tokens.SAVE_DELAY_MS, timeout=self.flush)
         self._save_cap = QTimer(self, singleShot=True, interval=tokens.SAVE_MAX_MS, timeout=self.flush)
+        # undo's note of where things stand, once the moment is over: an action's saves and refreshes (opening a
+        # piece is four) are one note, not one each (at 3,000 pieces a note is a tenth of a second)
+        self._mark_timer = QTimer(self, singleShot=True, interval=0, timeout=self.mark_now)
         self._retry_timer = QTimer(self, interval=tokens.SAVE_RETRY_MS, timeout=self.flush)  # while not saved
         self._was_unsaved = False
         self.lib.on_unsaved = lambda: QTimer.singleShot(0, self, self.show_save_state)
@@ -503,6 +506,15 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         if empty and not self.assistant_showing():
             self.dock.set_open(False)
         self._apply_search()
+        self.mark_soon()
+
+    def mark_soon(self) -> None:
+        """Every change ends in flush() or refresh(); undo notes it once the moment is over (see _mark_timer)."""
+        if self.history is not None:
+            self._mark_timer.start()
+
+    def mark_now(self) -> None:
+        self._mark_timer.stop()
         if self.history is not None:
             self.history.mark()
 

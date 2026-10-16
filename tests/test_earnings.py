@@ -41,3 +41,15 @@ def test_fees_and_cancelled_dont_count(tmp_path):
     r.lines = [RentalLine("fee", "", 1, "50", "Delivery")]
     r.status = "returned"
     assert earnings.earnings(lib) == {}
+
+
+def test_one_pieces_earnings_are_its_share_of_the_whole(data_folder):
+    """A piece's panel adds up only the rentals it's on: the same figures as the whole pass, for every piece."""
+    lib = sample.fill(Library(data_folder).load())
+    for n, r in enumerate(lib.rentals.values()):
+        r.status = "booked" if n % 2 else "returned"  # earned (and coming, with more than one rental)
+    whole = earnings.earnings(lib)
+    assert any(e.amount for e in whole.values())
+    for it in lib.items.values():
+        one = earnings.earnings(lib, only=it.id).get(it.id)
+        assert (one is None and it.id not in whole) or one == whole[it.id], it.name
