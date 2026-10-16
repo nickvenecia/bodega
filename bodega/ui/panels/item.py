@@ -53,6 +53,7 @@ from bodega.ui.components.widgets import (
     picker,
     qty_field,
     repolish,
+    rows_done,
     set_combo,
     status_line,
     suggestions,
@@ -264,7 +265,7 @@ class ItemPanel(DetailsBase):
         # the parts you add
         b = self._block("works", "Works With")
         self.kids_box = QWidget()
-        self.kids_lay = vbox(self.kids_box, 0, tokens.SPACE_1)
+        self.kids_lay = vbox(self.kids_box, 0, 0)  # rows, with hairlines between
         b.add(self.kids_box)
         arow = hbox()
         self.attach = add_chip("Add Gear…")
@@ -845,6 +846,7 @@ class ItemPanel(DetailsBase):
             self.kids_lay.addWidget(self._link_row(p, "Goes with", parent_row=True))
         for kid in pricing.children(self.lib, it.id):
             self.kids_lay.addWidget(self._link_row(kid, ""))
+        rows_done(self.kids_lay)
         self.kids_box.setVisible(self.kids_lay.count() > 0)
         self.attach.setVisible(p is None)
 
@@ -852,7 +854,9 @@ class ItemPanel(DetailsBase):
         box = KidRow(other.id)
         box.clicked.connect(lambda k: self.later(lambda: self.open_item.emit(k)))
         box.setToolTip("Open it")
-        lay = hbox(box, (tokens.SPACE_3, tokens.SPACE_1, tokens.SPACE_1, tokens.SPACE_1), tokens.SPACE_2)
+        lay = hbox(
+            box, (tokens.SPACE_3, tokens.SPACE_2, tokens.SPACE_2, tokens.SPACE_2), tokens.SPACE_2
+        )  # as a rental's lines
         if lead:
             t = QLabel(lead)
             t.setObjectName("Meta")

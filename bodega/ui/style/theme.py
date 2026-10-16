@@ -283,7 +283,7 @@ QListWidget#Picker::indicator:checked {{ background: {tokens.ACCENT_FILL}; borde
 #ProfileSub[tone="problem"] {{ color: {tokens.WARN}; font-weight: {WEIGHT_SEMIBOLD}; }}
 #Nav {{ background: transparent; border-radius: {tokens.NAV_R}px; }}
 #Nav:hover {{ background: {tokens.ROW_HOVER}; }}
-#Nav:focus, #NavHead:focus, #ItemBox:focus, #LineHead:focus {{ border: 1px solid {tokens.ACCENT}; }}
+#Nav:focus, #NavHead:focus, #LineHead:focus {{ border: 1px solid {tokens.ACCENT}; }}
 #Nav[selected="true"] {{ background: {tokens.ACCENT_TINT}; }}
 #NavLabel {{ color: {tokens.TEXT}; font-weight: {WEIGHT_MEDIUM}; }}
 #NavSub {{ color: {tokens.TEXT}; }}
@@ -333,8 +333,11 @@ QPushButton#Where[tone="late"] {{ background: {tokens.BAD_TINT}; border-color: {
 
 /* ---------- details panel */
 #Details {{ background: transparent; border: none; }}
-#ItemBox {{ background: {tokens.FIELD}; border: 1px solid {tokens.FIELD_BORDER}; border-radius: {RADIUS_LG}px; }}
-#ItemBox[open="false"]:hover {{ border-color: {tokens.BORDER_HOVER}; }}
+/* a row in a card's list (a rental's lines, a kit's gear, what goes with a piece): hairlines between, never a card in a card */
+#ItemBox {{ background: transparent; border: none; border-bottom: 1px solid {tokens.BORDER}; border-radius: 0; }}
+#ItemBox[last="true"] {{ border-bottom-color: transparent; }}
+#ItemBox[open="false"]:hover {{ background: {tokens.FILL_2}; border-bottom-color: transparent; border-radius: {RADIUS_SM}px; }}
+#ItemBox:focus {{ border: {tokens.FOCUS_RING}px solid {tokens.ACCENT}; border-radius: {RADIUS_SM}px; }}
 #ItemTitle {{ font-weight: {WEIGHT_MEDIUM}; }}
 #ItemTitle[blank="true"] {{ color: {tokens.FAINT}; }}
 #ItemAmount {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}

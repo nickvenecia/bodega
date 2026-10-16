@@ -39,6 +39,7 @@ from bodega.ui.components.widgets import (
     picker,
     qty_field,
     repolish,
+    rows_done,
     set_combo,
     status_line,
     to_qdate,
@@ -424,7 +425,7 @@ class RentalPanel(DetailsBase):
 
         # gear
         self.lines_box = QWidget()
-        self.lines_lay = vbox(self.lines_box, 0, tokens.SPACE_2)
+        self.lines_lay = vbox(self.lines_box, 0, 0)  # rows, with hairlines between
         g["gear"].add(self.lines_box)
         arow = hbox(spacing=tokens.SPACE_2)
         self.add = add_chip("Add Gear…")
@@ -807,6 +808,7 @@ class RentalPanel(DetailsBase):
             e.gear_wanted.connect(self.open_item.emit)
             self.lines_lay.addWidget(e)
             self.editors.append(e)
+        rows_done(self.lines_lay)
         for i, e in enumerate(self.editors):
             e.set_position(i, len(self.editors))
             if e.line is (open_line or was_open):

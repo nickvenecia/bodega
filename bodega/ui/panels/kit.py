@@ -25,6 +25,7 @@ from bodega.ui.components.widgets import (
     icon_button,
     percent_field,
     qty_field,
+    rows_done,
     set_combo,
     vbox,
 )
@@ -71,7 +72,7 @@ class PackagePanel(DetailsBase):
         g["package"].add(self.notes)
 
         self.lines_box = QWidget()
-        self.lines_lay = vbox(self.lines_box, 0, tokens.SPACE_2)
+        self.lines_lay = vbox(self.lines_box, 0, 0)  # rows, with hairlines between
         g["gear"].add(self.lines_box)
         arow = hbox()
         self.add = add_chip("Add Gear…")
@@ -160,6 +161,7 @@ class PackagePanel(DetailsBase):
             if it is None:
                 continue
             self.lines_lay.addWidget(self._line_row(n, it, line))
+        rows_done(self.lines_lay)
         self._sums()
 
     def _line_row(self, n: int, it, line) -> QWidget:

@@ -305,6 +305,16 @@ def repolish(w: QWidget) -> None:
     w.update()
 
 
+def rows_done(layout: QLayout) -> None:
+    """A list of rows (each an "ItemBox") is built: the last one has no hairline under it."""
+    rows = [layout.itemAt(n).widget() for n in range(layout.count())]
+    rows = [w for w in rows if w is not None and w.objectName() == "ItemBox"]
+    for w in rows:
+        if w.property("last") != (w is rows[-1]):
+            w.setProperty("last", w is rows[-1])
+            repolish(w)
+
+
 class AccentPicker(QWidget):
     """A row of color circles (tokens.ACCENTS), the chosen one ringed. Click, or the arrow keys."""
 

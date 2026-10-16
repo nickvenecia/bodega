@@ -189,6 +189,8 @@
 - The Assistant's header has Clear Chat, to start over, and a ⋯ with AI Settings…. Before the first question it
   offers a few to try: click one and it's in the box, ready to send.
 - Anything that's off (a button, a field, a switch, a menu item) is dimmed the same way everywhere, as on a Mac.
+- A rental's lines, a kit's gear and what goes with a piece are now rows with thin lines between them, instead of
+  boxes inside a box.
 - Drag a column's title in the gear list to put the columns in your own order (Name stays first); right-click a
   title for Move Left and Move Right. Bodega keeps the order for next time.
 - Switching Month and Timeline (and every other row of choices like it) slides the highlight across, as on a Mac.
