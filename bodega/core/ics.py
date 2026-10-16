@@ -28,7 +28,8 @@ def _esc(text: str) -> str:
 
 def _fold(line: str) -> str:
     """Lines longer than 75 bytes continue on the next line after a space (as the format asks)."""
-    out, cur = [], b""
+    out: list[str] = []
+    cur = b""
     for ch in line:
         b = ch.encode("utf-8")
         if len(cur) + len(b) > (75 if not out else 74):

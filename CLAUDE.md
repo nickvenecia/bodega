@@ -17,7 +17,7 @@ The owner is a filmmaker (director/DP/editor/colorist), not a full-time develope
 - **[DESIGN.md](DESIGN.md)**: how the app and the paper look and read. All app values live in `bodega/ui/tokens.py`;
   paper colors in `bodega/core/looks.py`. Never type a size or color anywhere else.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)**: code rules.
-- Before finishing any change: `ruff format . && ruff check . && python -m pytest -q`.
+- Before finishing any change: `ruff format . && ruff check . && mypy && python -m pytest -q`.
 - Commit messages: a short plain summary, nothing added after it.
 
 ## Layout

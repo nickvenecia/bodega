@@ -32,6 +32,10 @@ jobs:
         run: ruff format --check .
       - name: Lint (style, bugs, security)
         run: ruff check .
+      - name: Type check (the parts with no Qt)
+        run: |
+          pip install "mypy==1.15.0"
+          mypy
       - name: Known vulnerabilities in what ships (and what builds it)
         run: |
           pip install "pip-audit==2.9.0"

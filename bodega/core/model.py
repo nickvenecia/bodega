@@ -11,12 +11,11 @@ Amounts are kept as the text that was typed ("249.99") and turned into exact dec
 from __future__ import annotations
 
 import copy
-import functools
 import re
 import uuid
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 ITEM_STATUSES = ("ready", "repair", "retired")
 RENTAL_STATUSES = ("quote", "booked", "out", "returned", "cancelled")
@@ -80,7 +79,7 @@ def _as(v: Any, default: Any) -> Any:
         want = list if isinstance(default, list) else dict
         if not isinstance(v, want):
             raise ValueError(f"expected a {want.__name__}, got {type(v).__name__}")
-        return type(default).from_dict(v) if is_dataclass(default) else v
+        return cast(Any, type(default)).from_dict(v) if is_dataclass(default) else v
     if isinstance(v, (list, dict)):
         raise ValueError(f"expected a plain value, got {type(v).__name__}")
     if isinstance(default, bool):
@@ -127,10 +126,14 @@ def _plain(v: Any) -> Any:
     return v
 
 
-@functools.cache
+_WRITTEN: dict[type, tuple[str, ...]] = {}
+
+
 def _written(cls: type) -> tuple[str, ...]:
-    """The fields a record writes, in order (all but `newer`)."""
-    return tuple(f.name for f in fields(cls) if f.name != "newer")
+    """The fields a record writes, in order (all but `newer`), worked out once per kind of record."""
+    if cls not in _WRITTEN:
+        _WRITTEN[cls] = tuple(f.name for f in fields(cls) if f.name != "newer")
+    return _WRITTEN[cls]
 
 
 class Record:

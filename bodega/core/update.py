@@ -194,7 +194,9 @@ def _inside_appimage() -> bool:
     """APPIMAGE is passed down to programs an AppImage starts, so only trust it when Bodega itself runs
     from inside the AppImage (else another app's AppImage could be the one replaced)."""
     appdir = os.environ.get("APPDIR")
-    return bool(appdir) and Path(sys.executable).resolve().is_relative_to(Path(appdir).resolve())
+    if not appdir:
+        return False
+    return Path(sys.executable).resolve().is_relative_to(Path(appdir).resolve())
 
 
 def app_bundle() -> Path | None:

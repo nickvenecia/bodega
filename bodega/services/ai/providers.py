@@ -23,6 +23,7 @@ import json
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from typing import Any
 from urllib.parse import urlparse
 
 from bodega import __version__
@@ -116,7 +117,8 @@ class Setup:
 
     @classmethod
     def from_settings(cls, settings: dict) -> Setup:
-        d = settings.get("ai") if isinstance(settings.get("ai"), dict) else {}
+        got = settings.get("ai")
+        d = got if isinstance(got, dict) else {}
         return cls(str(d.get("provider") or ""), str(d.get("model") or ""), str(d.get("base_url") or ""))
 
     def to_settings(self, settings: dict) -> None:
@@ -330,9 +332,10 @@ def _ask(setup: Setup, system: str, user: str, key: str | None) -> str:
         usage.METER.used(d)
         choices = d.get("choices") if isinstance(d, dict) else None
         msg = choices[0].get("message", {}) if choices and isinstance(choices[0], dict) else {}
-        text = msg.get("content") or ""
-        if isinstance(text, list):  # some providers send parts
-            text = "".join(p.get("text", "") for p in text if isinstance(p, dict))
+        content: Any = msg.get("content") or ""
+        text = (  # some providers send parts
+            "".join(p.get("text", "") for p in content if isinstance(p, dict)) if isinstance(content, list) else content
+        )
     text = str(text).strip()
     if not text:
         raise AIError("The model didn't answer. Try again, or pick another model.")

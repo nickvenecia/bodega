@@ -30,6 +30,15 @@ include = ["bodega*"]
 [tool.setuptools.package-data]
 bodega = ["assets/*", "assets/fonts/*"]
 
+# ---------------------------------------------------------------- types
+# The parts with no Qt (gear, pricing, files, the web, the AI) are type-checked in CI: `mypy`. The windows next.
+[tool.mypy]
+files = ["bodega/core", "bodega/services"]
+python_version = "3.12"
+ignore_missing_imports = true  # openpyxl, segno and keyring ship no type information
+warn_unused_ignores = true
+warn_redundant_casts = true
+
 # ---------------------------------------------------------------- code style
 [tool.ruff]
 line-length = 120

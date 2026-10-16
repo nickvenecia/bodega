@@ -513,7 +513,7 @@ class Library:
         if parent is None:
             return 0
         above = set()
-        cur = parent
+        cur: Item | None = parent
         while cur is not None and cur.id not in above:
             above.add(cur.id)
             cur = self.items.get(cur.parent)

@@ -130,7 +130,7 @@ def check_public(host: str) -> str:
         infos = socket.getaddrinfo(host, 443, proto=socket.IPPROTO_TCP)
     except (socket.gaierror, UnicodeError) as e:
         raise OSError(f"Couldn't find {host}.") from e
-    addresses = [ipaddress.ip_address(info[4][0].split("%", 1)[0]) for info in infos]
+    addresses = [ipaddress.ip_address(str(info[4][0]).split("%", 1)[0]) for info in infos]
     if not addresses or any(_private(ip) for ip in addresses):
         raise Blocked(f"{host} isn't on the public internet, so Bodega won't open it.")
     return str(addresses[0])
@@ -199,7 +199,7 @@ class _PinnedHTTPS(http.client.HTTPSConnection):
 @dataclass
 class _Reply:
     status: int
-    headers: object  # an http.client.HTTPMessage
+    headers: http.client.HTTPMessage
     body: bytes
 
 

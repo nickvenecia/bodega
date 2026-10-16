@@ -417,7 +417,7 @@ def _rows_csv(path: Path) -> list[list]:
     except OSError as e:
         raise OSError(f"Bodega can't open {path.name}.") from e
     text = _decoded(raw)
-    out = []
+    out: list[list[str]] = []
     try:
         for r in csv.reader(io.StringIO(text, newline="")):  # keeps line breaks inside cells
             if len(out) >= MAX_ROWS:
@@ -577,9 +577,9 @@ def parse_rows(
     if head >= 0:
         # a lone percent in the header row ("0.04" over the rent column) is the day-rate percent
         for v in rows[head]:
-            n = _number(v)
-            if n is not None and 0 < n < 1:
-                out.rate_pct = _value_text(n * 100)
+            share = _number(v)
+            if share is not None and 0 < share < 1:
+                out.rate_pct = _value_text(share * 100)
     name_col = cols["name"]
     department = group = ""
     links = getattr(rows, "links", {})

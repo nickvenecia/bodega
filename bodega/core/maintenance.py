@@ -30,8 +30,7 @@ class Due:
 
 
 def last_service(it: Item) -> date | None:
-    done = [dates.parse(e.date) for e in it.log if e.kind == "service"]
-    done = [d for d in done if d is not None]
+    done = [d for d in (dates.parse(e.date) for e in it.log if e.kind == "service") if d is not None]
     return max(done) if done else None
 
 

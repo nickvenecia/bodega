@@ -33,7 +33,7 @@ packaging/     Installer files per OS
 - Python 3.12. `from __future__ import annotations` at the top of every module.
 - **Ruff** formats and lints. Before every commit:
   ```bash
-  ruff format . && ruff check . && python -m pytest -q
+  ruff format . && ruff check . && mypy && python -m pytest -q
   ```
   CI fails if any of the three fails. Settings are in `pyproject.toml` (line length 120, the standard's).
 - Type hints on every function signature. Prefer `X | None` and built-in generics (`list[str]`).

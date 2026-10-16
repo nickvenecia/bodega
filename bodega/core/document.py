@@ -193,9 +193,9 @@ def build_rental(lib, r: Rental, b: Business | None) -> DocView:
                 each = money.fmt(pricing.replacement(it, b) * units, cur)
                 table.rows.append(Row([_qty(units), it.name, each, "", ""], "sub", depth + 1, note))
             return
-        it = gear[0][0] if gear else None
-        note = _serials(it, line.qty) if (it and r.show_serials) else ""
-        own_value = pricing.replacement(it, b) * line.qty if it else money.ZERO
+        piece = gear[0][0] if gear else None
+        note = _serials(piece, line.qty) if (piece and r.show_serials) else ""
+        own_value = pricing.replacement(piece, b) * line.qty if piece else money.ZERO
         table.rows.append(
             Row([_qty(line.qty), name, money.fmt(own_value, cur), money.fmt(unit, cur), money.fmt(amount, cur)], "item", 0, note)
         )  # fmt: skip

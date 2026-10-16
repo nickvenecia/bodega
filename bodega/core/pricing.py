@@ -278,13 +278,15 @@ def line_days(r: Rental, line: RentalLine, b: Business | None) -> Days:
 
 def span_of(r: Rental) -> tuple[date | None, date | None]:
     """First pickup to last return, across every line."""
-    starts, ends = [], []
+    starts: list[date] = []
+    ends: list[date] = []
     for ln in [None, *r.lines]:
         a, z = (dates.parse(r.pickup), dates.parse(r.return_date)) if ln is None else line_dates(r, ln)
         if a:
             starts.append(a)
-        if z or a:
-            ends.append(z or a)
+        end = z or a
+        if end:
+            ends.append(end)
     return (min(starts) if starts else None, max(ends) if ends else None)
 
 

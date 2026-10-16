@@ -273,7 +273,8 @@ def _checked_pages(
         if not isinstance(row, dict) or not isinstance(row.get("n"), int) or not 0 <= row["n"] < len(batch):
             continue
         it = batch[row["n"]]
-        urls = row.get("urls") if isinstance(row.get("urls"), list) else []
+        given = row.get("urls")
+        urls = given if isinstance(given, list) else []
         for url in urls[:3]:
             link = web.web_link(clean_text(url, LIMITS["link"]))
             if not link or it.id in found or web.site_name(link) in avoid:
@@ -355,7 +356,8 @@ def update_from_links(
     """For each piece with a link: today's price from its page, and (with an AI set up) a cleaner name. A store
     that lets only web browsers in (B&H): with an AI set up, another page about the piece is found and read
     instead (its link stays as it is)."""
-    out, problems = [], []
+    out: list[Change] = []
+    problems: list[str] = []
     budget, pace = Budget(), _Pace(cancel)
     stuck: list[tuple[Item, str]] = []  # (piece, why its own page couldn't be read)
     todo = [it for it in items if web.web_link(it.link)]
@@ -394,13 +396,12 @@ def update_from_links(
                     problems.append(str(e))
                     break
                 for it, why in batch:
-                    page = pages.get(it.id)
-                    if page is None:
+                    found = pages.get(it.id)
+                    if found is None:
                         problems.append(f"{it.name}: {why} No other page about it could be checked.")
                     else:
                         site = web.site_name(it.link)
-                        why = f"{_host(page)} ({site} can't be read)"
-                        _from_page(setup, it, page, why, out, problems, budget)
+                        _from_page(setup, it, found, f"{_host(found)} ({site} can't be read)", out, problems, budget)
     progress(len(todo), len(todo))
     return _ended(Result(out, problems), budget)
 
@@ -576,8 +577,9 @@ def chat(
     if not isinstance(got, dict):  # it just talked: that's the answer
         return text.strip(), Result([], [])
     reply = str(got.get("reply") or "").strip()
-    out = []
-    for row in got.get("changes") if isinstance(got.get("changes"), list) else []:
+    out: list[Change] = []
+    asked = got.get("changes")
+    for row in asked if isinstance(asked, list) else []:
         if not isinstance(row, dict) or not isinstance(row.get("n"), int) or not 0 <= row["n"] < len(shown):
             continue
         field = row.get("field")
