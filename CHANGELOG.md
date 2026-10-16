@@ -211,6 +211,8 @@
 - Import remembers which column is which: once you've set the columns for a sheet, the next sheet with the same
   headings comes in the same way.
 - The filter button beside the search is the same size as the other round buttons in the bar.
+- The calendar marks today by its number, in blue, rather than a filled circle (blue is for what you can press or
+  have chosen).
 - The calendar works from the keyboard: Tab reaches it, the arrow keys move from rental to rental (the one you're on
   has a ring), Return opens it, and VoiceOver or Narrator says each one ("JLF-2026-001, Northwind Media, Oct 18–25,
   Booked").

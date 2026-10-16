@@ -203,8 +203,8 @@ class RentalCalendar(_Bars, QWidget):
             x = NAME_W + n * dw
             if d.weekday() >= 5:
                 p.fillRect(QRectF(x, HEAD_H, dw, self.height() - HEAD_H), theme.qcolor(tokens.PANEL))
-            if d == today:
-                p.fillRect(QRectF(x, 0, dw, self.height()), theme.qcolor(tokens.ACCENT_TINT))
+            if d == today:  # a quiet wash (the accent is for what's pressed or chosen); its number says today
+                p.fillRect(QRectF(x, 0, dw, self.height()), theme.qcolor(tokens.FILL))
         # the header: months and day numbers
         p.setPen(theme.qcolor(tokens.MUTED))
         for n in range(self.days):
@@ -217,12 +217,14 @@ class RentalCalendar(_Bars, QWidget):
                     int(Qt.AlignmentFlag.AlignLeft),
                     dates.MONTHS[d.month - 1],
                 )
-            p.setPen(theme.qcolor(tokens.TEXT if d == today else tokens.MUTED))
+            p.setPen(theme.qcolor(tokens.ACCENT_TEXT if d == today else tokens.MUTED))
+            p.setFont(theme.font(tokens.TEXT_SM, tokens.WEIGHT_SEMIBOLD) if d == today else f)
             p.drawText(
                 QRectF(x, HEAD_H / 2, dw, HEAD_H / 2 - tokens.SPACE_1),
                 int(Qt.AlignmentFlag.AlignCenter),
                 str(d.day),
             )
+            p.setFont(f)
         p.setPen(QPen(theme.qcolor(tokens.BORDER), 1))
         p.drawLine(0, HEAD_H, self.width(), HEAD_H)
         # one row per rental
@@ -382,14 +384,13 @@ class MonthCalendar(_Bars, QWidget):
                     tokens.MONTH_DAY_CIRCLE,
                     tokens.MONTH_DAY_CIRCLE,
                 )
-                if d == today:
-                    p.setPen(Qt.PenStyle.NoPen)
-                    p.setBrush(theme.qcolor(tokens.ACCENT))
-                    p.drawEllipse(num)
-                    p.setPen(theme.qcolor(tokens.ON_ACCENT))
+                if d == today:  # the standard's today (G.22): its number in the accent's words, Semibold
+                    p.setPen(theme.qcolor(tokens.ACCENT_TEXT))
+                    p.setFont(theme.font(tokens.TEXT_SM, tokens.WEIGHT_SEMIBOLD))
                 else:
                     p.setPen(theme.qcolor(tokens.TEXT if d.month == self.month else tokens.MUTED))
                 p.drawText(num, int(Qt.AlignmentFlag.AlignCenter), str(d.day))
+                p.setFont(theme.font(tokens.TEXT_SM, tokens.WEIGHT_MEDIUM))
         # the rentals, week by week, each in the first lane free across its days
         self._bars = []
         lanes_fit = max(
