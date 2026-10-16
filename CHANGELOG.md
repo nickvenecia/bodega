@@ -201,6 +201,8 @@
 - The gear jobs (Update from Links…, Find Missing Links…, Tidy Up Names…, Organize Groups…, and Update with AI… on
   a piece) are written the same way everywhere, each with "…": each ends in Review, and nothing changes until you
   approve.
+- In a profile, fields are sized by what they hold: rates and numbers are short, names and contact details share
+  one width, and dropdowns are as wide as their choice.
 - A kit with more than 12 pieces, or a rental with more than 12 lines, has its own search above its gear.
 - Esc in any search, including the gear picker's, clears what you typed first, before it closes anything.
 - Import remembers which column is which: once you've set the columns for a sheet, the next sheet with the same

@@ -1469,6 +1469,22 @@ def only(field: QLineEdit, pattern: str) -> QLineEdit:
     return field
 
 
+FIELD_KINDS = {"name": "ROW_CTL", "short": "ROW_CTL_SHORT"}  # the standard's widths, by what a field holds
+
+
+def sized(w: QWidget, kind: str) -> QWidget:
+    """A control sized by what it holds (the standard's 4.6, G.3): "name" (a name, an email, a phone, a link) and
+    "short" (a rate, a number, a prefix) are at most their kind's width, so fields of one kind line up; "popup"
+    hugs its value. Set per kind, never per control."""
+    if kind == "popup":
+        if isinstance(w, QComboBox):
+            w.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        w.setSizePolicy(QSizePolicy.Policy.Fixed, w.sizePolicy().verticalPolicy())
+    else:
+        w.setMaximumWidth(getattr(tokens, FIELD_KINDS[kind]))
+    return w
+
+
 def percent_field(text: str = "", placeholder: str = "") -> QLineEdit:
     """A percent (discount, sales tax, a day's rate): digits and one point, the % sign optional."""
     f = only(QLineEdit(text), PERCENT_TYPED)
