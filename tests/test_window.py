@@ -1470,3 +1470,22 @@ def test_the_menu_bar_has_the_open_rentals_commands(win):
     win.deselect()
     win._record_menu_state()
     assert not acts["agreement"].isEnabled()  # nothing open: nothing to act on
+
+
+def test_menus_and_words_are_measured_to_the_standard(win):
+    """Menu rows are LIST_ROW_H tall (every list of choices is); no words are smaller than the type ramp's
+    smallest."""
+    from PySide6.QtWidgets import QLabel
+
+    from bodega.ui.style import tokens
+
+    m = win.new_menu
+    m.ensurePolished()
+    m.adjustSize()
+    rows = [m.actionGeometry(a).height() for a in m.actions() if not a.isSeparator()]
+    assert rows and all(h == tokens.LIST_ROW_H for h in rows), rows
+    smallest = min(v for k, v in vars(tokens).items() if k.startswith("TEXT_") and isinstance(v, int))
+    win.open("gear", next(iter(win.lib.items)))
+    QApplication.processEvents()
+    sizes = {lbl.font().pixelSize() for lbl in win.findChildren(QLabel) if lbl.isVisible() and lbl.text()}
+    assert all(s == -1 or s >= smallest for s in sizes), sizes
