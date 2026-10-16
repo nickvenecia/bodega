@@ -1,20 +1,35 @@
-"""Draw the app icon (bodega/assets/icon.png): "b." on a dark tile, the full stop in the accent.
+"""The app icon, from one vector source (the standard's V-41).
 
-    python scripts/make_icon.py
+    python scripts/make_icon.py            draws bodega/assets/icon.png from bodega/assets/icon.svg
+    python scripts/make_icon.py --source   writes icon.svg again (after a change to the letters, tile or colors)
 
-The build turns the PNG into the Mac .icns and Windows .ico (bodega.spec). Colors come from the design
-tokens and the letters from the bundled Inter Display Bold, so the icon always matches the app.
+icon.svg is the icon: Apple's 824-point rounded tile on a 1024 grid with its shade and hairline, and "b." as the
+outlines of the bundled Inter Display Bold, the full stop in the accent. The mark is framed by its measured ink:
+centred on the tile, as tall as MARK_PX of type. The build turns icon.png into the Mac .icns and the Windows .ico
+(bodega.spec), so every size comes from the one drawing. Colors come from the design tokens.
 """
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+from PySide6.QtCore import QRectF  # noqa: E402
+from PySide6.QtGui import (  # noqa: E402
+    QFont,
+    QFontDatabase,
+    QFontMetricsF,
+    QGuiApplication,
+    QImage,
+    QPainter,
+    QPainterPath,
+)
+from PySide6.QtSvg import QSvgRenderer  # noqa: E402
 
 from bodega.ui.style.tokens import ACCENT, TEXT  # noqa: E402
 
@@ -23,55 +38,77 @@ TILE = 824  # Apple's icon grid: an 824 px rounded square centred on 1024 (room 
 RADIUS = 185
 TILE_TOP = "#1E1E22"  # a soft top-to-bottom shade of the app background (BG #111113)
 TILE_BOTTOM = "#121214"
+EDGE = 3  # a hairline edge so it holds up on dark docks…
+EDGE_ALPHA = 0.086  # …white, barely
+MARK_PX = 560  # the letters' size
 FONT = ROOT / "bodega" / "assets" / "fonts" / "InterDisplay-Bold.otf"
+SVG = ROOT / "bodega" / "assets" / "icon.svg"
+PNG = ROOT / "bodega" / "assets" / "icon.png"
 
 
-def _hex(c: str) -> tuple[int, int, int]:
-    c = c.lstrip("#")
-    return int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
+def _d(path: QPainterPath, dx: float, dy: float) -> str:
+    """A QPainterPath as SVG path data, moved by (dx, dy)."""
+    out, n = [], 0
+    while n < path.elementCount():
+        e = path.elementAt(n)
+        if e.isMoveTo():
+            out.append(f"M{e.x + dx:.2f} {e.y + dy:.2f}")
+        elif e.isLineTo():
+            out.append(f"L{e.x + dx:.2f} {e.y + dy:.2f}")
+        else:  # a curve: this point and the next two
+            c1, c2 = path.elementAt(n + 1), path.elementAt(n + 2)
+            out.append(
+                f"C{e.x + dx:.2f} {e.y + dy:.2f} {c1.x + dx:.2f} {c1.y + dy:.2f} {c2.x + dx:.2f} {c2.y + dy:.2f}"
+            )
+            n += 2
+        n += 1
+    return " ".join(out) + " Z"
 
 
-def draw(size: int = SIZE) -> Image.Image:
-    s = size / SIZE
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    off = round((SIZE - TILE) / 2 * s)
-    tile = round(TILE * s)
+def source() -> str:
+    """The SVG: the tile, and "b." as outlines centred on their ink."""
+    family = QFontDatabase.applicationFontFamilies(QFontDatabase.addApplicationFont(str(FONT)))[0]
+    f = QFont(family)
+    f.setPixelSize(MARK_PX)
+    f.setWeight(QFont.Weight.Bold)  # (the file is the bold face; asked for, it isn't thinned to a regular)
+    letter, dot = QPainterPath(), QPainterPath()
+    letter.addText(0, 0, f, "b")
+    dot.addText(QFontMetricsF(f).horizontalAdvance("b"), 0, f, ".")
+    ink = letter.boundingRect().united(dot.boundingRect())
+    dx, dy = (SIZE - ink.width()) / 2 - ink.left(), (SIZE - ink.height()) / 2 - ink.top()
+    off, inner = (SIZE - TILE) / 2, EDGE / 2
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{SIZE}" height="{SIZE}" viewBox="0 0 {SIZE} {SIZE}">
+  <!-- Bodega's icon, written by scripts/make_icon.py (its source option); icon.png is drawn from it -->
+  <defs>
+    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="{TILE_TOP}"/>
+      <stop offset="1" stop-color="{TILE_BOTTOM}"/>
+    </linearGradient>
+  </defs>
+  <rect x="{off}" y="{off}" width="{TILE}" height="{TILE}" rx="{RADIUS}" fill="url(#shade)"/>
+  <rect x="{off + inner}" y="{off + inner}" width="{TILE - EDGE}" height="{TILE - EDGE}" rx="{RADIUS - inner}"
+        fill="none" stroke="#FFFFFF" stroke-opacity="{EDGE_ALPHA}" stroke-width="{EDGE}"/>
+  <path fill="{TEXT}" d="{_d(letter, dx, dy)}"/>
+  <path fill="{ACCENT}" d="{_d(dot, dx, dy)}"/>
+</svg>
+"""
 
-    # the tile, with a gentle vertical shade
-    top, bottom = _hex(TILE_TOP), _hex(TILE_BOTTOM)
-    shade = Image.new("RGBA", (tile, tile))
-    px = ImageDraw.Draw(shade)
-    for y in range(tile):
-        f = y / max(1, tile - 1)
-        px.line(
-            [(0, y), (tile, y)],
-            fill=tuple(round(a + (b - a) * f) for a, b in zip(top, bottom, strict=True)),
-        )
-    mask = Image.new("L", (tile, tile), 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, tile - 1, tile - 1), round(RADIUS * s), fill=255)
-    img.paste(shade, (off, off), mask)
-    # a hairline edge so it holds up on dark docks
-    ImageDraw.Draw(img).rounded_rectangle(
-        (off, off, off + tile - 1, off + tile - 1),
-        round(RADIUS * s),
-        outline=(255, 255, 255, 22),
-        width=max(1, round(3 * s)),
-    )
 
-    # "b." in the text color, the full stop in the accent; sized by the letter's height, centred on its ink
-    letter, dot = "b", "."
-    font = ImageFont.truetype(str(FONT), round(560 * s))
-    d = ImageDraw.Draw(img)
-    left, top_px, right, bottom_px = font.getbbox(letter + dot)
-    w_letter = font.getlength(letter)
-    x = (size - (right - left)) / 2 - left
-    y = (size - (bottom_px - top_px)) / 2 - top_px
-    d.text((x, y), letter, font=font, fill=_hex(TEXT))
-    d.text((x + w_letter, y), dot, font=font, fill=_hex(ACCENT))
+def draw(size: int = SIZE) -> QImage:
+    """icon.svg at this size, on a clear background."""
+    img = QImage(size, size, QImage.Format.Format_ARGB32_Premultiplied)
+    img.fill(0)
+    p = QPainter(img)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    QSvgRenderer(str(SVG)).render(p, QRectF(0, 0, size, size))
+    p.end()
     return img
 
 
 if __name__ == "__main__":
-    out = ROOT / "bodega" / "assets" / "icon.png"
-    draw().save(out)
-    print(f"wrote {out}")
+    app = QGuiApplication(sys.argv[:1])
+    if "--source" in sys.argv:
+        SVG.write_text(source(), encoding="utf-8")
+        print(f"wrote {SVG}")
+    draw().save(str(PNG))
+    print(f"wrote {PNG}")

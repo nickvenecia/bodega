@@ -28,3 +28,27 @@ def test_settings_and_sidebar_icons_exist():
         ROWS.findall((ROOT / "ui/window/sidebar.py").read_text(encoding="utf-8"))
     )
     assert names and all(n in theme._SVG for n in names), names
+
+
+def test_the_app_icon_is_drawn_from_its_one_vector_source(qapp):
+    """V-41: bodega/assets/icon.png is icon.svg as scripts/make_icon.py draws it (the build makes every other size
+    from the PNG), so a change to one without the other fails here."""
+    import importlib.util
+
+    from PySide6.QtGui import QImage
+
+    spec = importlib.util.spec_from_file_location("make_icon", ROOT.parent / "scripts" / "make_icon.py")
+    make_icon = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(make_icon)
+    drawn = make_icon.draw()
+    kept = QImage(str(make_icon.PNG)).convertToFormat(drawn.format())
+
+    def apart(a, b) -> int:
+        return max(
+            abs(a.red() - b.red()), abs(a.green() - b.green()), abs(a.blue() - b.blue()), abs(a.alpha() - b.alpha())
+        )
+
+    far = sum(
+        apart(drawn.pixelColor(x, y), kept.pixelColor(x, y)) > 64 for x in range(0, 1024, 4) for y in range(0, 1024, 4)
+    )
+    assert make_icon.SVG.exists() and far < 20, far  # (the same picture)

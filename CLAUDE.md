@@ -165,7 +165,8 @@ bodega/
   cli.py           `python -m bodega cli sample OUT.pdf --doc agreement|quote|inventory|ratecard|package`,
                    `python -m bodega cli import SHEET.xlsx OUT.pdf`,
                    `python -m bodega cli update-check` (offline: finds this build's own update file)
-scripts/make_icon.py   draws bodega/assets/icon.png ("b." on the dark tile, the full stop in sky blue)
+scripts/make_icon.py   draws bodega/assets/icon.png from its one vector source, icon.svg ("b." on the dark tile, the
+                       full stop in the accent; `--source` writes the SVG again from the font and tokens)
 scripts/release_notes.py   a Release's text: the version's CHANGELOG entries, then the downloads
 scripts/lock.py        requirements.lock (every build, every computer) and requirements-lint.lock, with hashes
 tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR [SHEET.xlsx]
