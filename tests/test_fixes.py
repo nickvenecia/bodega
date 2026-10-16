@@ -68,9 +68,11 @@ def test_csv_keeps_line_breaks_in_notes(tmp_path):
 
 def test_broken_records_are_skipped_and_kept(data_folder):
     data_folder.mkdir(parents=True, exist_ok=True)
-    (data_folder / "packages.json").write_text(json.dumps([{"name": "Good"}, {"name": "Bad", "lines": 5}]))
+    (data_folder / "packages.json").write_text(
+        json.dumps([{"name": "Good"}, {"name": "Bad", "lines": 5}]), encoding="utf-8"
+    )
     (data_folder / "rentals").mkdir()
-    (data_folder / "rentals" / "r1.json").write_text(json.dumps({"lines": 5}))
+    (data_folder / "rentals" / "r1.json").write_text(json.dumps({"lines": 5}), encoding="utf-8")
     lib = Library(data_folder).load()  # doesn't crash
     assert [p.name for p in lib.packages.values()] == ["Good"]
     kept = [p.name for p in data_folder.iterdir()] + [p.name for p in (data_folder / "rentals").iterdir()]
@@ -80,7 +82,7 @@ def test_broken_records_are_skipped_and_kept(data_folder):
 
 def test_gear_file_of_the_wrong_shape_is_not_overwritten(data_folder):
     data_folder.mkdir(parents=True, exist_ok=True)
-    (data_folder / "gear.json").write_text(json.dumps({"oops": "a dict"}))
+    (data_folder / "gear.json").write_text(json.dumps({"oops": "a dict"}), encoding="utf-8")
     lib = Library(data_folder).load()
     lib.save_items()
     assert any(p.name.startswith("gear.json.unreadable") for p in data_folder.iterdir())
@@ -88,7 +90,7 @@ def test_gear_file_of_the_wrong_shape_is_not_overwritten(data_folder):
 
 def test_ids_that_could_name_other_files_are_replaced(data_folder):
     data_folder.mkdir(parents=True, exist_ok=True)
-    (data_folder / "gear.json").write_text(json.dumps([{"id": "../../evil", "name": "x"}]))
+    (data_folder / "gear.json").write_text(json.dumps([{"id": "../../evil", "name": "x"}]), encoding="utf-8")
     lib = Library(data_folder).load()
     assert all("/" not in i and ".." not in i for i in lib.items)
 

@@ -660,15 +660,15 @@ def stylesheet(folder: Path) -> str:
         folder = Path(tempfile.mkdtemp(prefix="bodega-ui-"))
     look = tokens.SCHEME
     chevron = folder / f"chevron-{look}.svg"
-    chevron.write_text(svg_markup("chevron", tokens.MUTED))
+    chevron.write_text(svg_markup("chevron", tokens.MUTED), encoding="utf-8")
     up = folder / f"chevron-up-{look}.svg"
-    up.write_text(svg_markup("chevron-up", tokens.MUTED))
+    up.write_text(svg_markup("chevron-up", tokens.MUTED), encoding="utf-8")
     right = folder / f"chevron-right-{look}.svg"
-    right.write_text(svg_markup("chevron-right", tokens.MUTED))
+    right.write_text(svg_markup("chevron-right", tokens.MUTED), encoding="utf-8")
     check = folder / f"check-{look}.svg"
-    check.write_text(svg_markup("check", tokens.ON_ACCENT, 3))
+    check.write_text(svg_markup("check", tokens.ON_ACCENT, 3), encoding="utf-8")
     updown = folder / f"updown-{look}.svg"
-    updown.write_text(svg_markup("updown", tokens.FAINT))
+    updown.write_text(svg_markup("updown", tokens.FAINT), encoding="utf-8")
     return (
         _sheet()
         .replace("__UPDOWN__", updown.as_posix())

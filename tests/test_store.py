@@ -21,7 +21,7 @@ def test_everything_saved_reads_back_the_same(data_folder):
 
 def test_unreadable_file_is_set_aside(data_folder):
     data_folder.mkdir(parents=True)
-    (data_folder / "gear.json").write_text("{not json")
+    (data_folder / "gear.json").write_text("{not json", encoding="utf-8")
     lib = Library(data_folder).load()
     assert lib.items == {}
     assert any(p.name.startswith("gear.json.unreadable-") for p in data_folder.iterdir())
@@ -29,7 +29,9 @@ def test_unreadable_file_is_set_aside(data_folder):
 
 def test_files_from_an_older_bodega_open_with_every_field_filled(data_folder):
     data_folder.mkdir(parents=True)
-    (data_folder / "gear.json").write_text(json.dumps([{"id": "a", "name": "Old", "qty": "3", "future": 1}]))
+    (data_folder / "gear.json").write_text(
+        json.dumps([{"id": "a", "name": "Old", "qty": "3", "future": 1}]), encoding="utf-8"
+    )
     it = Library(data_folder).load().items["a"]
     assert it.qty == 3 and it.rentable and it.status == "ready"
 

@@ -488,7 +488,9 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         return t is not None and any(r.data(0, ID) == obj_id and not r.isHidden() for r in t.record_rows())
 
     def refresh(self) -> None:
-        """Fill the table for where you are (and the sidebar's counts): one pass over everything."""
+        """Fill the table for where you are (and the sidebar's counts): one pass over everything. A refresh still
+        waiting for typing to pause (_table_timer) is done by this one."""
+        self._table_timer.stop()
         with pricing.indexed(self.lib):
             self._refresh()
 

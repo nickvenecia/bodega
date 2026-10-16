@@ -94,7 +94,7 @@ def test_a_backup_is_read_as_untrusted(tmp_path, files, says):
 
 
 def test_something_that_isnt_a_zip_is_said_plainly(tmp_path):
-    (tmp_path / "x.zip").write_text("not a zip")
+    (tmp_path / "x.zip").write_text("not a zip", encoding="utf-8")
     with pytest.raises(ValueError, match="isn't a Bodega backup"):
         backups.read_backup(tmp_path / "x.zip")
 

@@ -51,3 +51,28 @@ def test_no_action_made_by_qt_is_kept():
             if made_by_qt and on_self:
                 kept.append(f"{p.relative_to(ROOT)}:{node.lineno}")
     assert kept == [], kept
+
+
+def test_every_text_file_is_read_and_written_as_utf8():
+    """`read_text`, `write_text` and `open(…)` for text always say `encoding="utf-8"`: without it Windows uses its own
+    code page, and a curly quote in a file stopped a test there (the tests and scripts are checked too)."""
+    loose = []
+    for where in (ROOT, ROOT.parent / "tests", ROOT.parent / "scripts"):
+        for p in where.rglob("*.py"):
+            for node in ast.walk(ast.parse(p.read_text(encoding="utf-8"))):
+                if not isinstance(node, ast.Call) or any(k.arg == "encoding" for k in node.keywords):
+                    continue
+                f = node.func
+                name = f.attr if isinstance(f, ast.Attribute) else f.id if isinstance(f, ast.Name) else ""
+                if name in ("read_text", "write_text") and isinstance(f, ast.Attribute):
+                    loose.append(f"{p.relative_to(ROOT.parent).as_posix()}:{node.lineno}")
+                elif name == "open" and isinstance(f, ast.Name):
+                    mode = (
+                        node.args[1]
+                        if len(node.args) > 1
+                        else next((k.value for k in node.keywords if k.arg == "mode"), None)
+                    )
+                    text = not (isinstance(mode, ast.Constant) and "b" in str(mode.value))
+                    if text:
+                        loose.append(f"{p.relative_to(ROOT.parent).as_posix()}:{node.lineno}")
+    assert loose == [], loose

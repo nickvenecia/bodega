@@ -158,26 +158,33 @@ class History:
         return what
 
     def _put(self, s: State) -> None:
-        """Make the library this state, and save it."""
-        lib = self.lib
-        lib.items = {d["id"]: Item.from_dict(d) for d in s["items"]}
-        lib.packages = {d["id"]: Package.from_dict(d) for d in s["packages"]}
-        lib.clients = {d["id"]: Client.from_dict(d) for d in s["clients"]}
-        lib.businesses = {d["id"]: Business.from_dict(d) for d in s["businesses"]}
-        old = state_of(lib)["rentals"] if lib.rentals else {}
+        """Make the library this state, and save it: only the parts that differ from how things stand (`last`:
+        undo and redo mark first), so taking back one rental's change rewrites that rental, not the whole gear list
+        (at a rental house's size that was most of an undo's time)."""
+        lib, now = self.lib, self.last
+        if s["items"] != now["items"]:
+            lib.items = {d["id"]: Item.from_dict(d) for d in s["items"]}
+            lib.save_items()
+        if s["packages"] != now["packages"]:
+            lib.packages = {d["id"]: Package.from_dict(d) for d in s["packages"]}
+            lib.save_packages()
+        if s["clients"] != now["clients"]:
+            lib.clients = {d["id"]: Client.from_dict(d) for d in s["clients"]}
+            lib.save_clients()
+        if s["businesses"] != now["businesses"]:
+            lib.businesses = {d["id"]: Business.from_dict(d) for d in s["businesses"]}
+            lib.save_businesses()
+        old = now["rentals"]
         for rid in list(lib.rentals):
             if rid not in s["rentals"]:
                 lib.delete_rental(rid)
         for rid, d in s["rentals"].items():
             if old.get(rid) != d:
                 lib.save_rental(Rental.from_dict(d))
-        if s["groups"] is None:
-            lib.settings.pop("group_list", None)
-        else:
-            lib.settings["group_list"] = list(s["groups"])
-        lib.save_items()
-        lib.save_packages()
-        lib.save_clients()
-        lib.save_businesses()
-        lib.save_settings()
+        if s["groups"] != now["groups"]:
+            if s["groups"] is None:
+                lib.settings.pop("group_list", None)
+            else:
+                lib.settings["group_list"] = list(s["groups"])
+            lib.save_settings()
         self.last = shared(state_of(lib), s)

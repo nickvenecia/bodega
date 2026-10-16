@@ -144,7 +144,7 @@ def test_a_rentals_status_is_worded_in_one_place():
 
     root = Path(__file__).resolve().parents[1] / "bodega"
     copies = [
-        str(f.relative_to(root))
+        f.relative_to(root).as_posix()
         for f in root.rglob("*.py")
         if re.search(r'"quote":\s*"Quote"', f.read_text(encoding="utf-8"))
     ]
@@ -156,7 +156,7 @@ def test_the_main_button_comes_from_one_helper():
 
     root = Path(__file__).resolve().parents[1] / "bodega" / "ui"
     by_hand = [
-        str(f.relative_to(root))
+        f.relative_to(root).as_posix()
         for f in root.rglob("*.py")
         if 'setObjectName("Primary")' in f.read_text(encoding="utf-8")
     ]
@@ -200,7 +200,7 @@ def test_what_a_rental_or_a_piece_is_is_asked_of_it():
     word = re.compile(r"""\.status\s*(==|!=|in\b|not in\b)\s*\(?\s*["']""")  # a word, not a web reply's number
     root = Path(__file__).resolve().parent.parent / "bodega"
     found = [
-        f"{p.relative_to(root)}:{n}"
+        f"{p.relative_to(root).as_posix()}:{n}"
         for p in root.rglob("*.py")
         if p.name != "model.py"
         for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1)

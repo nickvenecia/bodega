@@ -41,7 +41,11 @@ def test_an_svg_with_a_doctype_is_refused():
         svg.clean(bomb.encode())
 
 
-@pytest.mark.parametrize("data", [b"\xff\xfe not text", b"<html></html>", b"<svg", b"x" * (svg.MAX_BYTES + 1)])
+@pytest.mark.parametrize(
+    "data",
+    [b"\xff\xfe not text", b"<html></html>", b"<svg", b"x" * (svg.MAX_BYTES + 1)],
+    ids=["not-text", "not-svg", "cut-off", "too-big"],  # (named, never by its bytes: see conftest's MAX_TEST_ID)
+)
 def test_something_that_isnt_a_usable_svg_is_said_plainly(data):
     with pytest.raises(svg.NotALogo):
         svg.clean(data)
@@ -59,7 +63,8 @@ def test_a_logo_from_before_is_drawn_from_its_cleaned_drawing(qapp, tmp_path):
     logo = tmp_path / "old-logo.svg"  # kept as it came, by an older Bodega
     logo.write_text(
         f'<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><image href="{secret}" '
-        'width="10" height="10"/></svg>'
+        'width="10" height="10"/></svg>',
+        encoding="utf-8",
     )
     r = svg_logo(logo)
     assert r is not None and logo_size(logo) == (10.0, 10.0)
@@ -79,27 +84,27 @@ def test_adding_an_svg_logo_keeps_the_cleaned_one(qapp, data_folder, tmp_path):
     from bodega.ui.dialogs.profile import import_logo
 
     src = tmp_path / "logo.svg"
-    src.write_text(HOSTILE)
+    src.write_text(HOSTILE, encoding="utf-8")
     name = import_logo(src)
-    kept = (logos_dir() / name).read_text()
+    kept = (logos_dir() / name).read_text(encoding="utf-8")
     assert PICTURE not in kept and "<circle" in kept
 
 
 def test_a_sheet_too_big_to_be_a_gear_list_is_said_plainly(tmp_path, monkeypatch):
     monkeypatch.setattr(importer, "MAX_ROWS", 10)
     sheet = tmp_path / "huge.csv"
-    sheet.write_text("Name,Qty\n" + "Light,1\n" * 20)
+    sheet.write_text("Name,Qty\n" + "Light,1\n" * 20, encoding="utf-8")
     with pytest.raises(OSError, match="more than 10 rows"):
         importer.load_rows(sheet)
     wide = tmp_path / "wide.csv"
-    wide.write_text(",".join(["x"] * (importer.MAX_COLUMNS + 1)))
+    wide.write_text(",".join(["x"] * (importer.MAX_COLUMNS + 1)), encoding="utf-8")
     with pytest.raises(OSError, match="columns"):
         importer.load_rows(wide)
 
 
 def test_a_cell_longer_than_csv_allows_is_said_plainly(tmp_path):
     sheet = tmp_path / "long.csv"
-    sheet.write_text('Name,Notes\nLight,"' + "x" * 200_000 + '"\n')
+    sheet.write_text('Name,Notes\nLight,"' + "x" * 200_000 + '"\n', encoding="utf-8")
     with pytest.raises(OSError, match="isn't laid out as a sheet"):
         importer.load_rows(sheet)
 

@@ -75,6 +75,18 @@ def pytest_runtest_logreport(report):
                 tr.write_line(f"[{name}] {text[-1500:]}")
 
 
+MAX_TEST_ID = 300  # characters in a test's name. pytest names a test by its parameters, a bytes one by the bytes
+# themselves: a 2 MB one made a 2 MB name, which pytest keeps in an environment variable, and that stopped the
+# Windows test machine dead (no log, no time limit)
+
+
+def pytest_collection_modifyitems(config, items):
+    """Every test's name stays short: one that would be long (a parameter's own value) needs `ids=`."""
+    long = [item.nodeid[:120] + "…" for item in items if len(item.nodeid) > MAX_TEST_ID]
+    if long:
+        raise pytest.UsageError(f"Give these parametrized tests short ids (ids=[…]): {long}")
+
+
 def pytest_sessionfinish(session, exitstatus):
     _status["code"] = int(exitstatus)
 

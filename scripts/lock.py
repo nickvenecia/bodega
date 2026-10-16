@@ -62,7 +62,9 @@ def check() -> int:
 
 def everything() -> str:
     """name==version for every package in requirements.lock, whichever computer it's for (for pip-audit)."""
-    found = re.findall(r"^([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;\\]+)", (ROOT / "requirements.lock").read_text(), re.M)
+    found = re.findall(
+        r"^([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;\\]+)", (ROOT / "requirements.lock").read_text(encoding="utf-8"), re.M
+    )
     return "".join(f"{name}=={version}\n" for name, version in sorted(set(found)))
 
 

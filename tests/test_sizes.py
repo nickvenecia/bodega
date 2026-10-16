@@ -13,8 +13,11 @@ from pathlib import Path
 import pytest
 
 SCRIPT = r"""
-import json, sys, tempfile
+import faulthandler, json, sys, tempfile
+faulthandler.enable()  # (a crash says where)
 from pathlib import Path
+from PySide6.QtCore import qInstallMessageHandler
+qInstallMessageHandler(lambda _kind, _where, text: sys.stderr.write(f"Qt: {text}\n"))  # (Windows: else unheard)
 from PySide6.QtWidgets import QApplication
 from bodega.core.paths import use_data_dir
 use_data_dir(Path(tempfile.mkdtemp()) / "data")
@@ -65,7 +68,7 @@ def measured(tmp_path_factory) -> dict:
     folder = tmp_path_factory.mktemp("screen")
     screen = folder / "screen.json"
     screen.write_text(json.dumps({"screens": [{"name": "test", "x": 0, "y": 0, "width": 2560, "height": 1440,
-                                               "logicalDpi": 96, "logicalBaseDpi": 96, "dpr": 1}]}))  # fmt: skip
+                                               "logicalDpi": 96, "logicalBaseDpi": 96, "dpr": 1}]}), encoding="utf-8")  # fmt: skip
     env = {**os.environ, "QT_QPA_PLATFORM": f"offscreen:configfile={screen}"}
     root = Path(__file__).resolve().parents[1]
     env["PYTHONPATH"] = str(root) + os.pathsep + env.get("PYTHONPATH", "")

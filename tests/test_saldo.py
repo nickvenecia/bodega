@@ -23,12 +23,12 @@ def saldo_home(tmp_path, monkeypatch):
 
 def _setup(home, *profiles):
     home.mkdir(parents=True, exist_ok=True)
-    (home / "businesses.json").write_text(json.dumps(list(profiles)))
+    (home / "businesses.json").write_text(json.dumps(list(profiles)), encoding="utf-8")
     (home / "invoices").mkdir(exist_ok=True)
 
 
 def _invoices(home) -> dict[str, dict]:
-    return {f.stem: json.loads(f.read_text()) for f in (home / "invoices").glob("*.json")}
+    return {f.stem: json.loads(f.read_text(encoding="utf-8")) for f in (home / "invoices").glob("*.json")}
 
 
 def test_nothing_is_sent_before_saldo_has_been_opened_once(tmp_path, saldo_home):
@@ -42,7 +42,7 @@ def test_nothing_is_sent_before_saldo_has_been_opened_once(tmp_path, saldo_home)
 def test_cobros_files_wait_for_saldo_to_bring_them_over(tmp_path, saldo_home):
     cobro = tmp_path / "Cobro"
     cobro.mkdir()
-    (cobro / "businesses.json").write_text("[]")
+    (cobro / "businesses.json").write_text("[]", encoding="utf-8")
     assert saldo.waiting_for_cobro()
     _setup(saldo_home, {"id": "biz1", "name": "Juniper Lane Films"})
     assert not saldo.waiting_for_cobro() and saldo.installed()
@@ -56,7 +56,9 @@ def test_draft_invoice_matches_the_rental(tmp_path, saldo_home):
     me = {"id": "biz1", "name": b.name, "prefix": "JL", "number_style": "year", "terms_days": 30}
     _setup(saldo_home, {"id": "other", "name": "Someone"}, me)
     year = dates.today().year
-    (saldo_home / "invoices" / "old.json").write_text(json.dumps({"id": "old", "number": f"JL-{year}-007"}))
+    (saldo_home / "invoices" / "old.json").write_text(
+        json.dumps({"id": "old", "number": f"JL-{year}-007"}), encoding="utf-8"
+    )
     number, updated = saldo.send(lib, r, b, me)
     assert number == f"JL-{year}-008" and not updated
     assert r.saldo_number == number and r.saldo_invoice in _invoices(saldo_home)
@@ -82,7 +84,7 @@ def test_sending_again_updates_the_draft_and_keeps_what_saldo_changed(tmp_path, 
     inv = _invoices(saldo_home)[r.saldo_invoice]
     inv["payment"] = "Zelle to rentals@example.com"  # typed in Saldo
     inv["reminder"] = {"days": 7}  # a field this Bodega doesn't know
-    (saldo_home / "invoices" / f"{r.saldo_invoice}.json").write_text(json.dumps(inv))
+    (saldo_home / "invoices" / f"{r.saldo_invoice}.json").write_text(json.dumps(inv), encoding="utf-8")
     r.project = "Night Exterior Reshoot"
     again, updated = saldo.send(lib, r, b, me)
     invs = _invoices(saldo_home)
@@ -100,9 +102,9 @@ def test_once_saldo_has_sent_it_a_new_draft_goes_beside_it(tmp_path, saldo_home)
     _setup(saldo_home, me)
     first, _ = saldo.send(lib, r, b, me)
     path = saldo_home / "invoices" / f"{r.saldo_invoice}.json"
-    inv = json.loads(path.read_text())
+    inv = json.loads(path.read_text(encoding="utf-8"))
     inv["status"] = "sent"
-    path.write_text(json.dumps(inv))
+    path.write_text(json.dumps(inv), encoding="utf-8")
     assert saldo.said(saldo.draft_of(r)) == f"sent {first}"
     second, updated = saldo.send(lib, r, b, me)
     assert not updated and second != first and len(_invoices(saldo_home)) == 2
@@ -183,7 +185,7 @@ def test_a_rental_says_where_its_invoice_stands_in_saldo(tmp_path, saldo_home):
     number, _ = saldo.send(lib, r, lib.pricing(), {"id": "p1", "prefix": "JLF"})
     assert saldo.where(r) == f"Draft invoice {number} in Saldo, not sent yet."
     path = saldo_home / "invoices" / f"{r.saldo_invoice}.json"
-    path.write_text(json.dumps({**json.loads(path.read_text()), "status": "sent"}))
+    path.write_text(json.dumps({**json.loads(path.read_text(encoding="utf-8")), "status": "sent"}), encoding="utf-8")
     assert saldo.where(r) == f"Invoice {number} sent from Saldo."
     path.unlink()  # deleted in Saldo
     assert "isn't in Saldo any more" in saldo.where(r)

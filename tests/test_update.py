@@ -135,15 +135,15 @@ def _wait_for(path: Path, timeout: float = 15) -> bool:
 def test_appimage_is_swapped_and_reopened(tmp_path: Path, monkeypatch):
     app = tmp_path / "apps" / "Bodega-linux-x64.AppImage"
     app.parent.mkdir()
-    app.write_text("old")
+    app.write_text("old", encoding="utf-8")
     monkeypatch.setenv("APPIMAGE", str(app))
     opened = tmp_path / "opened"
     work = update.new_work_folder()
     new = work / "Bodega-linux-x64.AppImage"
-    new.write_text(f"#!/bin/sh\ntouch {opened}\n")
+    new.write_text(f"#!/bin/sh\ntouch {opened}\n", encoding="utf-8")
     plan = update.prepare("appimage", new, pid=_gone_pid())
     subprocess.run(plan.command, check=True, timeout=30)
-    assert "touch" in app.read_text() and os.access(app, os.X_OK)  # the new one, runnable
+    assert "touch" in app.read_text(encoding="utf-8") and os.access(app, os.X_OK)  # the new one, runnable
     assert _wait_for(opened)  # and it was opened
     assert not work.exists()  # the download is cleaned up
 
@@ -152,8 +152,8 @@ def test_appimage_is_swapped_and_reopened(tmp_path: Path, monkeypatch):
 def test_linux_folder_is_swapped_and_reopened(tmp_path: Path, monkeypatch):
     folder = tmp_path / "bodega"
     folder.mkdir()
-    (folder / "Bodega").write_text("old")
-    (folder / "leftover.txt").write_text("old file")
+    (folder / "Bodega").write_text("old", encoding="utf-8")
+    (folder / "leftover.txt").write_text("old file", encoding="utf-8")
     monkeypatch.setattr(update, "target", lambda _kind: folder)
     opened = tmp_path / "opened"
     work = update.new_work_folder()
@@ -165,7 +165,7 @@ def test_linux_folder_is_swapped_and_reopened(tmp_path: Path, monkeypatch):
         t.addfile(info, io.BytesIO(script))
     plan = update.prepare("linux-folder", tar, pid=_gone_pid())
     subprocess.run(plan.command, check=True, timeout=30)
-    assert "touch" in (folder / "Bodega").read_text()
+    assert "touch" in (folder / "Bodega").read_text(encoding="utf-8")
     assert not (folder / "leftover.txt").exists()  # the whole folder is the new version
     assert _wait_for(opened)
     assert not list(tmp_path.glob("bodega.old.*"))
@@ -176,7 +176,7 @@ def test_mac_and_windows_helpers(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(update, "target", lambda _kind: app)
     dmg = tmp_path / "Bodega-mac-apple-silicon.dmg"
     dmg.write_bytes(b"dmg")
-    mac = update.prepare("mac-app", dmg, pid=4242).script.read_text()
+    mac = update.prepare("mac-app", dmg, pid=4242).script.read_text(encoding="utf-8")
     for step in (
         "kill -0 4242",
         "hdiutil attach",
@@ -190,7 +190,7 @@ def test_mac_and_windows_helpers(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(update, "target", lambda _kind: folder)
     setup = tmp_path / "Bodega-windows-setup.exe"
     setup.write_bytes(b"exe")
-    win = update.prepare("windows-installed", setup, pid=4242).script.read_text()
+    win = update.prepare("windows-installed", setup, pid=4242).script.read_text(encoding="utf-8")
     assert "/VERYSILENT" in win and "PID eq 4242" in win and "Bodega.exe" in win
 
 

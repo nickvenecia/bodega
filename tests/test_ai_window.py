@@ -104,7 +104,7 @@ def test_ai_setup_saves_to_keychain_not_settings(win, keychain):
     d._save()
     assert providers.key_for("kimi") == "sk-kimi-abc"
     assert win.lib.settings["ai"] == {"provider": "kimi", "model": "kimi-model", "base_url": ""}
-    assert "sk-kimi-abc" not in (win.lib.root / "settings.json").read_text()
+    assert "sk-kimi-abc" not in (win.lib.root / "settings.json").read_text(encoding="utf-8")
 
 
 def test_question_is_answered_as_plain_text(win, monkeypatch):
@@ -142,7 +142,7 @@ def test_feedback_waits_in_the_outbox(win, data_folder):
     d._send()
     waiting = feedback.waiting()
     assert len(waiting) == 1 and not d.sent_now
-    saved = json.loads(waiting[0].read_text())
+    saved = json.loads(waiting[0].read_text(encoding="utf-8"))
     assert saved["message"].startswith("Love it") and saved["details"]["bodega"]
 
 

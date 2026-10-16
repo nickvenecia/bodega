@@ -610,7 +610,7 @@ def test_an_import_never_replaces_your_pricing_unasked_and_says_what_it_filled_i
     from bodega.ui.dialogs.import_sheet import ImportDialog
 
     sheet = tmp_path / "list.csv"
-    sheet.write_text("Name,Qty,Price\nAputure STORM 80c,,500\nAputure STORM 1200x,2,2000\n")
+    sheet.write_text("Name,Qty,Price\nAputure STORM 80c,,500\nAputure STORM 1200x,2,2000\n", encoding="utf-8")
     d = ImportDialog(sheet, importer.load_rows(sheet), set(), has_profile=True)
     assert not d.use_pricing.isChecked()  # you have a profile: its pricing stays yours
     assert "1 with no quantity count as 1" in d.filled.text() and "2 with no Rent? are for rent" in d.filled.text()
@@ -625,7 +625,7 @@ def test_the_sheets_links_go_to_gear_you_have_only_if_you_say(win, tmp_path, mon
     mic = next(i for i in win.lib.items.values() if i.name == "Shotgun Microphone")
     mic.link = ""
     sheet = tmp_path / "list.csv"
-    sheet.write_text(f"Name,Department,Link\n{mic.name},{mic.department},https://maker.example/mic\n")
+    sheet.write_text(f"Name,Department,Link\n{mic.name},{mic.department},https://maker.example/mic\n", encoding="utf-8")
 
     def run(links_on: bool):
         def exec_(d):
@@ -799,10 +799,10 @@ def test_back_up_zips_the_data(tmp_path):
 
     src = tmp_path / "Bodega"
     (src / "rentals").mkdir(parents=True)
-    (src / "gear.json").write_text("{}")
-    (src / "rentals" / "a.json").write_text("{}")
+    (src / "gear.json").write_text("{}", encoding="utf-8")
+    (src / "rentals" / "a.json").write_text("{}", encoding="utf-8")
     (src / "ui").mkdir()
-    (src / "ui" / "x.svg").write_text("<svg/>")
+    (src / "ui" / "x.svg").write_text("<svg/>", encoding="utf-8")
     dest = tmp_path / "backup.zip"
     assert zip_folder(src, dest, skip=("ui",)) == 2
     assert sorted(zipfile.ZipFile(dest).namelist()) == ["Bodega/gear.json", "Bodega/rentals/a.json"]
@@ -1714,7 +1714,7 @@ def test_a_saved_calendar_file_offers_the_way_into_google_calendar(win, tmp_path
     )
     monkeypatch.setattr(transfer.QDesktopServices, "openUrl", lambda url: opened.append(url.toString()) or True)
     win.save_calendar()
-    assert out.read_text().startswith("BEGIN:VCALENDAR")
+    assert out.read_text(encoding="utf-8").startswith("BEGIN:VCALENDAR")
     assert asked == ["Calendar File Saved"] and opened == [transfer.GOOGLE_CALENDAR_IMPORT]
 
 
