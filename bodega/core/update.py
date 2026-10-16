@@ -393,12 +393,16 @@ def run(plan: Plan) -> None:
     """Start the helper so it outlives Bodega. Its input and output go nowhere: Bodega on Windows has no console, and
     left to Python, a helper started from it gets pipes whose other ends are already closed."""
     log.info("update: starting %s", shlex.join(plan.command))
-    quiet = {"stdin": subprocess.DEVNULL, "stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
+    nowhere = subprocess.DEVNULL
     if sys.platform == "win32":
         flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW
-        subprocess.Popen(plan.command, creationflags=flags, close_fds=True, **quiet)
+        subprocess.Popen(
+            plan.command, creationflags=flags, close_fds=True, stdin=nowhere, stdout=nowhere, stderr=nowhere
+        )
     else:
-        subprocess.Popen(plan.command, start_new_session=True, close_fds=True, **quiet)
+        subprocess.Popen(
+            plan.command, start_new_session=True, close_fds=True, stdin=nowhere, stdout=nowhere, stderr=nowhere
+        )
 
 
 def _q(p) -> str:
