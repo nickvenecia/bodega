@@ -87,6 +87,8 @@
 - A gear name too long for its column shows in full when you point at it, and screen readers read cut-off names
   and labels in full. Names in the gear picker and the import list are cut at the end, the data folder's path in
   the middle.
+- On Windows and Linux the menu bar shows across the top of the window, with every command and its shortcut, as it
+  does on a Mac.
 - Deleting gear, a kit, a quote, a renter or a profile, or removing a group, happens at once and says so with an Undo
   button in the message ("Deleted Sony FX6. Undo"); ⌘Z does the same. Nothing asks "are you sure?" for what Undo
   can take back. Gear that's on a rental is still retired instead of deleted, and that still asks.

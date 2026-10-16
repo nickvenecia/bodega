@@ -418,6 +418,10 @@ QTextBrowser#WhatsNew {{ background: {tokens.FILL}; color: {tokens.TEXT}; border
 QMenu {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {tokens.LIST_R}px;
     padding: {tokens.LIST_INSET - 1}px; }}
 QMenu {{ min-width: {tokens.MENU_MIN_W}px; }}
+/* the menu bar across the top of the window on Windows and Linux (the Mac's is the screen's own) */
+QMenuBar {{ background: transparent; color: {tokens.TEXT}; padding: {SPACE_1}px {SPACE_2}px 0 {SPACE_2}px; }}
+QMenuBar::item {{ background: transparent; padding: {SPACE_1}px {SPACE_2_5}px; border-radius: {tokens.LIST_ROW_R}px; }}
+QMenuBar::item:selected, QMenuBar::item:pressed {{ background: {tokens.CARD_HOVER}; }}
 QMenu::item {{ padding: 0 {SPACE_4}px 0 {SPACE_2_5}px; min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px;
     margin: {tokens.LIST_GAP // 2}px 0; }}
 QMenu::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_TEXT}; }}

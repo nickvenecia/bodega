@@ -20,8 +20,8 @@ from bodega.ui.window.common import PLACES, kind_of
 
 class MenusMixin:
     def _menus(self) -> None:
-        """Commands with shortcuts. The menu bar shows on the Mac; on Windows/Linux it's hidden and the
-        shortcuts still work, with the same commands under ⋯ in the sidebar."""
+        """Every command, with its shortcut, in a full menu bar (the standard's 3.7): the Mac's own at the top of
+        the screen; on Windows and Linux, across the top of the window."""
         bar = self.menuBar()
 
         def act(m: QMenu, text: str, slot, keys=None) -> QAction:
@@ -164,7 +164,7 @@ class MenusMixin:
         act(h, "Open Data Folder", self.open_data_folder)
         act(h, "Open Log File", lambda: reveal(log_dir() / "bodega.log"))
         act(h, "About Bodega", lambda: about(self, version_label(), str(data_dir())))
-        bar.setVisible(sys.platform == "darwin")
+        bar.setVisible(True)  # (on a Mac it lives in the screen's own bar)
 
         # the share button opens the page window at once: Inventory List, Rate Card and Labels are its tabs
         # (importing is in File and the + menus; Export as CSV and Get Photos in File)
