@@ -189,6 +189,9 @@ class ItemPanel(DetailsBase):
         self.photo.hide()
         lay.addWidget(self.photo)
         self._photo_job: Worker | None = None
+        self.earned: dict | None = (
+            None  # what the gear list worked out on its last fill (None: work it out here)
+        )
         self.setAcceptDrops(True)  # drop a picture anywhere on the panel (a file, or one out of a browser)
 
         # what it is
@@ -952,7 +955,7 @@ class ItemPanel(DetailsBase):
                 it.rentable and has_kids and bool(with_kids),
             ),
         }
-        e = earnings.earnings(self.lib).get(it.id)
+        e = (self.earned if self.earned is not None else earnings.earnings(self.lib)).get(it.id)
         made = e.amount if e is not None else money.ZERO
         n = len(e.rentals) if e is not None else 0
         coming = e.coming if e is not None else money.ZERO

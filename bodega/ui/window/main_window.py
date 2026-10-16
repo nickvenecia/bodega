@@ -461,7 +461,11 @@ class MainWindow(
         return False
 
     def refresh(self) -> None:
-        """Fill the table for where you are (and the sidebar's counts)."""
+        """Fill the table for where you are (and the sidebar's counts): one pass over everything."""
+        with pricing.indexed(self.lib):
+            self._refresh()
+
+    def _refresh(self) -> None:
         lib, b = self.lib, self.lib.pricing()
         if self.view_key.startswith("grp:") and self._grp() not in lib.groups():
             self.go("gear")  # its last piece moved out, so the group is gone
@@ -471,8 +475,10 @@ class MainWindow(
         pkg = self.packages.pkg
         open_kit = f"kit:{pkg.id}" if pkg is not None and view == "kits" and self.dock.opened else ""
         self.sidebar.select(open_kit if open_kit in self.sidebar.rows else view)
+        self.items.earned = None  # (worked out again below, on a gear page; the panel works it out otherwise)
         if kind == "gear":
             self.gear_table.fill(lib, b, self._grp(), self._divide_for(view))
+            self.items.earned = self.gear_table.earned  # worked out once a refresh, for the piece's panel too
             page = self.gear_table if lib.items else self._empty_page("gear")
         elif kind == "packages":
             self.kit_table.fill(lib, b)
@@ -682,6 +688,10 @@ class MainWindow(
 
     def _load(self, kind: str, obj_id: str) -> None:
         self.flush()
+        with pricing.indexed(self.lib):
+            self._load_now(kind, obj_id)
+
+    def _load_now(self, kind: str, obj_id: str) -> None:
         self._drop_fresh(keep=obj_id)
         # something else opening in a panel starts at its top (not where the last one was scrolled to)
         if kind == "gear":

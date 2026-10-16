@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import re
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
@@ -17,7 +18,13 @@ def parse(text: str | int | float | Decimal | None) -> Decimal:
         return text
     if text is None:
         return ZERO
-    s = re.sub(r"[^\d.\-]", "", str(text))
+    return _parsed(str(text))
+
+
+@functools.lru_cache(maxsize=8192)
+def _parsed(text: str) -> Decimal:
+    """(Remembered: the same few amounts are read thousands of times when a big list fills.)"""
+    s = re.sub(r"[^\d.\-]", "", text)
     if s in ("", "-", ".", "-."):
         return ZERO
     try:

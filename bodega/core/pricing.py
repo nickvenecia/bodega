@@ -25,6 +25,9 @@ No Qt in here: everything takes the Library (or anything with .items / .packages
 
 from __future__ import annotations
 
+import functools
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
@@ -58,8 +61,43 @@ def own_rate(item: Item, b: Business | None) -> Decimal:
 
 def children(lib, item_id: str) -> list[Item]:
     """What's attached to this item, in name order."""
+    index = getattr(lib, "_kids", None)
+    if index is not None:
+        return list(index.get(item_id, ()))
     kids = [i for i in lib.items.values() if i.parent == item_id and i.id != item_id]
     return sorted(kids, key=lambda i: i.name.casefold())
+
+
+@contextmanager
+def indexed(lib) -> Iterator[None]:
+    """Inside it, children() finds attached gear in one index, built once, instead of looking through every
+    piece each time: for a pass over everything (filling the list, earnings, shortages) that attaches and
+    detaches nothing. Nested passes share the outer one's index."""
+    if getattr(lib, "_kids", None) is not None:
+        yield
+        return
+    kids: dict[str, list[Item]] = {}
+    for i in lib.items.values():
+        if i.parent and i.parent != i.id:
+            kids.setdefault(i.parent, []).append(i)
+    for v in kids.values():
+        v.sort(key=lambda i: i.name.casefold())
+    lib._kids = kids
+    try:
+        yield
+    finally:
+        lib._kids = None
+
+
+def one_pass(f):
+    """A pass over everything (see indexed()): the function runs with attached gear indexed once."""
+
+    @functools.wraps(f)
+    def run(lib, *args, **kwargs):
+        with indexed(lib):
+            return f(lib, *args, **kwargs)
+
+    return run
 
 
 def root_of(lib, item: Item) -> Item:
@@ -483,6 +521,7 @@ class Short:
     why: str  # "Also on DP-2026-004" / "In repair"
 
 
+@one_pass
 def shortages(lib, r: Rental) -> list[Short]:
     """Gear this rental needs that isn't free on its dates (in repair, retired, or promised elsewhere).
     Each line counts on its own dates, so two lines on different days don't clash."""
@@ -529,6 +568,7 @@ class Day:
     rentals: tuple[Rental, ...]
 
 
+@one_pass
 def schedule(lib, item: Item, start: date, days: int) -> list[Day]:
     """Day by day, how many of this item are held and by which rentals (for the overview's calendar)."""
     mine = [
@@ -573,6 +613,7 @@ def rentals_with(
     return sorted(out, key=lambda x: (x[2] or today, x[0].number))
 
 
+@one_pass
 def booked_ahead(lib) -> set[str]:
     """The gear on a booked rental whose dates haven't gone by (what the gear filter's Booked shows)."""
     today = dates.today()
@@ -585,6 +626,7 @@ def booked_ahead(lib) -> set[str]:
     }
 
 
+@one_pass
 def units_out(lib) -> dict[str, int]:
     """How many of each item are out the door right now (on rentals marked Out, lines already started)."""
     today = dates.today()
@@ -601,6 +643,7 @@ def units_out(lib) -> dict[str, int]:
     return out
 
 
+@one_pass
 def out_now(lib) -> dict[str, str]:
     """Gear that's out right now: item id -> the rental number it's out on. On a rental that's out, a line
     with later dates of its own isn't out yet, and one with earlier dates counts until the rental's back."""

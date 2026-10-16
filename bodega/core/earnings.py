@@ -38,6 +38,7 @@ def _shares(lib, line, b) -> list[tuple[str, Decimal]]:
     return [(i, w / total) for i, w in weights]
 
 
+@pricing.one_pass
 def earnings(lib) -> dict[str, Earned]:
     out: dict[str, Earned] = {}
     for r in lib.rentals.values():
