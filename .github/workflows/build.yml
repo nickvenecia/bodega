@@ -123,6 +123,7 @@ jobs:
         timeout-minutes: 25  # a test that hangs fails the run here, instead of holding the machine for hours
         env:
           QT_QPA_PLATFORM: offscreen
+          BODEGA_PLAIN_EXIT: "1"  # Python shuts down as it would anywhere (pinning whether Qt still crashes as it does)
         run: |
           set +e
           # written out as it runs (a test that hangs shows where); pytest.log keeps it for the summary below
@@ -131,7 +132,7 @@ jobs:
           # Qt can crash while Python shuts down AFTER every test has passed (Windows does this);
           # what counts is pytest's own verdict on its last summary line.
           if [ $code -ne 0 ] && python -c "import re,sys; lines=[l for l in open('pytest.log',encoding='utf-8',errors='replace').read().splitlines() if l.startswith('=')]; sys.exit(0 if lines and re.search(r' passed', lines[-1]) and not re.search(r'failed|error', lines[-1]) else 1)"; then
-            echo "All tests passed (exit code $code came from shutting down afterwards)."
+            echo "::warning title=Shutdown::All tests passed; exit code $code came from shutting down afterwards."
             code=0
           fi
           if [ $code -ne 0 ]; then

@@ -93,7 +93,8 @@ def pytest_sessionfinish(session, exitstatus):
 
 @pytest.hookimpl(trylast=True)
 def pytest_unconfigure(config):
-    if "PySide6.QtWidgets" in sys.modules:
+    # BODEGA_PLAIN_EXIT: Python shuts down as it would anywhere, so a crash on the way out shows (CI pins it)
+    if "PySide6.QtWidgets" in sys.modules and not os.environ.get("BODEGA_PLAIN_EXIT"):
         sys.stdout.flush()
         sys.stderr.flush()
         os._exit(_status["code"])
