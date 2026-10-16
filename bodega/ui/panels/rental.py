@@ -360,8 +360,6 @@ class RentalPanel(DetailsBase):
         self.menu_action(
             "calendar", "Add to Calendar", lambda: self.r and self.calendar_wanted.emit(self.r.id)
         )
-        self.menu_action("check", "Check Out…", lambda: self.r and self.check_wanted.emit(self.r.id, False))
-        self.menu_action("check", "Check In…", lambda: self.r and self.check_wanted.emit(self.r.id, True))
         self.menu_action("receipt", "Send to Saldo…", lambda: self.r and self.saldo_wanted.emit(self.r.id))
         self.menu_action("", "-", None)
         self.delete_act = self.menu_action(

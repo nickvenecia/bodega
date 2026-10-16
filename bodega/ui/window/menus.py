@@ -86,8 +86,10 @@ class MenusMixin:
         act(e, "Duplicate", self._duplicate_current, "Ctrl+D")
         act(e, "Delete…", self.delete_selected, "Ctrl+Backspace")
         e.addSeparator()
-        act(e, "Move Up", lambda: self.step_gear(-1), "Ctrl+Alt+Up")
-        act(e, "Move Down", lambda: self.step_gear(1), "Ctrl+Alt+Down")
+        act(
+            e, "Move Up", lambda: self.step_gear(-1)
+        )  # (no keys: the standard keeps ⌥ off arrows and the like)
+        act(e, "Move Down", lambda: self.step_gear(1))
         e.addSeparator()
         find = act(e, "Find", self._focus_search, QKeySequence.StandardKey.Find)
         find.setShortcuts([*find.shortcuts(), QKeySequence("Ctrl+Alt+F")])  # ⌥⌘F, the Mac's other Find

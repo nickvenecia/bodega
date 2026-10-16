@@ -54,12 +54,20 @@ class ServicesMixin:
         self.check_updates(quiet=True)  # every time Bodega opens
 
     def check_updates(self, quiet: bool = False) -> None:
+        """One check at a time: asking again while one runs only makes that one speak up when it's done."""
         from bodega.ui.dialogs.update import CheckThread
 
+        running = getattr(self, "_update_check", None)
+        if running is not None:
+            running.quiet = running.quiet and quiet
+            return
         check = CheckThread(self)
-        check.found.connect(lambda rel: self._found_release(rel, quiet))
-        check.failed.connect(lambda m: None if quiet else self.toast(m, "problem"))
+        check.quiet = quiet
+        check.found.connect(lambda rel: self._found_release(rel, check.quiet))
+        check.failed.connect(lambda m: None if check.quiet else self.toast(m, "problem"))
+        check.finished.connect(lambda: setattr(self, "_update_check", None))
         check.finished.connect(check.deleteLater)  # a finished check doesn't stay under the window
+        self._update_check = check
         check.start()
 
     def _found_release(self, rel: update.Release, quiet: bool) -> None:

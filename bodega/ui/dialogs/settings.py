@@ -277,6 +277,10 @@ class SettingsDialog(QDialog):
         return d is None or d.may_leave()
 
     def reject(self) -> None:
+        """Esc: words in the search go first (one layer at a time), then Settings closes."""
+        if self.find.text():
+            self.find.clear()
+            return
         if self._profile_may_go():
             super().reject()
 

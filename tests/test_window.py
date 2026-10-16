@@ -1361,7 +1361,7 @@ def test_no_two_commands_share_a_key(win):
                 name = keys.toString(QKeySequence.SequenceFormat.PortableText)
                 assert name not in taken, f"{name}: {taken.get(name)} and {a.text()}"
                 taken[name] = a.text()
-    assert {"Ctrl+N", "Ctrl+F", "Ctrl+Z", "Ctrl+1", "Ctrl+Alt+Up"} <= set(taken)
+    assert {"Ctrl+N", "Ctrl+F", "Ctrl+Z", "Ctrl+1"} <= set(taken)
 
 
 def test_the_share_button_opens_the_page_window_at_once(win, monkeypatch):

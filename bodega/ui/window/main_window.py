@@ -318,9 +318,7 @@ class MainWindow(
             t.cleared.connect(self.deselect)
         self.gear_table.reordered.connect(self._reordered)
         self.gear_table.branded.connect(self._branded)
-        self.gear_table.columns_changed.connect(
-            lambda cols: self.lib.settings.__setitem__("hidden_columns", cols)
-        )
+        self.gear_table.columns_changed.connect(self._columns_changed)
         self.gear_table.itemSelectionChanged.connect(self._selection_count)
         self.kit_table.delete_wanted.connect(lambda ids: self.delete("packages", ids[0]))
         self.rental_table.delete_wanted.connect(lambda ids: self.delete("rentals", ids[0]))
@@ -551,6 +549,12 @@ class MainWindow(
         else:
             self.no_results.hide()
 
+    def _columns_changed(self, hidden: list[str]) -> None:
+        """A column shown or hidden (kept for next time); Earned, shown again, is worked out again."""
+        self.lib.settings["hidden_columns"] = hidden
+        if "earned" not in hidden and self.gear_table.earned is None:
+            self.refresh()
+
     def _filter_off(self, what: str, key: str) -> None:
         """A filter chip's ✕: that filter comes off (the others stay)."""
         f = self.view_menu.filter
@@ -743,7 +747,7 @@ class MainWindow(
             m = QMenu(self)
             n = len(ids)
             m.addAction(  # a list to search, once this menu has closed (never a menu over a menu)
-                theme.menu_icon("export"),
+                theme.menu_icon("folder"),
                 "Move To…" if n == 1 else f"Move {n} To…",
                 lambda: QTimer.singleShot(0, self, lambda: self.move_to(ids)),
             )

@@ -939,7 +939,8 @@ class GearTable(Table):
             self._fill_later = (lib, b, group, divide)
             return
         self.thumbs = any(it.photo for it in lib.items.values())  # once one has a photo, every row has room
-        self.earned = earnings.earnings(lib)
+        # worked out only while the Earned column shows (the piece's panel works out its own otherwise)
+        self.earned = earnings.earnings(lib) if "earned" not in self.hidden_cols else None
         self.group = group
         self.divide = divide or ("brand" if group else "group")
         keep, col, order = self._fill_start()
@@ -1010,7 +1011,7 @@ class GearTable(Table):
 
     def _row(self, it: Item, st, kids: int, cur: str, out: dict, parent, on: str, pos: int) -> Row:
         status, color = _tone(it, out.get(it.id, 0))
-        e = self.earned.get(it.id)
+        e = self.earned.get(it.id) if self.earned is not None else None
         made = e.amount if e is not None else money.ZERO
         day = st.day if it.rentable else None
         row = self.make(
