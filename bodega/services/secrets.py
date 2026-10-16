@@ -37,8 +37,19 @@ def available() -> bool:
         return False
 
 
+_FOR_NOW: dict[str, str] = {}  # held for this run only (an evaluation in CI): never written, never logged
+
+
+def use_for_now(name: str, value: str) -> None:
+    """Hold a secret in memory for this run only (`python -m bodega cli ai-eval` with a key from CI's secrets): it's
+    never written anywhere, and goes when the run ends."""
+    _FOR_NOW[name] = value
+
+
 def get(name: str) -> str:
     """The secret called `name`, or "" (none saved, or no keychain)."""
+    if _FOR_NOW.get(name):
+        return _FOR_NOW[name]
     try:
         return _keyring().get_password(SERVICE, name) or ""
     except SecretsUnavailable:

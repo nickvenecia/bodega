@@ -96,6 +96,8 @@ bodega/
     ai/providers.py  PROVIDERS (Anthropic, OpenAI, Gemini, Kimi, OpenRouter, DeepSeek, Mistral, xAI, Groq, custom);
                    two API kinds (anthropic, openai); Setup (settings "ai"); list_models() live, never hardcoded;
                    ask()/ask_json(); keys never on a redirect, plain http only to this computer
+    ai/evals.py    the AI's naming, grouping and planted-instruction cases, scored against a real model
+                   (`python -m bodega cli ai-eval`; CI runs it when the secret BODEGA_EVAL_KEY is stored)
     ai/usage.py    METER: every question counted (day, month, tokens), a daily limit (settings "ai_daily_limit":
                    warns at 80%, LimitReached at 100%), at most 20 a minute; the window loads and saves it
     ai/tasks.py    update_from_links (a link that's Refused: another page, found and checked as find_links does),

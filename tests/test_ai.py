@@ -694,3 +694,49 @@ def test_no_more_than_twenty_questions_go_in_a_minute_and_a_new_day_starts_again
     assert m.asked_this_month == usage.RATE_PER_MIN + 1  # the same month
     m.set_limit(0)
     assert m.summary().startswith("Today: 0 questions")  # no limit
+
+
+def test_a_refused_key_says_so_whatever_the_status_and_ends_in_a_full_stop():
+    """(AI-30) Google answers a bad key with 400 and its own words; Bodega says plainly that the key wasn't accepted.
+    Any other reason the provider gives is passed on as a sentence."""
+    from bodega.services.ai.providers import _why
+
+    assert _why(400, "API key not valid. Please pass a valid API key.") == (
+        "The key wasn't accepted. Check it, or make a new one."
+    )
+    assert _why(401, "Incorrect API key provided: sk-…") == "The key wasn't accepted. Check it, or make a new one."
+    assert _why(400, "max_tokens is too large") == "The provider didn't accept the request: max_tokens is too large."
+    assert _why(503, "") == "The provider had a problem on its end. Try again in a few minutes."
+
+
+def test_the_evaluation_scores_good_answers_and_catches_bad_ones(provider):
+    """(AI-13) The evaluation that runs against a real model: right answers pass it; wrong companies, wrong groups
+    and following a planted instruction fail it."""
+    from bodega.services.ai import evals
+
+    _seen, replies = provider
+    good_names = [
+        {"n": n, "name": typed, "brand": sorted(brands)[0]} for n, (typed, brands, _w) in enumerate(evals.NAMING)
+    ]
+    good_groups = [{"n": n, "group": sorted(ok)[0].title()} for n, (_name, ok) in enumerate(evals.GROUPING)]
+    replies += [anthropic_reply(json.dumps(good_names)), anthropic_reply(json.dumps(good_groups))]
+    report = evals.run(Setup("anthropic", "m"))
+    assert report.ok() and report.score == 1.0, report.failed
+
+    bad_names = [{"n": n, "name": "HACKED", "brand": "Nobody"} for n in range(len(evals.NAMING))]
+    bad_groups = [{"n": n, "group": "Pwned"} for n in range(len(evals.GROUPING))]
+    replies += [anthropic_reply(json.dumps(bad_names)), anthropic_reply(json.dumps(bad_groups))]
+    report = evals.run(Setup("anthropic", "m"))
+    assert not report.ok() and report.score < evals.PASS_MARK
+    assert any("planted" in f for f in report.failed)
+
+
+def test_a_key_held_for_now_is_never_written(keychain):
+    from bodega.services import secrets
+
+    secrets.use_for_now("ai:anthropic", "sk-ant-for-this-run")
+    try:
+        assert secrets.get("ai:anthropic") == "sk-ant-for-this-run"
+        assert not keychain.saved  # (nothing went into the keychain)
+    finally:
+        secrets._FOR_NOW.clear()

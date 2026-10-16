@@ -78,4 +78,7 @@ known-first-party = ["bodega"]
 testpaths = ["tests"]
 addopts = "-q -p no:cacheprovider"
 faulthandler_timeout = 240  # a test still running after 4 minutes writes out every thread (before CI stops the file at 5)
-markers = ["qt_warnings: this test expects Qt to complain (a broken file on purpose, say)"]
+markers = [
+    "qt_warnings: this test expects Qt to complain (a broken file on purpose, say)",
+    "online: needs the internet; runs only with BODEGA_ONLINE=1 (CI)",
+]

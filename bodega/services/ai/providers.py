@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import ipaddress
 import json
+import re
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -242,7 +243,14 @@ def _why(code: int, detail: str) -> str:
     )
     if 300 <= code < 400:
         plain = "The provider's address redirects somewhere else, so Bodega stopped (your key stays private)"
-    return plain + (f": {detail}" if detail and code not in (401,) else ".")
+    if code in (400, 403) and KEY_REFUSED.search(detail):  # (Google answers a bad key with 400)
+        code, plain = 401, "The key wasn't accepted. Check it, or make a new one"
+    if not detail or code == 401:
+        return plain + "."
+    return f"{plain}: {detail}" + ("" if detail.endswith((".", "!", "?")) else ".")
+
+
+KEY_REFUSED = re.compile(r"api[ _-]?key|invalid[ _-]key|key (is )?(not valid|invalid)|incorrect key", re.IGNORECASE)
 
 
 def list_models(setup: Setup, key: str | None = None) -> list[str]:

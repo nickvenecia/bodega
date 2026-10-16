@@ -3,6 +3,8 @@
 python -m bodega cli sample OUT.pdf [--doc agreement|quote|inventory|ratecard|package] [--dark]
 python -m bodega cli import SHEET.xlsx OUT.pdf [--doc inventory|ratecard]
 python -m bodega cli update-check     (no internet: this copy reads a made-up newer release and finds its file)
+python -m bodega cli ai-eval [--provider anthropic] [--model NAME]   (your key: from the keychain, or
+                                      BODEGA_EVAL_KEY in CI, held for this run only)
 """
 
 from __future__ import annotations
@@ -29,9 +31,14 @@ def main(argv: list[str] | None = None) -> int:
     i.add_argument("--doc", choices=("inventory", "ratecard"), default="inventory")
     i.add_argument("--name", default="", help="the name at the top of the page")
     sub.add_parser("update-check", help="check this copy can read a release and pick its own file (offline)")
+    e = sub.add_parser("ai-eval", help="score the AI's naming and grouping against a real model (your key)")
+    e.add_argument("--provider", default="anthropic")
+    e.add_argument("--model", default="", help="the model (the provider's newest, if left out)")
     args = ap.parse_args(argv)
     if args.cmd == "update-check":
         return update_check()
+    if args.cmd == "ai-eval":
+        return ai_eval(args.provider, args.model)
 
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtGui import QGuiApplication
@@ -138,3 +145,24 @@ def update_check() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def ai_eval(provider: str, model: str) -> int:
+    """The AI evaluation (services/ai/evals.py) against a real model: its score, and each case that failed."""
+    from bodega.services import secrets
+    from bodega.services.ai import evals, providers
+    from bodega.services.ai.providers import AIError, Setup
+
+    key = os.environ.get("BODEGA_EVAL_KEY", "")
+    if key:
+        secrets.use_for_now(providers.secret_name(provider), key)  # (CI's secret: this run only)
+    try:
+        model = model or providers.list_models(Setup(provider, ""))[0]
+        report = evals.run(Setup(provider, model))
+    except (AIError, IndexError) as e:
+        print(f"Couldn't run the evaluation: {e or 'the provider listed no models'}")
+        return 2
+    print(f"{provider} · {model}: {report.passed} of {report.total} cases passed ({report.score:.0%}).")
+    for line in report.failed + report.problems:
+        print(f"  {line}")
+    return 0 if report.ok() else 1
