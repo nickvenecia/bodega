@@ -95,19 +95,13 @@ def test_what_counts_as_a_picture_to_paste_or_drop(qapp, tmp_path):
     m.setImageData(img)
     assert photos.has_picture(m, links=False) and photos.picture_image(m).size() == img.size()
     m = QMimeData()
-    m.setUrls(
-        [QUrl.fromLocalFile(str(tmp_path / "notes.txt")), QUrl.fromLocalFile(str(tmp_path / "fx6.png"))]
-    )
+    m.setUrls([QUrl.fromLocalFile(str(tmp_path / "notes.txt")), QUrl.fromLocalFile(str(tmp_path / "fx6.png"))])
     assert photos.picture_file(m) == tmp_path / "fx6.png" and photos.has_picture(m, links=False)
     m = QMimeData()
     m.setUrls([QUrl("https://cdn.example.com/fx6.jpg")])
     assert photos.picture_link(m) == "https://cdn.example.com/fx6.jpg"
-    assert photos.has_picture(m) and not photos.has_picture(
-        m, links=False
-    )  # a copied link is for the Link field
-    m.setUrls(
-        [QUrl("smb://server/share/x.jpg"), QUrl("javascript:alert(1)"), QUrl("ftp://example.com/x.jpg")]
-    )
+    assert photos.has_picture(m) and not photos.has_picture(m, links=False)  # a copied link is for the Link field
+    m.setUrls([QUrl("smb://server/share/x.jpg"), QUrl("javascript:alert(1)"), QUrl("ftp://example.com/x.jpg")])
     assert photos.picture_link(m) == "" and photos.picture_file(m) is None
 
 
@@ -123,9 +117,7 @@ def test_a_photo_dragged_out_of_a_browser(qapp, data_folder, monkeypatch):
         return picture(color="#22aa66")
 
     monkeypatch.setattr(web, "fetch_image", page_not_picture)  # the link of the page the photo was on
-    monkeypatch.setattr(
-        web, "fetch", lambda url, **_k: web.Page(url, '<meta property="og:image" content="/fx6.jpg">')
-    )
+    monkeypatch.setattr(web, "fetch", lambda url, **_k: web.Page(url, '<meta property="og:image" content="/fx6.jpg">'))
     assert photos.path_of(photos.from_any_link("https://shop.example.com/fx6"))
 
 
@@ -175,10 +167,7 @@ def test_a_store_that_turns_bodega_away_says_what_to_do(qapp, data_folder, monke
     win.items.photo_from_link()
     win.items._photo_job.wait(5000)
     QApplication.processEvents()
-    assert (
-        said[-1] == (f"B&H only lets web browsers read its pages. {PASTE_INSTEAD}", "problem")
-        and not it.photo
-    )
+    assert said[-1] == (f"B&H only lets web browsers read its pages. {PASTE_INSTEAD}", "problem") and not it.photo
     said_price = "B&H won't let Bodega read its price. Open the link instead."
     got = []
     check = PriceCheck(it.id, it.link)

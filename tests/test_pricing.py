@@ -242,14 +242,10 @@ def test_booked_ahead_is_the_gear_on_bookings_still_to_come(lib):
 def test_money_rounds_half_up_and_never_goes_wrong_on_odd_amounts():
     from bodega.core import money
 
-    assert money.cents(Decimal("2.345")) == Decimal("2.35") and money.cents(Decimal("2.344")) == Decimal(
-        "2.34"
-    )
+    assert money.cents(Decimal("2.345")) == Decimal("2.35") and money.cents(Decimal("2.344")) == Decimal("2.34")
     assert money.whole(Decimal("24.5")) == 25 and money.whole(Decimal("24.49")) == 24
     assert money.parse("") == 0 and money.parse("-") == 0 and money.parse("abc") == 0
-    assert (
-        money.parse("1000000000000000") == 0
-    )  # too big to be real: a typo, never a quadrillion-dollar total
+    assert money.parse("1000000000000000") == 0  # too big to be real: a typo, never a quadrillion-dollar total
     assert money.pct("-5") == 0  # a percent is never negative
 
 
@@ -285,7 +281,5 @@ def test_the_schedule_says_whats_held_each_day(lib):
     it = lib.items[it_id]
     days = pricing.schedule(lib, it, date(2026, 11, 1), 5)
     held = [d.booked for d in days]
-    assert (
-        held[0] == 0 and held[1] >= units and held[2] >= units and held[3] == 0
-    )  # back on the 4th: free that day
+    assert held[0] == 0 and held[1] >= units and held[2] >= units and held[3] == 0  # back on the 4th: free that day
     assert all(d.free == max(0, it.qty - d.booked) for d in days if it.status == "ready")

@@ -106,9 +106,7 @@ class EmptyPage(QWidget):
         lay.addLayout(self.tile_row)
         lay.addStretch(3)
 
-    def show_for(
-        self, tiles: tuple[tuple[str, str, str, str, Callable], ...], sheet_tile: int | None = None
-    ) -> None:
+    def show_for(self, tiles: tuple[tuple[str, str, str, str, Callable], ...], sheet_tile: int | None = None) -> None:
         """The tiles: (icon, title, detail, tooltip, what it does). `sheet_tile`: a spreadsheet dropped here is
         imported, and that tile lights up while it's dragged in."""
         self._sheet_tile = sheet_tile
@@ -130,7 +128,7 @@ class EmptyPage(QWidget):
             self.tiles.append(tile)
         self.tile_row.addStretch(1)
 
-    # ---- a spreadsheet dragged in from the Finder or Explorer lights its tile and is imported
+    # A spreadsheet dragged in from the Finder or Explorer lights its tile and is imported
     def _light(self, on: bool) -> None:
         if self._sheet_tile is not None and self._sheet_tile < len(self.tiles):
             self.tiles[self._sheet_tile].set_hot(on)
@@ -172,9 +170,7 @@ class NoResults(QWidget):
         self.title.setObjectName("EmptyTitle")
         self.detail = hint("")
         self.clear = QPushButton("Clear Search")
-        self.clear.clicked.connect(
-            lambda: QTimer.singleShot(0, self, lambda: self.clear_wanted.emit(self._what))
-        )
+        self.clear.clicked.connect(lambda: QTimer.singleShot(0, self, lambda: self.clear_wanted.emit(self._what)))
         for w in (self.title, self.detail):
             w.setAlignment(Qt.AlignmentFlag.AlignCenter)
             lay.addWidget(w)

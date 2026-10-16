@@ -52,9 +52,7 @@ class Row(QTreeWidgetItem):
         col = tree.sortColumn() if tree else 0
         ha, hb = self.data(0, HEAD), other.data(0, HEAD)
         if ha is not None and hb is not None:  # dividers keep their order whichever way you sort
-            descending = (
-                tree is not None and tree.header().sortIndicatorOrder() == Qt.SortOrder.DescendingOrder
-            )
+            descending = tree is not None and tree.header().sortIndicatorOrder() == Qt.SortOrder.DescendingOrder
             return ha > hb if descending else ha < hb
         a, b = self.data(col, SORT), other.data(col, SORT)
         if a is None or b is None:
@@ -107,7 +105,7 @@ class Table(QTreeWidget):
         self.currentItemChanged.connect(self._current)
         self._quiet = False
 
-    # ------------------------------------------------------------------ sliding with the inspector
+    # Sliding with the inspector
     # Redrawing every row on every step of the inspector's slide is too slow, so while it slides the table
     # is two still pictures (before and after) split after the wide column: the columns to the right
     # move with the edge, the names are covered or uncovered. The real table comes back when it stops.
@@ -152,7 +150,7 @@ class Table(QTreeWidget):
         """The slide is over: settle anything held still while it ran."""
         self._step_aside()
 
-    # ------------------------------------------------------------------ narrow
+    # Narrow
     STEP_ASIDE: tuple[int, ...] = ()  # columns that make way, in turn, so the wide one keeps WIDE_MIN
     WIDE_MIN = tokens.NAME_MIN
 
@@ -367,9 +365,7 @@ class RowPainter(QStyledItemDelegate):
         hover = bool(option.state & QStyle.StateFlag.State_MouseOver)
         selected = bool(option.state & QStyle.StateFlag.State_Selected)
         if divider:
-            self.row_shape(
-                painter, option, index, theme.qcolor(tokens.DIVIDER_HOVER if hover else tokens.DIVIDER)
-            )
+            self.row_shape(painter, option, index, theme.qcolor(tokens.DIVIDER_HOVER if hover else tokens.DIVIDER))
         elif selected:
             self.row_shape(painter, option, index, theme.qcolor(tokens.CARD_SELECTED))
         elif hover:
@@ -381,9 +377,7 @@ class RowPainter(QStyledItemDelegate):
         """The cell without hover or selection (its row shape is already drawn)."""
         opt = QStyleOptionViewItem(option)
         opt.state &= ~(
-            QStyle.StateFlag.State_MouseOver
-            | QStyle.StateFlag.State_Selected
-            | QStyle.StateFlag.State_HasFocus
+            QStyle.StateFlag.State_MouseOver | QStyle.StateFlag.State_Selected | QStyle.StateFlag.State_HasFocus
         )
         return opt
 
@@ -404,9 +398,7 @@ class RowPainter(QStyledItemDelegate):
         words, opt.text = opt.text, ""
         w = opt.widget
         style = w.style() if w else QApplication.style()
-        style.drawControl(
-            QStyle.ControlElement.CE_ItemViewItem, opt, painter, w
-        )  # the cell, without its words
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, opt, painter, w)  # the cell, without its words
         rect = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, opt, w)
         d = tokens.STATUS_DOT
         painter.save()
@@ -423,11 +415,7 @@ class RowPainter(QStyledItemDelegate):
 
     def helpEvent(self, event, view, option, index):
         """A cell's own tooltip, or else, when the cell cuts its words short, the whole of them."""
-        if (
-            event.type() != QEvent.Type.ToolTip
-            or not index.isValid()
-            or index.data(Qt.ItemDataRole.ToolTipRole)
-        ):
+        if event.type() != QEvent.Type.ToolTip or not index.isValid() or index.data(Qt.ItemDataRole.ToolTipRole):
             return super().helpEvent(event, view, option, index)
         text = self.cut_short(view, option, index)
         if text:
@@ -606,9 +594,7 @@ class GearTable(Table):
         h.setToolTip(GEAR_COL["kids"], "Gear that goes with it")
         h.setToolTip(GEAR_COL["paid"], "What it cost, before tax (what goes with it included)")
         h.setToolTip(GEAR_COL["value"], "Replacement value: paid plus sales tax")
-        h.setToolTip(
-            GEAR_COL["earned"], "An estimate: each rental's gear total, shared out by each piece's day rate"
-        )
+        h.setToolTip(GEAR_COL["earned"], "An estimate: each rental's gear total, shared out by each piece's day rate")
         self.header().setSectionResizeMode(GEAR_COL["grip"], QHeaderView.ResizeMode.Fixed)
         self.header().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.header().customContextMenuRequested.connect(self._column_menu)
@@ -635,7 +621,7 @@ class GearTable(Table):
         self.setDefaultDropAction(Qt.DropAction.CopyAction)
         self.setDropIndicatorShown(True)
 
-    # ------------------------------------------------------------------ columns
+    # Columns
     def _column_menu(self, pos) -> None:
         m = QMenu(self)
         for key, title, _w, _a in GEAR_COLUMNS:
@@ -681,7 +667,7 @@ class GearTable(Table):
     def slide_done(self) -> None:
         self._apply_columns()
 
-    # ------------------------------------------------------------------ dragging
+    # Dragging
     def selected_ids(self) -> list[str]:
         return self.chosen_ids()
 
@@ -794,11 +780,7 @@ class GearTable(Table):
             return
         if not e.buttons():
             row = self.itemAt(e.position().toPoint())
-            on_grip = (
-                row is not None
-                and row.data(0, ID)
-                and self.columnAt(int(e.position().x())) == GEAR_COL["grip"]
-            )
+            on_grip = row is not None and row.data(0, ID) and self.columnAt(int(e.position().x())) == GEAR_COL["grip"]
             shape = Qt.CursorShape.OpenHandCursor if on_grip else Qt.CursorShape.ArrowCursor
             if self.viewport().cursor().shape() != shape:
                 self.viewport().setCursor(shape)
@@ -902,9 +884,7 @@ class GearTable(Table):
 
     def _dividers(self) -> list:
         root = self.invisibleRootItem()
-        return [
-            root.child(i) for i in range(root.childCount()) if root.child(i).data(0, HEAD + 10) is not None
-        ]
+        return [root.child(i) for i in range(root.childCount()) if root.child(i).data(0, HEAD + 10) is not None]
 
     def _fold(self, row, opening: bool) -> None:
         row.setExpanded(opening)
@@ -933,7 +913,7 @@ class GearTable(Table):
     def your_order(self) -> bool:
         return self.sortColumn() == GEAR_COL["grip"]
 
-    # ------------------------------------------------------------------ filling
+    # Filling
     def fill(self, lib: Library, b: Business | None, group: str = "", divide: str = "") -> None:
         if self._lift is not None:  # never rebuild the rows under a row being dragged: after it lands
             self._fill_later = (lib, b, group, divide)
@@ -980,9 +960,7 @@ class GearTable(Table):
             big = theme.font(tokens.TEXT_SM, tokens.WEIGHT_SEMIBOLD)
             for c, (_k, _t, _w, align) in enumerate(GEAR_COLUMNS):
                 d.setFont(c, big if c == GEAR_COL["name"] else f)
-                d.setForeground(
-                    c, theme.qcolor(tokens.MUTED if c == GEAR_COL["name"] else tokens.DIVIDER_TEXT)
-                )
+                d.setForeground(c, theme.qcolor(tokens.MUTED if c == GEAR_COL["name"] else tokens.DIVIDER_TEXT))
                 if align is not None:
                     d.setTextAlignment(c, align)
             dividers[key] = d
@@ -992,9 +970,7 @@ class GearTable(Table):
             self.stocks[it.id] = st
             kids = len(pricing.children(lib, it.id))
             on = lib.items.get(it.parent) if it.parent else None
-            self._row(
-                it, st, kids, cur, out, dividers.get(key_of(it), self), on.name if on else "", position[it.id]
-            )
+            self._row(it, st, kids, cur, out, dividers.get(key_of(it), self), on.name if on else "", position[it.id])
             if key_of(it) in totals:
                 totals[key_of(it)].add(st)
         for key, d in dividers.items():
@@ -1171,9 +1147,7 @@ class RentalTable(Table):
                 ],
             )
             row.setData(4, DOT, getattr(tokens, STATUS_COLORS[tone]))
-            row.setData(
-                0, HAY, search.folded(" ".join((r.number, r.client.name, r.client.company, r.project)))
-            )
+            row.setData(0, HAY, search.folded(" ".join((r.number, r.client.name, r.client.company, r.project))))
         self._fill_end(keep, col, order)
 
 

@@ -38,7 +38,7 @@ from bodega.core.model import Business, Item, Package, Rental, RentalLine
 ZERO = money.ZERO
 
 
-# ---------------------------------------------------------------------------- items
+# Items
 def replacement(item: Item, b: Business | None) -> Decimal:
     """Replacement value of one unit, with sales tax."""
     tax = money.pct(b.value_tax) if b else ZERO
@@ -173,7 +173,7 @@ def stock(lib, item: Item, b: Business | None, attached: bool = True) -> Stock:
     return out
 
 
-# ---------------------------------------------------------------------------- packages
+# Packages
 def package_gear(lib, pkg: Package) -> list[tuple[Item, int, int]]:
     """Every piece of gear in a package, attached gear included: (item, units, depth)."""
     out: list[tuple[Item, int, int]] = []
@@ -203,7 +203,7 @@ def package_value(lib, pkg: Package, b: Business | None) -> Decimal:
     return sum((replacement(it, b) * units for it, units, _d in package_gear(lib, pkg)), ZERO)
 
 
-# ---------------------------------------------------------------------------- days
+# Days
 def nights(pickup: date | None, ret: date | None) -> int:
     if pickup is None or ret is None:
         return 1
@@ -314,7 +314,7 @@ def _days(n: int) -> str:
     return f"{n} day" if n == 1 else f"{n} days"
 
 
-# ---------------------------------------------------------------------------- rentals
+# Rentals
 LOCKED = ("booked", "out", "returned", "cancelled")  # a rental's prices hold from booking on
 
 
@@ -475,7 +475,7 @@ def suggested_deposit(lib, r: Rental, b: Business | None) -> Decimal:
     return money.whole(t.value * money.pct(deposit_pct(b)))
 
 
-# ---------------------------------------------------------------------------- availability
+# Availability
 def _window(a: date | None, z: date | None) -> tuple[date, date] | None:
     """Gear returned on a day can go out again that day; a same-day rental holds its day."""
     if a is None:
@@ -538,9 +538,7 @@ def shortages(lib, r: Rental) -> list[Short]:
         if it is None:
             continue
         if it.status != "ready":
-            out.append(
-                Short(it, max(bk.units for bk in own), 0, "In repair" if it.status == "repair" else "Retired")
-            )
+            out.append(Short(it, max(bk.units for bk in own), 0, "In repair" if it.status == "repair" else "Retired"))
             continue
         theirs = [bk for bk in others if bk.item_id == item_id]
         worst_need, worst_free, where = 0, it.qty, set()
@@ -571,9 +569,7 @@ class Day:
 @one_pass
 def schedule(lib, item: Item, start: date, days: int) -> list[Day]:
     """Day by day, how many of this item are held and by which rentals (for the overview's calendar)."""
-    mine = [
-        bk for r in lib.rentals.values() if r.holds_gear() for bk in bookings(lib, r) if bk.item_id == item.id
-    ]
+    mine = [bk for r in lib.rentals.values() if r.holds_gear() for bk in bookings(lib, r) if bk.item_id == item.id]
     out = []
     for n in range(days):
         d = dates.plus(start, n)
@@ -588,9 +584,7 @@ def schedule(lib, item: Item, start: date, days: int) -> list[Day]:
     return out
 
 
-def rentals_with(
-    lib, item: Item, upcoming_only: bool = True
-) -> list[tuple[Rental, int, date | None, date | None]]:
+def rentals_with(lib, item: Item, upcoming_only: bool = True) -> list[tuple[Rental, int, date | None, date | None]]:
     """Rentals this item is on (as itself or attached to something): (rental, units, first day, last day).
     Upcoming only skips returned, cancelled and anything that ended before today."""
     today = dates.today()
@@ -617,13 +611,7 @@ def rentals_with(
 def booked_ahead(lib) -> set[str]:
     """The gear on a booked rental whose dates haven't gone by (what the gear filter's Booked shows)."""
     today = dates.today()
-    return {
-        b.item_id
-        for r in lib.rentals.values()
-        if r.status == "booked"
-        for b in bookings(lib, r)
-        if b.end >= today
-    }
+    return {b.item_id for r in lib.rentals.values() if r.status == "booked" for b in bookings(lib, r) if b.end >= today}
 
 
 @one_pass

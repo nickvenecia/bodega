@@ -89,9 +89,7 @@ class MenusMixin:
         act(e, "Duplicate", self._duplicate_current, "Ctrl+D")
         act(e, "Delete…", self.delete_selected, "Ctrl+Backspace")
         e.addSeparator()
-        act(
-            e, "Move Up", lambda: self.step_gear(-1)
-        )  # (no keys: the standard keeps ⌥ off arrows and the like)
+        act(e, "Move Up", lambda: self.step_gear(-1))  # (no keys: the standard keeps ⌥ off arrows and the like)
         act(e, "Move Down", lambda: self.step_gear(1))
         e.addSeparator()
         find = act(e, "Find", self._focus_search, QKeySequence.StandardKey.Find)
@@ -122,9 +120,7 @@ class MenusMixin:
             "agreement": act(
                 rm, "Agreement…", lambda: self._with_open_rental(lambda i: self.show_pages(("rental", i)))
             ),
-            "out": act(
-                rm, "Check Out…", lambda: self._with_open_rental(lambda i: self.check_rental(i, False))
-            ),
+            "out": act(rm, "Check Out…", lambda: self._with_open_rental(lambda i: self.check_rental(i, False))),
             "in": act(rm, "Check In…", lambda: self._with_open_rental(lambda i: self.check_rental(i, True))),
             "saldo": act(rm, "Send to Saldo…", lambda: self._with_open_rental(self.send_to_saldo)),
             "calendar": act(rm, "Add to Calendar", lambda: self._with_open_rental(self.add_to_calendar)),
@@ -143,9 +139,7 @@ class MenusMixin:
         ai = bar.addMenu("AI")
         self.act_assistant = act(ai, "Show Assistant", self.toggle_assistant, "Ctrl+J")
         ai.aboutToShow.connect(
-            lambda: self.act_assistant.setText(
-                "Hide Assistant" if self.assistant_showing() else "Show Assistant"
-            )
+            lambda: self.act_assistant.setText("Hide Assistant" if self.assistant_showing() else "Show Assistant")
         )
         ai.addSeparator()
         act(ai, "Update from Links…", lambda: self.open_ai_assistant("links"))
@@ -162,9 +156,7 @@ class MenusMixin:
         act(h, "Keyboard Shortcuts", self.show_shortcuts, "Ctrl+/")
         act(h, "Send Feedback…", self.open_feedback)
         upd = act(h, "Check for Updates…", self.check_updates)
-        upd.setMenuRole(
-            QAction.MenuRole.ApplicationSpecificRole
-        )  # on the Mac: in the Bodega menu, like Mac apps
+        upd.setMenuRole(QAction.MenuRole.ApplicationSpecificRole)  # on the Mac: in the Bodega menu, like Mac apps
         act(h, "Open Data Folder", self.open_data_folder)
         act(h, "Open Log File", lambda: reveal(log_dir() / "bodega.log"))
         act(h, "About Bodega", lambda: about(self, version_label(), str(data_dir())))
@@ -218,7 +210,7 @@ class MenusMixin:
         m.exec(QPoint(at.x(), at.y() - m.sizeHint().height() - tokens.MENU_GAP))
         self.sidebar.show_who()
 
-    # ------------------------------------------------------------------ Edit
+    # Edit
     def _text_widget(self):
         """The text box you're typing in, if any (it keeps its own undo, cut, copy and paste)."""
         w = QApplication.focusWidget()
@@ -295,12 +287,8 @@ class MenusMixin:
         redo = "" if typed_again or h is None else h.redo_names()
         self.act_undo.setEnabled(typing or bool(undo))
         self.act_redo.setEnabled(typed_again or bool(redo))
-        self.act_undo.setText(
-            "Undo Typing" if typing else f"Undo Change to {_titled(undo)}" if undo else "Undo"
-        )
-        self.act_redo.setText(
-            "Redo Typing" if typed_again else f"Redo Change to {_titled(redo)}" if redo else "Redo"
-        )
+        self.act_undo.setText("Undo Typing" if typing else f"Undo Change to {_titled(undo)}" if undo else "Undo")
+        self.act_redo.setText("Redo Typing" if typed_again else f"Redo Change to {_titled(redo)}" if redo else "Redo")
 
     def _after_history(self) -> None:
         """Undo/redo put new copies of everything in the library: open them again in the panel."""

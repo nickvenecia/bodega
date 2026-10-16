@@ -142,9 +142,7 @@ class PagesMixin:
             folder.mkdir(parents=True, exist_ok=True)
         except OSError:
             folder = Path.home()
-        path, _ = QFileDialog.getSaveFileName(
-            self.page or self, title, str(folder / f"{got[2]}{suffix}"), kinds
-        )
+        path, _ = QFileDialog.getSaveFileName(self.page or self, title, str(folder / f"{got[2]}{suffix}"), kinds)
         if not path:
             return None
         p = Path(path)
@@ -217,9 +215,7 @@ class PagesMixin:
         r = self._page_rental()
         if r is None:
             return
-        QGuiApplication.clipboard().setText(
-            document.summary_text(self.lib, r, self.lib.businesses.get(r.business_id))
-        )
+        QGuiApplication.clipboard().setText(document.summary_text(self.lib, r, self.lib.businesses.get(r.business_id)))
 
     def email_renter(self) -> None:
         """A new email to the renter with the summary in it; the saved PDF is shown, ready to drag in."""

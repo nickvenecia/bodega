@@ -59,7 +59,7 @@ class Lift(QObject):
         self.timer = QTimer(self, interval=tokens.LIFT_STEP_MS, timeout=self._step)
         self.timer.start()
 
-    # ------------------------------------------------------------------ where it lands
+    # Where it lands
     def _slot(self, k: int) -> float:
         return self.base[k] if k < len(self.rest) else self.end_y
 
@@ -89,7 +89,7 @@ class Lift(QObject):
             return ("into", prev[1], prev[2])
         return None
 
-    # ------------------------------------------------------------------ each step
+    # Each step
     def _step(self) -> None:
         vp = self.t.viewport()
         edge = tokens.TABLE_ROW_H
@@ -114,7 +114,7 @@ class Lift(QObject):
     def stop(self) -> None:
         self.timer.stop()
 
-    # ------------------------------------------------------------------ drawing
+    # Drawing
     def _picture(self, r: QTreeWidgetItem) -> QPixmap:
         """One row, drawn by the table's own painter (once, then reused while it slides)."""
         got = self._pix.get(id(r))
@@ -193,9 +193,7 @@ class Lift(QObject):
             label = str(len(self.moving))
             fm = p.fontMetrics()
             bw = max(tokens.SMALL_H, fm.horizontalAdvance(label) + 2 * tokens.SPACE_2)
-            badge = QRectF(
-                card.right() - bw / 2 - tokens.SPACE_2, card.top() - tokens.SMALL_H / 2, bw, tokens.SMALL_H
-            )
+            badge = QRectF(card.right() - bw / 2 - tokens.SPACE_2, card.top() - tokens.SMALL_H / 2, bw, tokens.SMALL_H)
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(theme.qcolor(tokens.ACCENT))
             p.drawRoundedRect(badge, tokens.SMALL_H / 2, tokens.SMALL_H / 2)

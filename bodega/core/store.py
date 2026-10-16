@@ -127,13 +127,11 @@ class Library:
         # id): still in memory, tried again by save_again(). on_unsaved is told the moment a write fails.
         self.unsaved: set[str] = set()
         self.on_unsaved: Callable[[], None] | None = None
-        self.why_unsaved: tuple[str, str] | None = (
-            None  # the computer's reason, in plain words (errors.reason)
-        )
+        self.why_unsaved: tuple[str, str] | None = None  # the computer's reason, in plain words (errors.reason)
         self.newer_format = False
         self._as_saved: dict[str, tuple[str, str]] = {}  # each rental's status and number when last saved
 
-    # ------------------------------------------------------------------ files
+    # Files
     @property
     def _rental_dir(self) -> Path:
         return self.root / "rentals"
@@ -315,9 +313,7 @@ class Library:
         self._write("renters", self.root / "clients.json", [c.to_dict() for c in clients])
 
     def save_businesses(self) -> None:
-        self._write(
-            "profiles", self.root / "businesses.json", [b.to_dict() for b in self.businesses.values()]
-        )
+        self._write("profiles", self.root / "businesses.json", [b.to_dict() for b in self.businesses.values()])
 
     def save_rental(self, r: Rental) -> None:
         from bodega.core import pricing
@@ -350,8 +346,8 @@ class Library:
         self.settings["format"] = max(FORMAT, newer)  # never says older than what wrote the folder
         self._write("settings", self.root / "settings.json", self.settings)
 
-    # ------------------------------------------------------------------ gear
-    # ------------------------------------------------------------------ groups
+    # Gear
+    # Groups
     # Groups (Cameras, Lenses, Grip…) are how gear is organised: one per piece. Their order is saved in
     # settings ("group_list"), so you can make empty ones, rename and reorder them. A sheet's departments
     # (Camera, G&E…) are kept on each piece but only used while importing.
@@ -378,9 +374,7 @@ class Library:
         if not new or new == old:
             return
         groups = self.groups()
-        groups = (
-            [g for g in groups if g != old] if new in groups else [new if g == old else g for g in groups]
-        )
+        groups = [g for g in groups if g != old] if new in groups else [new if g == old else g for g in groups]
         for it in self.items.values():
             if it.group == old:
                 it.group = new
@@ -510,7 +504,7 @@ class Library:
             self._save_groups(self.groups())
         return it
 
-    # ------------------------------------------------------------------ operations (one place for each change)
+    # Operations (one place for each change)
     def attach(self, ids: list[str], parent_id: str) -> int:
         """These pieces go with that one: each takes its department and group (and so does what's attached to
         it). A piece can't go with itself or with something attached to it. Saved. Returns how many."""
@@ -568,9 +562,7 @@ class Library:
         r.status = status
         self.save_rental(r)
 
-    def import_items(
-        self, items: list[Item], pricing_found: tuple[str, str] | None, b: Business | None
-    ) -> int:
+    def import_items(self, items: list[Item], pricing_found: tuple[str, str] | None, b: Business | None) -> int:
         """Add what came in from a sheet (a safety copy first). With `pricing_found`, the profile takes the
         sheet's day-rate percent and tax (or, with no profile yet, the next one starts with them). Saved."""
         self.snapshot("before-import")
@@ -641,7 +633,7 @@ class Library:
         added = {item_id: n for n, item_id in enumerate(self.items)}
         return sorted(self.items.values(), key=lambda i: (order.get(i.group, len(order)), added[i.id]))
 
-    # ------------------------------------------------------------------ packages
+    # Packages
     def new_package(self) -> Package:
         p = Package(name="")
         self.packages[p.id] = p
@@ -688,7 +680,7 @@ class Library:
                 changed.add(r.id)
         return changed
 
-    # ------------------------------------------------------------------ profiles
+    # Profiles
     def add_business(self, b: Business) -> Business:
         b.prefix = clean_prefix(b.prefix) or initials(b.name)
         if not b.terms.strip():
@@ -703,7 +695,7 @@ class Library:
         self.businesses.pop(b_id, None)
         self.save_businesses()
 
-    # ------------------------------------------------------------------ renters
+    # Renters
     def save_client(self, c: Client) -> Client:
         """Save a renter; rentals that aren't out the door yet follow the change."""
         c = replace(c)
@@ -722,7 +714,7 @@ class Library:
     def match_client(self, c: Client) -> Client | None:
         return self.clients.get(c.id)
 
-    # ------------------------------------------------------------------ rentals
+    # Rentals
     # A rental number is never given twice: settings "numbers" keeps the last one Bodega gave in each series
     # ("JLF-2026": 7), and a deleted rental's number stays spent. A rental keeps its number once it has one.
     def _spent(self) -> dict[str, int]:
@@ -747,11 +739,7 @@ class Library:
         """The next number free in a series: past every number in use and every one given before."""
         prefix = clean_prefix(prefix)
         pat = re.compile(rf"^{re.escape(prefix)}-{year}-(\d+)$", re.IGNORECASE)
-        used = [
-            int(m.group(1))
-            for r in self.rentals.values()
-            if r.id != skip and (m := pat.match(r.number.strip()))
-        ]
+        used = [int(m.group(1)) for r in self.rentals.values() if r.id != skip and (m := pat.match(r.number.strip()))]
         return max([*used, self._spent().get(f"{prefix}-{year}", 0)]) + 1
 
     def next_number(self, b: Business, year: int, skip: str = "") -> str:
@@ -781,9 +769,7 @@ class Library:
         key = number.strip().casefold()
         if not key:
             return None
-        return next(
-            (r for r in self.rentals.values() if r.id != skip and r.number.strip().casefold() == key), None
-        )
+        return next((r for r in self.rentals.values() if r.id != skip and r.number.strip().casefold() == key), None)
 
     def renumber(self, r: Rental) -> bool:
         """A quote whose number Bodega picked takes its profile's series when its profile changes (the old

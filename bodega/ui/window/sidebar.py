@@ -41,9 +41,7 @@ class SectionHead(QFrame):
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)  # Tab reaches it; Return or Space folds it
         self.setAccessibleName(text)
         self.folded = False
-        self.lay = hbox(
-            self, (tokens.SPACE_2, tokens.SPACE_1, tokens.SPACE_1, tokens.SPACE_1), tokens.SPACE_1
-        )
+        self.lay = hbox(self, (tokens.SPACE_2, tokens.SPACE_1, tokens.SPACE_1, tokens.SPACE_1), tokens.SPACE_1)
         self.label = section_label(text)
         self.chevron = IconLabel("chevron", "FAINT")
         self.lay.addWidget(self.label)
@@ -277,9 +275,7 @@ class Sidebar(LeftPanel):
         from bodega.services import account
 
         lib = self.lib
-        b = lib.businesses.get(settings.value(lib.settings, "business")) or next(
-            iter(lib.businesses.values()), None
-        )
+        b = lib.businesses.get(settings.value(lib.settings, "business")) or next(iter(lib.businesses.values()), None)
         who = account.current()
         name = b.name if b and b.name else "Your Profile"
         if lib.unsaved:
@@ -369,16 +365,12 @@ class Sidebar(LeftPanel):
         out = [r for r in rentals if r.is_out()]
         late = sum(1 for r in out if pricing.late(r))
         # late says so in words, not only in red ("2 late"): color is never the only sign
-        self.rows["out"].set_count(
-            f"{late} late" if late else len(out), "late" if late else ("out" if out else "")
-        )
+        self.rows["out"].set_count(f"{late} late" if late else len(out), "late" if late else ("out" if out else ""))
         self.rows["upcoming"].set_count(sum(1 for r in rentals if pricing.coming_up(r)))
         # folded, All Rentals still shows when something's out (amber) or late (red)
         folded = self.rows["rentals"].folded
         tone = ("late" if late else ("out" if out else "")) if folded else ""
         self.rows["rentals"].set_count(f"{late} late" if late and folded else len(rentals), tone)
         self.select(
-            self.current
-            if self.current in self.rows
-            else ("kits" if self.current.startswith("kit:") else "gear")
+            self.current if self.current in self.rows else ("kits" if self.current.startswith("kit:") else "gear")
         )

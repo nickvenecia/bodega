@@ -139,7 +139,7 @@ class Record:
         return out
 
 
-# ---------------------------------------------------------------------------- gear
+# Gear
 PHOTO_NAME = re.compile(r"[0-9a-f]{16}\.(?:jpg|png)")  # what a photo's file is called (never a path)
 
 
@@ -186,9 +186,7 @@ class Item(Record):
     photo: str = ""  # a file name in the photos folder ("3f9c…a1.jpg"); see PHOTO_NAME
     log: list[LogEntry] = field(default_factory=list)  # maintenance: services, repairs, notes (newest last)
     service_days: int = 0  # remind every this many days after the last service (0: never)
-    imported_as: str = (
-        ""  # the name a spreadsheet gave it, if it came from one (a later import knows it by it)
-    )
+    imported_as: str = ""  # the name a spreadsheet gave it, if it came from one (a later import knows it by it)
     status: str = "ready"  # ready / repair / retired
     extras: list[str] = field(default_factory=list)  # sections added by hand: link, serials, works, notes
     created: str = field(default_factory=now_iso)
@@ -248,7 +246,7 @@ class Package(Record):
         return p
 
 
-# ---------------------------------------------------------------------------- people
+# People
 @dataclass
 class Client(Record):
     """Someone you rent to. Saved once (New Renter…) and picked on every rental."""
@@ -304,7 +302,7 @@ class Business(Record):
         return b
 
 
-# ---------------------------------------------------------------------------- rentals
+# Rentals
 @dataclass
 class RentalLine(Record):
     """One line on a rental: a piece of gear (with what's attached to it), a package, or a flat fee.
@@ -387,9 +385,7 @@ class Rental(Record):
     return_date: str = ""
     billed_days: str = ""  # blank = worked out from the dates
     weekend_deal: bool = True
-    week_days: int = (
-        0  # a week billed as this many days, kept from the profile when booked (0: the profile's)
-    )
+    week_days: int = 0  # a week billed as this many days, kept from the profile when booked (0: the profile's)
     lines: list[RentalLine] = field(default_factory=list)
     discount: str = ""  # percent off the whole rental
     tax_rate: str = ""
@@ -398,16 +394,12 @@ class Rental(Record):
     note: str = ""
     show_serials: bool = True
     show_checks: bool = True  # Out / In boxes beside every line, for checking gear out and back in
-    checks: list[CheckRow] = field(
-        default_factory=list
-    )  # Check Out / Check In: each piece ticked, notes, photos
+    checks: list[CheckRow] = field(default_factory=list)  # Check Out / Check In: each piece ticked, notes, photos
     checked_out: str = ""  # when it was checked out (ISO time)
     checked_in: str = ""  # when it was checked back in
     saldo_invoice: str = ""  # Send to Saldo: the invoice (its id in Saldo) this rental became
     saldo_number: str = ""  # …and its number
-    history: list[RentalEvent] = field(
-        default_factory=list
-    )  # what happened to it, oldest first; only added to
+    history: list[RentalEvent] = field(default_factory=list)  # what happened to it, oldest first; only added to
     created: str = field(default_factory=now_iso)
     updated: str = field(default_factory=now_iso)
     newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record

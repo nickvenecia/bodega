@@ -120,7 +120,7 @@ def file_name(text: str) -> str:
     return re.sub(r"\s+", " ", clean).strip() or "Bodega"
 
 
-# ---------------------------------------------------------------------------- the rental agreement
+# The rental agreement
 def rental_title(r: Rental) -> str:
     return "Rental Quote" if r.status == "quote" else "Rental Agreement"
 
@@ -208,11 +208,7 @@ def build_rental(lib, r: Rental, b: Business | None) -> DocView:
     if t.mixed:
         # one block per date range, so what goes out together is checked out together
         for a, z in pricing.periods(r):
-            these = [
-                (ln, amt, d)
-                for ln, amt, d in pairs
-                if ln.kind != "fee" and pricing.line_dates(r, ln) == (a, z)
-            ]
+            these = [(ln, amt, d) for ln, amt, d in pairs if ln.kind != "fee" and pricing.line_dates(r, ln) == (a, z)]
             if not these:
                 continue
             d = these[0][2]
@@ -253,9 +249,7 @@ def build_rental(lib, r: Rental, b: Business | None) -> DocView:
     text = r.terms if r.terms.strip() else (terms_for(b) if b else "")
     v.paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
     if r.status == "quote":
-        v.paragraphs.insert(
-            0, "Quote. Prices hold for 14 days. The gear is held for you once the rental is booked."
-        )
+        v.paragraphs.insert(0, "Quote. Prices hold for 14 days. The gear is held for you once the rental is booked.")
     v.signatures = r.status != "quote"
     v.note = r.note.strip()
     v.footer = b.name if b else ""
@@ -267,7 +261,7 @@ def rental_stem(r: Rental) -> str:
     return file_name(f"{r.number} {who}" if who else r.number)
 
 
-# ---------------------------------------------------------------------------- the inventory list
+# The inventory list
 def _tree(lib, items: list[Item]) -> list[tuple[Item, int]]:
     """Top-level items in order, each followed by what's attached to it (depth 1, 2…)."""
     keep = {i.id for i in items}
@@ -295,9 +289,7 @@ def _grouped(lib, items: list[Item]):
     return sections
 
 
-def build_inventory(
-    lib, items: list[Item], b: Business | None, title: str = "Equipment Inventory"
-) -> DocView:
+def build_inventory(lib, items: list[Item], b: Business | None, title: str = "Equipment Inventory") -> DocView:
     cur = _cur(b)
     items = [i for i in items if i.status != "retired"]
     v = DocView(kind="inventory", title=title)
@@ -358,7 +350,7 @@ def build_inventory(
     return v
 
 
-# ---------------------------------------------------------------------------- the rate card
+# The rate card
 def build_ratecard(lib, items: list[Item], packages: list[Package], b: Business | None) -> DocView:
     cur = _cur(b)
     wd = b.week_days if b else 7
@@ -381,9 +373,7 @@ def build_ratecard(lib, items: list[Item], packages: list[Package], b: Business 
             table.rows.append(
                 Row([p.name or "Kit", money.fmt_short(rate, cur), money.fmt_short(rate * wd, cur)], "package", 0, names)
             )  # fmt: skip
-    shown = [
-        i for i in items if i.rentable and i.status != "retired" and not (i.parent and i.parent in lib.items)
-    ]
+    shown = [i for i in items if i.rentable and i.status != "retired" and not (i.parent and i.parent in lib.items)]
     last_dep = None
     for dep, group, rows in _grouped(lib, shown):
         if dep != last_dep:
@@ -412,7 +402,7 @@ def build_ratecard(lib, items: list[Item], packages: list[Package], b: Business 
     return v
 
 
-# ---------------------------------------------------------------------------- one package
+# One package
 def build_package(lib, p: Package, b: Business | None) -> DocView:
     cur = _cur(b)
     wd = b.week_days if b else 7
@@ -451,7 +441,7 @@ def build_package(lib, p: Package, b: Business | None) -> DocView:
     return v
 
 
-# ---------------------------------------------------------------------------- as text
+# As text
 def summary_text(lib, r: Rental, b: Business | None) -> str:
     """For pasting into an email."""
     cur = _cur(b)
@@ -479,7 +469,7 @@ def summary_text(lib, r: Rental, b: Business | None) -> str:
     return "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------- labels
+# Labels
 def build_labels(items: list[Item], b: Business | None) -> DocView:
     """A sticker for every unit (retired gear left out), with a QR code a scanner reads back as the piece."""
     v = DocView(kind="labels", title="Labels", business=b.name if b else "")

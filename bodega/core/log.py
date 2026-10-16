@@ -53,9 +53,7 @@ def setup_logging(level: int = logging.INFO, filename: str = "bodega.log") -> No
     stream = sys.stderr
     if stream is not None and hasattr(stream, "isatty") and stream.isatty():
         console = logging.StreamHandler(stream)
-        console.setFormatter(
-            logging.Formatter("%(asctime)s %(levelname)-7s %(name)s: %(message)s", "%H:%M:%S")
-        )
+        console.setFormatter(logging.Formatter("%(asctime)s %(levelname)-7s %(name)s: %(message)s", "%H:%M:%S"))
         root.addHandler(console)
 
 

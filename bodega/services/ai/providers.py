@@ -141,7 +141,7 @@ def save_key(provider: str, key: str) -> None:
     secrets.put(secret_name(provider), key.strip())
 
 
-# ---------------------------------------------------------------- the address
+# The address
 def check_address(url: str) -> str:
     """The provider's address, checked: https to anywhere, or http only to this computer (a local model).
     Returns it without a trailing /. Raises AIError."""
@@ -167,7 +167,7 @@ def _local(host: str) -> bool:
         return False
 
 
-# ---------------------------------------------------------------- talking to it
+# Talking to it
 def _headers(setup: Setup, key: str) -> dict[str, str]:
     h = {"Content-Type": "application/json", "User-Agent": f"Bodega/{__version__}"}
     if setup.p and setup.p.kind == "anthropic":
@@ -186,9 +186,7 @@ def _call(setup: Setup, path: str, body: dict | None = None, key: str | None = N
     if setup.p and setup.p.needs_key and not key:
         raise AIError("Add your API key first.")
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(
-        base + path, data=data, headers=_headers(setup, key), method="POST" if body else "GET"
-    )
+    req = urllib.request.Request(base + path, data=data, headers=_headers(setup, key), method="POST" if body else "GET")
     try:
         with web.open_no_redirect(req, TIMEOUT_S, direct=_local(urlparse(base).hostname or "")) as r:
             raw = r.read(MAX_ANSWER_BYTES + 1)
@@ -197,9 +195,7 @@ def _call(setup: Setup, path: str, body: dict | None = None, key: str | None = N
         raise AIError(_why(e.code, detail), e.code) from None
     except Exception as e:  # no internet, timeouts, TLS problems…
         log.info("AI request to %s failed: %s", urlparse(base).hostname, type(e).__name__)
-        raise AIError(
-            f"Couldn't reach {setup.p.label if setup.p else 'the provider'}. Check your internet."
-        ) from None
+        raise AIError(f"Couldn't reach {setup.p.label if setup.p else 'the provider'}. Check your internet.") from None
     if len(raw) > MAX_ANSWER_BYTES:
         raise AIError("The answer was too long.")
     try:
@@ -281,9 +277,7 @@ def _ask(setup: Setup, system: str, user: str, key: str | None) -> str:
             key=key,
         )  # fmt: skip
         parts = d.get("content") if isinstance(d, dict) else None
-        text = "".join(
-            p.get("text", "") for p in parts or [] if isinstance(p, dict) and p.get("type") == "text"
-        )
+        text = "".join(p.get("text", "") for p in parts or [] if isinstance(p, dict) and p.get("type") == "text")
     else:
         body = {"model": setup.model, "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}  # fmt: skip
         cap = CAP_NAMES[1] if setup.provider in COMPLETION_CAP else CAP_NAMES[0]
@@ -324,7 +318,5 @@ def ask_json(setup: Setup, system: str, user: str):
     """Ask for JSON and read it."""
     got = read_json(ask(setup, system + "\n\nAnswer with JSON only, no other words.", user))
     if got is None:
-        raise AIError(
-            "The model's answer wasn't in the shape Bodega asked for. Try again, or pick another model."
-        )
+        raise AIError("The model's answer wasn't in the shape Bodega asked for. Try again, or pick another model.")
     return got

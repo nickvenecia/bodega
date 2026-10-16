@@ -190,7 +190,7 @@ class Dock(QWidget):
         self._anim.finished.connect(self._done)
         root.installEventFilter(self)
 
-    # ------------------------------------------------------------------ where it goes
+    # Where it goes
     def _rest(self) -> QRect:
         """Where it sits when open."""
         gap = tokens.GLASS_GAP
@@ -233,7 +233,7 @@ class Dock(QWidget):
         self.target = width
         self._place()
 
-    # ------------------------------------------------------------------ opening and closing
+    # Opening and closing
     def after_close(self, fn) -> None:
         """Run `fn` once the dock is out of sight (now, if it is); dropped if it opens again first."""
         if self.isVisible():
@@ -254,9 +254,7 @@ class Dock(QWidget):
             self.show()
             self.raise_()
         start, end = self._t, (1.0 if on else 0.0)
-        if (
-            not animate or not self.root.isVisible() or access.reduce_motion()
-        ):  # Reduce Motion: it's simply there
+        if not animate or not self.root.isVisible() or access.reduce_motion():  # Reduce Motion: it's simply there
             self._at(end)
             self._done()
             return
@@ -286,7 +284,7 @@ class Dock(QWidget):
             for fn in after:
                 fn()
 
-    # ------------------------------------------------------------------ drawing
+    # Drawing
     def _sheet(self) -> QPixmap:
         """The glass sheet as it looks in place (with the window's gradient and shadow at its corners),
         drawn once per size and look, then just copied at every step of the slide."""

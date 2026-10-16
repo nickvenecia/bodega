@@ -74,7 +74,7 @@ def valid_email(email: str) -> bool:
     return bool(EMAIL_OK.match(email.strip()))
 
 
-# ---------------------------------------------------------------- the signed-in session
+# The signed-in session
 def current() -> Session | None:
     """Who's signed in (the token from the keychain), or None."""
     raw = secrets.get(KEYCHAIN_ENTRY)

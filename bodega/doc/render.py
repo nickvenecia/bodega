@@ -40,7 +40,7 @@ PHOTO_DPI = 300  # how sharp the photo is on paper (it's scaled to this first, s
 LOGO_H = 40.0
 
 
-# ---------------------------------------------------------------------------- drawing steps
+# Drawing steps
 @dataclass
 class Text:
     rect: QRectF
@@ -98,7 +98,7 @@ class Page:
     paper: str = WHITE_PAPER
 
 
-# ---------------------------------------------------------------------------- logo files
+# Logo files
 @lru_cache(maxsize=16)
 def _clean_svg(path: str, mtime: float) -> bytes | None:
     from bodega.core import svg
@@ -155,9 +155,7 @@ def _photo_image(path: str, mtime: float, px: int) -> QImage:
         return img
     side = min(img.width(), img.height())
     img = img.copy((img.width() - side) // 2, (img.height() - side) // 2, side, side)
-    return img.scaled(
-        px, px, Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation
-    )
+    return img.scaled(px, px, Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation)
 
 
 def _draw_photo(p: QPainter, step: Photo) -> None:
@@ -184,9 +182,7 @@ def _draw_qr(p: QPainter, step: QR) -> None:
         return
     cell = step.rect.width() / n
     p.save()
-    p.setRenderHint(
-        QPainter.RenderHint.Antialiasing, False
-    )  # no hairline seams between squares (scanners mind)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing, False)  # no hairline seams between squares (scanners mind)
     p.setPen(Qt.PenStyle.NoPen)
     p.setBrush(QColor("#000000"))
     for r, row in enumerate(step.modules):
@@ -197,9 +193,7 @@ def _draw_qr(p: QPainter, step: QR) -> None:
                 while c < n and row[c]:
                     c += 1
                 p.drawRect(
-                    QRectF(
-                        step.rect.left() + start * cell, step.rect.top() + r * cell, (c - start) * cell, cell
-                    )
+                    QRectF(step.rect.left() + start * cell, step.rect.top() + r * cell, (c - start) * cell, cell)
                 )
             else:
                 c += 1
@@ -221,7 +215,7 @@ def photo_path(name: str) -> Path | None:
     return path if path.is_file() else None
 
 
-# ---------------------------------------------------------------------------- measuring
+# Measuring
 def text_h(text: str, spec: FontSpec, width: float) -> float:
     if not text:
         return 0.0
@@ -283,7 +277,7 @@ class _Pages:
         self.steps.append(Line(QPointF(x1, y), QPointF(x2, y), width, color))
 
 
-# ---------------------------------------------------------------------------- the layout
+# The layout
 SEMIBOLD, BOLD = 600, 700  # the paper's two heavier weights
 TIGHT = -0.01  # letter spacing for big figures and names
 
@@ -307,9 +301,7 @@ class _Fonts:
         self.para_lead = FontSpec(FONT, 7.8, SEMIBOLD)
 
 
-def layout(
-    v: DocView, pal: Palette, logo: Path | None = None, size: tuple[float, float] = LETTER
-) -> list[Page]:
+def layout(v: DocView, pal: Palette, logo: Path | None = None, size: tuple[float, float] = LETTER) -> list[Page]:
     if v.labels:
         return _label_sheets(v, pal, size)
     W, _H = size
@@ -374,9 +366,7 @@ def _label_sheets(v: DocView, pal: Palette, size: tuple[float, float]) -> list[P
     return pages
 
 
-def _header(
-    out: _Pages, v: DocView, pal: Palette, F: _Fonts, logo: Path | None, x0: float, cw: float
-) -> None:
+def _header(out: _Pages, v: DocView, pal: Palette, F: _Fonts, logo: Path | None, x0: float, cw: float) -> None:
     right_w = 210.0
     left_w = cw - right_w - 20
     y = out.y
@@ -680,7 +670,7 @@ def _footers(out: _Pages, v: DocView, pal: Palette, F: _Fonts, x0: float, cw: fl
         )
 
 
-# ---------------------------------------------------------------------------- painting
+# Painting
 def paint(p: QPainter, page: Page) -> None:
     W, H = page.size
     p.save()

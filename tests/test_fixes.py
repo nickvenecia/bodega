@@ -28,12 +28,10 @@ def win(qapp, data_folder):
 
 
 def _totals(lib):
-    return {
-        r.id: pricing.totals(lib, r, lib.businesses.get(r.business_id)).total for r in lib.rentals.values()
-    }
+    return {r.id: pricing.totals(lib, r, lib.businesses.get(r.business_id)).total for r in lib.rentals.values()}
 
 
-# ---------------------------------------------------------------- core
+# Core
 def test_deleting_gear_or_kits_keeps_rental_prices(lib):
     before = _totals(lib)
     for r in list(lib.rentals.values()):
@@ -104,7 +102,7 @@ def test_belongs_to_loops_are_broken(data_folder):
     assert not (a.parent and b.parent)
 
 
-# ---------------------------------------------------------------- window
+# Window
 def test_emptied_group_goes_back_to_all_gear(win):
     it = next(iter(win.lib.items.values()))
     win.lib.put_in_group([it.id], "Solo")

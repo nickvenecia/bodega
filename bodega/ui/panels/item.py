@@ -189,9 +189,7 @@ class ItemPanel(DetailsBase):
         self.photo.hide()
         lay.addWidget(self.photo)
         self._photo_job: Worker | None = None
-        self.earned: dict | None = (
-            None  # what the gear list worked out on its last fill (None: work it out here)
-        )
+        self.earned: dict | None = None  # what the gear list worked out on its last fill (None: work it out here)
         self.setAcceptDrops(True)  # drop a picture anywhere on the panel (a file, or one out of a browser)
 
         # what it is
@@ -225,9 +223,7 @@ class ItemPanel(DetailsBase):
         sec = Section("Status")
         self.status = combo([(k, STATUS_LABELS[k], "") for k in ITEM_STATUSES], "ready")
         self.status.setItemData(1, "Not available to rent until it's back", Qt.ItemDataRole.ToolTipRole)
-        self.status.setItemData(
-            2, "Sold, lost or broken for good: left off the inventory", Qt.ItemDataRole.ToolTipRole
-        )
+        self.status.setItemData(2, "Sold, lost or broken for good: left off the inventory", Qt.ItemDataRole.ToolTipRole)
         sec.add(self.status)
         row.addWidget(sec, 1)
         b.add(row)
@@ -262,9 +258,7 @@ class ItemPanel(DetailsBase):
             self.sum_rows[key] = (k, v)
         b.add(self.sums)
         self.rentable = ToggleRow("For Rent", True)
-        self.rentable.setToolTip(
-            "Off for gear you keep for yourself: it's left off rentals and the rate card"
-        )
+        self.rentable.setToolTip("Off for gear you keep for yourself: it's left off rentals and the rate card")
         b.add(self.rentable)
 
         # the parts you add
@@ -386,7 +380,7 @@ class ItemPanel(DetailsBase):
         c.setFilterMode(Qt.MatchFlag.MatchContains)
         return suggestions(c)
 
-    # ------------------------------------------------------------------ wiring
+    # Wiring
     def _connect(self) -> None:
         self.name.textEdited.connect(lambda t: self._set("name", t))
         self.brand.textEdited.connect(lambda t: self._set("brand", t.strip()))
@@ -394,20 +388,12 @@ class ItemPanel(DetailsBase):
         self.series.textEdited.connect(lambda t: self._set("series", t.strip()))
         self.group.activated.connect(lambda _i: self._group_picked())
         self.qty.valueChanged.connect(self._qty_changed)
-        self.status.currentIndexChanged.connect(
-            lambda _i: self._set("status", self.status.currentData(), True)
-        )
+        self.status.currentIndexChanged.connect(lambda _i: self._set("status", self.status.currentData(), True))
         self.attach.clicked.connect(lambda: self.it and self.attach_wanted.emit(self.it.id))
-        self.value.textEdited.connect(
-            lambda t: self._set("value", t.replace("$", "").replace(",", "").strip())
-        )
-        self.rate.textEdited.connect(
-            lambda t: self._set("day_rate", t.replace("$", "").replace(",", "").strip())
-        )
+        self.value.textEdited.connect(lambda t: self._set("value", t.replace("$", "").replace(",", "").strip()))
+        self.rate.textEdited.connect(lambda t: self._set("day_rate", t.replace("$", "").replace(",", "").strip()))
         self.rentable.toggled.connect(lambda on: self._set("rentable", on, True))
-        self.link.textEdited.connect(
-            lambda t: (self._set("link", t.strip()), self._parts(), self._link_state())
-        )
+        self.link.textEdited.connect(lambda t: (self._set("link", t.strip()), self._parts(), self._link_state()))
         self.open_link.clicked.connect(self._open_link)
         self.check_price.clicked.connect(self._check_price)
         self.use_price.clicked.connect(self._use_price)
@@ -457,7 +443,7 @@ class ItemPanel(DetailsBase):
         self.changed.emit(self.it)
         self.structure_changed.emit()
 
-    # ------------------------------------------------------------------ the parts you add
+    # The parts you add
     def _has(self, key: str) -> bool:
         """Whether a part has anything in it."""
         it = self.it
@@ -516,7 +502,7 @@ class ItemPanel(DetailsBase):
         self._parts()
         self.changed.emit(it)
 
-    # ------------------------------------------------------------------ link + price
+    # Link + price
     def _open_link(self) -> None:
         url = web.web_link(self.link.text())
         if url:  # only web pages open: never file://, smb:// or an app's own links
@@ -580,7 +566,7 @@ class ItemPanel(DetailsBase):
         self._set("value", self._found_price)
         self._show_price(self.price_found.text() + " · same as yours")
 
-    # ------------------------------------------------------------------ maintenance
+    # Maintenance
     def _show_care(self) -> None:
         it = self.it
         if it is None:
@@ -631,9 +617,7 @@ class ItemPanel(DetailsBase):
         if it is None or not (text or self.log_kind.currentData() == "service"):
             return
         it.log.append(
-            LogEntry(
-                from_qdate(self.log_date.date()), self.log_kind.currentData(), text, self.log_cost.value()
-            )
+            LogEntry(from_qdate(self.log_date.date()), self.log_kind.currentData(), text, self.log_cost.value())
         )
         it.log.sort(key=lambda e: e.date)
         self.log_text.clear()
@@ -651,7 +635,7 @@ class ItemPanel(DetailsBase):
         self._parts()
         self.changed.emit(it)
 
-    # ------------------------------------------------------------------ photo
+    # Photo
     def _show_photo(self) -> None:
         it = self.it
         name = it.photo if it is not None and photos.path_of(it.photo) else ""
@@ -764,7 +748,7 @@ class ItemPanel(DetailsBase):
         if self._take_picture(e.mimeData(), links=True):
             e.acceptProposedAction()
 
-    # ------------------------------------------------------------------ loading
+    # Loading
     def b(self):
         return self.lib.pricing()
 
@@ -888,9 +872,7 @@ class ItemPanel(DetailsBase):
         more = icon_button("more", "Open or remove")
         more.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         m = QMenu(more)
-        m.addAction(
-            theme.menu_icon("edit"), "Open", lambda k=other.id: self.later(lambda: self.open_item.emit(k))
-        )
+        m.addAction(theme.menu_icon("edit"), "Open", lambda k=other.id: self.later(lambda: self.open_item.emit(k)))
         loose = self.it.id if parent_row else other.id  # the one that stops going with the other
         m.addAction(
             theme.menu_icon("unlink"),
@@ -1043,9 +1025,7 @@ class PriceCheck(QThread):
             got = prices.fetch(self.url)
         except web.Refused:
             site = web.site_name(self.url) or "That store"
-            self.done.emit(
-                self.item_id, "", "", f"{site} won't let Bodega read its price. Open the link instead."
-            )
+            self.done.emit(self.item_id, "", "", f"{site} won't let Bodega read its price. Open the link instead.")
             return
         except OSError as e:
             self.done.emit(self.item_id, "", "", errors.plain(e, "check the price"))

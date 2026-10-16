@@ -43,9 +43,7 @@ def keep(data: bytes) -> str:
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation,
         )
-    clear = img.hasAlphaChannel() and not _solid(
-        img
-    )  # a cut-out product shot keeps its see-through background
+    clear = img.hasAlphaChannel() and not _solid(img)  # a cut-out product shot keeps its see-through background
     name = f"{hashlib.sha256(data).hexdigest()[:16]}.{'png' if clear else 'jpg'}"
     folder = photos_dir()
     folder.mkdir(parents=True, exist_ok=True)
@@ -128,7 +126,7 @@ def from_any_link(link: str) -> str:
         raise OSError(str(e)) from e
 
 
-# ---------------------------------------------------------------- pasted or dropped
+# Pasted or dropped
 def picture_file(mime: QMimeData) -> Path | None:
     """A picture file among what was copied or dropped (from Finder, Explorer, the desktop)."""
     for url in mime.urls() if mime.hasUrls() else []:

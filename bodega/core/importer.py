@@ -138,11 +138,7 @@ def guess_brand(name: str, common: set[str] | None = None) -> str:
         return ""
     if common and first.lower() in common:
         return first
-    if (
-        re.fullmatch(r"[A-Z]{3,}", first)
-        or re.search(r"[a-z][A-Z]", first)
-        or re.match(r"^\d+[A-Za-z]{3,}$", first)
-    ):
+    if re.fullmatch(r"[A-Z]{3,}", first) or re.search(r"[a-z][A-Z]", first) or re.match(r"^\d+[A-Za-z]{3,}$", first):
         return first  # SHAPE, CAMVATE, SmallRig, LightBridge, 8Sinn
     return ""
 
@@ -245,7 +241,7 @@ def _value_text(d: Decimal | None) -> str:
     return f"{d:f}".rstrip("0").rstrip(".") if "." in f"{d:f}" else f"{d:f}"
 
 
-# ---------------------------------------------------------------------------- reading rows
+# Reading rows
 _HYPERLINK = re.compile(r'^=\s*HYPERLINK\(\s*"([^"]+)"\s*(?:[,;]\s*"([^"]*)"\s*)?\)\s*$', re.I)
 
 
@@ -259,7 +255,7 @@ def _hyperlink_formula(value) -> tuple[str, str] | None:
     return m.group(1), m.group(2) if m.group(2) is not None else m.group(1)
 
 
-# ---------------------------------------------------------------------------- Google Sheets
+# Google Sheets
 GOOGLE_SHEET = re.compile(r"docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]{20,})")
 
 
@@ -579,9 +575,7 @@ def parse_rows(
                 out.sheet_total = Decimal(str(value))  # kept, to check what was read against it
             continue
         # a heading in the name column ("1000c", "Steel", or "Post" under a repeated header row)
-        others_empty = (
-            qty is None and value is None and not _clean(get("serials")) and not _clean(get("link"))
-        )
+        others_empty = qty is None and value is None and not _clean(get("serials")) and not _clean(get("link"))
         if others_empty:
             known = DEPARTMENTS.get(low)
             if known:
@@ -629,7 +623,7 @@ def parse_rows(
     return out
 
 
-# ---------------------------------------------------------------------------- attaching
+# Attaching
 _GENERIC = {
     "for", "with", "and", "the", "a", "an", "of", "to", "kit", "set", "case", "cable", "cables", "mount",
     "black", "silver", "white", "gray", "grey", "space", "pro", "plus", "mini", "series", "system",
@@ -718,7 +712,7 @@ def attach_guesses(items: list[Item]) -> int:
     return count
 
 
-# ---------------------------------------------------------------------------- CSV out
+# CSV out
 CSV_COLUMNS = [
     "Department", "Group", "Name", "Company", "Series", "Qty", "Serial Numbers", "Unit Value", "Day Rate", "Rentable",
     "Belongs To", "Status", "Link", "Notes",

@@ -121,7 +121,7 @@ class FilterButton(QToolButton):
         self.setMenu(self.m)
         self.show_state()
 
-    # ------------------------------------------------------------------ state
+    # State
     def set_divide(self, key: str, default: str) -> None:
         self.divide, self.default_divide = key, default
 
@@ -159,7 +159,7 @@ class FilterButton(QToolButton):
         self.show_state()
         self.changed.emit()
 
-    # ------------------------------------------------------------------ the menu
+    # The menu
     def _heading(self, text: str) -> None:
         label = QLabel(text)
         label.setObjectName("MenuHeading")

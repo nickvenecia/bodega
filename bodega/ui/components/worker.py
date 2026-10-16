@@ -33,9 +33,7 @@ class Worker(QThread):
     def run(self) -> None:
         try:
             result = self.job(lambda n, total: self.progress.emit(n, total), self.cancel)
-        except (
-            Exception
-        ) as e:  # plain words: Bodega's own, the computer's translated, or a reference to the log
+        except Exception as e:  # plain words: Bodega's own, the computer's translated, or a reference to the log
             self.failed.emit(errors.plain(e, self.doing))
             return
         self.done.emit(result)

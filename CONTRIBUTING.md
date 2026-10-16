@@ -35,7 +35,7 @@ packaging/     Installer files per OS
   ```bash
   ruff format . && ruff check . && python -m pytest -q
   ```
-  CI fails if any of the three fails. Settings are in `pyproject.toml` (line length 110).
+  CI fails if any of the three fails. Settings are in `pyproject.toml` (line length 120, the standard's).
 - Type hints on every function signature. Prefer `X | None` and built-in generics (`list[str]`).
 - Names: `snake_case` functions/variables, `PascalCase` classes, `UPPER_CASE` constants,
   `_leading_underscore` for anything private to a module.
@@ -97,9 +97,17 @@ packaging/     Installer files per OS
 ## 4. Threads
 
 - Anything that waits on the internet or may take more than a moment runs off the main thread and talks to the
-  window with **signals**: `ui/components/worker.py` (`Worker`: AI jobs, photos from links, with progress and
-  Stop), the update check and download (`ui/dialogs/update.py`), Check Price (`ui/panels/item.py`). Drawing a page
-  takes milliseconds; keep it that way.
+  window with **signals**, almost always through `ui/components/worker.py` (`Worker`, with progress and Stop).
+  Today that's:
+  - the Assistant's jobs and questions (`ui/window/ai.py`, `ui/panels/assistant.py`) and the list of models in AI
+    Settings (`ui/dialogs/ai_setup.py`);
+  - photos from links: one piece's (`ui/panels/item.py`) and every piece's (`ui/window/transfer.py`);
+  - opening a Google Sheet, backing up and restoring (`_run_transfer` in `ui/window/transfer.py`, one at a time);
+  - Check Price (`PriceCheck` in `ui/panels/item.py`);
+  - the update check and download (`ui/dialogs/update.py`).
+- A result that comes back late checks the window still shows what it was for (the same piece, still open) before
+  it touches anything. Quitting while one runs asks first (Stop and Quit), and waits for it at most QUIT_WAIT_MS.
+- Drawing a page takes milliseconds; keep it that way.
 
 ---
 

@@ -138,9 +138,7 @@ class GroupsMixin:
     def new_group(self) -> None:
         from bodega.ui.dialogs.common import ask_name
 
-        name = ask_name(
-            self, "New Group", "Add", placeholder="Cases, Lights, Media…", known=self.lib.groups()
-        )
+        name = ask_name(self, "New Group", "Add", placeholder="Cases, Lights, Media…", known=self.lib.groups())
         if name:
             self.lib.add_group(name)
             self._groups_edited()
@@ -190,6 +188,4 @@ class GroupsMixin:
             return
         self.lib.snapshot("before-tidy")
         n = self.lib.apply_groups(tidy.suggest(self.lib.items))
-        self._groups_edited(
-            f"Tidied {words.count(n, 'piece')} into {words.count(len(self.lib.groups()), 'group')}."
-        )
+        self._groups_edited(f"Tidied {words.count(n, 'piece')} into {words.count(len(self.lib.groups()), 'group')}.")

@@ -51,9 +51,7 @@ def clean(data: bytes) -> bytes:
     except UnicodeDecodeError as e:
         raise NotALogo("That file isn't an SVG Bodega can read. Use a PNG, JPG or SVG file.") from e
     if re.search(r"<!\s*(DOCTYPE|ENTITY)", text, re.IGNORECASE):
-        raise NotALogo(
-            "That SVG asks to read other files, so Bodega won't use it. Save it as a PNG and use that."
-        )
+        raise NotALogo("That SVG asks to read other files, so Bodega won't use it. Save it as a PNG and use that.")
     try:
         root = fromstring(text, forbid_dtd=True)
     except (ET.ParseError, DefusedXmlException) as e:

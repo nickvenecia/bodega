@@ -188,9 +188,7 @@ def test_tidy_up_groups_suggests_the_usual_names(tmp_path):
     odd = lib.add_item(Item(name="Mystery Thing", group="Steel"))
     new = tidy.suggest(lib.items)
     assert new[card.id] == "Media" and new[light.id] == new[fres.id] == "Lights"
-    assert (
-        new[case.id] == "Cases & Carts" and new[odd.id] == "Grip"
-    )  # by the old name when the name says nothing
+    assert new[case.id] == "Cases & Carts" and new[odd.id] == "Grip"  # by the old name when the name says nothing
     assert lib.apply_groups(new) == 5
     assert lib.groups() == ["Media", "Lights", "Grip", "Cases & Carts"]  # in the tidy order
 
@@ -202,14 +200,10 @@ def test_your_order_and_companies(tmp_path):
     a = lib.add_item(Item(name="Aputure STORM 80c", department="G&E", group="Lights"))
     b = lib.add_item(Item(name="amaran PT4c", department="G&E", group="Lights"))
     c = lib.add_item(Item(name="Matthews C-Stand", department="G&E", group="Steel"))
-    assert (
-        lib.guess_brands() == 3 and a.brand == "Aputure" and lib.brands() == ["amaran", "Aputure", "Matthews"]
-    )
+    assert lib.guess_brands() == 3 and a.brand == "Aputure" and lib.brands() == ["amaran", "Aputure", "Matthews"]
     lib.reorder_items([b.id], a.id)
     assert [i.name for i in lib.ordered_items()][:2] == ["amaran PT4c", "Aputure STORM 80c"]
     lib.reorder_items([c.id], a.id, after=True)  # next to a light: into Lights
     assert c.group == "Lights" and [i.id for i in lib.ordered_items()] == [b.id, a.id, c.id]
     again = Library(tmp_path).load()
-    assert [i.id for i in again.ordered_items()] == [b.id, a.id, c.id] and again.items[
-        a.id
-    ].brand == "Aputure"
+    assert [i.id for i in again.ordered_items()] == [b.id, a.id, c.id] and again.items[a.id].brand == "Aputure"

@@ -41,9 +41,7 @@ def test_an_svg_with_a_doctype_is_refused():
         svg.clean(bomb.encode())
 
 
-@pytest.mark.parametrize(
-    "data", [b"\xff\xfe not text", b"<html></html>", b"<svg", b"x" * (svg.MAX_BYTES + 1)]
-)
+@pytest.mark.parametrize("data", [b"\xff\xfe not text", b"<html></html>", b"<svg", b"x" * (svg.MAX_BYTES + 1)])
 def test_something_that_isnt_a_usable_svg_is_said_plainly(data):
     with pytest.raises(svg.NotALogo):
         svg.clean(data)

@@ -145,7 +145,7 @@ class AssistantPanel(SidePanel):
         size = tokens.ASSISTANT_ICON_BIG
         self.face.setPixmap(theme.icon("assistant", theme.ACCENT, size).pixmap(size, size))
 
-    # ------------------------------------------------------------------ state
+    # State
     def show_setup(self, setup: Setup, scope: str) -> None:
         ready = setup.ready()
         self.connect_btn.setVisible(not ready)
@@ -199,7 +199,7 @@ class AssistantPanel(SidePanel):
             self.worker.stop()
             self.worker.wait(tokens.QUIT_WAIT_MS)
 
-    # ------------------------------------------------------------------ questions
+    # Questions
     def _suggest(self, question: str) -> None:
         self.question.setText(question)
         self.question.setFocus()

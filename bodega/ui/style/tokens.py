@@ -6,7 +6,7 @@ that isn't here, add a token (and document it in DESIGN.md) instead of typing a 
 
 from __future__ import annotations
 
-# ---------------------------------------------------------------- spacing (4-pt grid)
+# Spacing (4-pt grid)
 SPACE_1 = 4  # tight: a label and its control, an icon and its text
 SPACE_2 = 8  # related items: buttons in a row, cards in the list, options in a stack
 SPACE_3 = 12  # between groups (sections) inside a panel
@@ -16,7 +16,7 @@ SPACE_1_5 = 6  # Apple's half-steps, for small insets only: a menu's inset…
 SPACE_2_5 = 10  # …a sidebar or menu row's padding
 SPACE_0_5 = 2  # the hairline gaps: a key cap's top and bottom, a number under a name
 
-# ---------------------------------------------------------------- control sizes (the standard's A.5, pointer)
+# Control sizes (the standard's A.5, pointer)
 CONTROL_H = 28  # (control-h) EVERY button, dropdown, text field, segmented control and icon circle
 SMALL_H = 20  # (control-sm) chips, token buttons, small icon buttons
 TARGET_MIN = 24  # a small target inside a row that's clickable too: never less (WCAG 2.5.8's 24-point circle)
@@ -46,14 +46,14 @@ MENU_MIN_W = 210  # (menu-min-w) a menu's narrowest; it grows to its longest row
 MENU_ROWS = 8  # (menu-rows) rows a dropdown list shows before it scrolls
 MONOGRAM = 38  # the profile card's initials circle
 
-# ---------------------------------------------------------------- corner radius (the standard's scale)
+# Corner radius (the standard's scale)
 RADIUS_XS = 4  # (radius-xs) a checkbox's box, a key cap
 RADIUS_SM = 8  # (radius-sm) rows in a menu or list, focus outlines, small buttons
 RADIUS = 10  # (radius-md) fields, wells, notes
 RADIUS_LG = 14  # (radius-lg) cards, menus, dropdown lists, grouped cards
 RADIUS_XL = 18  # (radius-xl) sheets, panels with grouped content
 
-# ---------------------------------------------------------------- type: Apple's macOS text styles (A.4, pointer)
+# Type: Apple's macOS text styles (A.4, pointer)
 TEXT_LARGE_TITLE = 26  # Large Title: a page's title (All Gear, Lights), Bold
 TEXT_TITLE1 = 22  # Title 1: a record's name, Bold
 TEXT_TITLE2 = 17  # Title 2: dialog titles, an empty page's headline
@@ -79,7 +79,7 @@ WEIGHT_MEDIUM = 500  # controls
 WEIGHT_SEMIBOLD = 600  # titles, labels, primary button
 WEIGHT_BOLD = 700  # wordmark, dialog titles
 
-# ---------------------------------------------------------------- layout
+# Layout
 SIDEBAR_W = 244  # (sidebar-w) the sidebar: Inventory and Rentals
 INSPECTOR_W = 420  # the panel on the right where the selected thing is edited
 INSPECTOR_MIN = 360  # …on a smaller window
@@ -180,7 +180,7 @@ NAV_H = CHOICE_ROW_H  # one row in the sidebar
 NAV_INSET = SCROLL_GUTTER  # a sidebar row's gap from the glass edge (the scroll bar's room on the right)
 NAV_R = GLASS_R - NAV_INSET  # its corners: concentric with the glass (the curves run parallel)
 MENU_GAP = 6  # between a button and the menu it opens
-# ---- every list of choices looks the same (the standard's G.7): menus, dropdown lists, pickers, suggestions.
+# Every list of choices looks the same (the standard's G.7): menus, dropdown lists, pickers, suggestions.
 # Rows sit LIST_INSET inside a list whose corners are LIST_R, so their corners (LIST_ROW_R) run parallel to it.
 # (The sidebar and Settings' sections are the same choice rows inside the glass: NAV_*.)
 LIST_R = RADIUS_LG  # (radius-lg) a menu's corners
@@ -191,9 +191,7 @@ LIST_GAP = 0
 AVATAR = 32  # your profile's initials, bottom of the sidebar
 ASSISTANT_ICON = 28  # the assistant's face next to its title
 ASSISTANT_ICON_BIG = 64  # and saying hi in an empty chat
-START_TILE_W = (
-    184  # one way to start on an empty page (three fit beside the inspector on the smallest window)
-)
+START_TILE_W = 184  # one way to start on an empty page (three fit beside the inspector on the smallest window)
 START_BADGE = 40  # the circle behind a start tile's icon
 PROFILE_CARD_H = 48
 TOOLBAR_H = 64  # the bar above a table: title, search, New
@@ -212,7 +210,7 @@ MONTH_BAR_H = 20  # a rental across the days it's out
 MONTH_BAR_GAP = SPACE_1
 MONTH_CELL_MIN_H = 96
 
-# ---------------------------------------------------------------- colors: a dark and a light set
+# Colors: a dark and a light set
 # The app follows the system (or View → Appearance). Read colors as tokens.X when drawing, never copy them
 # into a constant at import: use() swaps them. A color drawn in code goes through theme.qcolor() (it reads the
 # rgba() form too). Values are the standard's Appendix A (A.1 light, A.2 dark, A.3 meanings); the names in
@@ -373,7 +371,7 @@ LIGHT = {
     "MONOGRAM_TOP": "#A1A1A6",
     "MONOGRAM_BOTTOM": "#7C7C80",
 }
-# ---------------------------------------------------------------- the accent you pick (Settings › General)
+# The accent you pick (Settings › General)
 # Bodega's own is blue, hand-set in DARK / LIGHT above. The others are built from one color by accent_set().
 # Never red: red means late, failed or delete.
 APP_ACCENT = "blue"

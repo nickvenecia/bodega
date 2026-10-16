@@ -35,9 +35,5 @@ class Palette:
 def palette(color: str, dark: bool = False) -> Palette:
     _label, light_accent, dark_accent = COLORS.get(color, COLORS["blue"])
     if dark:
-        return Palette(
-            "#1A1A1E", "#F2F0EB", "#B4AFA8", "#7C7872", "#3A3A42", "#24242A", dark_accent, "#121214"
-        )
-    return Palette(
-        WHITE_PAPER, "#1B1B1F", "#5E5E66", "#8E8E96", "#D9D9DE", "#F3F3F5", light_accent, "#FFFFFF"
-    )
+        return Palette("#1A1A1E", "#F2F0EB", "#B4AFA8", "#7C7872", "#3A3A42", "#24242A", dark_accent, "#121214")
+    return Palette(WHITE_PAPER, "#1B1B1F", "#5E5E66", "#8E8E96", "#D9D9DE", "#F3F3F5", light_accent, "#FFFFFF")

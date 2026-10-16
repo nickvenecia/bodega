@@ -48,9 +48,7 @@ class FeedbackDialog(Guarded, QDialog):
         self.details.setChecked(True)
         lay.addWidget(self.details)
         if not feedback.ADDRESS and not feedback.sender().connected:
-            lay.addWidget(
-                hint("Sending isn't switched on yet: your message waits on this computer until it is.")
-            )
+            lay.addWidget(hint("Sending isn't switched on yet: your message waits on this computer until it is."))
 
         row = button_row()
         cancel = QPushButton("Cancel")
@@ -72,9 +70,7 @@ class FeedbackDialog(Guarded, QDialog):
 
     def _send(self) -> None:
         try:
-            fb = feedback.make(
-                self.kind.value(), self.message.text(), self.email.text(), self.details.isChecked()
-            )
+            fb = feedback.make(self.kind.value(), self.message.text(), self.email.text(), self.details.isChecked())
         except OSError:
             return
         link = feedback.mail_link(fb)

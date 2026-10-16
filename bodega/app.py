@@ -197,13 +197,9 @@ class _RoundPopups(QObject):
             if isinstance(obj, QComboBox):
                 obj.setMaxVisibleItems(tokens.MENU_ROWS)  # a list of data shows 8 rows, then scrolls
             if isinstance(obj, QAbstractButton) and obj.focusPolicy() == Qt.FocusPolicy.StrongFocus:
-                obj.setFocusPolicy(
-                    Qt.FocusPolicy.TabFocus
-                )  # Tab gives it the focus (and its ring); a click doesn't
+                obj.setFocusPolicy(Qt.FocusPolicy.TabFocus)  # Tab gives it the focus (and its ring); a click doesn't
             if (
-                isinstance(obj, QLabel)
-                and obj.textFormat() == Qt.TextFormat.AutoText
-                and not obj.inherits("QTipLabel")
+                isinstance(obj, QLabel) and obj.textFormat() == Qt.TextFormat.AutoText and not obj.inherits("QTipLabel")
             ):  # names are shown as typed: a gear name like "<img …>" mustn't turn into a picture
                 obj.setTextFormat(Qt.TextFormat.PlainText)
             if (isinstance(obj, QMenu) and obj.isWindow()) or obj.inherits("QTipLabel"):

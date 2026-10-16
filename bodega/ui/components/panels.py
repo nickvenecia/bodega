@@ -36,9 +36,7 @@ class NavRow(QFrame):
     menu_wanted = Signal(str, QPoint)
     dropped = Signal(str)  # gear dragged from the table onto a department
 
-    def __init__(
-        self, key: str, label: str, icon: str = "", parent: QWidget | None = None, foldable: bool = True
-    ):
+    def __init__(self, key: str, label: str, icon: str = "", parent: QWidget | None = None, foldable: bool = True):
         """`foldable=False`: a plain list row (Settings) with no room kept for a fold arrow."""
         super().__init__(parent)
         self.key = key
@@ -46,21 +44,15 @@ class NavRow(QFrame):
         self.setObjectName("Nav")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setFocusPolicy(
-            Qt.FocusPolicy.TabFocus
-        )  # Tab reaches every place (a click doesn't move the focus)
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)  # Tab reaches every place (a click doesn't move the focus)
         self.setFixedHeight(tokens.NAV_H)
-        lay = hbox(
-            self, (tokens.SPACE_1 if foldable else tokens.SPACE_2, 0, tokens.SPACE_2, 0), tokens.SPACE_1
-        )
+        lay = hbox(self, (tokens.SPACE_1 if foldable else tokens.SPACE_2, 0, tokens.SPACE_2, 0), tokens.SPACE_1)
         self.arrow = QToolButton()  # shown on rows with rows under them; keeps its room on the others
         self.arrow.setObjectName("NavArrow")
         self.arrow.setFixedSize(tokens.TARGET_MIN, tokens.TARGET_MIN)  # inside a row that's a target too
         self.arrow.setCursor(Qt.CursorShape.PointingHandCursor)
         self.arrow.clicked.connect(lambda: self.fold_wanted.emit(self.key))
-        self.arrow.setFocusPolicy(
-            Qt.FocusPolicy.NoFocus
-        )  # the row folds from the keyboard (← →); no extra stop
+        self.arrow.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # the row folds from the keyboard (← →); no extra stop
         self.arrow.setAccessibleName(f"Hide {label}")
         keep = self.arrow.sizePolicy()
         keep.setRetainSizeWhenHidden(True)
@@ -84,9 +76,7 @@ class NavRow(QFrame):
         lay.addWidget(self.count)
 
     def recolor(self) -> None:
-        self.arrow.setIcon(
-            theme.icon("chevron-right" if self.folded else "chevron", theme.FAINT, tokens.ICON_SM)
-        )
+        self.arrow.setIcon(theme.icon("chevron-right" if self.folded else "chevron", theme.FAINT, tokens.ICON_SM))
 
     def set_folded(self, on: bool) -> None:
         self.folded = on
@@ -181,9 +171,7 @@ class LeftPanel(QFrame):
         self.scroll = FitScroll()  # its scroll bar's room is the right-hand inset
         body = QWidget()
         inset = tokens.NAV_INSET
-        self.lay = vbox(
-            body, (inset, 0 if top_height else inset, inset - tokens.SCROLL_GUTTER, inset), tokens.NAV_GAP
-        )
+        self.lay = vbox(body, (inset, 0 if top_height else inset, inset - tokens.SCROLL_GUTTER, inset), tokens.NAV_GAP)
         self.scroll.setWidget(body)
         outer.addWidget(self.scroll, 1)
         self.foot = QFrame()

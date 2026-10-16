@@ -126,9 +126,7 @@ class GearPicker(QDialog):
     def _row(self, kind: str, ref: str, name: str, meta: str, hay: str) -> None:
         it = QListWidgetItem(f"{name}    {meta}" if meta else name)
         it.setToolTip(name)
-        it.setFlags(
-            Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsSelectable
-        )
+        it.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsSelectable)
         it.setCheckState(Qt.CheckState.Unchecked)
         it.setData(KIND, kind)
         it.setData(REF, ref)

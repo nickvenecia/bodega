@@ -114,11 +114,7 @@ class Section(QWidget):
     def _name(self, w: QWidget) -> None:
         """A field is known by its label (a screen reader says "Company, text field", not just "text field")."""
         title = self.label.text().replace("&&", "&")
-        if (
-            title
-            and isinstance(w, (QLineEdit, QComboBox, QPlainTextEdit, QAbstractSpinBox))
-            and not w.accessibleName()
-        ):
+        if title and isinstance(w, (QLineEdit, QComboBox, QPlainTextEdit, QAbstractSpinBox)) and not w.accessibleName():
             w.setAccessibleName(title)
             self.label.setBuddy(w)
 
@@ -262,9 +258,7 @@ class Disclosure(QFrame):
 
     def _show_title(self) -> None:
         folded = not self.body.isVisibleTo(self)
-        self.header.set_full_text(
-            f" {self._title}" + (f"  ·  {self._summary}" if folded and self._summary else "")
-        )
+        self.header.set_full_text(f" {self._title}" + (f"  ·  {self._summary}" if folded and self._summary else ""))
 
 
 def announce(w: QWidget, text: str) -> None:
@@ -544,9 +538,7 @@ class Toast(QWidget):
         m = glass.shadow_margin()
         icon_w = tokens.ICON + tokens.SPACE_2
         pad_x, pad_y = tokens.SPACE_4, tokens.SPACE_3
-        widest = max(
-            tokens.ICON, min(tokens.TOAST_MAX_W, area.width() - 2 * tokens.SPACE_5) - 2 * pad_x - icon_w
-        )
+        widest = max(tokens.ICON, min(tokens.TOAST_MAX_W, area.width() - 2 * tokens.SPACE_5) - 2 * pad_x - icon_w)
         flags = int(Qt.TextFlag.TextWordWrap)
         box = QFontMetrics(self._font()).boundingRect(QRect(0, 0, widest, 10_000), flags, self.text)
         w = icon_w + min(widest, box.width()) + 2 * pad_x
@@ -616,7 +608,7 @@ class Toast(QWidget):
         p.end()
 
 
-# ------------------------------------------------------------------ dropdowns
+# Dropdowns
 def combo(items: list[tuple[str, str, str]], current: str) -> QComboBox:
     """The standard dropdown. items: (key, label, tooltip); the key is the item's data."""
     c = QComboBox()
@@ -998,7 +990,7 @@ class TitleEdit(QPlainTextEdit):
             self._fit()
 
 
-# ------------------------------------------------------------------ fields shared by the panels
+# Fields shared by the panels
 DATE_FORMATS = ("ddd, MMM d, yyyy", "MMM d, yyyy", "M/d/yy")  # the longest that fits is shown
 
 

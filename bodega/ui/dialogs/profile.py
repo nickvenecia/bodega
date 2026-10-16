@@ -402,7 +402,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
             f"Next {b.prefix}-{dates.today().year}-{n:03d} · {COLORS.get(b.color, COLORS['blue'])[0]}"
         )
 
-    # ------------------------------------------------------------------ logo
+    # Logo
     def _build_logo(self) -> Section:
         sec = Section("Logo")
         row = hbox(spacing=SPACE_2)
@@ -462,15 +462,13 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         self.logo_error.hide()
         self._set_logo(name)
 
-    # ------------------------------------------------------------------ buttons
+    # Buttons
     def _save(self) -> None:
         if not self._check_next():
             return
         self.business = self._draft()
         text = self.next_field.text().strip()
-        self.next_number = (
-            int(text) if self._next_typed and text.isdigit() and int(text) > self._free() else 0
-        )
+        self.next_number = int(text) if self._next_typed and text.isdigit() and int(text) > self._free() else 0
         self.accept()
 
     def _delete(self) -> None:

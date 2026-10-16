@@ -77,7 +77,7 @@ def site_name(url: str) -> str:
     return host
 
 
-# ---------------------------------------------------------------- links
+# Links
 def web_link(text: str) -> str:
     """A link as typed or imported -> "https://…", or "" if it isn't a plain web link.
     "bhphotovideo.com/c/x" gets https://; "file://…", "javascript:…", "smb://…", a link with a
@@ -289,7 +289,7 @@ def fetch_image(url: str, timeout: float = TIMEOUT_S) -> bytes:
     return body
 
 
-# ---------------------------------------------------------------- reading a page
+# Reading a page
 @dataclass
 class PageInfo:
     title: str = ""

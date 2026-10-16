@@ -127,7 +127,7 @@ class SettingsDialog(QDialog):
         shown = pane in self.panes and not self.rows[pane].isHidden()
         self.show_pane(pane if shown else "general")
 
-    # ------------------------------------------------------------------ moving around
+    # Moving around
     def _then(self, run) -> None:
         """Settings closes first, then `run` opens its own window (one window at a time)."""
         if self._profile_may_go():
@@ -200,7 +200,7 @@ class SettingsDialog(QDialog):
             row.addWidget(b)
         return row
 
-    # ------------------------------------------------------------------ General
+    # General
     def _build_general(self) -> None:
         w, lay = self._column()
         look = Section("Appearance")
@@ -215,9 +215,7 @@ class SettingsDialog(QDialog):
         accent.add(self.accent)
         lay.addWidget(accent)
         upd = Section("Updates")
-        self.auto = ToggleRow(
-            "Check for Updates Automatically", settings.value(self.lib.settings, "auto_update")
-        )
+        self.auto = ToggleRow("Check for Updates Automatically", settings.value(self.lib.settings, "auto_update"))
         self.auto.toggled.connect(self._auto)
         upd.add(self.auto)
         version = ElidedLabel(f"Version {version_label()}")
@@ -231,7 +229,7 @@ class SettingsDialog(QDialog):
         self.lib.settings["auto_update"] = on
         self.lib.save_settings()
 
-    # ------------------------------------------------------------------ Profiles
+    # Profiles
     def _build_profiles(self) -> None:
         from bodega.ui.dialogs.profile import ProfileDialog
 
@@ -317,7 +315,7 @@ class SettingsDialog(QDialog):
         self._build_profiles()
         self.win.toast("Profile deleted." if not saved else "Profile saved.", "done")
 
-    # ------------------------------------------------------------------ AI
+    # AI
     def _build_ai(self) -> None:
         from bodega.ui.dialogs.ai_setup import AISetupDialog
 
@@ -329,7 +327,7 @@ class SettingsDialog(QDialog):
         self.ai_editor = d
         self._fill("ai", d)
 
-    # ------------------------------------------------------------------ Account
+    # Account
     def _build_account(self) -> None:
         from bodega.ui.dialogs.account import SignInDialog
 
@@ -362,13 +360,13 @@ class SettingsDialog(QDialog):
         self._build_account()
         self.win.sidebar.show_who()
 
-    # ------------------------------------------------------------------ Shortcuts
+    # Shortcuts
     def _build_shortcuts(self) -> None:
         from bodega.ui.dialogs.shortcuts import ShortcutsList
 
         self._fill("shortcuts", ShortcutsList(self.win.menuBar()))
 
-    # ------------------------------------------------------------------ Your Data
+    # Your Data
     def _build_data(self) -> None:
         w, lay = self._column()
         where = Section("Saved on This Computer")

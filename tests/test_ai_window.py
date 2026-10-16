@@ -227,12 +227,8 @@ def test_cancel_in_review_changes_nothing(win, monkeypatch):
     Setup("anthropic", "test-model").to_settings(win.lib.settings)
     lens = next(i for i in win.lib.items.values() if i.group == "Lenses")
     before = lens.name
-    _answers(
-        monkeypatch, json.dumps([{"n": 0, "name": before + " (Tidy)", "brand": lens.brand, "series": "Cine"}])
-    )
-    monkeypatch.setattr(
-        ai_review.ReviewDialog, "exec", lambda self: ai_review.ReviewDialog.DialogCode.Rejected
-    )
+    _answers(monkeypatch, json.dumps([{"n": 0, "name": before + " (Tidy)", "brand": lens.brand, "series": "Cine"}]))
+    monkeypatch.setattr(ai_review.ReviewDialog, "exec", lambda self: ai_review.ReviewDialog.DialogCode.Rejected)
     win.go("grp:Lenses")
     win.open_ai_assistant()
     win.ai_job("names", [lens])

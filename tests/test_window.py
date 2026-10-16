@@ -156,9 +156,7 @@ def test_saving_your_profile_with_the_cursor_in_a_field(qapp, data_folder):
         type_and_save(settings, "name", "Juniper Lane Films", lambda: change(settings))  # a new profile
 
     def change(settings) -> None:
-        type_and_save(
-            settings, "tagline", "Camera · Lighting · Grip", lambda: (done.append(1), settings.close())
-        )
+        type_and_save(settings, "tagline", "Camera · Lighting · Grip", lambda: (done.append(1), settings.close()))
 
     when_open(SettingsDialog, add)
     w.edit_business(True)
@@ -209,9 +207,7 @@ def test_renaming_a_group_from_its_row_in_the_sidebar(win, monkeypatch, data_fol
     when_open(QMenu, rename)
     at = row.rect().center()
     with still_there_after(row):
-        QApplication.sendEvent(
-            row, QContextMenuEvent(QContextMenuEvent.Reason.Mouse, at, row.mapToGlobal(at))
-        )
+        QApplication.sendEvent(row, QContextMenuEvent(QContextMenuEvent.Reason.Mouse, at, row.mapToGlobal(at)))
     wait_for(lambda: "Grip & Rigging" in win.lib.groups())
     assert "grp:Grip & Rigging" in win.sidebar.rows and f"grp:{group}" not in win.sidebar.rows
     assert "Grip & Rigging" in Library(data_folder).load().groups()
@@ -277,9 +273,7 @@ def test_scrolling_past_dropdowns_and_dates_leaves_the_cursor_alone(win):
     win.go("rentals")
     win.open("rentals", next(iter(win.lib.rentals)))
     QApplication.processEvents()
-    controls = [
-        w for w in win.findChildren(QWidget) if isinstance(w, (QComboBox, QDateEdit)) and w.isVisible()
-    ]
+    controls = [w for w in win.findChildren(QWidget) if isinstance(w, (QComboBox, QDateEdit)) and w.isVisible()]
     assert controls
     assert all(w.focusPolicy() == Qt.FocusPolicy.StrongFocus for w in controls)
 
@@ -604,9 +598,7 @@ def test_import_window_choices(qapp, data_folder, tmp_path):
     assert d.items and d.pricing == ("4", "8.25")  # no profile yet: it starts with the sheet's pricing
 
 
-def test_an_import_never_replaces_your_pricing_unasked_and_says_what_it_filled_in(
-    qapp, data_folder, tmp_path
-):
+def test_an_import_never_replaces_your_pricing_unasked_and_says_what_it_filled_in(qapp, data_folder, tmp_path):
     from bodega.core import importer
     from bodega.ui.dialogs.import_sheet import ImportDialog
 
@@ -614,10 +606,7 @@ def test_an_import_never_replaces_your_pricing_unasked_and_says_what_it_filled_i
     sheet.write_text("Name,Qty,Price\nAputure STORM 80c,,500\nAputure STORM 1200x,2,2000\n")
     d = ImportDialog(sheet, importer.load_rows(sheet), set(), has_profile=True)
     assert not d.use_pricing.isChecked()  # you have a profile: its pricing stays yours
-    assert (
-        "1 with no quantity count as 1" in d.filled.text()
-        and "2 with no Rent? are for rent" in d.filled.text()
-    )
+    assert "1 with no quantity count as 1" in d.filled.text() and "2 with no Rent? are for rent" in d.filled.text()
     assert "company" in d.filled.text() and all(i.brand == "Aputure" for i in d.chosen())
     d.guess.setChecked(False)
     assert not any(i.brand for i in d.chosen()) and "company" not in d.filled.text()
@@ -715,9 +704,7 @@ def test_select_all_and_delete(win, monkeypatch):
     win.go("gear")
     t.select_showing()
     win.delete_gear(t.chosen_ids())
-    assert (
-        asked[-1].startswith("Retire ") and " and Delete " in asked[-1]
-    )  # one alert: retire some, delete the rest
+    assert asked[-1].startswith("Retire ") and " and Delete " in asked[-1]  # one alert: retire some, delete the rest
     left = list(win.lib.items.values())
     assert left and all(i.status == "retired" for i in left)  # with what's attached to them
     assert all(win.lib.rentals_with(i.id) or i.parent in win.lib.items for i in left)
@@ -1317,9 +1304,7 @@ def test_folding_by_keyboard_is_remembered_and_option_click_folds_every_group(wi
     t.setFocus()
     QTest.keyClick(t, Qt.Key.Key_Left)
     assert not dividers[0].isExpanded() and win.lib.settings["folded"]  # kept, as a click would be
-    monkeypatch.setattr(
-        QApplication, "keyboardModifiers", staticmethod(lambda: Qt.KeyboardModifier.AltModifier)
-    )
+    monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.KeyboardModifier.AltModifier))
     GearTable._divider_clicked(t, dividers[1], 0)  # ⌥-click on an open one folds them all
     assert not any(d.isExpanded() for d in t._dividers())
 
@@ -1380,10 +1365,7 @@ def test_a_status_is_a_dot_and_a_word_in_the_text_color(win):
 
     win.go("gear")
     row = next(iter(win.gear_table.showing_rows()))
-    assert (
-        row.data(GEAR_COL["status"], DOT)
-        and row.foreground(GEAR_COL["status"]).style() == Qt.BrushStyle.NoBrush
-    )
+    assert row.data(GEAR_COL["status"], DOT) and row.foreground(GEAR_COL["status"]).style() == Qt.BrushStyle.NoBrush
     win.go("rentals")
     r = win.rental_table.topLevelItem(0)
     assert r.data(4, DOT)

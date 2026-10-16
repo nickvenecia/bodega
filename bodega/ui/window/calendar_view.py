@@ -140,9 +140,7 @@ class RentalCalendar(QWidget):
                 x1 = max(float(NAME_W), self._x(a))
                 x2 = min(float(self.width()), self._x(max(z, dates.plus(a, 1))))
                 inset = tokens.CAL_BAR_INSET
-                rect = QRectF(
-                    x1 + 1, y + inset, max(float(tokens.SPACE_2), x2 - x1 - 2), tokens.CAL_ROW_H - 2 * inset
-                )
+                rect = QRectF(x1 + 1, y + inset, max(float(tokens.SPACE_2), x2 - x1 - 2), tokens.CAL_ROW_H - 2 * inset)
                 p.setBrush(theme.qcolor(fill))
                 p.setPen(QPen(theme.qcolor(edge), 1))
                 p.drawRoundedRect(rect, tokens.RADIUS_SM, tokens.RADIUS_SM)
@@ -219,7 +217,7 @@ class MonthCalendar(QWidget):
         self.lib: Library | None = None
         self.setMinimumHeight(tokens.MONTH_HEAD_H + 5 * tokens.MONTH_CELL_MIN_H)
 
-    # ------------------------------------------------------------------ the month
+    # The month
     def first_day(self) -> date:
         return week_start(date(self.year, self.month, 1))
 
@@ -247,7 +245,7 @@ class MonthCalendar(QWidget):
         self.rows = rental_spans(lib, start, end) if lib is not None else []
         self.update()
 
-    # ------------------------------------------------------------------ drawing
+    # Drawing
     def _cell(self) -> tuple[float, float]:
         return self.width() / 7, (self.height() - tokens.MONTH_HEAD_H) / self.weeks()
 
@@ -328,9 +326,7 @@ class MonthCalendar(QWidget):
                 p.drawText(
                     rect.adjusted(tokens.SPACE_2, 0, -tokens.SPACE_1, 0),
                     int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
-                    p.fontMetrics().elidedText(
-                        who, Qt.TextElideMode.ElideRight, int(rect.width() - tokens.SPACE_3)
-                    ),
+                    p.fontMetrics().elidedText(who, Qt.TextElideMode.ElideRight, int(rect.width() - tokens.SPACE_3)),
                 )
                 self._bars.append((rect, r, ra, rz))
             p.setPen(theme.qcolor(tokens.MUTED))

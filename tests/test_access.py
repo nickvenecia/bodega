@@ -161,9 +161,7 @@ def test_home_and_end_go_to_a_menus_first_and_last_choice(qapp):
     m.addSeparator()
     QApplication.sendEvent(m, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_End, Qt.KeyboardModifier.NoModifier))
     assert m.activeAction().text() == "Cherry"
-    QApplication.sendEvent(
-        m, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Home, Qt.KeyboardModifier.NoModifier)
-    )
+    QApplication.sendEvent(m, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Home, Qt.KeyboardModifier.NoModifier))
     assert m.activeAction().text() == "Apple"
     m.deleteLater()
 

@@ -67,9 +67,7 @@ class TransferMixin:
             notice(self, "Couldn't Open the Sheet", message)
 
         self.toast("Getting the sheet from Google…")
-        self._run_transfer(
-            lambda _p, _c: importer.download_google_sheet(link, folder), got, failed, "open the sheet"
-        )
+        self._run_transfer(lambda _p, _c: importer.download_google_sheet(link, folder), got, failed, "open the sheet")
 
     def _transfer_free(self) -> bool:
         """One download or backup at a time."""
@@ -100,9 +98,9 @@ class TransferMixin:
             self.toast(errors.plain(e, "read that file"), "problem")
             return 0
         have = {(i.name.casefold(), i.department.casefold()): i.id for i in self.lib.items.values()}
-        for i in (
-            self.lib.items.values()
-        ):  # a piece renamed since it came from a sheet is still known by the sheet's name
+        for (
+            i
+        ) in self.lib.items.values():  # a piece renamed since it came from a sheet is still known by the sheet's name
             if i.imported_as:
                 have.setdefault((i.imported_as.casefold(), i.department.casefold()), i.id)
         if ask:
@@ -143,8 +141,7 @@ class TransferMixin:
         log.info("imported %d items from %s", len(chosen), path.name)
         self.go("gear")
         self.toast(
-            f"Added {words.count(len(chosen), 'piece')}."
-            + (f" Links for {linked:,} more." if linked else ""),
+            f"Added {words.count(len(chosen), 'piece')}." + (f" Links for {linked:,} more." if linked else ""),
             "done",
         )
         return len(chosen)
@@ -163,9 +160,7 @@ class TransferMixin:
         """The gear the list shows, in its order, when a place, a search or a filter narrows it (None: all)."""
         if kind_of(self.view_key) != "gear":
             return None
-        if not (
-            self.view_key.startswith("grp:") or self.search.text().strip() or self.view_menu.filter.active()
-        ):
+        if not (self.view_key.startswith("grp:") or self.search.text().strip() or self.view_menu.filter.active()):
             return None
         ids = [r.data(0, ID) for r in self.gear_table.item_rows() if not r.isHidden()]
         return [self.lib.items[i] for i in ids if i in self.lib.items]
@@ -187,17 +182,13 @@ class TransferMixin:
         if p.suffix.lower() != ".csv":
             p = p.with_name(p.name + ".csv")
         try:
-            importer.write_csv(
-                showing if showing is not None else self.lib.ordered_items(), self.lib.items, p
-            )
+            importer.write_csv(showing if showing is not None else self.lib.ordered_items(), self.lib.items, p)
         except OSError as e:
             notice(self, "Couldn't Save the CSV", errors.plain(e, "save the CSV"))
             return
         self.last_export = p
         n = len(showing) if showing is not None else len(self.lib.items)
-        self.toast(
-            f"Saved {p.name}: {n:,} piece{'s' if n != 1 else ''}{' showing' if showing else ''}.", "done"
-        )
+        self.toast(f"Saved {p.name}: {n:,} piece{'s' if n != 1 else ''}{' showing' if showing else ''}.", "done")
 
     def open_data_folder(self) -> None:
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(data_dir())))
@@ -208,17 +199,13 @@ class TransferMixin:
 
         self.flush()
         name = f"Bodega Backup {dates.iso(dates.today())}.zip"
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Back Up", str(documents_dir() / name), "Zip Files (*.zip)"
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Back Up", str(documents_dir() / name), "Zip Files (*.zip)")
         if not path or not self._transfer_free():
             return
         self.toast("Backing up…")
         self._run_transfer(
             lambda _p, _c: zip_folder(data_dir(), Path(path), skip=("ui",)),
-            lambda _r: self.toast(
-                "Backed up. It holds your renters' details, so keep it somewhere private.", "done"
-            ),
+            lambda _r: self.toast("Backed up. It holds your renters' details, so keep it somewhere private.", "done"),
             lambda message: notice(self, "Couldn't Back Up", message),
             "save the backup",
         )
@@ -231,9 +218,7 @@ class TransferMixin:
 
         self.flush()
         start = backups.folder(self.lib.root) if backups.copies(self.lib.root) else documents_dir()
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Restore from Backup", str(start), "Bodega Backups (*.zip)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "Restore from Backup", str(start), "Bodega Backups (*.zip)")
         if not path:
             return
         try:
@@ -266,7 +251,7 @@ class TransferMixin:
         log.info("restored %s", Path(path).name)
         self.toast("Restored." + (f" What you had before is kept as {kept.name}." if kept else ""), "done")
 
-    # ------------------------------------------------------------------ photos from links
+    # Photos from links
     def get_photos_from_links(self) -> None:
         """File › Get Photos from Links: each piece with a link and no photo gets its product page's main
         picture, in the background. One undo (⌘Z) takes them all back."""
@@ -329,7 +314,7 @@ class TransferMixin:
         else:
             self.toast("None of those pages shared a photo.", "problem")
 
-    # ------------------------------------------------------------------ calendars
+    # Calendars
     def add_to_calendar(self, rental_id: str = "") -> None:
         """Add Rentals to Calendar (or one rental's, from its ⋯): a calendar file, opened in your calendar app
         (Apple Calendar on a Mac). Adding it again updates the same events."""
@@ -383,7 +368,7 @@ class TransferMixin:
             return
         self.toast("Saved. In Google Calendar: Settings › Import & Export › Import.", "done")
 
-    # ------------------------------------------------------------------ Saldo
+    # Saldo
     def send_to_saldo(self, rental_id: str) -> None:
         """Send to Saldo…: the rental as a draft invoice in Saldo (the renter, every line, the totals). Sent
         again, it updates that draft while it's still one."""

@@ -85,7 +85,9 @@ class Budget:
 
     def ask(self, fn: Callable, *args):
         if not self.stopped and self.left <= 0:
-            self.stopped = f"Stopped after {MAX_CALLS} questions to your AI, the most one job asks. Run it again for the rest."
+            self.stopped = (
+                f"Stopped after {MAX_CALLS} questions to your AI, the most one job asks. Run it again for the rest."
+            )
         if self.stopped:
             raise AIError(self.stopped)
         self.left -= 1
@@ -140,7 +142,7 @@ class _Pace:
             self.last[site] = time.monotonic()
 
 
-# ---------------------------------------------------------------- checking what comes back
+# Checking what comes back
 def clean_text(value, limit: int) -> str:
     """Plain, single-line text of at most `limit` characters (no control characters, no line breaks)."""
     if not isinstance(value, (str, int, float)):
@@ -232,7 +234,7 @@ NAMING = (
 )
 
 
-# ---------------------------------------------------------------- finding a page
+# Finding a page
 def _checked_pages(
     setup: Setup,
     batch: list[Item],
@@ -338,7 +340,7 @@ def _host(page: web.Page) -> str:
     return (urlparse(page.url).hostname or "").removeprefix("www.")
 
 
-# ---------------------------------------------------------------- the jobs
+# The jobs
 def update_from_links(
     setup: Setup | None,
     items: list[Item],
@@ -367,9 +369,7 @@ def update_from_links(
         _from_page(setup, it, page, _host(page), out, problems, budget)
     if stuck and (cancel is None or not cancel.is_set()) and not budget.stopped:
         if setup is None or not setup.ready():
-            problems += [
-                f"{it.name}: {why} With an AI set up, Bodega looks for another page." for it, why in stuck
-            ]
+            problems += [f"{it.name}: {why} With an AI set up, Bodega looks for another page." for it, why in stuck]
         else:
             avoid = {web.site_name(it.link) for it, _why in stuck}
             for start in range(0, len(stuck), BATCH):
@@ -433,9 +433,7 @@ def find_links(
     found_ids = {c.item_id for c in out if c.field == "link"}
     missing = [it.name for it in todo if it.id not in found_ids]
     if missing and not problems:
-        problems.append(
-            f"No page could be checked for {len(missing)} piece{'s' if len(missing) != 1 else ''}."
-        )
+        problems.append(f"No page could be checked for {len(missing)} piece{'s' if len(missing) != 1 else ''}.")
     return _ended(Result(out, problems), budget)
 
 
@@ -472,11 +470,7 @@ def tidy_names(
             problems.append(str(e))
             break
         for row in got if isinstance(got, list) else []:
-            if (
-                not isinstance(row, dict)
-                or not isinstance(row.get("n"), int)
-                or not 0 <= row["n"] < len(batch)
-            ):
+            if not isinstance(row, dict) or not isinstance(row.get("n"), int) or not 0 <= row["n"] < len(batch):
                 continue
             it = batch[row["n"]]
             for field in ("name", "brand", "series"):
@@ -528,11 +522,7 @@ def organize_groups(
             problems.append(str(e))
             break
         for row in got if isinstance(got, list) else []:
-            if (
-                not isinstance(row, dict)
-                or not isinstance(row.get("n"), int)
-                or not 0 <= row["n"] < len(batch)
-            ):
+            if not isinstance(row, dict) or not isinstance(row.get("n"), int) or not 0 <= row["n"] < len(batch):
                 continue
             it = batch[row["n"]]
             new = clean_text(row.get("group", ""), LIMITS["group"])
@@ -588,9 +578,7 @@ def chat(
     for c in _by_rules(got.get("rules"), items):
         if not any(x.item_id == c.item_id and x.field == c.field for x in out):
             out.append(c)
-    return reply or ("Changes to review." if out else "No answer came back. Try asking another way."), Result(
-        out, []
-    )
+    return reply or ("Changes to review." if out else "No answer came back. Try asking another way."), Result(out, [])
 
 
 def _by_rules(rules, items: list[Item]) -> list[Change]:
@@ -646,9 +634,7 @@ def apply(lib, changes: list[Change]) -> int:
         if it is None or c.field not in FIELD_LABELS:
             continue
         now = getattr(it, c.field)
-        changed_since = (
-            money.parse(now) != money.parse(c.old) if c.field == "value" else not _same(now, c.old)
-        )
+        changed_since = money.parse(now) != money.parse(c.old) if c.field == "value" else not _same(now, c.old)
         if changed_since:  # you edited it while the job ran: your edit stays
             continue
         if c.field == "group":

@@ -138,9 +138,7 @@ class EditingMixin:
             return
         if kind == "packages":
             p = self.lib.packages.get(obj_id)
-            if p is None or not confirm(
-                self, f"Delete {p.name or 'this kit'}?", "The gear in it stays.", "Delete"
-            ):
+            if p is None or not confirm(self, f"Delete {p.name or 'this kit'}?", "The gear in it stays.", "Delete"):
                 return
             self.lib.delete_package(obj_id)
             self.packages.pkg = None
@@ -243,9 +241,7 @@ class EditingMixin:
         listed = ", ".join(names[:3]) + (f" and {len(names) - 3} more" if len(names) > 3 else "")
         text = (listed + ". ") if len(picked) > 1 else ""
         if extra:
-            text += (
-                f"The {extra} piece{'s' if extra != 1 else ''} attached go{'' if extra != 1 else 'es'} too. "
-            )
+            text += f"The {extra} piece{'s' if extra != 1 else ''} attached go{'' if extra != 1 else 'es'} too. "
         text += "Rentals that had them keep their names."
         if not asked and not confirm(
             self, title, text, "Delete" if len(everything) == 1 else f"Delete {len(everything)}"
@@ -255,9 +251,7 @@ class EditingMixin:
         shown = [r.data(0, ID) for r in self.gear_table.showing_rows()]
         gone = set(everything)
         after = [
-            i
-            for i in shown[max((n for n, i in enumerate(shown) if i in gone), default=-1) + 1 :]
-            if i not in gone
+            i for i in shown[max((n for n, i in enumerate(shown) if i in gone), default=-1) + 1 :] if i not in gone
         ]
         before = [i for i in shown if i not in gone]
         neighbour = (after or before[-1:] or [None])[0]  # the row after what went, else the one before
@@ -343,9 +337,7 @@ class EditingMixin:
         if p is None:
             return
         have = {ln.item_id for ln in p.lines}
-        d = GearPicker(
-            self.lib, self.lib.pricing(), f"Add to {p.name or 'the Kit'}", exclude=have, parent=self
-        )
+        d = GearPicker(self.lib, self.lib.pricing(), f"Add to {p.name or 'the Kit'}", exclude=have, parent=self)
         if d.exec() != GearPicker.DialogCode.Accepted:
             return
         for _kind, ref in d.picked:
@@ -358,15 +350,11 @@ class EditingMixin:
         r = self.lib.rentals.get(rental_id)
         if r is None:
             return
-        d = GearPicker(
-            self.lib, self.lib.businesses.get(r.business_id), "Add to Rental", packages=True, parent=self
-        )
+        d = GearPicker(self.lib, self.lib.businesses.get(r.business_id), "Add to Rental", packages=True, parent=self)
         if d.exec() != GearPicker.DialogCode.Accepted:
             return
         for kind, ref in d.picked:
-            existing = next(
-                (ln for ln in r.lines if ln.kind == kind and ln.ref == ref and not r.own_dates(ln)), None
-            )
+            existing = next((ln for ln in r.lines if ln.kind == kind and ln.ref == ref and not r.own_dates(ln)), None)
             if existing is not None:
                 existing.qty += 1
             else:
@@ -575,7 +563,7 @@ class EditingMixin:
         groups[key] = state
         self.lib.settings["groups"] = groups
 
-    # ------------------------------------------------------------------ check out / check in
+    # Check out / check in
     def check_rental(self, rental_id: str, back: bool) -> None:
         """Check Out… / Check In…: tick the gear, note its condition; then mark the rental Out or Returned."""
         from bodega.ui.dialogs.checklist import CheckDialog

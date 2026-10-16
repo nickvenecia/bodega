@@ -116,9 +116,7 @@ def send_waiting() -> int:
     for path in waiting():
         try:
             d = json.loads(path.read_text(encoding="utf-8"))
-            sender().send(
-                Feedback(**{k: d[k] for k in ("kind", "message", "email", "details", "written") if k in d})
-            )
+            sender().send(Feedback(**{k: d[k] for k in ("kind", "message", "email", "details", "written") if k in d}))
             path.unlink()
             n += 1
         except (OSError, ValueError, TypeError, KeyError):

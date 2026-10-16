@@ -303,9 +303,7 @@ def test_a_build_shows_the_commit_it_was_made_from(monkeypatch):
     assert version_label() == f"{__version__} (a1b2c3d)"
 
 
-@pytest.mark.parametrize(
-    "kind", ["mac-app", "windows-installed", "windows-portable", "appimage", "linux-folder"]
-)
+@pytest.mark.parametrize("kind", ["mac-app", "windows-installed", "windows-portable", "appimage", "linux-folder"])
 def test_every_build_can_find_its_own_update_offline(kind, monkeypatch, capsys):
     from bodega import cli
 

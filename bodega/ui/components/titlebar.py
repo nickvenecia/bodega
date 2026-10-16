@@ -189,9 +189,9 @@ def animate_to(window: QWidget, rect) -> bool:
         # the Mac counts up from the bottom of the main screen; Qt counts down from its top
         main = QGuiApplication.primaryScreen().geometry()
         frame = NSRect(rect.x(), main.height() - (rect.y() + rect.height()), rect.width(), rect.height())
-        set_frame = ctypes.CFUNCTYPE(
-            None, ctypes.c_void_p, ctypes.c_void_p, NSRect, ctypes.c_bool, ctypes.c_bool
-        )(address)
+        set_frame = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, NSRect, ctypes.c_bool, ctypes.c_bool)(
+            address
+        )
         from bodega.ui.components import access
 
         set_frame(ns_window, sel(b"setFrame:display:animate:"), frame, True, not access.reduce_motion())

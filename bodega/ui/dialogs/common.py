@@ -180,9 +180,7 @@ def ask_name(
     return field.text().strip() or None
 
 
-def ask_choice(
-    parent: QWidget, title: str, text: str, choices: list[tuple[str, str]], action: str
-) -> str | None:
+def ask_choice(parent: QWidget, title: str, text: str, choices: list[tuple[str, str]], action: str) -> str | None:
     """One of a few choices ((key, words) each), picked from a dropdown. The key, or None if cancelled."""
     d = QDialog(parent)
     d.setWindowTitle(title)
@@ -284,9 +282,7 @@ def tidy_preview(parent: QWidget, moves: list) -> bool:
     t = QLabel("Tidy Up Groups")
     t.setObjectName("DialogTitle")
     lay.addWidget(t)
-    lay.addWidget(
-        hint(f"{words.count(len(moves), 'piece')} {'gets' if len(moves) == 1 else 'get'} a clearer group.")
-    )
+    lay.addWidget(hint(f"{words.count(len(moves), 'piece')} {'gets' if len(moves) == 1 else 'get'} a clearer group."))
     box = QListWidget()
     box.setObjectName("Picker")
     pairs = Counter((old or "No Group", new or "No Group") for _it, old, new in moves)

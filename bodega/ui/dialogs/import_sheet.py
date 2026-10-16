@@ -107,9 +107,7 @@ class ImportDialog(QDialog):
         self.tidy.setToolTip("SD Cards becomes Media, 1000c becomes Lights")
         self.tidy.toggled.connect(lambda _on: self.reread())
         self.options.add(self.tidy)
-        self.use_pricing = ToggleRow(
-            "Use the Sheet's Pricing", not has_profile
-        )  # never replaces yours unasked
+        self.use_pricing = ToggleRow("Use the Sheet's Pricing", not has_profile)  # never replaces yours unasked
         self.use_pricing.setToolTip(
             "Your profile's day-rate percent and tax become the sheet's"
             if has_profile
@@ -206,7 +204,7 @@ class ImportDialog(QDialog):
         outer.addLayout(buttons)
         self.reread()
 
-    # ------------------------------------------------------------------ reading
+    # Reading
     def _layout(self) -> importer.Layout:
         cols = {}
         for key, c in self.col_pickers.items():
@@ -236,9 +234,7 @@ class ImportDialog(QDialog):
         bits = [f"{money.fmt_rate(self.got.rate_pct)} of value a day"] if self.got.rate_pct else []
         if self.got.value_tax:
             bits.append(f"{money.fmt_rate(self.got.value_tax)} tax")
-        self.use_pricing.setText(
-            "Use the Sheet's Pricing: " + ", ".join(bits) if bits else "Use the Sheet's Pricing"
-        )
+        self.use_pricing.setText("Use the Sheet's Pricing: " + ", ".join(bits) if bits else "Use the Sheet's Pricing")
         self.use_pricing.setVisible(bool(bits))
         self._has_pricing = bool(bits)
         g = self.got
@@ -267,9 +263,7 @@ class ImportDialog(QDialog):
     def _fill_departments(self) -> None:
         counts: dict[str, int] = {}
         for it in self.got.items:
-            counts[it.department or "No Department"] = (
-                counts.get(it.department or "No Department", 0) + it.qty
-            )
+            counts[it.department or "No Department"] = counts.get(it.department or "No Department", 0) + it.qty
         was = {d: t.isChecked() for d, t in self.dep_toggles.items()}
         for t in self.dep_toggles.values():
             t.setParent(None)
@@ -313,12 +307,8 @@ class ImportDialog(QDialog):
                 meta += f"  ·  on {parent.name}"
             row = QListWidgetItem(f"{text}      {meta}")
             row.setToolTip(theme.plain_tip(f"{it.name}\n{meta}"))
-            row.setFlags(
-                Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsSelectable
-            )
-            row.setCheckState(
-                Qt.CheckState.Unchecked if self._key(it) in self._unticked else Qt.CheckState.Checked
-            )
+            row.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsSelectable)
+            row.setCheckState(Qt.CheckState.Unchecked if self._key(it) in self._unticked else Qt.CheckState.Checked)
             row.setData(REF, it.id)
             self.list.addItem(row)
         self.list.blockSignals(False)

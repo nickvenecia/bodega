@@ -43,9 +43,7 @@ class ShortcutsList(QWidget):
         super().__init__(parent)
         bl = vbox(self, (0, 0, tokens.SPACE_3, tokens.SPACE_4), tokens.SPACE_3)
         groups = keys_by_menu(bar)
-        groups.append(
-            ("Anywhere", [(t, k.toString(QKeySequence.SequenceFormat.NativeText)) for t, k in EXTRA])
-        )
+        groups.append(("Anywhere", [(t, k.toString(QKeySequence.SequenceFormat.NativeText)) for t, k in EXTRA]))
         for title, rows in groups:
             sec = Section(title)
             for text, key in rows:

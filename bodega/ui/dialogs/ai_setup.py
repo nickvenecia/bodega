@@ -55,9 +55,7 @@ class AISetupDialog(Embeddable, QDialog):
 
         sec = Section("Provider")
         row = hbox(spacing=SPACE_2)
-        self.provider = combo(
-            [(p.key, p.label, "") for p in PROVIDERS.values()], start.provider or "anthropic"
-        )
+        self.provider = combo([(p.key, p.label, "") for p in PROVIDERS.values()], start.provider or "anthropic")
         self.provider.currentIndexChanged.connect(lambda _i: self._provider_changed())
         row.addWidget(self.provider, 1)
         self.get_key = QPushButton("Get Key ↗")
@@ -69,9 +67,7 @@ class AISetupDialog(Embeddable, QDialog):
 
         self.address_sec = Section("Address")
         self.address = QLineEdit(start.base_url)
-        self.address.setPlaceholderText(
-            "https://…/v1   (or http://localhost:11434/v1 for a model on this computer)"
-        )
+        self.address.setPlaceholderText("https://…/v1   (or http://localhost:11434/v1 for a model on this computer)")
         self.address_sec.add(self.address)
         lay.addWidget(self.address_sec)
 
@@ -117,7 +113,7 @@ class AISetupDialog(Embeddable, QDialog):
         lay.addLayout(buttons)
         self._provider_changed(first=True)
 
-    # ------------------------------------------------------------------ what's picked
+    # What's picked
     def _p(self) -> providers.Provider:
         return PROVIDERS[self.provider.currentData()]
 
@@ -146,7 +142,7 @@ class AISetupDialog(Embeddable, QDialog):
         if not secrets.available():
             self.status.setText("This computer has no keychain, so Bodega can't keep a key safely.")
 
-    # ------------------------------------------------------------------ actions
+    # Actions
     def _run(self, job, done, busy: str) -> None:
         if self._worker is not None and self._worker.isRunning():
             return

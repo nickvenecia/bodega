@@ -27,9 +27,7 @@ class ReviewDialog(QDialog):
         n = len(result.changes)
         lay.addWidget(
             hint(
-                f"{n} suggestion{'s' if n != 1 else ''}. Untick any you don't want."
-                if n
-                else "No changes to suggest."
+                f"{n} suggestion{'s' if n != 1 else ''}. Untick any you don't want." if n else "No changes to suggest."
             )
         )
 

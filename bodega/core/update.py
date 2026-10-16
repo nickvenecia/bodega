@@ -147,9 +147,7 @@ def whats_new(notes: str) -> list[tuple[str, str]]:
             joining = True
     # a heading with nothing under it (all of it left out) goes too
     last = len(blocks) - 1
-    return [
-        b for n, b in enumerate(blocks) if b[0] != "heading" or (n < last and blocks[n + 1][0] != "heading")
-    ]
+    return [b for n, b in enumerate(blocks) if b[0] != "heading" or (n < last and blocks[n + 1][0] != "heading")]
 
 
 def check(timeout: float = 15) -> Release:
@@ -178,7 +176,7 @@ def check(timeout: float = 15) -> Release:
     return rel
 
 
-# ---------------------------------------------------------------------------- this copy of Bodega
+# This copy of Bodega
 def install_kind() -> str:
     if not getattr(sys, "frozen", False):
         return "source"
@@ -269,7 +267,7 @@ def _overlaps(a: Path, b: Path) -> bool:
     return a == b or a.is_relative_to(b) or b.is_relative_to(a)
 
 
-# ---------------------------------------------------------------------------- download + install
+# Download + install
 DOWNLOAD_FROM = f"https://github.com/{REPO}/releases/download/"
 DOWNLOAD_HOSTS = ("github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com")
 
@@ -293,9 +291,7 @@ def download(
     if not _trusted(asset.url):
         raise ValueError("That update isn't from Bodega's GitHub releases, so it wasn't used.")
     if not asset.sha256:
-        raise ValueError(
-            "GitHub didn't say what the update should look like, so it wasn't used. Try again later."
-        )
+        raise ValueError("GitHub didn't say what the update should look like, so it wasn't used. Try again later.")
     out = folder / asset.name
     req = urllib.request.Request(asset.url, headers={"User-Agent": f"Bodega/{__version__}"})
     h = hashlib.sha256()
@@ -389,9 +385,7 @@ def run(plan: Plan) -> None:
     """Start the helper so it outlives Bodega."""
     log.info("update: starting %s", shlex.join(plan.command))
     if sys.platform == "win32":
-        flags = (
-            subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW
-        )
+        flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW
         subprocess.Popen(plan.command, creationflags=flags, close_fds=True)
     else:
         subprocess.Popen(plan.command, start_new_session=True, close_fds=True)

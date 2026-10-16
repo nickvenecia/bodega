@@ -8,9 +8,7 @@ from pathlib import Path
 from bodega.ui.style import theme
 
 ROOT = Path(__file__).resolve().parent.parent / "bodega"
-CALLS = re.compile(
-    r'(?:icon|menu_icon|IconLabel|circle_button|icon_button|header_icon|set_icon)\(\s*"([a-z0-9-]+)"'
-)
+CALLS = re.compile(r'(?:icon|menu_icon|IconLabel|circle_button|icon_button|header_icon|set_icon)\(\s*"([a-z0-9-]+)"')
 ROWS = re.compile(r'_row\(\s*"[^"]+",\s*"[^"]+",\s*"([a-z0-9-]+)"')  # a sidebar row: key, label, icon
 
 

@@ -279,9 +279,7 @@ class LineEditor(QFrame):
             gear = pricing.line_gear(lib, line)
             if line.kind == "package":
                 n = sum(u for _i, u, _d in gear)
-                self.meta.setText(
-                    f"A kit of {words.count(n, 'piece')}: each goes on the agreement, serials and all."
-                )
+                self.meta.setText(f"A kit of {words.count(n, 'piece')}: each goes on the agreement, serials and all.")
             else:
                 kids = [f"{k.name}" + (f" ×{u}" if u > 1 else "") for k, u, d in gear if d]
                 self.meta.setText(("With " + ", ".join(kids)) if kids else "")
@@ -352,9 +350,7 @@ class RentalPanel(DetailsBase):
         self.check.clicked.connect(lambda: self.r and self.check_wanted.emit(self.r.id, self.r.is_out()))
         self.sheet = self.footer_button("Agreement…", "receipt")
         self.menu_action("copy", "Duplicate", lambda: self.r and self.duplicate_wanted.emit(self.r.id))
-        self.menu_action(
-            "calendar", "Add to Calendar", lambda: self.r and self.calendar_wanted.emit(self.r.id)
-        )
+        self.menu_action("calendar", "Add to Calendar", lambda: self.r and self.calendar_wanted.emit(self.r.id))
         self.menu_action("receipt", "Send to Saldo…", lambda: self.r and self.saldo_wanted.emit(self.r.id))
         self.menu_action("", "-", None)
         self.delete_act = self.menu_action(
@@ -518,7 +514,7 @@ class RentalPanel(DetailsBase):
         self._connect()
         self.form.hide()
 
-    # ------------------------------------------------------------------ wiring
+    # Wiring
     def _connect(self) -> None:
         def text(field):
             return lambda t: self._edit(field, t)
@@ -731,7 +727,7 @@ class RentalPanel(DetailsBase):
         self.defaults_saved.emit(b)
         self.recalc()
 
-    # ------------------------------------------------------------------ loading
+    # Loading
     def load(self, r: Rental) -> None:
         self._loading = True
         self.r = r
@@ -844,7 +840,7 @@ class RentalPanel(DetailsBase):
             self.build_lines(open_line=ed.line)
             self.changed.emit(self.r)
 
-    # ------------------------------------------------------------------ numbers
+    # Numbers
     def _compute(self) -> None:
         if self.r is None:
             return
@@ -905,8 +901,6 @@ class RentalPanel(DetailsBase):
         n = len([ln for ln in r.lines if ln.kind != "fee"])
         g["gear"].set_summary(f"{n} line{'s' if n != 1 else ''}" + (" · check dates" if self.shorts else ""))
         g["money"].set_summary(money.fmt(t.total, cur))
-        g["agreement"].set_summary(
-            "Custom terms" if b and r.terms.strip() != terms_for(b).strip() else "Profile terms"
-        )
+        g["agreement"].set_summary("Custom terms" if b and r.terms.strip() != terms_for(b).strip() else "Profile terms")
         self.show_history()
         self.reset_terms.setVisible(bool(b) and r.terms.strip() != terms_for(b).strip())

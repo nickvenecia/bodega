@@ -88,7 +88,7 @@ def profile_for(found: list[dict], b: Business | None) -> dict | None:
     return found[0] if len(found) == 1 else None
 
 
-# ---------------------------------------------------------------- Saldo's numbers (saldo/core/numbering.py)
+# Saldo's numbers (saldo/core/numbering.py)
 def _clean_prefix(prefix: str) -> str:
     p = re.sub(r"[^A-Za-z0-9-]", "", prefix or "").strip("-").upper()
     return p or "INV"
@@ -129,7 +129,7 @@ def _whole(value, default: int) -> int:
         return default
 
 
-# ---------------------------------------------------------------- the invoice
+# The invoice
 def invoice_for(lib, r: Rental, b: Business | None, profile: dict, taken: list[str]) -> dict:
     t = pricing.totals(lib, r, b)
     items = []
@@ -239,9 +239,5 @@ def send(lib, r: Rental, b: Business | None, profile: dict) -> tuple[str, bool]:
         inv, updated = fresh, False
     write_json(folder / f"{inv['id']}.json", inv)
     r.saldo_invoice, r.saldo_number = inv["id"], str(inv.get("number", ""))
-    r.happened(
-        f"Draft invoice {r.saldo_number} updated in Saldo"
-        if updated
-        else f"Sent to Saldo as {r.saldo_number}"
-    )
+    r.happened(f"Draft invoice {r.saldo_number} updated in Saldo" if updated else f"Sent to Saldo as {r.saldo_number}")
     return r.saldo_number, updated

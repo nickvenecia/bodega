@@ -47,9 +47,7 @@ def test_the_internets_errors_never_show_their_raw_text():
 
 def test_bodegas_own_plain_words_pass_through():
     assert errors.plain(AIError("The key wasn't accepted."), "ask") == "The key wasn't accepted."
-    assert (
-        errors.plain(OSError("That page isn't on B&H any more."), "x") == "That page isn't on B&H any more."
-    )
+    assert errors.plain(OSError("That page isn't on B&H any more."), "x") == "That page isn't on B&H any more."
 
 
 def test_anything_unknown_gets_a_reference_that_matches_the_log(caplog):

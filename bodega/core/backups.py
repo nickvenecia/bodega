@@ -184,9 +184,7 @@ def read_backup(path: Path) -> Backup:
                 except (UnicodeDecodeError, ValueError):
                     ok = False
                 if not ok:
-                    raise ValueError(
-                        f"{rel.as_posix()} in that backup can't be read, so nothing was restored."
-                    )
+                    raise ValueError(f"{rel.as_posix()} in that backup can't be read, so nothing was restored.")
             backup.files[place] = data
     if not any(k in RECORDS or k.startswith("rentals/") for k in backup.files):
         raise ValueError("That isn't a Bodega backup: there's no gear, kits, rentals or profiles in it.")

@@ -56,9 +56,7 @@ from bodega.ui.window.transfer import TransferMixin
 log = get_logger(__name__)
 
 
-class MainWindow(
-    AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, PagesMixin, ServicesMixin, QMainWindow
-):
+class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, PagesMixin, ServicesMixin, QMainWindow):
     def __init__(self, lib: Library | None = None):
         super().__init__()
         self.lib = lib or Library().load()
@@ -112,9 +110,7 @@ class MainWindow(
         self._retry_timer = QTimer(self, interval=tokens.SAVE_RETRY_MS, timeout=self.flush)  # while not saved
         self._was_unsaved = False
         self.lib.on_unsaved = lambda: QTimer.singleShot(0, self, self.show_save_state)
-        self._table_timer = QTimer(
-            self, singleShot=True, interval=tokens.TABLE_DELAY_MS, timeout=self.refresh
-        )
+        self._table_timer = QTimer(self, singleShot=True, interval=tokens.TABLE_DELAY_MS, timeout=self.refresh)
 
         self._wire()
         self._menus()
@@ -137,9 +133,7 @@ class MainWindow(
                 self.lib.save_items()
             self.lib.settings["companies_guessed"] = True
         folded = settings.value(self.lib.settings, "folded")
-        self.gear_table.folded = (
-            {x for x in folded if isinstance(x, str)} if isinstance(folded, list) else set()
-        )
+        self.gear_table.folded = {x for x in folded if isinstance(x, str)} if isinstance(folded, list) else set()
         self._restored = False  # True: open at the size already set (screenshots), not the saved one
         view = settings.value(self.lib.settings, "view")
         self.go(view if isinstance(view, str) else "gear")
@@ -153,7 +147,7 @@ class MainWindow(
         self._arm_midnight()
         QGuiApplication.instance().applicationStateChanged.connect(self._app_state)
 
-    # ------------------------------------------------------------------ the day, and going to the background
+    # The day, and going to the background
     def _arm_midnight(self) -> None:
         now = datetime.now()
         nxt = datetime.combine(now.date() + timedelta(days=1), datetime.min.time())
@@ -173,7 +167,7 @@ class MainWindow(
         elif state in (Qt.ApplicationState.ApplicationInactive, Qt.ApplicationState.ApplicationHidden):
             self.flush()  # going to another app: what you typed is saved now
 
-    # ------------------------------------------------------------------ building
+    # Building
     def _build_center(self) -> QWidget:
         center = QFrame()
         center.setObjectName("Center")
@@ -272,9 +266,7 @@ class MainWindow(
         lay.addWidget(self.pages, 1)
         self.totals = QFrame()
         self.totals.setObjectName("Totals")
-        tl = hbox(
-            self.totals, (tokens.SPACE_5, tokens.SPACE_3, tokens.SPACE_5, tokens.SPACE_3), tokens.SPACE_5
-        )
+        tl = hbox(self.totals, (tokens.SPACE_5, tokens.SPACE_3, tokens.SPACE_5, tokens.SPACE_3), tokens.SPACE_5)
         self.total_values: dict[str, QLabel] = {}
         self.total_labels: dict[str, QLabel] = {}
         tl.addStretch(1)
@@ -367,7 +359,7 @@ class MainWindow(
         for panel in (self.items, self.packages, self.rentals):
             panel.groups_changed.connect(self._groups_changed)
 
-    # ------------------------------------------------------------------ where you are
+    # Where you are
     def business(self) -> Business | None:
         cur = settings.value(self.lib.settings, "business")
         return self.lib.businesses.get(cur) or next(iter(self.lib.businesses.values()), None)
@@ -411,15 +403,11 @@ class MainWindow(
         self.title.setText(self._grp() or TITLES.get(view, ""))
         kind = kind_of(view)
         self.btn_export.setVisible(kind == "gear" and bool(self.lib.items))  # nothing to print yet: no share
-        self.btn_new.setToolTip(
-            {"gear": "New Gear or Group", "packages": "New Kit", "rentals": "New Rental"}[kind]
-        )
+        self.btn_new.setToolTip({"gear": "New Gear or Group", "packages": "New Kit", "rentals": "New Rental"}[kind])
         gear_page = kind == "gear"  # on gear pages the + asks: a piece, or a group
         self.btn_new.setMenu(self.new_menu if gear_page else None)
         self.btn_new.setPopupMode(
-            QToolButton.ToolButtonPopupMode.InstantPopup
-            if gear_page
-            else QToolButton.ToolButtonPopupMode.DelayedPopup
+            QToolButton.ToolButtonPopupMode.InstantPopup if gear_page else QToolButton.ToolButtonPopupMode.DelayedPopup
         )
         self.view_menu.set_divide(self._divide_for(view), "brand" if view.startswith("grp:") else "group")
         if moved:
@@ -431,9 +419,7 @@ class MainWindow(
             self.refresh()
             self._ai_state()
             return
-        self.inspector.setCurrentWidget(
-            {"gear": self.items, "packages": self.packages, "rentals": self.rentals}[kind]
-        )
+        self.inspector.setCurrentWidget({"gear": self.items, "packages": self.packages, "rentals": self.rentals}[kind])
         self.refresh()
         # keep what's open if it's still here; otherwise nothing is picked and the panel slides away
         cur = {"gear": self.items.it, "packages": self.packages.pkg, "rentals": self.rentals.r}[kind]
@@ -622,14 +608,10 @@ class MainWindow(
                 sheet_tile=1,
             )
         elif which == "packages":
-            self.empty.show_for(
-                (("case", "New Kit", "Gear that rents together", "", lambda: self.new("packages")),)
-            )
+            self.empty.show_for((("case", "New Kit", "Gear that rents together", "", lambda: self.new("packages")),))
         else:
             icon = {"out": "camera", "upcoming": "clock", "rentals": "receipt"}[which]
-            self.empty.show_for(
-                ((icon, "New Rental", "A quote or a booking", "", lambda: self.new("rentals")),)
-            )
+            self.empty.show_for(((icon, "New Rental", "A quote or a booking", "", lambda: self.new("rentals")),))
         return self.empty
 
     def _inspector_empty(self, kind: str) -> None:
@@ -637,9 +619,7 @@ class MainWindow(
 
         def blank() -> None:
             if kind == "rentals" and not self.lib.businesses:
-                panel.show_empty(
-                    "Add Your Profile", "", "Add Your Profile…", lambda: self.edit_business(True)
-                )
+                panel.show_empty("Add Your Profile", "", "Add Your Profile…", lambda: self.edit_business(True))
             else:
                 panel.show_empty("Nothing Selected", "", "", None)
                 panel.empty_btn.hide()
@@ -682,7 +662,7 @@ class MainWindow(
     def _remember_folds(self) -> None:
         self.lib.settings["folded"] = sorted(self.gear_table.folded)
 
-    # ------------------------------------------------------------------ opening
+    # Opening
     def open(self, kind: str, obj_id: str) -> None:
         """Open a piece of gear, a kit or a rental on the right (moving to its place if needed)."""
         where = {"gear": self.lib.items, "packages": self.lib.packages, "rentals": self.lib.rentals}[kind]
@@ -736,9 +716,7 @@ class MainWindow(
                 if self.rentals.r is not r or not self.rentals.form.isVisible():
                     self.rentals.load(r)
                     self.rentals.to_top()
-        self.inspector.setCurrentWidget(
-            {"gear": self.items, "packages": self.packages}.get(kind, self.rentals)
-        )
+        self.inspector.setCurrentWidget({"gear": self.items, "packages": self.packages}.get(kind, self.rentals))
         if kind == "packages" and self.view_key == "kits":  # the kit's own row in the sidebar
             self.sidebar.select(f"kit:{obj_id}" if f"kit:{obj_id}" in self.sidebar.rows else "kits")
         self.dock.set_open(True)
@@ -762,17 +740,13 @@ class MainWindow(
                 it = self.lib.items.get(obj_id)
                 m.addAction(theme.menu_icon("copy"), "Duplicate", lambda: self.duplicate(kind, obj_id))
                 if it is not None and it.parent:
-                    m.addAction(
-                        theme.menu_icon("unlink"), "Make It Its Own Piece", lambda: self.detach(obj_id)
-                    )
+                    m.addAction(theme.menu_icon("unlink"), "Make It Its Own Piece", lambda: self.detach(obj_id))
                 m.addAction(
                     theme.menu_icon("receipt"),
                     "Rent This",
                     lambda: (self.open("gear", obj_id), self.rent_this()),
                 )
-                m.addAction(
-                    theme.menu_icon("assistant"), "Update with AI", lambda: self.ai_this_piece(obj_id)
-                )
+                m.addAction(theme.menu_icon("assistant"), "Update with AI", lambda: self.ai_this_piece(obj_id))
                 m.addSeparator()
                 m.addAction(theme.menu_icon("trash"), "Delete…", lambda: self.delete(kind, obj_id))
             else:
@@ -797,29 +771,29 @@ class MainWindow(
         items += [("", "-", None), ("trash", "Delete…", lambda: self.delete(kind, obj_id))]
         menu(self, items).exec(pos)
 
-    # ------------------------------------------------------------------ groups
+    # Groups
 
-    # ------------------------------------------------------------------ settings
+    # Settings
 
-    # ------------------------------------------------------------------ new, duplicate, delete
+    # New, duplicate, delete
 
-    # ------------------------------------------------------------------ attaching
+    # Attaching
 
-    # ------------------------------------------------------------------ kits + rentals: adding gear
+    # Kits + rentals: adding gear
 
-    # ------------------------------------------------------------------ edits
+    # Edits
 
-    # ------------------------------------------------------------------ renters
+    # Renters
 
-    # ------------------------------------------------------------------ profiles
+    # Profiles
 
-    # ------------------------------------------------------------------ import / export
+    # Import / export
 
-    # ------------------------------------------------------------------ the page window
+    # The page window
 
-    # ------------------------------------------------------------------ updates
+    # Updates
 
-    # ------------------------------------------------------------------ misc
+    # Misc
     def toast(self, text: str, tone: str = "") -> None:
         """A short message over the page. `tone`: "done" (it worked), "problem" (it didn't: say what to do),
         or "" for news."""
@@ -864,9 +838,7 @@ class MainWindow(
         except (TypeError, ValueError):
             return False
         frame = self.frameGeometry()
-        return any(
-            s.availableGeometry().adjusted(-2, -2, 2, 2).contains(frame) for s in QGuiApplication.screens()
-        )
+        return any(s.availableGeometry().adjusted(-2, -2, 2, 2).contains(frame) for s in QGuiApplication.screens())
 
     def resizeEvent(self, e):
         """The inspector gives up some width on a smaller window, so the toolbar never crowds."""

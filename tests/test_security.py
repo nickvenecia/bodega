@@ -28,9 +28,7 @@ def test_only_web_links_count():
         assert web.web_link(bad) == "", bad
 
 
-@pytest.mark.parametrize(
-    "host_ip", ["127.0.0.1", "10.0.0.1", "192.168.1.1", "169.254.169.254", "::1", "fd00::1"]
-)
+@pytest.mark.parametrize("host_ip", ["127.0.0.1", "10.0.0.1", "192.168.1.1", "169.254.169.254", "::1", "fd00::1"])
 def test_private_addresses_are_blocked(monkeypatch, host_ip):
     import socket
 

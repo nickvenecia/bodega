@@ -120,9 +120,7 @@ class PackagePanel(DetailsBase):
         self.add.clicked.connect(lambda: self.pkg and self.add_wanted.emit(self.pkg.id))
         self.pricing.currentIndexChanged.connect(lambda _i: self._set("pricing", self.pricing.currentData()))
         self.discount.textEdited.connect(lambda t: self._set("discount", t))
-        self.fixed.textEdited.connect(
-            lambda t: self._set("day_rate", t.replace("$", "").replace(",", "").strip())
-        )
+        self.fixed.textEdited.connect(lambda t: self._set("day_rate", t.replace("$", "").replace(",", "").strip()))
         self.form.hide()
 
     def b(self):
@@ -180,9 +178,7 @@ class PackagePanel(DetailsBase):
         more = icon_button("more", "Open or remove")
         more.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         m = QMenu(more)
-        m.addAction(
-            theme.menu_icon("edit"), "Open Gear", lambda i=it.id: self.later(lambda: self.open_item.emit(i))
-        )
+        m.addAction(theme.menu_icon("edit"), "Open Gear", lambda i=it.id: self.later(lambda: self.open_item.emit(i)))
         m.addSeparator()
         m.addAction(theme.menu_icon("trash"), "Remove", lambda n=n: self.later(lambda: self._remove(n)))
         more.setMenu(m)
@@ -225,9 +221,7 @@ class PackagePanel(DetailsBase):
         self.sum_rows["alone"].setText(f"{money.fmt_short(alone, cur)} a day")
         self.sum_rows["rate"].setText(f"{money.fmt_short(rate, cur)} a day")
         self.sum_rows["week"].setText(money.fmt_short(rate * wd, cur))
-        self.sum_rows["value"].setText(
-            money.fmt_short(money.whole(pricing.package_value(self.lib, p, b)), cur)
-        )
+        self.sum_rows["value"].setText(money.fmt_short(money.whole(pricing.package_value(self.lib, p, b)), cur))
         save = alone - rate
         if save > 0 and alone:
             pct = money.whole(save / alone * 100)
