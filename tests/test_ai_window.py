@@ -68,7 +68,7 @@ def test_tidy_names_end_to_end(win, monkeypatch):
     _wait(win.assistant.worker)
     assert picked["n"] >= 1
     assert win.lib.items[lens.id].name.endswith("(Tidy)") and win.lib.items[lens.id].series == "Cine"
-    assert list((win.lib.root / "backups").glob("gear-*.json"))
+    assert list((win.lib.root / "backups").glob("Bodega * before-ai.zip"))
 
 
 def test_jobs_need_setup_first(win, monkeypatch):

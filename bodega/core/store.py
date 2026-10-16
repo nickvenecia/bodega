@@ -229,26 +229,28 @@ class Library:
                 seen.add(p)
                 p = self.items[p].parent
 
-    SNAPSHOTS_KEPT = 20
-
     def snapshot(self, why: str) -> Path | None:
-        """A dated copy of gear.json in backups/ before a big change (an AI's edits, say); the newest
-        SNAPSHOTS_KEPT are kept. None if there's no gear yet or it couldn't be written."""
-        src = self.root / "gear.json"
-        if not src.exists():
-            return None
-        folder = self.root / "backups"
-        stamp = time.strftime("%Y-%m-%d-%H%M%S")
-        dest = folder / f"gear-{stamp}-{re.sub(r'[^a-z0-9-]', '', why.lower())}.json"
-        try:
-            folder.mkdir(parents=True, exist_ok=True)
-            dest.write_bytes(src.read_bytes())
-            for old in sorted(folder.glob("gear-*.json"))[: -self.SNAPSHOTS_KEPT]:
-                old.unlink(missing_ok=True)
-        except OSError:
-            log.warning("couldn't keep a copy of the gear before %s", why, exc_info=True)
-            return None
-        return dest
+        """A safety copy of every record before a big change (an import, an AI's edits): see core/backups.py.
+        None if there's nothing yet or it couldn't be written."""
+        from bodega.core import backups
+
+        return backups.safety_copy(self.root, why)
+
+    def restore(self, backup) -> Path | None:
+        """Put a backup (core/backups.read_backup) back in place of everything, after a safety copy of how
+        things are now (returned, so it can be put back in turn). Numbers given since stay spent."""
+        from bodega.core import backups
+
+        for r in self.rentals.values():
+            self._spend_number(r.number)
+        spent = self._spent()
+        kept = backups.safety_copy(self.root, "before-restore")
+        backups.put_back(self.root, backup)
+        self.unsaved.clear()
+        self.load()
+        for series, n in spent.items():
+            self._spend(series, n)
+        return kept
 
     def _write(self, what: str, path: Path, data: Any) -> None:
         """Write one file; if it fails, remember it as unsaved (and say so) before the error goes on up."""

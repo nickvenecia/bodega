@@ -11,6 +11,7 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QFileDialog
 
 from bodega.core import dates, importer
+from bodega.core.history import History
 from bodega.core.log import get_logger
 from bodega.core.model import Item
 from bodega.core.paths import data_dir, documents_dir
@@ -102,6 +103,7 @@ class TransferMixin:
             if i.parent and i.parent not in ids:
                 i.parent = same.get(i.parent, "")
         self.flush()
+        self.lib.snapshot("before-import")
         for i in chosen:
             self.lib.add_item(i)
         if pricing_found:
@@ -170,6 +172,49 @@ class TransferMixin:
             notice(self, "Couldn't back up", str(e))
             return
         self.toast("Backed up", "done")
+
+    def restore(self) -> None:
+        """File › Restore from Backup…: put a Back Up zip or a safety copy back in place of everything, after a
+        look at what's in it. How things are now is kept as a safety copy first."""
+        from bodega.core import backups
+        from bodega.ui.dialogs.common import confirm
+
+        self.flush()
+        start = backups.folder(self.lib.root) if backups.copies(self.lib.root) else documents_dir()
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Restore from Backup", str(start), "Bodega Backups (*.zip)"
+        )
+        if not path:
+            return
+        try:
+            backup = backups.read_backup(Path(path))
+        except ValueError as e:
+            notice(self, "Couldn't Restore That", str(e))
+            return
+        if not confirm(
+            self,
+            "Replace Everything with This Backup?",
+            f"Your gear, kits, rentals, renters and profiles become what {Path(path).name} holds: "
+            f"{backup.summary()}. What you have now is kept as a safety copy first, so you can go back.",
+            "Restore",
+        ):
+            return
+        try:
+            kept = self.lib.restore(backup)
+            problem = ""
+        except OSError as e:
+            log.warning("restore failed", exc_info=True)
+            kept, problem = None, f"Bodega couldn't write to its folder ({e.strerror or e})."
+            self.lib.load()  # whatever made it back, as it now is on disk
+        self.deselect()
+        self.history = History(self.lib)  # undo starts again from what was put back
+        self.refresh()
+        self.sidebar.show_who()
+        if problem:
+            notice(self, "Couldn't Restore All of It", problem)
+            return
+        log.info("restored %s", Path(path).name)
+        self.toast("Restored." + (f" What you had before is kept as {kept.name}." if kept else ""), "done")
 
     # ------------------------------------------------------------------ photos from links
     def get_photos_from_links(self) -> None:

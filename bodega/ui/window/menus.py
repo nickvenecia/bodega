@@ -47,6 +47,7 @@ class MenusMixin:
         act(f, "Add Rentals to Calendar", lambda: self.add_to_calendar())
         act(f, "Save Calendar File…", self.save_calendar)
         act(f, "Back Up…", self.back_up)
+        act(f, "Restore from Backup…", self.restore)
         f.addSeparator()
         act(
             f,

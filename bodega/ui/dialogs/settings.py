@@ -17,7 +17,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QStackedWidget, QWidget
 
 from bodega import __version__
-from bodega.core import dates
+from bodega.core import backups, dates
 from bodega.core.paths import data_dir
 from bodega.core.store import Library
 from bodega.services import account
@@ -32,6 +32,7 @@ from bodega.ui.components.widgets import (
     ToggleRow,
     combo,
     hbox,
+    hint,
     set_combo,
     vbox,
 )
@@ -323,11 +324,24 @@ class SettingsDialog(QDialog):
         show.clicked.connect(self.win.open_data_folder)
         back = QPushButton("Back Up…")
         back.clicked.connect(self.win.back_up)
+        restore = QPushButton("Restore…")
+        restore.setToolTip("Put a backup or a safety copy back in place of everything")
+        restore.clicked.connect(self.win.restore)
         row = hbox(spacing=tokens.SPACE_2)
         row.addWidget(show)
         row.addWidget(back)
+        row.addWidget(restore)
         row.addStretch(1)
         where.add(row)
         lay.addWidget(where)
+        safety = Section("Safety Copies")
+        safety.add(
+            hint(
+                f"Bodega keeps a copy of your gear, kits, rentals, renters and profiles each day you open it "
+                f"(the last {backups.DAILY_KEPT} days) and before a big change: an import, Tidy Up Groups, an "
+                f"AI's changes or a restore (the last {backups.CHANGES_KEPT}). Restore… starts with them."
+            )
+        )
+        lay.addWidget(safety)
         lay.addStretch(1)
         self._fill("data", w)

@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.core import document, money, pricing, update
+from bodega.core import backups, document, money, pricing, update
 from bodega.core.history import History
 from bodega.core.log import get_logger
 from bodega.core.model import Business
@@ -138,6 +138,7 @@ class MainWindow(
         view = self.lib.settings.get("view", "gear")
         self.go(view if isinstance(view, str) else "gear")
         self.history = History(self.lib)  # undo/redo starts from how things are when the window opens
+        backups.daily_copy(self.lib.root)  # the first time Bodega opens today: a safety copy
         QTimer.singleShot(tokens.UPDATE_CHECK_DELAY_MS, self._auto_check_updates)
 
     # ------------------------------------------------------------------ building

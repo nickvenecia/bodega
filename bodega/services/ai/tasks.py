@@ -482,7 +482,7 @@ def inventory_text(items: list[Item], lookup: dict[str, Item], numbered: bool = 
 
 
 def apply(lib, changes: list[Change]) -> int:
-    """Make the approved changes (a copy of your gear is kept first: Library.snapshot). Returns how many."""
+    """Make the approved changes (a safety copy is kept first: Library.snapshot). Returns how many."""
     if not changes:
         return 0
     lib.snapshot("before-ai")

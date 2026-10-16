@@ -14,6 +14,10 @@
 - When Bodega can't save (the disk is full, say), a banner across the top says so and stays until it can, with Try
   Again; your profile card at the bottom of the sidebar says Not Saved. Bodega keeps trying, and tells you when it's
   saved. Quitting while something isn't saved asks first: Try Again, Quit Anyway or Cancel.
+- Bodega keeps safety copies of your gear, kits, rentals, renters and profiles: one each day you open it (the last
+  14 days), and one before each import, Tidy Up Groups, AI change or restore (the last 20).
+- File › Restore from Backup… (also in Settings › Your Data) puts a Back Up zip or a safety copy back. It shows
+  what's in it first, and keeps what you have now as a safety copy, so a restore can be undone the same way.
 - Closing a renter, your profile, Send Feedback or Check Out with changes you haven't saved asks first (Discard
   Changes or Keep Editing), instead of dropping them. Save Changes stays off until you've changed something.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles

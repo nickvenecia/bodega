@@ -161,5 +161,6 @@ class GroupsMixin:
             return
         if not tidy_preview(self, moves):
             return
+        self.lib.snapshot("before-tidy")
         n = self.lib.apply_groups(tidy.suggest(self.lib.items))
         self._groups_edited(f"Tidied {n} pieces into {len(self.lib.groups())} groups.")

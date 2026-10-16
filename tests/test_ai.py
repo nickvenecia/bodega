@@ -318,7 +318,7 @@ def test_applying_keeps_a_copy_first(data_folder):
         ],
     )
     assert n == 2 and it.name == "New Name" and it.value == "1234.50" and not it.link
-    assert list((data_folder / "backups").glob("gear-*-before-ai.json"))
+    assert list((data_folder / "backups").glob("Bodega * before-ai.zip"))
 
 
 def test_questions_never_include_renters(provider, data_folder):

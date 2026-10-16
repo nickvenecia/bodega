@@ -46,6 +46,9 @@ bodega/
                    set_next_number, number_taken); delete_item detaches what was attached and leaves rentals the name;
                    groups() in your order (settings "group_list"), add/rename/remove/step, put_in_group()
                    (what goes with it comes along, emptied groups go), apply_groups(); pricing() never None
+    backups.py     safety copies (backups/: one a day, and before an import, Tidy Up, AI changes or a restore)
+                   and Restore: read_backup() checks a zip as untrusted, put_back(); Library.restore() keeps a copy
+                   first and every number spent; photos and logos are only ever added
     tidy.py        Tidy Up Groups: GROUPS, RULES (by name), RENAMES (by old group); suggest(), changes()
     prices.py      Check Price: fetch a product page, read its price (JSON-LD offers, price meta tags). Stores
                    may block it; that's web.Refused, with a plain message
