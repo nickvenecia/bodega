@@ -13,6 +13,7 @@ from bodega.core.looks import FONT
 from bodega.ui.style import tokens
 from bodega.ui.style.tokens import (
     AVATAR,
+    BAR_CTRL_H,
     BAR_H,
     CHIP_SM_H,
     CONTROL_H,
@@ -39,6 +40,7 @@ from bodega.ui.style.tokens import (
     TEXT_BRAND,
     TEXT_LG,
     TEXT_MD,
+    TEXT_RECORD,
     TEXT_SM,
     TEXT_TITLE,
     TEXT_TITLEBAR,
@@ -61,6 +63,7 @@ FONT_FAMILY = FONT  # the same Inter as the paper (core/looks.py): one font for 
 _INNER = CONTROL_H - 2
 _SMALL_INNER = SMALL_H - 2
 _SEG_INNER = CONTROL_H - 2 - 2 * SEG_INSET  # segmented control: 1px border + inset
+_BAR_INNER = BAR_CTRL_H - 2  # the bar's circles and search field
 
 
 def _load_colors() -> None:
@@ -81,7 +84,7 @@ def load_fonts() -> str:
 def _sheet() -> str:
     """The app stylesheet in the current colors."""
     return f"""
-* {{ outline: none; }}
+* {{ outline: none; }}  /* Qt's dotted focus box: every control draws its own focus ring below */
 QWidget {{ color: {tokens.TEXT}; font-size: {TEXT_MD}px; }}
 QMainWindow {{ background: {tokens.BG}; }}
 *[glass="true"] {{ background: transparent; border: none; }}
@@ -96,7 +99,7 @@ QToolTip {{ background: {tokens.RAISED}; color: {tokens.TEXT}; border: 1px solid
 #TitleWordmark {{ font-size: {TEXT_TITLEBAR}px; font-weight: {WEIGHT_BOLD}; letter-spacing: {TRACK_TITLEBAR}px; }}
 #DialogTitle {{ font-size: {TEXT_XL}px; font-weight: {WEIGHT_BOLD}; }}
 #SectionLabel {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; font-weight: {WEIGHT_SEMIBOLD}; }}
-#Hint {{ color: {tokens.FAINT}; font-size: {TEXT_SM}px; }}
+#Hint {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}
 #Muted {{ color: {tokens.MUTED}; }}
 #Meta {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}
 
@@ -112,14 +115,14 @@ QPushButton {{
 QPushButton:hover {{ background: {tokens.RAISED_HOVER}; }}
 QPushButton:pressed {{ background: {tokens.RAISED_PRESS}; }}
 QPushButton:disabled {{ color: {tokens.FAINT}; background: {tokens.CARD}; border-color: {tokens.BORDER}; }}
-QPushButton#Primary {{ background: {tokens.ACCENT}; color: {tokens.ON_ACCENT}; border-color: {tokens.ACCENT};
+QPushButton#Primary {{ background: {tokens.ACCENT_FILL}; color: {tokens.ON_ACCENT}; border-color: {tokens.ACCENT_FILL};
     font-weight: {WEIGHT_SEMIBOLD}; padding: 0 {SPACE_4}px; }}
-QPushButton#Primary:hover {{ background: {tokens.ACCENT_HOVER}; border-color: {tokens.ACCENT_HOVER}; }}
+QPushButton#Primary:hover {{ background: {tokens.ACCENT_FILL_HOVER}; border-color: {tokens.ACCENT_FILL_HOVER}; }}
 QPushButton#Primary:pressed {{ background: {tokens.ACCENT_PRESS}; border-color: {tokens.ACCENT_PRESS}; }}
 QPushButton#Primary:disabled {{ background: {tokens.ACCENT_OFF}; border-color: {tokens.ACCENT_OFF}; color: {tokens.ACCENT_OFF_TEXT}; }}
 QPushButton#Ghost {{ background: transparent; border-color: transparent; color: {tokens.MUTED}; }}
 QPushButton#Ghost:hover {{ background: {tokens.CARD_HOVER}; color: {tokens.TEXT}; }}
-QPushButton#AddChip {{ background: {tokens.CHIP}; border: 1px solid transparent; color: {tokens.ACCENT}; padding: 0 {SPACE_3}px 0 {SPACE_2}px; font-weight: {WEIGHT_SEMIBOLD}; }}
+QPushButton#AddChip {{ background: {tokens.CHIP}; border: 1px solid transparent; color: {tokens.ACCENT_TEXT}; padding: 0 {SPACE_3}px 0 {SPACE_2}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 QPushButton#AddChip:hover {{ background: {tokens.CHIP_HOVER}; }}
 QPushButton#AddChip:pressed {{ background: {tokens.ACCENT_TINT}; }}
 QToolButton#SectionAdd {{ background: transparent; border: none; border-radius: {tokens.SECTION_ADD // 2}px;
@@ -127,8 +130,8 @@ QToolButton#SectionAdd {{ background: transparent; border: none; border-radius: 
     min-height: {tokens.SECTION_ADD}px; max-height: {tokens.SECTION_ADD}px; }}
 QToolButton#SectionAdd:hover {{ background: {tokens.CARD_HOVER}; }}
 *[capsule="true"] {{ border-radius: {_INNER // 2}px; padding-left: {SPACE_4}px; }}
-QPushButton#LinkBtn {{ background: transparent; border: none; padding: 0; color: {tokens.ACCENT}; text-align: left; }}
-QPushButton#LinkBtn:hover {{ color: {tokens.ACCENT_HOVER}; }}
+QPushButton#LinkBtn {{ background: transparent; border: none; padding: 0; color: {tokens.ACCENT_TEXT}; text-align: left; }}
+QPushButton#LinkBtn:hover {{ color: {tokens.TEXT}; }}
 QPushButton#LinkBtn:disabled {{ color: {tokens.FAINT}; background: transparent; }}
 QPushButton#Disclosure {{ background: transparent; border: none; border-radius: 0; padding: 0; text-align: left;
     color: {tokens.MUTED}; font-size: {TEXT_SM}px; font-weight: {WEIGHT_SEMIBOLD}; min-height: {SMALL_H}px; max-height: {SMALL_H}px; }}
@@ -145,28 +148,34 @@ QToolButton#Circle, QToolButton#CirclePrimary {{ border-radius: {_INNER // 2}px;
     min-height: {_INNER}px; max-height: {_INNER}px; }}
 QToolButton#Circle {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; }}
 QToolButton#Circle:hover {{ background: {tokens.RAISED_HOVER}; }}
-QToolButton#CirclePrimary {{ background: {tokens.ACCENT}; border: 1px solid {tokens.ACCENT}; }}
-QToolButton#CirclePrimary:hover {{ background: {tokens.ACCENT_HOVER}; border-color: {tokens.ACCENT_HOVER}; }}
+QToolButton#CirclePrimary {{ background: {tokens.ACCENT_FILL}; border: 1px solid {tokens.ACCENT_FILL}; }}
+QToolButton#CirclePrimary:hover {{ background: {tokens.ACCENT_FILL_HOVER}; border-color: {tokens.ACCENT_FILL_HOVER}; }}
 QToolButton#CirclePrimary:pressed {{ background: {tokens.ACCENT_PRESS}; }}
 QToolButton#Circle[active="true"] {{ background: {tokens.ACCENT_TINT}; border-color: {tokens.ACCENT_EDGE}; }}
+QToolButton#Circle[bar="true"], QToolButton#CirclePrimary[bar="true"] {{ border-radius: {_BAR_INNER // 2}px;
+    min-width: {_BAR_INNER}px; max-width: {_BAR_INNER}px; min-height: {_BAR_INNER}px; max-height: {_BAR_INNER}px; }}
+QLineEdit[bar="true"] {{ min-height: {_BAR_INNER}px; max-height: {_BAR_INNER}px; border-radius: {_BAR_INNER // 2}px; }}
+/* keyboard focus: buttons take it from Tab only (never a click), so a ring means the keyboard is there */
+QPushButton:focus, QToolButton:focus, #SegBtn:focus {{ border: 1px solid {tokens.ACCENT}; }}
+QPushButton#Primary:focus, QToolButton#CirclePrimary:focus {{ border: 1px solid {tokens.ON_ACCENT}; }}
 #Alert {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {RADIUS_LG}px; }}
 #AlertTitle {{ font-size: {TEXT_LG}px; font-weight: {WEIGHT_SEMIBOLD}; }}
-QPushButton#DangerFill {{ background: {tokens.BAD}; border: 1px solid {tokens.BAD}; color: {tokens.ON_ACCENT}; font-weight: {WEIGHT_SEMIBOLD}; }}
-QPushButton#DangerFill:hover {{ background: {tokens.BAD}; border-color: {tokens.BAD}; }}
+QPushButton#DangerFill {{ background: {tokens.BAD_BUTTON}; border: 1px solid {tokens.BAD_BUTTON}; color: #FFFFFF; font-weight: {WEIGHT_SEMIBOLD}; }}
+QPushButton#DangerFill:hover {{ background: {tokens.BAD_BUTTON}; border-color: {tokens.BAD_BUTTON}; }}
 QFrame#CheckRow {{ background: {tokens.FILL}; border-radius: {RADIUS_LG}px; }}
 QLabel#Due {{ color: {tokens.MUTED}; }}
 QLabel#Due[tone="out"] {{ color: {tokens.WARN}; font-weight: {WEIGHT_SEMIBOLD}; }}
 QLabel#Due[tone="late"] {{ color: {tokens.BAD}; font-weight: {WEIGHT_SEMIBOLD}; }}
 #KeyCap {{ background: {tokens.CHIP}; color: {tokens.MUTED}; border-radius: {RADIUS_SM}px; padding: 2px {SPACE_2}px;
     font-weight: {WEIGHT_MEDIUM}; }}
-#MenuHeading {{ color: {tokens.FAINT}; font-size: {TEXT_XS}px; font-weight: {WEIGHT_SEMIBOLD}; padding: {SPACE_1}px {SPACE_2}px 0 {SPACE_2}px; }}
+#MenuHeading {{ color: {tokens.MUTED}; font-size: {TEXT_XS}px; font-weight: {WEIGHT_SEMIBOLD}; padding: {SPACE_1}px {SPACE_2}px 0 {SPACE_2}px; }}
 
 /* ---------- fields + dropdowns: all CONTROL_H tall */
 QComboBox {{ combobox-popup: 0; }}
 QComboBox, QLineEdit {{
     background: {tokens.FIELD}; border: 1px solid {tokens.FIELD_BORDER}; border-radius: {RADIUS}px;
     padding: 0 {SPACE_3}px; min-height: {_INNER}px; max-height: {_INNER}px;
-    selection-background-color: {tokens.ACCENT}; selection-color: {tokens.ON_ACCENT};
+    selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT};
 }}
 QComboBox:hover, QLineEdit:hover {{ border-color: {tokens.BORDER_HOVER}; }}
 QLineEdit:focus, QComboBox:focus {{ border-color: {tokens.ACCENT}; }}
@@ -176,7 +185,7 @@ QComboBoxPrivateContainer {{ background: transparent; border: none; }}
 QComboBox QAbstractItemView, QListView#Suggestions {{
     background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {tokens.LIST_R}px;
     padding: {tokens.LIST_INSET - 1}px; outline: none;
-    selection-background-color: {tokens.ACCENT_TINT}; selection-color: {tokens.ACCENT_HOVER};
+    selection-background-color: {tokens.ACCENT_TINT}; selection-color: {tokens.ACCENT_TEXT};
 }}
 QComboBox QAbstractItemView::item, QListView#Suggestions::item {{
     padding: 0 {SPACE_2}px; min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px;
@@ -184,7 +193,7 @@ QComboBox QAbstractItemView::item, QListView#Suggestions::item {{
 }}
 QComboBox QAbstractItemView::item:hover, QListView#Suggestions::item:hover {{ background: {tokens.CARD_HOVER}; }}
 QComboBox QAbstractItemView::item:selected, QListView#Suggestions::item:selected {{
-    background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_HOVER};
+    background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_TEXT};
 }}
 QComboBox QAbstractItemView::separator {{ height: 1px; background: {tokens.BORDER_STRONG}; margin: {SPACE_1}px {SPACE_2}px; }}
 
@@ -198,7 +207,7 @@ QComboBox QAbstractItemView::separator {{ height: 1px; background: {tokens.BORDE
 /* ---------- checkboxes, sliders, progress */
 QCheckBox {{ spacing: {SPACE_2}px; min-height: {SMALL_H}px; }}
 QCheckBox::indicator, QTreeView::indicator {{ width: {INDICATOR}px; height: {INDICATOR}px; border-radius: {RADIUS_XS}px; border: 1px solid {tokens.BORDER_CHECK}; background: {tokens.CARD}; }}
-QCheckBox::indicator:checked, QTreeView::indicator:checked {{ background: {tokens.ACCENT}; border-color: {tokens.ACCENT}; image: url(__CHECK__); }}
+QCheckBox::indicator:checked, QTreeView::indicator:checked {{ background: {tokens.ACCENT_FILL}; border-color: {tokens.ACCENT_FILL}; image: url(__CHECK__); }}
 QCheckBox:disabled {{ color: {tokens.FAINT}; }}
 QSlider {{ min-height: {SMALL_H}px; }}
 QSlider::groove:horizontal {{ height: {TRACK_H}px; background: {tokens.RAISED}; border-radius: {TRACK_H // 2}px; }}
@@ -219,15 +228,15 @@ QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::su
 /* ---------- cards: packages and rentals */
 #Chip {{ border-radius: {RADIUS_SM}px; padding: 0 {SPACE_2}px; font-size: {TEXT_XS}px; font-weight: {WEIGHT_SEMIBOLD};
     min-height: {CHIP_SM_H}px; max-height: {CHIP_SM_H}px; border: 1px solid {tokens.BORDER_STRONG}; color: {tokens.MUTED}; }}
-#Chip[tone="booked"] {{ color: {tokens.ACCENT}; border-color: {tokens.ACCENT_EDGE}; background: {tokens.ACCENT_TINT}; }}
+#Chip[tone="booked"] {{ color: {tokens.ACCENT_TEXT}; border-color: {tokens.ACCENT_EDGE}; background: {tokens.ACCENT_TINT}; }}
 #Chip[tone="out"] {{ color: {tokens.WARN}; border-color: {tokens.WARN}; }}
 #Chip[tone="late"], #Chip[tone="short"] {{ color: {tokens.BAD}; border-color: {tokens.BAD_EDGE}; background: {tokens.BAD_TINT}; }}
 #Chip[tone="returned"] {{ color: {tokens.GOOD}; border-color: {tokens.GOOD}; }}
 #Chip[tone="repair"] {{ color: {tokens.WARN}; border-color: {tokens.BORDER_STRONG}; }}
-#Chip[tone="cancelled"], #Chip[tone="retired"] {{ color: {tokens.FAINT}; border-color: {tokens.BORDER}; }}
+#Chip[tone="cancelled"], #Chip[tone="retired"] {{ color: {tokens.MUTED}; border-color: {tokens.BORDER}; }}
 
 /* ---------- gear rows */
-#RowMeta {{ color: {tokens.FAINT}; font-size: {TEXT_SM}px; }}
+#RowMeta {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}
 #Warn {{ color: {tokens.WARN}; font-size: {TEXT_SM}px; }}
 QFrame#Banner {{ background: {tokens.BANNER}; border: 1px solid {tokens.BANNER_EDGE}; border-radius: {RADIUS}px;
     margin: 0 {SPACE_4}px {SPACE_2}px {SPACE_4}px; }}
@@ -237,9 +246,9 @@ QFrame#Banner {{ background: {tokens.BANNER}; border: 1px solid {tokens.BANNER_E
 #SumValue {{ font-weight: {WEIGHT_MEDIUM}; }}
 #CardTitle {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #Card {{ background: {tokens.BLOCK}; border: none; border-radius: {RADIUS_LG}px; }}
-QPlainTextEdit#BigName {{ font-size: {TEXT_XL}px; font-weight: {WEIGHT_BOLD}; color: {tokens.TEXT};
+QPlainTextEdit#BigName {{ font-size: {TEXT_RECORD}px; font-weight: {WEIGHT_BOLD}; color: {tokens.TEXT};
     background: transparent; border: 1px solid transparent; border-radius: {RADIUS}px; padding: 0 {SPACE_1}px;
-    selection-background-color: {tokens.ACCENT}; selection-color: {tokens.ON_ACCENT}; }}
+    selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
 QPlainTextEdit#BigName:hover {{ background: {tokens.FILL}; }}
 QPlainTextEdit#BigName:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT}; }}
 #Totals {{ background: transparent; border-top: 1px solid {tokens.BORDER}; }}
@@ -250,10 +259,10 @@ QListWidget#Picker {{ background: {tokens.CARD}; border: 1px solid {tokens.BORDE
 QListWidget#Picker::item {{ min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px; padding: 0 {SPACE_2}px;
     margin: {tokens.LIST_GAP // 2}px 0; }}
 QListWidget#Picker::item:hover {{ background: {tokens.CARD_HOVER}; }}
-QListWidget#Picker::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_HOVER}; }}
+QListWidget#Picker::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_TEXT}; }}
 QListWidget#Picker::indicator {{ width: {INDICATOR}px; height: {INDICATOR}px; border-radius: {RADIUS_XS}px;
     border: 1px solid {tokens.BORDER_CHECK}; background: {tokens.CARD}; }}
-QListWidget#Picker::indicator:checked {{ background: {tokens.ACCENT}; border-color: {tokens.ACCENT}; image: url(__CHECK__); }}
+QListWidget#Picker::indicator:checked {{ background: {tokens.ACCENT_FILL}; border-color: {tokens.ACCENT_FILL}; image: url(__CHECK__); }}
 
 
 /* ---------- the window: sidebar, toolbar, tables */
@@ -261,7 +270,7 @@ QListWidget#Picker::indicator:checked {{ background: {tokens.ACCENT}; border-col
 #SidebarFoot {{ border: none; }}
 #ProfileCard {{ background: transparent; border-radius: {tokens.NAV_R}px; }}
 #ProfileCard:hover {{ background: {tokens.CARD_HOVER}; }}
-#Avatar {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT}; border-radius: {AVATAR // 2}px;
+#Avatar {{ background: {tokens.FILL}; color: {tokens.TEXT}; border-radius: {AVATAR // 2}px;
     font-size: {TEXT_SM}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #ProfileName {{ font-weight: {WEIGHT_SEMIBOLD}; }}
 #ProfileSub {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}
@@ -275,17 +284,17 @@ QToolButton#NavArrow {{ background: transparent; border: none; padding: 0; }}
 QToolButton#NavArrow:hover {{ background: {tokens.CARD_HOVER}; border-radius: {RADIUS_XS}px; }}
 #NavHead {{ background: transparent; }}
 #NavHead:hover #SectionLabel {{ color: {tokens.TEXT}; }}
-#Nav[selected="true"] #NavLabel, #Nav[selected="true"] #NavSub {{ color: {tokens.ACCENT_HOVER}; }}
-#NavCount {{ color: {tokens.FAINT}; font-size: {TEXT_SM}px; }}
+#Nav[selected="true"] #NavLabel, #Nav[selected="true"] #NavSub {{ color: {tokens.ACCENT_TEXT}; }}
+#NavCount {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}
 #NavCount[tone="out"] {{ color: {tokens.WARN}; font-weight: {WEIGHT_SEMIBOLD}; }}
 #NavCount[tone="late"] {{ color: {tokens.BAD}; font-weight: {WEIGHT_SEMIBOLD}; }}
 #Toolbar {{ border: none; }}
 #CalTitle {{ font-size: {TEXT_XL}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #PageTitle {{ font-size: {TEXT_TITLE}px; font-weight: {WEIGHT_BOLD}; letter-spacing: {TRACK_TITLE}px; }}
-#PageCount {{ color: {tokens.FAINT}; font-size: {TEXT_LG}px; }}
+#PageCount {{ color: {tokens.MUTED}; font-size: {TEXT_LG}px; }}
 #Center {{ background: transparent; }}
 QTreeWidget#Table {{ background: transparent; border: none; outline: none; font-size: {TEXT_MD}px; }}
-QTreeWidget#Table::item {{ height: {TABLE_ROW_H}px; border-bottom: 1px solid {tokens.BORDER}; padding: 0 {SPACE_2}px; }}
+QTreeWidget#Table::item {{ height: {TABLE_ROW_H - 1}px; border-bottom: 1px solid {tokens.BORDER}; padding: 0 {SPACE_2}px; }}
 QTreeWidget#Table::item:hover {{ background: transparent; }}
 QTreeWidget#Table::item:selected {{ background: transparent; color: {tokens.TEXT}; }}
 QTreeWidget#Table::branch {{ background: transparent; border-bottom: 1px solid {tokens.BORDER}; }}
@@ -298,7 +307,7 @@ QHeaderView::section {{ background: transparent; color: {tokens.MUTED}; border: 
 QHeaderView::section:hover {{ color: {tokens.TEXT}; }}
 QHeaderView::up-arrow {{ image: url(__CHEVRON_UP__); width: {SORT_ARROW}px; height: {SORT_ARROW}px; padding-right: {SPACE_1}px; }}
 QHeaderView::down-arrow {{ image: url(__CHEVRON__); width: {SORT_ARROW}px; height: {SORT_ARROW}px; padding-right: {SPACE_1}px; }}
-QPushButton#Where {{ background: {tokens.ACCENT_TINT}; border: 1px solid {tokens.ACCENT_EDGE}; color: {tokens.ACCENT_HOVER}; text-align: left; }}
+QPushButton#Where {{ background: {tokens.ACCENT_TINT}; border: 1px solid {tokens.ACCENT_EDGE}; color: {tokens.ACCENT_TEXT}; text-align: left; }}
 QPushButton#Where[tone="out"] {{ background: transparent; border-color: {tokens.WARN}; color: {tokens.WARN}; }}
 QPushButton#Where[tone="late"] {{ background: {tokens.BAD_TINT}; border-color: {tokens.BAD_EDGE}; color: {tokens.BAD}; }}
 
@@ -324,19 +333,19 @@ QPushButton#Where[tone="late"] {{ background: {tokens.BAD_TINT}; border-color: {
 #ItemAmount {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}
 QPlainTextEdit#Field {{ background: {tokens.FIELD}; border: 1px solid {tokens.FIELD_BORDER}; border-radius: {RADIUS}px;
     font-family: inherit; font-size: {TEXT_MD}px; color: {tokens.TEXT}; padding: {SPACE_1}px {SPACE_2}px;
-    selection-background-color: {tokens.ACCENT}; selection-color: {tokens.ON_ACCENT}; }}
+    selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
 QPlainTextEdit#Field:hover {{ border-color: {tokens.BORDER_HOVER}; }}
 QPlainTextEdit#Field:focus {{ border-color: {tokens.ACCENT}; }}
 QPlainTextEdit#Field:disabled, QLineEdit:disabled, QComboBox:disabled, QDateEdit:disabled {{ color: {tokens.FAINT}; border-color: {tokens.BORDER}; }}
 QDateEdit {{ background: {tokens.FIELD}; border: 1px solid {tokens.FIELD_BORDER}; border-radius: {RADIUS}px;
     padding: 0 {SPACE_3}px; min-height: {_INNER}px; max-height: {_INNER}px;
-    selection-background-color: {tokens.ACCENT}; selection-color: {tokens.ON_ACCENT}; }}
+    selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
 QDateEdit:hover {{ border-color: {tokens.BORDER_HOVER}; }}
 QDateEdit:focus {{ border-color: {tokens.ACCENT}; }}
 QDateEdit::drop-down {{ border: none; width: {SPACE_5}px; }}
 QDateEdit::down-arrow {{ image: url(__CHEVRON__); width: {SPACE_3}px; height: {SPACE_3}px; }}
 QCalendarWidget QWidget {{ background: {tokens.RAISED}; color: {tokens.TEXT}; }}
-QCalendarWidget QAbstractItemView {{ background: {tokens.CARD}; selection-background-color: {tokens.ACCENT}; selection-color: {tokens.ON_ACCENT}; }}
+QCalendarWidget QAbstractItemView {{ background: {tokens.CARD}; selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
 QCalendarWidget QToolButton {{ background: transparent; border: none; padding: {SPACE_1}px {SPACE_2}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 QCalendarWidget QToolButton:hover {{ background: {tokens.RAISED_HOVER}; border-radius: {RADIUS_SM}px; }}
 #LogoThumb {{ background: {tokens.PAPER}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {RADIUS_SM}px; }}
@@ -354,11 +363,11 @@ QMenu {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; 
     padding: {tokens.LIST_INSET - 1}px; }}
 QMenu::item {{ padding: 0 {SPACE_4}px 0 {SPACE_2}px; min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px;
     margin: {tokens.LIST_GAP // 2}px 0; }}
-QMenu::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_HOVER}; }}
+QMenu::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_TEXT}; }}
 QMenu::item:disabled {{ color: {tokens.FAINT}; }}
 QMenu::icon {{ padding-left: {SPACE_2}px; }}
 QMenu::separator {{ height: 1px; background: {tokens.BORDER_STRONG}; margin: {SPACE_1}px {SPACE_2}px; }}
-QMenu::section {{ color: {tokens.FAINT}; padding: {SPACE_2}px {SPACE_2}px 0 {SPACE_2}px; font-size: {TEXT_XS}px; font-weight: {WEIGHT_SEMIBOLD}; }}
+QMenu::section {{ color: {tokens.MUTED}; padding: {SPACE_2}px {SPACE_2}px 0 {SPACE_2}px; font-size: {TEXT_XS}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 """
 
 
@@ -563,15 +572,32 @@ def apply(app, appearance: str, folder: Path, accent: str | None = None) -> str:
     return look
 
 
-def font(size: int = TEXT_MD, weight: int = WEIGHT_REGULAR):
-    """The app's font at a type-scale size (TEXT_*) and weight (WEIGHT_*): the one way to make a QFont."""
+def font(size: int = TEXT_MD, weight: int = WEIGHT_REGULAR, tabular: bool = False):
+    """The app's font at a type-scale size (TEXT_*) and weight (WEIGHT_*): the one way to make a QFont.
+    `tabular`: every figure the same width, so columns of money line up digit for digit."""
     from PySide6.QtGui import QFont
     from PySide6.QtWidgets import QApplication
 
     f = QFont(QApplication.font())
     f.setPixelSize(size)
     f.setWeight(QFont.Weight(weight))
+    if tabular:
+        tabular_figures(f)
     return f
+
+
+def tabular_figures(f) -> None:
+    """Inter's tabular figures on this font (its "tnum" feature), for numbers that line up."""
+    from PySide6.QtGui import QFont
+
+    f.setFeature(QFont.Tag("tnum"), 1)
+
+
+def use_tabular(widget) -> None:
+    """A widget whose figures line up: a table, a total."""
+    f = widget.font()
+    tabular_figures(f)
+    widget.setFont(f)
 
 
 def plain_tip(text: str) -> str:

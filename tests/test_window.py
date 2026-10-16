@@ -1061,3 +1061,32 @@ def test_screen_readers_hear_a_name_for_every_icon_button_and_place(win):
     assert win.btn_ai.accessibleName() == "AI Assistant"
     rows = [r for r in win.sidebar.findChildren(NavRow) if r.isVisible()]
     assert rows and all(r.accessibleName() for r in rows)
+
+
+def test_measured_to_the_standard(win):
+    """The standard's Appendix A, measured in the real window: controls 28, the bar's circles 36, table rows 44,
+    sidebar rows 32, figures that line up."""
+    from PySide6.QtGui import QFont
+    from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton
+
+    from bodega.ui.components.panels import NavRow
+    from bodega.ui.style import tokens
+
+    it = next(iter(win.lib.items.values()))
+    win.open("gear", it.id)
+    QApplication.processEvents()
+    controls = [
+        w
+        for w in win.items.findChildren(QWidget)
+        if isinstance(w, (QPushButton, QLineEdit, QComboBox))
+        and w.isVisible()
+        and w.objectName() not in ("LinkBtn", "Disclosure", "Where", "AddChip")
+    ]
+    assert controls and {w.height() for w in controls} == {tokens.CONTROL_H}
+    for b in (win.btn_new, win.btn_ai, win.btn_export):
+        assert (b.width(), b.height()) == (tokens.BAR_CTRL_H, tokens.BAR_CTRL_H)
+    assert win.search.height() == tokens.BAR_CTRL_H
+    row = win.gear_table.visualItemRect(win.gear_table.topLevelItem(0))
+    assert row.height() == tokens.ROW_H
+    assert {r.height() for r in win.sidebar.findChildren(NavRow) if r.isVisible()} == {tokens.CHOICE_ROW_H}
+    assert win.gear_table.font().isFeatureSet(QFont.Tag("tnum"))

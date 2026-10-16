@@ -13,12 +13,18 @@ If you need a value that doesn't exist, add a token, give it a comment, and add 
 
 ### Controls: one height for everything you click or type in
 
+Every size is the standard's Appendix A (pointer); `tests/test_window.py::test_measured_to_the_standard` measures
+them in the real window.
+
 | Token | px | Used for |
 |---|---|---|
-| `CONTROL_H` | 34 | **Every** button, dropdown, text field and segmented control |
-| `SMALL_H` | 24 | Chips on file cards, naming token buttons, icon-only buttons |
-| `INDICATOR` | 16 | Standard icon box |
-| `TOGGLE_ROW_H` · `TOGGLE_W`×`TOGGLE_H` | 32 · 36×20 | An on/off row and its switch |
+| `CONTROL_H` | 28 | (control-h) **Every** button, dropdown, text field, segmented control and icon circle |
+| `SMALL_H` | 20 | (control-sm) Chips, naming token buttons, small icon buttons |
+| `BAR_CTRL_H` | 36 | (bar-h) The bar's circles (export, assistant, +) and its search field |
+| `ROW_H` | 44 | (row-h) Table rows (the hairline inside the 44), grouped rows, an on/off row |
+| `CHOICE_ROW_H` | 32 | (choice-row) Menus, dropdown lists, pickers, the sidebar's places |
+| `INDICATOR` | 16 | (check) A checkbox |
+| `TOGGLE_ROW_H` · `TOGGLE_W`×`TOGGLE_H` | 44 · 44×26 | An on/off row and its switch (green when on, as Apple's) |
 | `BAR_H` | 6 | Progress bars |
 | `TRACK_H` / `HANDLE` | 4 / 14 | Slider groove / handle |
 | `SCROLL_W` / `SCROLL_MIN` | 10 / 30 | Scrollbar width / shortest handle |
@@ -32,8 +38,9 @@ If you need a value that doesn't exist, add a token, give it a comment, and add 
 
 | Token | px | Used for |
 |---|---|---|
-| `ICON_SM` | 14 | Icons inside small buttons (scissors, info, close) |
-| `ICON` | 16 | Icons inside normal buttons and menus |
+| `ICON_SM` | 12 | Chevrons, small marks beside words |
+| `ICON` | 15 | (icon-ctl) Icons inside controls, fields and menus |
+| `ICON_BAR` | 18 | (icon-bar) Icons in the bar |
 
 All icons are line icons drawn as SVG in `theme._SVG` and made with `theme.icon(name, color)` (buttons, menus) or
 `widgets.IconLabel(name, tone)` (an icon that isn't a button). Both follow light and dark by themselves; never draw
@@ -50,7 +57,8 @@ Use these names, never the numbers.
 
 **Fonts:** one family (Inter, `looks.FONT`, shared with the paper), loaded once in `app.py`. Every size is a
 `TEXT_*` token in pixels and every weight a `WEIGHT_*` token; in code, make a font with `theme.font(size, weight)`,
-never `QFont()` or `setBold`.
+never `QFont()` or `setBold`. Figures that line up (tables, totals) are tabular: `theme.font(..., tabular=True)` or
+`theme.use_tabular(widget)`. Nothing sets letter spacing by hand except the wordmark.
 
 ---
 
@@ -76,14 +84,19 @@ never `QFont()` or `setBold`.
 Font for the app itself: **Inter** (bundled in `bodega/assets/fonts`). One family only.
 The paper uses Inter too, plus IBM Plex Mono for serial numbers (see §9).
 
-| Token | px | Used for |
-|---|---|---|
-| `TEXT_XS` | 11 | Chips |
-| `TEXT_SM` | 12 | Section labels (`MUTED`, semibold), secondary text: file details, hints, tooltips |
-| `TEXT_MD` | 13 | Body text and every control (the default) |
-| `TEXT_LG` | 14 | Emphasis: renter names and amounts on cards, department names, footer totals |
-| `TEXT_XL` | 18 | Dialog titles, empty-state headlines |
-| `TEXT_BRAND` | 21 | The "bodega." wordmark only |
+Apple's macOS text styles (the standard's A.4, pointer sizes). The older names are each one of them.
+
+| Token | px | Apple style | Used for |
+|---|---|---|---|
+| `TEXT_LARGE_TITLE` (`TEXT_TITLE`) | 26 | Large Title, Bold | A page's title (All Gear, Lights) |
+| `TEXT_TITLE1` (`TEXT_RECORD`) | 22 | Title 1, Bold | A record's name at the top of its panel |
+| `TEXT_TITLE2` (`TEXT_XL`) | 17 | Title 2 | Dialog titles, empty-state headlines |
+| `TEXT_TITLE3` (`TEXT_LG`) | 15 | Title 3 | Emphasis: names and amounts on cards, footer totals |
+| `TEXT_BODY` (`TEXT_MD`) | 13 | Body | Body text and every control (the default) |
+| `TEXT_CALLOUT` (`TEXT_SM`) | 12 | Callout | Section labels (`MUTED`, semibold), secondary text, hints, tooltips |
+| `TEXT_SUBHEAD` (`TEXT_XS`) | 11 | Subheadline | Chips |
+| `TEXT_FOOTNOTE` | 10 | Footnote | The smallest words; never smaller |
+| `TEXT_BRAND` | 21 | | The "bodega." wordmark only |
 
 Weights: `WEIGHT_REGULAR` 400 for text, `WEIGHT_MEDIUM` 500 for controls,
 `WEIGHT_SEMIBOLD` 600 for titles, labels and the primary button, `WEIGHT_BOLD` 700 for the wordmark and dialog titles.
@@ -94,15 +107,19 @@ Weights: `WEIGHT_REGULAR` 400 for text, `WEIGHT_MEDIUM` 500 for controls,
 
 | Token | px | Used for |
 |---|---|---|
-| `RADIUS_XS` | 4 | Small inner corners |
-| `RADIUS_SM` | 6 | Chips, small buttons |
-| `RADIUS` | 8 | Buttons, fields, dropdowns, segmented controls |
-| `RADIUS_LG` | 12 | Package and rental cards, line boxes |
+| `RADIUS_XS` | 4 | A checkbox, a key cap |
+| `RADIUS_SM` | 8 | Rows in a menu or list, a table row's highlight, small buttons |
+| `RADIUS` | 10 | Fields, wells, notes |
+| `RADIUS_LG` | 14 | Cards, menus, line boxes |
+| `RADIUS_XL` | 18 | Sheets, panels with grouped content |
+| `GLASS_R` | 20 | The glass panels (sidebar, inspector, Settings' sidebar) |
+
+Buttons with words are capsules and icon buttons circles, whatever their height.
 
 **Every list of choices looks the same as the sidebar and Settings**: menus, dropdown lists, pickers and
-type-ahead suggestions. The list's corners are `LIST_R` (= `GLASS_R`, 18), rows sit `LIST_INSET` (10) inside it
-with corners `LIST_ROW_R` (8, concentric), `LIST_ROW_H` (30) tall, `LIST_GAP` (2) apart. Hover is `CARD_HOVER`; the
-highlighted or picked row is `ACCENT_TINT` with its words and icon in `ACCENT_HOVER`. This is a must: never give a
+type-ahead suggestions. The list's corners are `LIST_R` (= `GLASS_R`, 20), rows sit `LIST_INSET` (10) inside it
+with corners `LIST_ROW_R` (10, concentric), `LIST_ROW_H` (32) tall, `LIST_GAP` (2) apart. Hover is `CARD_HOVER`; the
+highlighted or picked row is `ACCENT_TINT` with its words and icon in `ACCENT_TEXT`. This is a must: never give a
 list its own sizes. `app._RoundPopups` makes every `QMenu` and dropdown window see-through and gives dropdowns
 `widgets.ComboItemDelegate`; type-ahead lists go through `widgets.suggestions()`. Don't create popups that bypass them.
 
@@ -135,12 +152,14 @@ The blue's shades are hand-set in `DARK` / `LIGHT`. The app icon and the paper k
 | `RAISED` (+ `_HOVER`, `_PRESS`) | Buttons, popups |
 | `WELL` | Sunken areas: the preview behind the paper |
 | `BORDER` / `BORDER_STRONG` / `BORDER_HOVER` / `BORDER_CHECK` | Hairlines, control borders, hover, empty checkbox |
-| `TEXT` / `MUTED` / `FAINT` | Main text / secondary text / hints, labels, disabled |
-| `ACCENT` (+ `_HOVER`, `_PRESS`) | Blue (red is never an accent: it means late or delete). Selection, the one primary action, focus |
-| `ON_ACCENT` | Text and icons on the accent (and on a Late chip) |
+| `TEXT` / `MUTED` / `FAINT` | Main text / secondary words (hints, labels, counts: 4.5:1 or more) / placeholders only |
+| `ACCENT` (+ `_HOVER`, `_PRESS`) | Blue (red is never an accent: it means late or delete). Selection, focus, icons |
+| `ACCENT_FILL` (+ `_HOVER`) | The accent under words (the primary button, +): white on it reads at 4.5:1 |
+| `ACCENT_TEXT` | The accent as words (links, a picked row, Booked): 4.5:1 on the page |
+| `ON_ACCENT` | Text and icons on the accent fill |
 | `ACCENT_OFF` / `ACCENT_OFF_TEXT` | A disabled primary button |
 | `ACCENT_TINT` / `ACCENT_EDGE` | Blue wash and outline (the Booked chip, the selected card, an open fold count) |
-| `GOOD` / `WARN` / `BAD` | Returned / out or in repair / late or double-booked. |
+| `GOOD` / `WARN` / `BAD` (+ `_FILL`, `_SOFT`) | Returned / out or in repair / late or double-booked: as words, as a fill (a switch that's on is `GOOD_FILL`), and softly. `BAD_BUTTON`: a red button with white words |
 | `PAPER` / `SHADOW` | The paper and its shadow in the preview |
 | `BAD_TINT` / `BAD_EDGE` | Danger button hover / a failed card's outline |
 | `TOAST` / `TOAST_TEXT` / `TOAST_EDGE` / `TOAST_SHADOW` | A toast: a lighter card in dark, a dark card on the white page in light, so it's never missed |
@@ -236,8 +255,8 @@ Bodega talks like a helpful person, not like software.
 ## 8. Layout of the main window
 
 **The glass** (`ui/components/glass.py`), after Apple's Liquid Glass (iOS 26/27, macOS 26+): the window is a flat,
-quiet backdrop (`WINDOW_TOP`: pure white in the light look, like a Mac app's main area; the Mac's charcoal `#1E1E1E`
-in dark, darker than the panels), the content sits on it, and the tools float above it on rounded, see-through
+quiet backdrop (`WINDOW_TOP`, the standard's canvas: `#F7F7F8` in light, `#0E0E10` in dark, darker than the
+panels), the content sits on it, and the tools float above it on rounded, see-through
 panels (`GLASS`, one hairline `GLASS_STROKE` a touch brighter along the top `GLASS_EDGE`, `GLASS_R`, and a soft, wide,
 faint shadow all round, like the Mac's). Search, dropdowns and buttons are capsules; the
 + and export buttons are circles; "add" buttons are tinted capsules (`widgets.add_chip`). Table rows highlight

@@ -9,7 +9,7 @@ and ⋯. After saving a rental it offers Show File, Email Renter and, for a quot
 from __future__ import annotations
 
 from PySide6.QtCore import QRectF, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QImage, QPainter
+from PySide6.QtGui import QImage, QPainter
 from PySide6.QtWidgets import (
     QDialog,
     QFrame,
@@ -69,7 +69,7 @@ class PageView(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         if not self.pages:
             if self.message:
-                p.setPen(QColor(tokens.FAINT))
+                p.setPen(theme.qcolor(tokens.FAINT))
                 p.drawText(self.rect(), int(Qt.AlignmentFlag.AlignCenter), self.message)
             return
         y = float(tokens.PAGE_GAP)

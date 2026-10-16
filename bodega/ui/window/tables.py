@@ -73,6 +73,7 @@ class Table(QTreeWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setObjectName("Table")
+        theme.use_tabular(self)  # money and quantities line up digit for digit
         self.setColumnCount(len(self.COLUMNS))
         self.setHeaderLabels([c[0] for c in self.COLUMNS])
         self.setRootIsDecorated(False)
@@ -447,9 +448,9 @@ class _GearPainter(RowPainter):
         suffix = fm.elidedText(suffix, Qt.TextElideMode.ElideRight, max(0, room - name_w))
         painter.save()
         align = int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
-        painter.setPen(QColor(tokens.TEXT))
+        painter.setPen(theme.qcolor(tokens.TEXT))
         painter.drawText(rect, align, name)
-        painter.setPen(QColor(tokens.MUTED))
+        painter.setPen(theme.qcolor(tokens.MUTED))
         painter.drawText(rect.adjusted(name_w, 0, 0, 0), align, suffix)
         painter.restore()
 
@@ -483,7 +484,7 @@ class _GearPainter(RowPainter):
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(tokens.FAINT))
+        painter.setBrush(theme.qcolor(tokens.FAINT))
         c = QPointF(rect.center())
         gap = tokens.GRIP_GAP
         for dx in (-gap / 2, gap / 2):
@@ -931,10 +932,10 @@ class GearTable(Table):
             ],
             parent,
         )
-        row.setForeground(GEAR_COL["status"], QColor(color))
-        row.setForeground(GEAR_COL["kids"], QColor(tokens.ACCENT))
+        row.setForeground(GEAR_COL["status"], theme.qcolor(color))
+        row.setForeground(GEAR_COL["kids"], theme.qcolor(tokens.ACCENT))
         for k in ("brand", "series"):
-            row.setForeground(GEAR_COL[k], QColor(tokens.MUTED))
+            row.setForeground(GEAR_COL[k], theme.qcolor(tokens.MUTED))
         if kids:
             row.setToolTip(GEAR_COL["kids"], f"{kids} go with it")
         if on:
@@ -1073,7 +1074,7 @@ class RentalTable(Table):
                     (money.fmt(t.total, cur), money.in_cents(t.total)),
                 ],
             )
-            row.setForeground(4, QColor(getattr(tokens, STATUS_COLORS[tone])))
+            row.setForeground(4, theme.qcolor(getattr(tokens, STATUS_COLORS[tone])))
             row.setData(0, HAY, " ".join((r.number, r.client.name, r.client.company, r.project)).casefold())
         self._fill_end(keep, col, order)
 

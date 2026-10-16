@@ -182,6 +182,10 @@ class _RoundPopups(QObject):
         if ev.type() == QEvent.Type.Polish and isinstance(obj, QWidget):
             if obj.focusPolicy() == Qt.FocusPolicy.WheelFocus:
                 obj.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+            if isinstance(obj, QAbstractButton) and obj.focusPolicy() == Qt.FocusPolicy.StrongFocus:
+                obj.setFocusPolicy(
+                    Qt.FocusPolicy.TabFocus
+                )  # Tab gives it the focus (and its ring); a click doesn't
             if (
                 isinstance(obj, QLabel)
                 and obj.textFormat() == Qt.TextFormat.AutoText

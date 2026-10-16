@@ -52,6 +52,11 @@
 - Settings › Your Data says plainly that your files and backups hold your renters' details, and how to keep
   them private (FileVault or BitLocker). Backing up says so too.
 - On Linux, another account on the same computer can no longer stop Bodega from opening.
+- A fresh look, measured to Apple's own sizes: buttons and fields are a little more compact, rows in the gear
+  list are roomier, titles are larger, and the dark look is deeper, with the panels lifted above it. Every word
+  now reads clearly: hints and counts are darker in light and brighter in dark, and the words on blue buttons
+  are easier to read. Group bands in the gear list are a quiet grey, so blue means something you can press.
+  Money in the lists lines up digit for digit. A switch that's on is green, as on a Mac.
 - Bodega keeps safety copies of your gear, kits, rentals, renters and profiles: one each day you open it (the last
   14 days), and one before each import, Tidy Up Groups, AI change or restore (the last 20).
 - File › Restore from Backup… (also in Settings › Your Data) puts a Back Up zip or a safety copy back. It shows

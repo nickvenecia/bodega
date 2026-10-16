@@ -13,16 +13,20 @@ SPACE_3 = 12  # between groups (sections) inside a panel
 SPACE_4 = 16  # padding of panels, bars and the main areas
 SPACE_5 = 24  # padding of dialogs and the empty-state drop zone
 
-# ---------------------------------------------------------------- control sizes
-CONTROL_H = 34  # EVERY button, dropdown, text field and segmented control
-SMALL_H = 24  # chips, token buttons, icon-only buttons
+# ---------------------------------------------------------------- control sizes (the standard's A.5, pointer)
+CONTROL_H = 28  # (control-h) EVERY button, dropdown, text field, segmented control and icon circle
+SMALL_H = 20  # (control-sm) chips, token buttons, small icon buttons
+BAR_CTRL_H = 36  # (bar-h) the bar's circles and search field
+ROW_H = 44  # (row-h) list rows and grouped rows: a table's rows, an on/off setting
+CHOICE_ROW_H = 32  # (choice-row) menus, dropdown lists, pickers, the sidebar
 SECTION_ADD = 20  # a sidebar section's plain + (a gray glyph, the Mac's size)
-INDICATOR = 16  # standard icon size
-TOGGLE_ROW_H = 32  # an on/off setting: label left, switch right
-TOGGLE_W, TOGGLE_H = 36, 20  # the switch
-TOGGLE_INSET = 3  # gap between the switch's track and its knob
-ICON = 16
-ICON_SM = 14
+INDICATOR = 16  # (check) a checkbox
+TOGGLE_ROW_H = ROW_H  # an on/off setting: label left, switch right
+TOGGLE_W, TOGGLE_H = 44, 26  # (switch) its track; the knob is the height − 4
+TOGGLE_INSET = 2  # gap between the switch's track and its knob
+ICON = 15  # (icon-ctl) icons inside controls and fields
+ICON_BAR = 18  # (icon-bar) icons in the bar
+ICON_SM = 12  # a chevron, a small mark beside words
 ICON_LG = 20  # the assistant's bubble in its toolbar button (sized to fill the circle)
 BAR_H = 6  # progress bars
 TRACK_H = 4  # slider groove
@@ -31,20 +35,32 @@ SCROLL_W = 10  # scrollbar width
 SCROLL_GUTTER = SCROLL_W  # space always kept for it (see widgets.FitScroll)
 SCROLL_MIN = 30  # shortest scrollbar handle
 
-# ---------------------------------------------------------------- corner radius
-RADIUS_XS = 4  # checkbox box
-RADIUS_SM = 6  # chips, menu/list rows, small buttons
-RADIUS = 8  # controls: buttons, fields, dropdowns, segmented controls
-RADIUS_LG = 12  # cards, popups, panels inside dialogs
+# ---------------------------------------------------------------- corner radius (the standard's scale)
+RADIUS_XS = 4  # (radius-xs) a checkbox's box, a key cap
+RADIUS_SM = 8  # (radius-sm) rows in a menu or list, focus outlines, small buttons
+RADIUS = 10  # (radius-md) fields, wells, notes
+RADIUS_LG = 14  # (radius-lg) cards, menus, dropdown lists, grouped cards
+RADIUS_XL = 18  # (radius-xl) sheets, panels with grouped content
 
-# ---------------------------------------------------------------- type scale (px)
-TEXT_XS = 11  # chips
-TEXT_SM = 12  # secondary text: file details, hints, tooltips
-TEXT_MD = 13  # body text and every control (the default)
-TEXT_LG = 14  # emphasized text: file names in the list, footer title
-TEXT_XL = 18  # dialog titles, empty-state headline
-TEXT_TITLE = 24  # the page's large title (All Gear, Lights)
-TEXT_BRAND = 21  # the "bodega." wordmark only
+# ---------------------------------------------------------------- type: Apple's macOS text styles (A.4, pointer)
+TEXT_LARGE_TITLE = 26  # Large Title: a page's title (All Gear, Lights), Bold
+TEXT_TITLE1 = 22  # Title 1: a record's name, Bold
+TEXT_TITLE2 = 17  # Title 2: dialog titles, an empty page's headline
+TEXT_TITLE3 = 15  # Title 3: emphasized lines (a footer's title)
+TEXT_HEADLINE = 13  # Headline (Bold)
+TEXT_BODY = 13  # Body: every control and most words (the default)
+TEXT_CALLOUT = 12  # Callout: secondary words, hints, tooltips
+TEXT_SUBHEAD = 11  # Subheadline: chips, small labels
+TEXT_FOOTNOTE = 10  # Footnote / Caption: the smallest words (never smaller)
+# the older names, each one of the styles
+TEXT_XS = TEXT_SUBHEAD
+TEXT_SM = TEXT_CALLOUT
+TEXT_MD = TEXT_BODY
+TEXT_LG = TEXT_TITLE3
+TEXT_XL = TEXT_TITLE2
+TEXT_TITLE = TEXT_LARGE_TITLE
+TEXT_RECORD = TEXT_TITLE1
+TEXT_BRAND = 21  # the "bodega." wordmark only (a mark, not words)
 TEXT_TITLEBAR = 15  # the wordmark in the Mac title bar
 
 WEIGHT_REGULAR = 400
@@ -62,10 +78,10 @@ TITLEBAR_H = 32  # Bodega's own Mac title bar (fitted to the real one once the w
 SEG_INSET = 2  # gap between a segmented control's frame and its buttons
 ROW_INDENT = 18  # attached gear in the list, per level
 TEXT_BOX_H = 2 * CONTROL_H - SPACE_2  # a two-line text box (addresses, notes)
-CHIP_SM_H = SMALL_H - 6  # the small status chip
+CHIP_SM_H = SMALL_H  # the small status chip
 SCROLL_INSET = 2  # a scrollbar's handle sits this far inside its track
 TEXT_BOX_TALL = 4 * CONTROL_H - SPACE_3  # notes
-TEXT_BOX_TERMS = 9 * CONTROL_H  # the agreement's terms
+TEXT_BOX_TERMS = 7 * ROW_H  # the agreement's terms
 NUM_FIELD_W = 96  # qty / rate fields
 QTY_FIELD_W = 64  # a quantity on its own
 LOGO_THUMB = 40  # the logo preview in the profile dialog
@@ -83,12 +99,12 @@ IMPORT_SIZE = (760, 800)  # the Import window
 IMPORT_LIST_H = 320  # the list of pieces in the Import window
 WINDOW_SIZE = (1600, 1000)
 WINDOW_MIN = (1280, 700)  # the toolbar, table and inspector all fit
-TABLE_ROW_H = 34  # one row in the gear, kit and rental tables
+TABLE_ROW_H = ROW_H  # one row in the gear, kit and rental tables
 NAME_MIN = 240  # the gear table's Name column never gets narrower; other columns step aside
 GRIP_W = 28  # the grip column you drag a gear row by
-GRIP_GAP = 5  # between the grip's dots
+GRIP_GAP = SPACE_1  # between the grip's dots
 CHEVRON = 9  # a divider's open/closed chevron
-GLASS_R = 18  # a floating glass panel's corners
+GLASS_R = 20  # (radius-glass) a floating glass panel's corners
 GLASS_GAP = 10  # between the window's edge and its floating panels, and between panels
 GLASS_SHADOW_STEPS = 16  # layers of a panel's shadow (soft, like the Mac's)
 GLASS_SHADOW_SPREAD = 24  # how far it reaches: wide and faint, never a dark smudge
@@ -128,10 +144,10 @@ PAGE_DIALOG_INSET = 80  # the page window stays this far inside the main window
 PAGE_DIALOG_MIN_H = 600
 LOGO_THUMB_MAX_W = 160
 DAY_W_MIN = 22  # one day on the calendar, at its narrowest
-CAL_BAR_INSET = 7  # a rental's bar sits this far inside its calendar row
+CAL_BAR_INSET = SPACE_2  # a rental's bar sits this far inside its calendar row
 TRACK_BRAND = -0.5  # letter spacing (px): the wordmark
 TRACK_TITLEBAR = -0.3
-TRACK_TITLE = -0.4  # page titles
+TRACK_TITLE = 0  # page titles: the font's own spacing (nothing is tracked by hand but the wordmark)
 REVIEW_COL_W = (180, 64, 150, 0, 130)  # the AI Review window's columns (0: takes the room)
 REVIEW_W = 900
 # the tables' fixed column widths
@@ -140,13 +156,13 @@ COL_W = {
     "with_tax": 104, "day": 88, "pieces": 90, "rate": 110, "value": 120, "rental": 140, "production": 200,
     "dates": 190, "rental_status": 100, "total": 120, "earned": 96,
 }  # fmt: skip
-ROW_R = 9  # a table row's rounded highlight
+ROW_R = RADIUS_SM  # a table row's rounded highlight
 TABLE_THUMB = 24  # a piece's photo before its name in the gear list
 PHOTO_H = 200  # the photo at the top of a piece's panel
 LOG_COST_W = 90  # the cost box in a maintenance line
 CHIP_H = 28  # a tinted capsule button
 SORT_ARROW = 10  # the sort arrow in a column title
-NAV_H = 30  # one row in the sidebar
+NAV_H = CHOICE_ROW_H  # one row in the sidebar
 NAV_INSET = SCROLL_GUTTER  # a sidebar row's gap from the glass edge (the scroll bar's room on the right)
 NAV_R = GLASS_R - NAV_INSET  # its corners: concentric with the glass (the curves run parallel)
 MENU_GAP = 6  # between a button and the menu it opens
@@ -166,7 +182,7 @@ START_TILE_W = (
 START_BADGE = 40  # the circle behind a start tile's icon
 PROFILE_CARD_H = 48
 TOOLBAR_H = 64  # the bar above a table: title, search, New
-SEARCH_W = 440  # the search box gets the room the dropdowns had
+SEARCH_W = 280  # (bar-search-w) the bar's search field…
 SEARCH_MIN = 160  # the search box at its narrowest
 PAGE_DIALOG_SIZE = (1100, 1000)  # the agreement / inventory / rate card window
 DAY_W = 36  # one day on the rentals calendar
@@ -177,129 +193,149 @@ CAL_HEAD_H = 44  # months and day numbers above it
 MONTH_HEAD_H = 28  # the weekday names above the month
 MONTH_DAY_H = 26  # a day's number, at the top of its square
 MONTH_BAR_H = 20  # a rental across the days it's out
-MONTH_BAR_GAP = 3
+MONTH_BAR_GAP = SPACE_1
 MONTH_CELL_MIN_H = 96
 
 # ---------------------------------------------------------------- colors: a dark and a light set
 # The app follows the system (or View → Appearance). Read colors as tokens.X when drawing, never copy them
-# into a constant at import: use() swaps them.
+# into a constant at import: use() swaps them. A color drawn in code goes through theme.qcolor() (it reads the
+# rgba() form too). Values are the standard's Appendix A (A.1 light, A.2 dark, A.3 meanings); the names in
+# brackets are its roles. Words sit at 4.5:1 or more on what's under them; FAINT is for placeholders only.
 DARK = {
-    "BG": "#1E1E1E",  # window background: the Mac's dark charcoal, not black
-    "PANEL": "#1E1E1E",  # dialogs, footers
-    "CARD": "#1F1E20",  # cards, fields
-    "CARD_HOVER": "#262527",
-    "CARD_SELECTED": "#1C2333",  # a selected card (a hint of the accent)
-    "RAISED": "#2B2A2C",  # buttons, popups
-    "RAISED_HOVER": "#343335",
-    "RAISED_PRESS": "#272628",
-    "BORDER": "#2D2C2E",
-    "BORDER_STRONG": "#3B3A3D",
-    "BORDER_HOVER": "#4D4B4F",
-    "BORDER_CHECK": "#5C5A5F",  # unchecked checkbox outline
-    "TEXT": "#F4F2F1",
-    "MUTED": "#A8A5A6",  # secondary text
-    "FAINT": "#737072",  # hints, disabled, section labels
-    "WELL": "#0C0B0C",  # sunken areas: thumbnails, previews, logs
-    "ACCENT": "#4A90F7",  # sky blue — selection, primary action, focus
-    "ACCENT_HOVER": "#66A3FF",
-    "ACCENT_PRESS": "#3478E0",
-    "ON_ACCENT": "#FFFFFF",  # text/icons on the accent
-    "ACCENT_OFF": "#1F2A3D",  # disabled primary button
-    "ACCENT_OFF_TEXT": "#5E7499",
-    "ACCENT_TINT": "rgba(74, 144, 247, 0.15)",  # a blue wash
-    "ACCENT_EDGE": "rgba(102, 163, 255, 0.55)",
-    "GOOD": "#4CC38A",
-    "BAD": "#F0616D",  # late, failed, delete
-    "BAD_TINT": "#2A1A1D",  # danger button hover
-    "BAD_EDGE": "#5A2A30",  # failed card border
-    "WARN": "#E9B949",
+    "BG": "#0E0E10",  # (canvas) the window, behind the table and the glass
+    "PANEL": "#1C1C1E",  # (surface) dialogs, footers
+    "CARD": "#1C1C1E",  # (surface) cards, fields
+    "CARD_HOVER": "#232325",  # (surface-2)
+    "CARD_SELECTED": "#273852",  # (accent-soft over surface) a selected card
+    "RAISED": "#2C2C2E",  # (raised) buttons, menus, popups
+    "RAISED_HOVER": "#3A3A3C",
+    "RAISED_PRESS": "#262628",
+    "BORDER": "rgba(84, 84, 88, 0.55)",  # (border) field and control edges
+    "BORDER_STRONG": "rgba(84, 84, 88, 0.80)",  # (border-strong) the rule above totals; a switch that's off
+    "BORDER_HOVER": "#6C6C70",
+    "BORDER_CHECK": "#8E8E93",  # an unticked box's edge
+    "TEXT": "#F5F5F7",  # (text)
+    "MUTED": "#A1A1A6",  # (text-muted) secondary words: hints, counts, labels (7.5:1)
+    "FAINT": "#7C7C80",  # (text-faint) placeholders and incidental words only
+    "WELL": "#232325",  # (surface-2) sunken areas: thumbnails, previews, logs
+    "ACCENT": "#4A90F7",  # Bodega's blue, lifted for dark: selection, focus, icons, links
+    "ACCENT_HOVER": "#6BA4F8",  # (accent-hover) mixed 18% toward white
+    "ACCENT_PRESS": "#3D76CB",
+    "ACCENT_FILL": "#3D76CB",  # under words (a primary button, +): white on it reads at 4.5:1
+    "ACCENT_FILL_HOVER": "#4880D2",
+    "ACCENT_TEXT": "#9CC2FB",  # (accent-text) the accent as words: mixed 45% toward white
+    "ON_ACCENT": "#FFFFFF",  # (on-accent) words and icons on the accent fill
+    "ACCENT_OFF": "#294063",  # a primary button that's unavailable: its fill at 40%
+    "ACCENT_OFF_TEXT": "#7F8CA1",
+    "ACCENT_TINT": "rgba(74, 144, 247, 0.24)",  # (accent-soft) a selection's wash
+    "ACCENT_EDGE": "rgba(74, 144, 247, 0.45)",  # (accent-edge) an "on" control's edge
+    "GOOD": "#30D158",  # success as words
+    "GOOD_FILL": "#30D158",  # …as a fill (a switch that's on)
+    "GOOD_SOFT": "rgba(48, 209, 88, 0.18)",
+    "BAD": "#FF6B7E",  # danger as words: late, failed, delete
+    "BAD_FILL": "#FF4245",
+    "BAD_BUTTON": "#DB393B",  # a red button's fill: white words on it at 4.5:1
+    "BAD_TINT": "rgba(255, 66, 69, 0.18)",  # (danger soft) a danger button's hover
+    "BAD_EDGE": "rgba(255, 107, 126, 0.45)",
+    "WARN": "#FFB340",  # warning as words
+    "WARN_FILL": "#FF9230",
+    "WARN_SOFT": "rgba(255, 146, 48, 0.18)",
     "PAPER": "#FFFFFF",  # the paper (and logo thumbnails) in the preview
     "SHADOW": "rgba(0, 0, 0, 0.55)",  # the paper's shadow on the dark preview
-    "DIVIDER": "#252F3F",  # a department or group divider in the gear table: a blue band
-    "DIVIDER_TEXT": "#9CC2FF",  # its name and totals
-    "DIVIDER_HOVER": "#2A3646",  # a divider under the mouse: the same blue, a step brighter
-    "ROW_HOVER": "rgba(255, 255, 255, 0.05)",  # a table row under the mouse
-    "WINDOW_TOP": "#1E1E1E",  # the window's backdrop: flat, darker than the panels (as on the Mac)
-    "WINDOW_BOTTOM": "#1E1E1E",
-    "GLASS": "rgba(48, 47, 50, 0.92)",  # a floating panel (sidebar, inspector): one even tone, lighter than the page
-    "GLASS_STROKE": "rgba(255, 255, 255, 0.10)",  # its one hairline: faintly lighter than the panel
-    "GLASS_EDGE": "rgba(255, 255, 255, 0.18)",  # …a little brighter along the top, where light catches it
-    "GLASS_SHADOW": "rgba(0, 0, 0, 0.35)",  # soft and wide
-    "TOAST": "#3A393C",  # a toast: a step lighter than the panels, so it stands out over anything
-    "TOAST_TEXT": "#F4F2F1",
+    "DIVIDER": "#1C1C1E",  # a department or group divider in the gear table: a quiet band (it can't be pressed)
+    "DIVIDER_TEXT": "#F5F5F7",  # its name and totals
+    "DIVIDER_HOVER": "#232325",
+    "ROW_HOVER": "rgba(255, 255, 255, 0.05)",  # (row-hover) a table row under the mouse
+    "WINDOW_TOP": "#0E0E10",  # the window's backdrop (canvas)
+    "WINDOW_BOTTOM": "#0E0E10",
+    "GLASS": "rgba(30, 30, 32, 0.84)",  # (side-glass) a floating panel: the sidebar, the inspector
+    "GLASS_STROKE": "rgba(255, 255, 255, 0.10)",  # (glass-stroke) its one hairline
+    "GLASS_EDGE": "rgba(255, 255, 255, 0.14)",  # (glass-edge) a little brighter along the top
+    "GLASS_SHADOW": "rgba(0, 0, 0, 0.45)",  # (shadow-glass) soft and wide
+    "TOAST": "#48484A",  # (toast) a step lighter than the panels, so it stands out over anything
+    "TOAST_TEXT": "#F5F5F7",
     "TOAST_EDGE": "rgba(255, 255, 255, 0.12)",
-    "TOAST_SHADOW": "rgba(0, 0, 0, 0.60)",  # …lifted by a deeper shadow than the panels'
-    "TOAST_DONE": "#4CC38A",  # its icon: it worked
-    "TOAST_PROBLEM": "#E9B949",  # …it didn't (amber: red means late or delete)
+    "TOAST_SHADOW": "rgba(0, 0, 0, 0.60)",
+    "TOAST_DONE": "#30D158",  # its icon: it worked
+    "TOAST_PROBLEM": "#FFB340",  # …it didn't (amber: red means late or delete)
     "TOAST_PROBLEM_FILL": "#4A3F25",  # a problem's toast is tinted amber, so it's never missed
-    "TOAST_PROBLEM_EDGE": "rgba(233, 185, 73, 0.45)",
-    "BANNER": "rgba(233, 185, 73, 0.14)",  # a problem that lasts, across the top (amber, like a problem's toast)
-    "BANNER_EDGE": "rgba(233, 185, 73, 0.45)",
-    "CHIP": "rgba(74, 144, 247, 0.16)",  # a tinted capsule (+ Link, + Notes)
-    "CHIP_HOVER": "rgba(74, 144, 247, 0.26)",
-    "FIELD": "rgba(255, 255, 255, 0.07)",  # a text field or dropdown: lightly frosted
-    "FIELD_BORDER": "rgba(255, 255, 255, 0.08)",
+    "TOAST_PROBLEM_EDGE": "rgba(255, 179, 64, 0.45)",
+    "BANNER": "rgba(255, 146, 48, 0.18)",  # (warning soft) a problem that lasts, across the top
+    "BANNER_EDGE": "rgba(255, 179, 64, 0.45)",
+    "CHIP": "rgba(74, 144, 247, 0.24)",  # (accent-soft) a tinted capsule button (+ Link, + Notes)
+    "CHIP_HOVER": "rgba(74, 144, 247, 0.34)",  # (accent-soft-2)
+    "FIELD": "rgba(255, 255, 255, 0.05)",  # (field) a text field or dropdown
+    "FIELD_BORDER": "rgba(255, 255, 255, 0.12)",  # (field-border)
     "BLOCK": "rgba(255, 255, 255, 0.045)",  # a card inside a glass panel: a soft tint, no outline
-    "FILL": "rgba(255, 255, 255, 0.045)",  # a soft fill on the page: a switch's track, weekends, a placeholder
+    "FILL": "rgba(120, 120, 128, 0.24)",  # (fill) a soft fill: weekends, a placeholder
 }
 LIGHT = {
-    "BG": "#FFFFFF",
-    "PANEL": "#FFFFFF",
+    "BG": "#F7F7F8",  # (canvas)
+    "PANEL": "#FFFFFF",  # (surface)
     "CARD": "#FFFFFF",
-    "CARD_HOVER": "#F2F2F4",
-    "CARD_SELECTED": "#E8F0FD",
-    "RAISED": "#FFFFFF",
-    "RAISED_HOVER": "#F5F5F7",
+    "CARD_HOVER": "#F2F2F4",  # (surface-2)
+    "CARD_SELECTED": "#E8EFFB",
+    "RAISED": "#FFFFFF",  # (raised)
+    "RAISED_HOVER": "#F2F2F4",
     "RAISED_PRESS": "#E8E8EC",
-    "BORDER": "#E5E5EA",
-    "BORDER_STRONG": "#D8D8DD",
-    "BORDER_HOVER": "#B8B8BF",
-    "BORDER_CHECK": "#A2A2AA",
-    "TEXT": "#1D1D1F",
-    "MUTED": "#6E6E73",
-    "FAINT": "#A1A1A6",
-    "WELL": "#EDEDF0",
+    "BORDER": "rgba(60, 60, 67, 0.18)",
+    "BORDER_STRONG": "rgba(60, 60, 67, 0.29)",
+    "BORDER_HOVER": "rgba(60, 60, 67, 0.40)",
+    "BORDER_CHECK": "#8A8A8E",
+    "TEXT": "#1D1D1F",  # 15.7:1
+    "MUTED": "#6E6E73",  # 4.7:1
+    "FAINT": "#8A8A8E",  # placeholders only
+    "WELL": "#F2F2F4",
     "ACCENT": "#2F6FDB",
-    "ACCENT_HOVER": "#3D7DE8",
-    "ACCENT_PRESS": "#245CC0",
+    "ACCENT_HOVER": "#285EBA",  # (accent-hover) mixed 15% toward black
+    "ACCENT_PRESS": "#2453A6",
+    "ACCENT_FILL": "#2F6FDB",  # white on it: 4.75:1
+    "ACCENT_FILL_HOVER": "#285EBA",
+    "ACCENT_TEXT": "#2B66CA",  # the accent as words on the canvas, at 4.5:1 or more
     "ON_ACCENT": "#FFFFFE",
-    "ACCENT_OFF": "#D3E0F7",
-    "ACCENT_OFF_TEXT": "#8FA9D6",
-    "ACCENT_TINT": "rgba(47, 111, 219, 0.09)",
+    "ACCENT_OFF": "#ACC5F1",
+    "ACCENT_OFF_TEXT": "#E6EEFB",
+    "ACCENT_TINT": "rgba(47, 111, 219, 0.11)",
     "ACCENT_EDGE": "rgba(47, 111, 219, 0.45)",
-    "GOOD": "#1E9A5E",
-    "BAD": "#D3374A",
-    "BAD_TINT": "#FBEAEC",
-    "BAD_EDGE": "#EFB7BF",
-    "WARN": "#A97A06",
+    "GOOD": "#1F7A35",
+    "GOOD_FILL": "#34C759",
+    "GOOD_SOFT": "rgba(52, 199, 89, 0.13)",
+    "BAD": "#C8102E",
+    "BAD_FILL": "#FF383C",
+    "BAD_BUTTON": "#C8102E",
+    "BAD_TINT": "rgba(255, 56, 60, 0.12)",
+    "BAD_EDGE": "rgba(200, 16, 46, 0.35)",
+    "WARN": "#A05A00",
+    "WARN_FILL": "#FF8D28",
+    "WARN_SOFT": "rgba(255, 141, 40, 0.14)",
     "PAPER": "#FFFFFF",
     "SHADOW": "rgba(0, 0, 0, 0.16)",
-    "DIVIDER": "#DCE7FA",
-    "DIVIDER_TEXT": "#245CC0",
-    "DIVIDER_HOVER": "#CDDDF7",
-    "ROW_HOVER": "rgba(0, 0, 0, 0.04)",
-    "WINDOW_TOP": "#FFFFFF",
-    "WINDOW_BOTTOM": "#FFFFFF",
-    "GLASS": "rgba(242, 242, 245, 0.94)",
-    "GLASS_STROKE": "rgba(0, 0, 0, 0.06)",  # a very faint gray hairline
-    "GLASS_EDGE": "rgba(0, 0, 0, 0.04)",  # (fainter still along the top)
-    "GLASS_SHADOW": "rgba(0, 0, 0, 0.08)",  # soft and wide
-    "TOAST": "#2C2C2E",  # dark on the white page: easy to spot
-    "TOAST_TEXT": "#FFFFFF",
+    "DIVIDER": "#EDEDF0",
+    "DIVIDER_TEXT": "#1D1D1F",
+    "DIVIDER_HOVER": "#E5E5E9",
+    "ROW_HOVER": "rgba(120, 120, 128, 0.08)",
+    "WINDOW_TOP": "#F7F7F8",
+    "WINDOW_BOTTOM": "#F7F7F8",
+    "GLASS": "rgba(236, 236, 239, 0.90)",  # (side-glass) side at 90%
+    "GLASS_STROKE": "rgba(60, 60, 67, 0.10)",
+    "GLASS_EDGE": "rgba(255, 255, 255, 0.75)",
+    "GLASS_SHADOW": "rgba(0, 0, 0, 0.09)",
+    "TOAST": "#1C1C1E",  # (toast) dark on the light page: easy to spot
+    "TOAST_TEXT": "#F5F5F7",
     "TOAST_EDGE": "rgba(255, 255, 255, 0.10)",
     "TOAST_SHADOW": "rgba(0, 0, 0, 0.30)",
-    "TOAST_DONE": "#4CC38A",  # (the dark look's: these sit on the dark toast)
-    "TOAST_PROBLEM": "#E9B949",
+    "TOAST_DONE": "#30D158",  # (the dark look's: these sit on the dark toast)
+    "TOAST_PROBLEM": "#FFB340",
     "TOAST_PROBLEM_FILL": "#4A3F25",
-    "TOAST_PROBLEM_EDGE": "rgba(233, 185, 73, 0.45)",
-    "BANNER": "rgba(169, 122, 6, 0.10)",  # a problem that lasts, across the top (amber, like a problem's toast)
-    "BANNER_EDGE": "rgba(169, 122, 6, 0.40)",
-    "CHIP": "rgba(47, 111, 219, 0.10)",
+    "TOAST_PROBLEM_EDGE": "rgba(255, 179, 64, 0.45)",
+    "BANNER": "rgba(255, 141, 40, 0.14)",
+    "BANNER_EDGE": "rgba(160, 90, 0, 0.35)",
+    "CHIP": "rgba(47, 111, 219, 0.11)",
     "CHIP_HOVER": "rgba(47, 111, 219, 0.18)",
-    "FIELD": "rgba(255, 255, 255, 1.0)",
-    "FIELD_BORDER": "rgba(0, 0, 0, 0.10)",
-    "BLOCK": "rgba(255, 255, 255, 0.85)",  # white cards on the gray glass
-    "FILL": "rgba(0, 0, 0, 0.045)",  # light gray on white
+    "FIELD": "#FFFFFF",
+    "FIELD_BORDER": "rgba(60, 60, 67, 0.22)",
+    "BLOCK": "rgba(255, 255, 255, 0.85)",  # white cards on the grey glass
+    "FILL": "rgba(120, 120, 128, 0.12)",
 }
 # ---------------------------------------------------------------- the accent you pick (Settings › General)
 # Bodega's own is blue, hand-set in DARK / LIGHT above. The others are built from one color by accent_set().
@@ -356,42 +392,55 @@ def contrast(a: str, b: str) -> float:
     return (hi + 0.05) / (lo + 0.05)
 
 
+def _toward(c: str, to: str, bg: str, ratio: float = 4.5) -> str:
+    """`c` mixed toward `to` (black or white) just enough to read at `ratio` against `bg`."""
+    step = 0.0
+    out = c
+    while contrast(out, bg) < ratio and step < 1:
+        step += 0.02
+        out = _mix(to, c, step)
+    return out
+
+
 def accent_set(base: str, scheme: str) -> dict[str, str]:
-    """Every accent token for one color, in the dark or light look (the same steps as the hand-set blue)."""
+    """Every accent token for one color, in the dark or light look (the same steps as the hand-set blue):
+    white words on its fill and its words on the canvas read at 4.5:1 or more."""
     light = scheme == "light"
-    on = "#FFFFFF" if contrast("#FFFFFF", base) >= 3 else DARK_ON_ACCENT
+    canvas = LIGHT["BG"] if light else DARK["BG"]
+    fill = _toward(base, "#000000", "#FFFFFF")
+    on = "#FFFFFE" if light else "#FFFFFF"
     if light:
         return {
             "ACCENT": base,
-            "ACCENT_HOVER": _mix(base, "#FFFFFF", 0.9),
-            "ACCENT_PRESS": _mix(base, "#000000", 0.85),
-            "ON_ACCENT": "#FFFFFE" if on == "#FFFFFF" else on,
-            "ACCENT_OFF": _mix(base, "#FFFFFF", 0.2),
-            "ACCENT_OFF_TEXT": _mix(base, "#FFFFFF", 0.5),
-            "ACCENT_TINT": _rgba(base, 0.09),
+            "ACCENT_HOVER": _mix("#000000", base, 0.15),
+            "ACCENT_PRESS": _mix("#000000", base, 0.25),
+            "ACCENT_FILL": fill,
+            "ACCENT_FILL_HOVER": _mix("#000000", fill, 0.15),
+            "ACCENT_TEXT": _toward(base, "#000000", canvas),
+            "ON_ACCENT": on,
+            "ACCENT_OFF": _mix(fill, "#FFFFFF", 0.4),
+            "ACCENT_OFF_TEXT": _mix("#FFFFFF", _mix(fill, "#FFFFFF", 0.4), 0.6),
+            "ACCENT_TINT": _rgba(base, 0.11),
             "ACCENT_EDGE": _rgba(base, 0.45),
-            "CARD_SELECTED": _mix(base, "#FFFFFF", 0.1),
-            "DIVIDER": _mix(base, "#FFFFFF", 0.15),
-            "DIVIDER_TEXT": _mix(base, "#000000", 0.85),
-            "DIVIDER_HOVER": _mix(base, "#FFFFFF", 0.22),
-            "CHIP": _rgba(base, 0.10),
+            "CARD_SELECTED": _mix(base, "#FFFFFF", 0.11),
+            "CHIP": _rgba(base, 0.11),
             "CHIP_HOVER": _rgba(base, 0.18),
         }
     return {
         "ACCENT": base,
-        "ACCENT_HOVER": _mix(base, "#FFFFFF", 0.85),
-        "ACCENT_PRESS": _mix(base, "#000000", 0.88),
+        "ACCENT_HOVER": _mix("#FFFFFF", base, 0.18),
+        "ACCENT_PRESS": fill,
+        "ACCENT_FILL": fill,
+        "ACCENT_FILL_HOVER": _mix("#FFFFFF", fill, 0.06),
+        "ACCENT_TEXT": _toward(_mix("#FFFFFF", base, 0.45), "#FFFFFF", canvas),
         "ON_ACCENT": on,
-        "ACCENT_OFF": _mix(base, DARK["CARD"], 0.18),
-        "ACCENT_OFF_TEXT": _mix(base, DARK["CARD"], 0.45),
-        "ACCENT_TINT": _rgba(base, 0.15),
-        "ACCENT_EDGE": _rgba(_mix(base, "#FFFFFF", 0.85), 0.55),
-        "CARD_SELECTED": _mix(base, DARK["CARD"], 0.12),
-        "DIVIDER": _mix(base, DARK["BG"], 0.15),
-        "DIVIDER_TEXT": _mix(base, "#FFFFFF", 0.55),
-        "DIVIDER_HOVER": _mix(base, DARK["BG"], 0.2),
-        "CHIP": _rgba(base, 0.16),
-        "CHIP_HOVER": _rgba(base, 0.26),
+        "ACCENT_OFF": _mix(fill, DARK["CARD"], 0.4),
+        "ACCENT_OFF_TEXT": _mix("#FFFFFF", _mix(fill, DARK["CARD"], 0.4), 0.4),
+        "ACCENT_TINT": _rgba(base, 0.24),
+        "ACCENT_EDGE": _rgba(base, 0.45),
+        "CARD_SELECTED": _mix(base, DARK["CARD"], 0.24),
+        "CHIP": _rgba(base, 0.24),
+        "CHIP_HOVER": _rgba(base, 0.34),
     }
 
 

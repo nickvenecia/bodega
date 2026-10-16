@@ -16,7 +16,7 @@ from PySide6.QtCore import (
     QVariantAnimation,
     Signal,
 )
-from PySide6.QtGui import QColor, QCursor, QFontMetrics, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QCursor, QFontMetrics, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QAbstractButton,
     QButtonGroup,
@@ -658,7 +658,7 @@ class ComboItemDelegate(QStyledItemDelegate):
         if self._is_separator(index):
             y = option.rect.center().y()
             painter.save()
-            painter.setPen(QColor(tokens.BORDER_STRONG))
+            painter.setPen(theme.qcolor(tokens.BORDER_STRONG))
             painter.drawLine(
                 option.rect.left() + tokens.SPACE_2,
                 y,
@@ -758,7 +758,7 @@ class ToggleRow(QAbstractButton):
         on, enabled = self.isChecked(), self.isEnabled()
         r = self.rect()
         # label
-        p.setPen(QColor(tokens.TEXT if enabled else tokens.FAINT))
+        p.setPen(theme.qcolor(tokens.TEXT if enabled else tokens.FAINT))
         text_rect = r.adjusted(0, 0, -(tokens.TOGGLE_W + tokens.SPACE_3), 0)
         label = self.fontMetrics().elidedText(self.text(), Qt.TextElideMode.ElideRight, text_rect.width())
         p.drawText(
@@ -769,18 +769,20 @@ class ToggleRow(QAbstractButton):
         # switch
         tw, th = tokens.TOGGLE_W, tokens.TOGGLE_H
         track = QRectF(r.right() - tw + 1, r.center().y() - th / 2 + 1, tw - 1, th - 1)
-        if on:
-            fill = tokens.ACCENT_HOVER if self._hover and enabled else tokens.ACCENT
+        if on:  # an on switch is green, as Apple's are
+            fill = tokens.GOOD_FILL
         else:
             fill = tokens.BORDER_HOVER if self._hover and enabled else tokens.BORDER_STRONG
         if not enabled:
-            fill = tokens.ACCENT_OFF if on else tokens.BORDER
+            fill = tokens.GOOD_SOFT if on else tokens.BORDER
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(fill))
+        p.setBrush(theme.qcolor(fill))
         p.drawRoundedRect(track, th / 2, th / 2)
         knob = th - 2 * tokens.TOGGLE_INSET
         x = track.right() - tokens.TOGGLE_INSET - knob if on else track.left() + tokens.TOGGLE_INSET
-        p.setBrush(QColor(tokens.ON_ACCENT if on else tokens.TEXT) if enabled else QColor(tokens.FAINT))
+        p.setBrush(
+            theme.qcolor(tokens.ON_ACCENT if on else tokens.TEXT) if enabled else theme.qcolor(tokens.FAINT)
+        )
         p.drawEllipse(QRectF(x, track.top() + tokens.TOGGLE_INSET, knob, knob))
         p.end()
 
