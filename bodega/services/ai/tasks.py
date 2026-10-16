@@ -32,7 +32,7 @@ from urllib.parse import urlparse
 from bodega.core import money, prices, web
 from bodega.core.log import get_logger
 from bodega.core.model import Item
-from bodega.services.ai.providers import AIError, Setup, ask, ask_json, read_json
+from bodega.services.ai.providers import AIError, LimitReached, Setup, ask, ask_json, read_json
 
 log = get_logger(__name__)
 
@@ -95,6 +95,9 @@ class Budget:
         self.left -= 1
         try:
             got = fn(*args)
+        except LimitReached as e:  # today's limit: the job stops here
+            self.stopped = str(e)
+            raise
         except AIError as e:
             self.fails += 1
             if self.fails >= MAX_FAILS:

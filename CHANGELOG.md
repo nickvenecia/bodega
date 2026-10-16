@@ -201,6 +201,9 @@
 - The gear jobs (Update from Links…, Find Missing Links…, Tidy Up Names…, Organize Groups…, and Update with AI… on
   a piece) are written the same way everywhere, each with "…": each ends in Review, and nothing changes until you
   approve.
+- Settings › AI shows how many questions Bodega has asked your AI today and this month, with a daily limit (300 to
+  start; change it, or 0 for none). Bodega says when you're at 80% of it and stops a job cleanly at the limit. It
+  never asks more than 20 questions a minute: a big job waits its turn.
 - In a profile, fields are sized by what they hold: rates and numbers are short, names and contact details share
   one width, and dropdowns are as wide as their choice.
 - A kit with more than 12 pieces, or a rental with more than 12 lines, has its own search above its gear.

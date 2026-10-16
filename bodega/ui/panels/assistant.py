@@ -471,6 +471,7 @@ class AssistantPanel(SidePanel):
     setup_wanted = Signal()
     changes_found = Signal(object)  # a request in the chat came back with changes: Review… them
     apply_wanted = Signal(list)  # Change N Items: make these changes
+    run_over = Signal()  # a job or an answer finished (the window keeps what was asked: services/ai/usage.py)
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__("Assistant", more=True, scroll=False, parent=parent)
@@ -652,6 +653,7 @@ class AssistantPanel(SidePanel):
         self.composer.set_working(False)
         for b in (*self.job_buttons.values(), self.ask_btn):
             b.setEnabled(self.pending is None and self._ready)
+        self.run_over.emit()
 
     def _stop(self) -> None:
         if self.worker is not None:

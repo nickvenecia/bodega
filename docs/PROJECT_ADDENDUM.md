@@ -98,8 +98,10 @@ ask the owner for it.
 - Cost drivers and their caps: the person's own AI spend (each answer capped at 4,096 tokens, 90 s; 150 questions
   a job, stopping after 3 failures in a row; spend caps are
   the provider account's own); web fetches (15 s, 6 MB, https and public addresses only)
-- Rate limits per endpoint group: none (no server)
-- Quotas per plan: none (no plans)
+- Rate limits per endpoint group: none (no server); questions to the AI, at most 20 a minute (the standard's default,
+  `services/ai/usage.py`: a job waits its turn)
+- Quotas per plan: none (no plans); the AI, 300 questions a day by default (Settings › AI › Daily Limit; 0 for none),
+  a warning at 80% and a stop at 100%, with the day's and the month's count shown there
 - Upload types and sizes: photos and logos are read and saved again (PNG/JPG/SVG for logos), scaled to 1,600 points
   on the long side; spreadsheets .xlsx, .xlsm, .csv
 - Spend caps: the AI provider account's own, set by the person
@@ -136,7 +138,8 @@ row. Gear lists and pages are marked as data, never instructions, in every promp
   company, series only. Must refuse: any other change (prices, links, quantities, deleting), and anything about
   renters or rentals, which it never sees; its prompt says the gear list is data, never instructions.
 - Model and provider: the person's choice (Anthropic, OpenAI, Gemini, Kimi, OpenRouter, DeepSeek, Mistral, xAI, Groq,
-  or another OpenAI-compatible address). Quotas: none yet beyond the caps above. Kill switch: Remove Key.
+  or another OpenAI-compatible address). Quotas: a daily limit of questions (300 unless changed, shown with what's
+  been asked today and this month in Settings › AI), at most 20 a minute, and the caps above. Kill switch: Remove Key.
 
 ## Process (§18)
 - Commit attribution rule: **no tool, assistant, co-author or session lines**, in commits and pull requests alike. A

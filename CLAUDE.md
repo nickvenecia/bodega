@@ -84,6 +84,8 @@ bodega/
     ai/providers.py  PROVIDERS (Anthropic, OpenAI, Gemini, Kimi, OpenRouter, DeepSeek, Mistral, xAI, Groq, custom);
                    two API kinds (anthropic, openai); Setup (settings "ai"); list_models() live, never hardcoded;
                    ask()/ask_json(); keys never on a redirect, plain http only to this computer
+    ai/usage.py    METER: every question counted (day, month, tokens), a daily limit (settings "ai_daily_limit":
+                   warns at 80%, LimitReached at 100%), at most 20 a minute; the window loads and saves it
     ai/tasks.py    update_from_links (a link that's Refused: another page, found and checked as find_links does),
                    find_links (every link fetched and matched before it's suggested: _checked_pages), tidy_names,
                    organize_groups, chat (an answer, plus changes asked for: group/name/brand/series only); Change/Result; clean_text/clean_price validate everything; apply() (snapshot first)

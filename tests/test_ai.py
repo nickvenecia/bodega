@@ -592,3 +592,64 @@ def test_with_no_internet_a_links_job_stops_after_a_few(monkeypatch):
     items = [Item(name=f"Piece {n}", link=f"https://shop.example/p/{n}") for n in range(10)]
     got = tasks.update_from_links(None, items)
     assert len(tried) == tasks.OFFLINE_AFTER and got.problems[-1] == tasks.OFFLINE
+
+
+# What's asked, and how much may be (services/ai/usage.py)
+def test_every_question_is_counted_with_its_tokens_and_the_tally_is_kept(provider):
+    from bodega.services.ai import usage
+
+    _seen, replies = provider
+    replies += [{**anthropic_reply("hi"), "usage": {"input_tokens": 120, "output_tokens": 30}}]
+    replies += [{**openai_reply("hi"), "usage": {"total_tokens": 50}}]
+    providers.ask(Setup("anthropic", "m"), "sys", "q")
+    providers.ask(Setup("kimi", "m"), "sys", "q")
+    m = usage.METER
+    assert (m.asked_today, m.asked_this_month, m.tokens_today) == (2, 2, 200)
+    kept: dict = {}
+    m.dump(kept)
+    again = usage.Meter()
+    again.load(kept)
+    assert (again.asked_today, again.tokens_today) == (2, 200)
+    assert again.summary().startswith("Today: 2 of 300 questions (about 200 tokens)")
+
+
+def test_todays_limit_warns_at_80_percent_and_stops_a_job_at_once(provider):
+    from bodega.services.ai import usage
+
+    _seen, replies = provider
+    usage.METER.set_limit(5)
+    replies += [anthropic_reply("[]")] * 10
+    for _ in range(4):
+        providers.ask(Setup("anthropic", "m"), "sys", "q")
+    assert "4 times today" in usage.METER.close_to_limit()
+    assert usage.METER.close_to_limit() == ""  # said once a day
+    items = [Item(name=f"Piece {n}") for n in range(tasks.BATCH * 4)]
+    got = tasks.tidy_names(Setup("anthropic", "m"), items)  # one more question, then the limit
+    assert got.problems and "daily limit" in got.problems[0] and usage.METER.asked_today == 5
+    with pytest.raises(providers.LimitReached, match="Settings › AI"):
+        providers.ask(Setup("anthropic", "m"), "sys", "q")
+
+
+def test_no_more_than_twenty_questions_go_in_a_minute_and_a_new_day_starts_again():
+    from datetime import date, timedelta
+
+    from bodega.services.ai import usage
+
+    now, day = [0.0], [date(2026, 10, 16)]
+    m = usage.Meter(clock=lambda: now[0], today=lambda: day[0])
+    waits = []
+
+    def sleep(s):
+        waits.append(s)
+        now[0] += s
+
+    for _ in range(usage.RATE_PER_MIN):
+        m.take(sleep)
+    assert waits == []
+    m.take(sleep)  # the 21st waits for the first's minute to pass
+    assert waits and sum(waits) >= 59 and m.asked_today == usage.RATE_PER_MIN + 1
+    day[0] += timedelta(days=1)
+    assert m.summary().startswith("Today: 0 of")  # a new day
+    assert m.asked_this_month == usage.RATE_PER_MIN + 1  # the same month
+    m.set_limit(0)
+    assert m.summary().startswith("Today: 0 questions")  # no limit

@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QDialog
 
 from bodega.core import settings, words
 from bodega.core.model import Item
-from bodega.services.ai import tasks
+from bodega.services.ai import tasks, usage
 from bodega.services.ai.providers import Setup
 from bodega.ui.components.worker import Worker
 from bodega.ui.dialogs.ai_review import ReviewDialog
@@ -39,7 +39,20 @@ class AIMixin:
         a.apply_wanted.connect(lambda changes: self._ai_apply(changes, in_chat=True))
         a.name_of = lambda item_id: self.lib.items[item_id].name if item_id in self.lib.items else "A piece"
         a.ask_job = self._ai_question
+        a.run_over.connect(self._ai_spent)
+        usage.METER.load(self.lib.settings)  # what's been asked today and this month, and today's limit
         return a
+
+    def _ai_spent(self) -> None:
+        """After a run: what it asked is kept, and getting close to today's limit is said (once a day)."""
+        usage.METER.dump(self.lib.settings)
+        try:
+            self.lib.save_settings()
+        except OSError:
+            pass  # kept as unsaved: the banner says so, and it's tried again
+        close = usage.METER.close_to_limit()
+        if close:
+            self.assistant.say("Bodega", close + " Change it in Settings › AI.", "problem")
 
     def ai_setup(self) -> Setup:
         return Setup.from_settings(self.lib.settings)

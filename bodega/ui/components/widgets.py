@@ -1458,6 +1458,7 @@ def set_tone(lbl: QLabel, tone: str, text: str) -> None:
 
 PERCENT_TYPED = r"\s*\d{0,3}(\.\d{0,3})?\s*%?\s*"  # "8.875", "15 %"
 WHOLE_TYPED = r"\s*\d{0,3}\s*"  # a count of days
+COUNT_TYPED = r"\s*\d{0,5}\s*"  # a bigger count (questions to your AI a day)
 
 
 def only(field: QLineEdit, pattern: str) -> QLineEdit:

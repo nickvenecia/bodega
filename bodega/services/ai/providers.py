@@ -29,6 +29,7 @@ from bodega import __version__
 from bodega.core import web
 from bodega.core.log import get_logger
 from bodega.services import secrets
+from bodega.services.ai import usage
 
 log = get_logger(__name__)
 
@@ -99,6 +100,10 @@ class AIError(OSError):
     def __init__(self, text: str, status: int = 0):
         super().__init__(text)
         self.status = status
+
+
+class LimitReached(AIError):
+    """Today's limit of questions is used up (usage.py): a job stops here at once, never after more failures."""
 
 
 @dataclass
@@ -291,6 +296,10 @@ def ask(setup: Setup, system: str, user: str, key: str | None = None) -> str:
     if not setup.model:
         raise AIError("Pick a model first.")
     try:
+        usage.METER.take()  # counted, within today's limit and the minute's
+    except usage.DailyLimit as e:
+        raise LimitReached(str(e)) from None
+    try:
         return _ask(setup, system, user, key)
     except (KeyError, AttributeError, TypeError, IndexError):
         raise AIError("The model's answer came back in a shape Bodega couldn't read.") from None
@@ -305,6 +314,7 @@ def _ask(setup: Setup, system: str, user: str, key: str | None) -> str:
              "messages": [{"role": "user", "content": user}]},
             key=key,
         )  # fmt: skip
+        usage.METER.used(d)
         parts = d.get("content") if isinstance(d, dict) else None
         text = "".join(p.get("text", "") for p in parts or [] if isinstance(p, dict) and p.get("type") == "text")
     else:
@@ -317,6 +327,7 @@ def _ask(setup: Setup, system: str, user: str, key: str | None) -> str:
                 raise
             other = CAP_NAMES[1] if cap == CAP_NAMES[0] else CAP_NAMES[0]  # it named the cap it won't take
             d = _call(setup, "/chat/completions", {**body, other: MAX_TOKENS}, key=key)
+        usage.METER.used(d)
         choices = d.get("choices") if isinstance(d, dict) else None
         msg = choices[0].get("message", {}) if choices and isinstance(choices[0], dict) else {}
         text = msg.get("content") or ""

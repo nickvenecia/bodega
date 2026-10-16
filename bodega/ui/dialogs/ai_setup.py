@@ -14,9 +14,10 @@ from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QPushButton
 from bodega.core import dates, errors, settings, words
 from bodega.core.store import Library
 from bodega.services import secrets
-from bodega.services.ai import providers
+from bodega.services.ai import providers, usage
 from bodega.services.ai.providers import PROVIDERS, Setup
 from bodega.ui.components.widgets import (
+    COUNT_TYPED,
     Embeddable,
     IconLabel,
     Section,
@@ -25,7 +26,9 @@ from bodega.ui.components.widgets import (
     combo,
     hbox,
     hint,
+    only,
     primary_button,
+    sized,
     status_line,
     vbox,
 )
@@ -103,6 +106,20 @@ class AISetupDialog(Embeddable, QDialog):
         self.load.clicked.connect(self._load_models)
         row.addWidget(self.load)
         sec.add(row)
+        lay.addWidget(sec)
+
+        sec = Section("Daily Limit")  # the standard's quota: a warning at 80%, a stop at 100%
+        row = hbox(spacing=SPACE_2)
+        self.limit = sized(only(QLineEdit(str(settings.value(lib.settings, "ai_daily_limit"))), COUNT_TYPED), "short")
+        self.limit.setPlaceholderText("None")
+        self.limit.setToolTip("Questions to your AI a day; blank or 0: no limit")
+        self.limit.setAccessibleName("Daily Limit, Questions")
+        row.addWidget(self.limit)
+        row.addWidget(hint("questions a day"))
+        row.addStretch(1)
+        sec.add(row)
+        self.usage = hint(usage.METER.summary())  # what's been asked, today and this month
+        sec.add(self.usage)
         lay.addWidget(sec)
 
         self.forget = QPushButton("Remove Key")  # a red row at the form's foot
@@ -277,6 +294,10 @@ class AISetupDialog(Embeddable, QDialog):
             self.status.setText(errors.plain(e, "save the key"))
             return
         self._setup().to_settings(self.lib.settings)
+        typed = self.limit.text().strip()
+        self.lib.settings["ai_daily_limit"] = int(typed) if typed.isdigit() else 0
+        usage.METER.set_limit(self.lib.settings["ai_daily_limit"])  # from the next question on
+        self.usage.setText(usage.METER.summary())
         self.lib.save_settings()
         if self.embedded:
             self._provider_changed(first=True)

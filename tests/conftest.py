@@ -50,6 +50,16 @@ def pytest_unconfigure(config):
 
 
 @pytest.fixture(autouse=True)
+def fresh_ai_meter():
+    """Every test starts with nothing asked of the AI today, and no per-minute wait (fake providers answer at
+    once; tests/test_ai.py checks the limits with a meter of their own)."""
+    from bodega.services.ai import usage
+
+    usage.METER = usage.Meter(rate=10**6)
+    yield
+
+
+@pytest.fixture(autouse=True)
 def data_folder(tmp_path):
     """Never touch the real gear: every test gets its own empty data folder."""
     from bodega.core.paths import use_data_dir
