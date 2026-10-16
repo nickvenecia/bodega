@@ -162,6 +162,7 @@ jobs:
           dist/Bodega.app/Contents/MacOS/Bodega --smoke-test
           dist/Bodega.app/Contents/MacOS/Bodega cli sample smoke.pdf --doc agreement
           test -s smoke.pdf
+          dist/Bodega.app/Contents/MacOS/Bodega cli update-check
 
       - name: Smoke test (Linux)
         if: runner.os == 'Linux'
@@ -171,6 +172,7 @@ jobs:
           dist/Bodega/Bodega --smoke-test
           dist/Bodega/Bodega cli sample smoke.pdf --doc inventory
           test -s smoke.pdf
+          dist/Bodega/Bodega cli update-check
 
       - name: Smoke test (Windows)
         if: runner.os == 'Windows'
@@ -183,6 +185,8 @@ jobs:
           $p = Start-Process -FilePath dist\Bodega\Bodega.exe -ArgumentList "cli","sample","smoke.pdf" -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "CLI smoke test failed: $($p.ExitCode)" }
           if (-not (Test-Path smoke.pdf)) { throw "no PDF" }
+          $p = Start-Process -FilePath dist\Bodega\Bodega.exe -ArgumentList "cli","update-check" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "update check failed: $($p.ExitCode)" }
 
       # ---------- optional: sign + notarize on macOS (only if you add the secrets — see README)
       - name: Sign and notarize (macOS)

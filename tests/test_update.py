@@ -301,3 +301,15 @@ def test_a_build_shows_the_commit_it_was_made_from(monkeypatch):
     assert version_label() == __version__  # from source: no commit to show
     monkeypatch.setattr(_build, "COMMIT", "a1b2c3d")
     assert version_label() == f"{__version__} (a1b2c3d)"
+
+
+@pytest.mark.parametrize(
+    "kind", ["mac-app", "windows-installed", "windows-portable", "appimage", "linux-folder"]
+)
+def test_every_build_can_find_its_own_update_offline(kind, monkeypatch, capsys):
+    from bodega import cli
+
+    monkeypatch.setattr(update, "install_kind", lambda: kind)
+    assert cli.update_check() == 0
+    assert "update check ok" in capsys.readouterr().out
+    assert set(cli.ASSETS) >= {n for k in ("windows-installed", "appimage") if (n := update.asset_name(k))}
