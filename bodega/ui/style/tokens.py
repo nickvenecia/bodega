@@ -191,6 +191,8 @@ PHOTO_H = 200  # (kept for older callers)
 PHOTO_HEAD = 88  # a record's photo, beside its name in the head (the standard's 4.5)
 LOG_COST_W = 90  # the cost box in a maintenance line
 CHIP_H = 28  # a tinted capsule button
+FILTER_CHIP_H = 26  # (G.10.6) an active filter's capsule: padding 0 6 0 12, its ✕ 4 after the words
+FILTER_CHIP_GAP = 6  # between the capsules (and after Clear All)
 SORT_ARROW = 10  # the sort arrow in a column title
 NAV_H = CHOICE_ROW_H  # one row in the sidebar
 NAV_INSET = SCROLL_GUTTER  # a sidebar row's gap from the glass edge (the scroll bar's room on the right)
@@ -243,6 +245,8 @@ SELBAR_LIFT = 18  # (G.10.7) the selection bar floats this far above the content
 FIGURE_GAP = 12  # (G.10.5) between the figure row's tiles…
 FIGURE_BELOW = 18  # …and below the row
 FIGURE_PAD = (16, 12, 16, 12)  # a tile's padding (left, top, right, bottom)
+CARD_SHADOW_BLUR = 2  # (shadow-card) a card's shadow: barely there, 1 below
+CARD_SHADOW_DROP = 1
 SELBAR_H = CONTROL_H + 12  # …a capsule this tall (padding 6 8 6 16, gap 10)
 SELBAR_PAD = (16, 6, 8, 6)  # (left, top, right, bottom)
 SELBAR_GAP = 10
@@ -329,6 +333,7 @@ DARK = {
     "GLASS_STROKE": "rgba(255, 255, 255, 0.10)",  # (glass-stroke) its one hairline
     "GLASS_EDGE": "rgba(255, 255, 255, 0.14)",  # (glass-edge) a little brighter along the top
     "GLASS_SHADOW": "rgba(0, 0, 0, 0.45)",  # (shadow-glass) soft and wide
+    "CARD_SHADOW": "rgba(255, 255, 255, 0.06)",  # (shadow-card) on the dark: a faint light edge, not a shadow
     "TOAST": "#48484A",  # (toast) a step lighter than the panels, so it stands out over anything
     "TOAST_TEXT": "#F5F5F7",
     "TOAST_EDGE": "rgba(255, 255, 255, 0.12)",
@@ -408,6 +413,7 @@ LIGHT = {
     "GLASS_STROKE": "rgba(60, 60, 67, 0.10)",
     "GLASS_EDGE": "rgba(255, 255, 255, 0.75)",
     "GLASS_SHADOW": "rgba(0, 0, 0, 0.09)",
+    "CARD_SHADOW": "rgba(0, 0, 0, 0.05)",
     "TOAST": "#1C1C1E",  # (toast) dark on the light page: easy to spot
     "TOAST_TEXT": "#F5F5F7",
     "TOAST_EDGE": "rgba(255, 255, 255, 0.10)",

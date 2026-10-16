@@ -103,7 +103,8 @@
 - Each list starts with a row of figures about all of it: gear has Pieces, Out, In Repair and Replacement Value (a
   group's page counts that group); kits have Kits, Pieces in Them and A Day of Every Kit; rentals have Out Now,
   Coming Up, Late and Quotes. Press Out or In Repair to show only that gear, and Out Now or Coming Up to go to
-  those rentals; press it again for the whole list.
+  those rentals; press it again for the whole list. The filters you've turned on sit just above the figures, with
+  Clear All first.
 - Single-key shortcuts, outside text fields: N makes something new (a piece, a kit or a rental, wherever you are),
   E puts the cursor in the open record (or opens the one you've marked), D deletes it (with Undo), / goes to the
   search, ? shows the keyboard shortcuts and A opens the assistant. They never act while you type in a field or

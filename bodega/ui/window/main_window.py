@@ -265,12 +265,13 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         grid.addLayout(right, 0, 2)
         lay.addWidget(bar)
         self.toolbar = bar
+        self.filter_chips = FilterChips()  # what the filter's hiding, each with its ✕
+        self.filter_chips.removed.connect(self._filter_off)
+        self.filter_chips.cleared.connect(self._filters_off)
+        lay.addWidget(self.filter_chips)
         self.figure_row = FigureRow()  # three or four figures about the whole list; a slice filters it
         self.figure_row.pressed.connect(self._figure_pressed)
         lay.addWidget(self.figure_row)
-        self.filter_chips = FilterChips()  # what the filter's hiding, each with its ✕
-        self.filter_chips.removed.connect(self._filter_off)
-        lay.addWidget(self.filter_chips)
         self.banner = Banner("Try Again")  # a save that failed, until it works
         self.banner.acted.connect(self.try_saving_again)
         lay.addWidget(self.banner)
@@ -639,6 +640,11 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         else:
             f.missing.discard(key)
         self.view_menu.show_state()
+        self.view_menu.changed.emit()
+
+    def _filters_off(self) -> None:
+        """Clear All, before the filter chips: every filter comes off (how the list is divided stays)."""
+        self.view_menu.clear_filter()
         self.view_menu.changed.emit()
 
     def _clear_hiding(self, what: str) -> None:

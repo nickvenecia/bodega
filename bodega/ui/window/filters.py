@@ -210,14 +210,22 @@ class FilterButton(QToolButton):
 
 
 class FilterChips(QWidget):
-    """Under the bar while a filter hides gear: one capsule for each ("Out", "Sony", "No Link"), with an ✕ that
-    takes it off. A chip acts once its click is over: taking a filter off rebuilds the chips."""
+    """Under the bar while a filter hides gear, 12 above the figure row (G.10.6): one capsule for each ("Out",
+    "Sony", "No Link"), with an ✕ that takes it off. A chip acts once its click is over: taking a filter off rebuilds
+    the chips."""
 
     removed = Signal(str, str)  # what kind ("show", "company", "missing"), which
+    cleared = Signal()  # Clear All
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self.lay = hbox(self, (tokens.PAGE_INSET, 0, tokens.PAGE_INSET, tokens.SPACE_2), tokens.SPACE_2)
+        self.lay = hbox(self, (tokens.PAGE_INSET, 0, tokens.PAGE_INSET, tokens.SPACE_3), tokens.FILTER_CHIP_GAP)
+        self.clear_all = QPushButton("Clear All")  # first, quiet
+        self.clear_all.setObjectName("ClearFilters")
+        self.clear_all.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.clear_all.setToolTip("Take every filter off")
+        self.clear_all.clicked.connect(lambda: QTimer.singleShot(0, self, self.cleared.emit))
+        self.lay.addWidget(self.clear_all)
         self.lay.addStretch(1)
         self.chips: list[QPushButton] = []
         self.hide()
@@ -248,6 +256,6 @@ class FilterChips(QWidget):
             b.clicked.connect(
                 lambda _c=False, w=what, k=key: QTimer.singleShot(0, self, lambda: self.removed.emit(w, k))
             )
-            self.lay.insertWidget(n, b)
+            self.lay.insertWidget(n + 1, b)  # (after Clear All)
             self.chips.append(b)
         self.setVisible(bool(on))

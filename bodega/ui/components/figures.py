@@ -5,7 +5,7 @@ on; pressed again, it lets go."""
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtWidgets import QFrame, QLabel, QWidget
+from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QLabel, QWidget
 
 from bodega.core.figures import Figure
 from bodega.ui.components.widgets import by_keyboard, hbox, repolish, vbox
@@ -27,9 +27,14 @@ class FigureTile(QFrame):
         lay.addWidget(self.value)
         lay.addWidget(self.label)
         self.slice = ""
+        self.shadow = QGraphicsDropShadowEffect(self)  # (shadow-card)
+        self.shadow.setBlurRadius(tokens.CARD_SHADOW_BLUR)
+        self.shadow.setOffset(0, tokens.CARD_SHADOW_DROP)
+        self.setGraphicsEffect(self.shadow)
 
     def show_figure(self, f: Figure, on: bool) -> None:
         self.slice = f.slice
+        self.shadow.setColor(theme.qcolor(tokens.CARD_SHADOW))  # (light or dark, as it is now)
         self.value.setText(f.value)
         self.label.setText(f.label)
         for w, key, v in ((self.value, "tone", f.tone), (self, "slice", bool(f.slice)), (self, "on", on)):

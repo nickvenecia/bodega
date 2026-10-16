@@ -106,3 +106,18 @@ def test_a_rentals_slice_goes_to_its_place(win):
     QTest.mouseClick(tile(win, "Coming Up"), Qt.MouseButton.LeftButton)
     QTest.qWait(50)
     assert win.view_key == "rentals"
+
+
+def test_the_filter_chips_sit_above_the_figures_with_clear_all_first(win):
+    win.go("gear")
+    win.view_menu.filter.company = "Sony"
+    win.set_gear_filter("repair")
+    chips = win.filter_chips
+    assert chips.isVisibleTo(win) and [c.text() for c in chips.chips] == ["In Repair", "Sony"]
+    assert chips.geometry().bottom() < win.figure_row.geometry().top()  # (G.10.6) under the title, above the figures
+    first = chips.lay.itemAt(0).widget()
+    assert first is chips.clear_all and first.height() == chips.chips[0].height()
+    divide = win.view_menu.divide
+    QTest.mouseClick(chips.clear_all, Qt.MouseButton.LeftButton)
+    QTest.qWait(50)
+    assert not win.view_menu.filter.active() and not chips.isVisibleTo(win) and win.view_menu.divide == divide
