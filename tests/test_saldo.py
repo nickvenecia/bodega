@@ -31,7 +31,7 @@ def _invoices(home) -> dict[str, dict]:
     return {f.stem: json.loads(f.read_text()) for f in (home / "invoices").glob("*.json")}
 
 
-def test_not_set_up(tmp_path, saldo_home):
+def test_nothing_is_sent_before_saldo_has_been_opened_once(tmp_path, saldo_home):
     lib = sample.fill(Library(tmp_path / "b").load())
     assert not saldo.installed()
     with pytest.raises(OSError):

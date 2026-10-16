@@ -395,7 +395,7 @@ def test_a_toast_says_its_news_and_goes(win):
     wait_for(lambda: not t.isVisible())
 
 
-def test_light_and_dark(win):
+def test_the_look_switches_between_light_and_dark_and_is_kept(win):
     from bodega.ui.style import tokens
 
     win.set_look("light")
@@ -451,7 +451,7 @@ def test_rental_line_dates_from_the_panel(win):
     assert not line.pickup and not r.own_dates(line)
 
 
-def test_status_and_numbers(win):
+def test_a_new_rental_is_a_quote_with_the_next_number_and_its_status_is_kept(win):
     win.new("rentals")
     r = win.rentals.r
     assert r.status == "quote" and r.number.endswith("-002")
@@ -545,7 +545,7 @@ def test_attach_and_add_through_the_picker(win, monkeypatch):
     assert r.lines[0].qty == 2
 
 
-def test_delete_with_confirm(win, monkeypatch):
+def test_deleting_asks_retires_gear_on_rentals_cancels_bookings_and_deletes_quotes(win, monkeypatch):
     from bodega.ui.window import editing
 
     asked = []
@@ -571,7 +571,7 @@ def test_delete_with_confirm(win, monkeypatch):
     assert win.pages.currentWidget() is win.empty
 
 
-def test_import_window_choices(qapp, data_folder, tmp_path):
+def test_the_import_window_leaves_out_what_you_untick_and_repicks_columns(qapp, data_folder, tmp_path):
     """The Import window: departments and single pieces can be left out, columns re-picked."""
     import openpyxl
 
@@ -639,7 +639,7 @@ def test_the_sheets_links_go_to_gear_you_have_only_if_you_say(win, tmp_path, mon
     assert win.lib.items[mic.id].link == "https://maker.example/mic"
 
 
-def test_your_own_groups(win, monkeypatch):
+def test_you_can_make_rename_order_and_fill_your_own_groups(win, monkeypatch):
     from bodega.ui.dialogs import common as dialogs
 
     lib = win.lib
@@ -912,7 +912,7 @@ def test_the_filter_button_lights_up_while_a_filter_hides_gear(win):
     assert f.isHidden()
 
 
-def test_undo_and_redo(win, monkeypatch):
+def test_undo_puts_a_change_back_and_redo_makes_it_again(win, monkeypatch):
     from bodega.ui.window import editing
 
     monkeypatch.setattr(editing, "confirm", lambda *a, **k: True)

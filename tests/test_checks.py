@@ -53,7 +53,7 @@ def test_check_out_and_in(qapp, data_folder, monkeypatch):
     win.close()
 
 
-def test_the_plus_buttons(qapp, data_folder):
+def test_each_places_plus_offers_what_it_can_make(qapp, data_folder):
     from bodega.ui.window.main_window import MainWindow
 
     win = MainWindow(sample.fill(Library(data_folder).load()))

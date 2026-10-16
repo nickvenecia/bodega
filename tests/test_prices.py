@@ -7,7 +7,7 @@ from decimal import Decimal
 from bodega.core import prices, web
 
 
-def test_json_ld_offer():
+def test_a_price_is_read_from_a_pages_product_offer():
     html = """<html><head><script type="application/ld+json">
     {"@context":"https://schema.org","@type":"Product","name":"Camera",
      "offers":{"@type":"Offer","price":"5498.00","priceCurrency":"USD"}}

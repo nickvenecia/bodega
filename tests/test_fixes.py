@@ -52,7 +52,7 @@ def test_huge_numbers_are_typos_not_crashes():
     assert importer._number("9" * 30) is None
 
 
-def test_quantities_are_clamped():
+def test_a_quantity_is_always_a_sensible_whole_number():
     assert clamp_qty("25000") == MAX_QTY
     assert clamp_qty(float("inf")) == 1
     assert clamp_qty("abc") == 1

@@ -120,7 +120,7 @@ def test_anthropic_request_shape_and_answer(provider):
     assert body["model"] == "model-x" and body["system"] == "sys" and body["messages"][0]["content"] == "hello"
 
 
-def test_kimi_speaks_openai(provider):
+def test_kimi_is_asked_the_openai_way_with_its_own_key(provider):
     seen, replies = provider
     replies.append(openai_reply("Hola"))
     assert providers.ask(Setup("kimi", "kimi-x"), "sys", "hello") == "Hola"

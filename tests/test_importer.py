@@ -62,7 +62,7 @@ def test_attaches_what_says_what_its_for():
     assert not fx6.parent and not light.parent
 
 
-def test_csv_round_trip(tmp_path):
+def test_gear_written_to_csv_reads_back_the_same(tmp_path):
     fx6 = Item(name="FX6", department="Camera", group="Body", qty=1, value="5998", serials=["123"])
     cage = Item(name="Cage for FX6", department="Camera", group="Body", value="279", parent=fx6.id)
     out = importer.write_csv([fx6, cage], {fx6.id: fx6, cage.id: cage}, tmp_path / "gear.csv")

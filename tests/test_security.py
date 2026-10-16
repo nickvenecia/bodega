@@ -37,7 +37,7 @@ def test_private_addresses_are_blocked(monkeypatch, host_ip):
         web.check_public("router.example.com")
 
 
-def test_public_addresses_pass(monkeypatch):
+def test_a_public_address_is_let_through(monkeypatch):
     import socket
 
     monkeypatch.setattr(socket, "getaddrinfo", lambda *a, **k: [(0, 0, 0, "", ("93.184.215.14", 443))])
@@ -133,7 +133,7 @@ def test_ipv6_wrappers_of_private_addresses_are_blocked(monkeypatch, addr):
         web.check_public("sneaky.example.com")
 
 
-def test_unpacking_is_capped():
+def test_a_page_that_unpacks_huge_is_cut_short():
     bomb = zlib.compress(b"0" * 50_000_000)  # 50 MB of zeros packs to ~50 KB
     out = web._unpack(bomb, "deflate", 1_000_000)
     assert len(out) <= 1_000_000
@@ -146,7 +146,7 @@ def test_a_hostile_page_cant_freeze_the_price_reader():
     assert time.monotonic() - start < 2
 
 
-def test_prices_still_read():
+def test_ordinary_prices_still_read_after_the_hostile_ones():
     assert prices.parse('<meta property="product:price:amount" content="1,299.00">')[0] == 1299
     ld = '<script type="application/ld+json">{"offers": {"price": "549.95"}}</script>'
     assert str(prices.parse(ld)[0]) == "549.95"

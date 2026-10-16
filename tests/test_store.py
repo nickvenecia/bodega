@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from bodega.core import sample
+from bodega.core import dates, sample
 from bodega.core.model import Item, Rental
 from bodega.core.store import Library
 
@@ -27,7 +27,7 @@ def test_unreadable_file_is_set_aside(data_folder):
     assert any(p.name.startswith("gear.json.unreadable-") for p in data_folder.iterdir())
 
 
-def test_old_files_load(data_folder):
+def test_files_from_an_older_bodega_open_with_every_field_filled(data_folder):
     data_folder.mkdir(parents=True)
     (data_folder / "gear.json").write_text(json.dumps([{"id": "a", "name": "Old", "qty": "3", "future": 1}]))
     it = Library(data_folder).load().items["a"]
@@ -207,3 +207,13 @@ def test_your_order_and_companies(tmp_path):
     assert c.group == "Lights" and [i.id for i in lib.ordered_items()] == [b.id, a.id, c.id]
     again = Library(tmp_path).load()
     assert [i.id for i in again.ordered_items()] == [b.id, a.id, c.id] and again.items[a.id].brand == "Aputure"
+
+
+def test_a_new_year_starts_its_numbers_again_at_001(data_folder):
+    lib = sample.fill(Library(data_folder).load())
+    b = next(iter(lib.businesses.values()))
+    year = dates.today().year
+    this = lib.next_number(b, year)
+    assert lib.next_number(b, year + 1).endswith(f"-{year + 1}-001")  # a fresh series each year…
+    lib._issue(b, year + 1)
+    assert lib.next_number(b, year) == this  # …and this year's carries on where it was

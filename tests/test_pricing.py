@@ -283,3 +283,20 @@ def test_the_schedule_says_whats_held_each_day(lib):
     held = [d.booked for d in days]
     assert held[0] == 0 and held[1] >= units and held[2] >= units and held[3] == 0  # back on the 4th: free that day
     assert all(d.free == max(0, it.qty - d.booked) for d in days if it.status == "ready")
+
+
+def test_whats_out_now_counts_only_rentals_that_are_out_and_lines_that_have_started(lib, monkeypatch):
+    from bodega.core import dates
+
+    monkeypatch.setattr(dates, "today", lambda: date(2026, 10, 16))
+    it = next(i for i in lib.items.values() if not i.parent and i.qty >= 1)
+    out = Rental(status="out", pickup="2026-10-10", return_date="2026-10-20")
+    out.lines = [
+        RentalLine("item", it.id, 1),
+        RentalLine("item", it.id, 1, pickup="2026-10-18", return_date="2026-10-20"),  # not yet
+    ]
+    booked = Rental(
+        status="booked", pickup="2026-10-10", return_date="2026-10-20", lines=[RentalLine("item", it.id, 1)]
+    )
+    lib.rentals = {"o": out, "b": booked}
+    assert pricing.units_out(lib).get(it.id) == 1

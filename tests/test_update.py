@@ -46,7 +46,7 @@ def test_versions_compare_like_numbers():
     assert not update.is_newer("2.3.0-beta", "2.3.0")
 
 
-def test_release_from_github():
+def test_a_github_release_is_read_with_each_downloads_size_and_check():
     rel = update.parse_release(GITHUB_ANSWER)
     assert rel.version == "9.1.0" and rel.newer
     a = rel.assets["Bodega-mac-apple-silicon.dmg"]

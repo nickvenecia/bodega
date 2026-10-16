@@ -119,7 +119,7 @@ def test_quitting_over_unsaved_changes_asks(win, full_disk, answers):
     assert Library(win.lib.root).load().items[it.id].name == "Edited"
 
 
-def test_quit_anyway_quits(win, full_disk, answers):
+def test_quit_anyway_quits_over_a_save_that_keeps_failing(win, full_disk, answers):
     said, asked = answers
     win.lib.unsaved.add("gear")
     said.append(QDialog.DialogCode.Accepted)  # Try Again: still full, asked again

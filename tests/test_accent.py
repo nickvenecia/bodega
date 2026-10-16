@@ -47,7 +47,7 @@ def test_the_accent_is_kept_for_what_you_can_press():
     assert STATUS_COLORS["booked"] == "INFO" and "FAINT" not in STATUS_COLORS.values()
 
 
-def test_no_red_accent():
+def test_no_accent_is_red_since_red_means_late_failed_or_delete():
     for _name, dark, light in tokens.ACCENTS.values():
         for c in (dark, light):
             h, _l, sat = colorsys.rgb_to_hls(*(v / 255 for v in tokens._rgb(c)))
@@ -109,3 +109,14 @@ def test_anything_off_is_drawn_at_forty_percent_in_every_look():
     qss = (Path(__file__).resolve().parents[1] / "bodega" / "ui" / "style" / "theme.py").read_text()
     off = [ln for ln in qss.splitlines() if ":disabled" in ln and "color:" in ln and "transparent" not in ln]
     assert off and all("_OFF}" in ln for ln in off), off  # one rule: never a hand-picked grey
+
+
+def test_the_accent_you_picked_comes_back_next_time(qapp, data_folder):
+    from bodega.app import saved_look
+    from bodega.core.store import write_json
+
+    data_folder.mkdir(parents=True, exist_ok=True)
+    write_json(data_folder / "settings.json", {"appearance": "light", "accent": "purple"})
+    assert saved_look() == ("light", "purple")  # what Bodega opens with
+    write_json(data_folder / "settings.json", {"appearance": 3, "accent": None})
+    assert saved_look() == ("system", "")  # an odd file: the defaults

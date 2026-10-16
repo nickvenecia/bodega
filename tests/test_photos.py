@@ -121,7 +121,7 @@ def test_a_photo_dragged_out_of_a_browser(qapp, data_folder, monkeypatch):
     assert photos.path_of(photos.from_any_link("https://shop.example.com/fx6"))
 
 
-def test_paste_a_photo(qapp, data_folder, monkeypatch):
+def test_a_pasted_picture_becomes_the_pieces_photo(qapp, data_folder, monkeypatch):
     from PySide6.QtWidgets import QApplication
 
     from bodega.ui.window.main_window import MainWindow

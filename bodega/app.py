@@ -303,16 +303,7 @@ def setup_app(app: QApplication) -> None:
     f.setPixelSize(tokens.TEXT_MD)  # every size is in pixels (the stylesheet's too), so they match
     f.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
     app.setFont(f)
-    from bodega.core.store import read_json
-
-    saved = read_json(data_dir() / "settings.json", {})
-    saved = saved if isinstance(saved, dict) else {}
-    appearance, accent = saved.get("appearance", "system"), saved.get("accent", "")
-    set_appearance(
-        app,
-        appearance if isinstance(appearance, str) else "system",
-        accent if isinstance(accent, str) else "",
-    )
+    set_appearance(app, *saved_look())
     hints = app.styleHints()
     if hasattr(hints, "colorSchemeChanged"):
         hints.colorSchemeChanged.connect(lambda _s: _system_changed(app))
@@ -322,6 +313,16 @@ def setup_app(app: QApplication) -> None:
         )
     app._round = _RoundPopups(app)
     app.installEventFilter(app._round)
+
+
+def saved_look() -> tuple[str, str]:
+    """The look and accent you picked, as Bodega last saved them (Match System and its own blue at first)."""
+    from bodega.core import settings
+    from bodega.core.store import read_json
+
+    saved = read_json(data_dir() / "settings.json", {})
+    saved = saved if isinstance(saved, dict) else {}
+    return settings.value(saved, "appearance"), settings.value(saved, "accent")
 
 
 def set_appearance(app: QApplication, appearance: str, accent: str | None = None) -> str:
