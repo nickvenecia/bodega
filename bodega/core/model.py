@@ -1,15 +1,19 @@
 """What Bodega keeps: your gear, packages of gear, rentals, renters and your profile.
 
-Plain dataclasses with to_dict()/from_dict(). from_dict() tolerates files from older and newer
-versions: unknown keys are ignored, missing keys get their default (defaults always mean "off" or empty).
+Plain dataclasses with to_dict()/from_dict(). from_dict() reads every field by what it holds, through one
+shared reader (_read): text stays text, a number a number, a yes/no a yes/no, a list a list, and anything else
+gets the field's default; missing keys get their default too (defaults always mean "off" or empty). Fields this
+Bodega doesn't know (written by a newer one) are kept in `newer` and written back as they were, and a status it
+doesn't know is read as the cautious one (a rental holds its gear, a piece isn't available).
 Amounts are kept as the text that was typed ("249.99") and turned into exact decimals in pricing.py.
 """
 
 from __future__ import annotations
 
+import copy
 import re
 import uuid
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime
 from typing import Any
 
@@ -39,13 +43,92 @@ def clamp_qty(v) -> int:
         return 1
 
 
-def _known(cls, d: dict) -> dict:
-    names = {f.name for f in fields(cls)}
-    return {k: v for k, v in d.items() if k in names}
-
-
 def _text(v: Any) -> str:
-    return "" if v is None else str(v)
+    """Text from a file: a number is written as text; nothing, a list or a dict is blank."""
+    if v is None or isinstance(v, (list, dict)):
+        return ""
+    return str(v)
+
+
+def _yes(v: Any, default: bool) -> bool:
+    if isinstance(v, bool):
+        return v
+    if v in (0, 1):
+        return bool(v)
+    if isinstance(v, str) and v.strip().lower() in ("true", "yes", "1", "false", "no", "0", ""):
+        return v.strip().lower() in ("true", "yes", "1")
+    return default
+
+
+def _as(v: Any, default: Any) -> Any:
+    """`v` as the kind of thing `default` is. A plain value of another kind is turned into this one (a number
+    for a name is its text; text that isn't a number is the default number); nothing (null) is the default.
+    A list or a dict where it can't be one is broken: ValueError, so the record is skipped and its file kept."""
+    if v is None:
+        return default
+    if isinstance(default, (list, dict)) or is_dataclass(default):
+        want = list if isinstance(default, list) else dict
+        if not isinstance(v, want):
+            raise ValueError(f"expected a {want.__name__}, got {type(v).__name__}")
+        return type(default).from_dict(v) if is_dataclass(default) else v
+    if isinstance(v, (list, dict)):
+        raise ValueError(f"expected a plain value, got {type(v).__name__}")
+    if isinstance(default, bool):
+        return _yes(v, default)
+    if isinstance(default, int):
+        try:
+            return int(v) if not isinstance(v, str) else int(v.strip())
+        except (TypeError, ValueError, OverflowError):
+            return default
+    if isinstance(default, str):
+        return str(v)
+    return v
+
+
+def _read(cls, d: dict):
+    """A record from a file, every field read by what it holds (see the top of this file). A choice this
+    Bodega doesn't know (a status from a newer one) is read as the cautious one, and kept to be written back."""
+    obj = cls()
+    names = {f.name for f in fields(cls)}
+    for f in fields(cls):
+        if f.name != "newer" and f.name in d:
+            setattr(obj, f.name, _as(d[f.name], getattr(obj, f.name)))
+    obj.newer = {k: copy.deepcopy(v) for k, v in d.items() if k not in names}
+    for name, (allowed, cautious) in cls.CHOICES.items():
+        if getattr(obj, name) not in allowed:
+            if name in d:
+                obj.newer[name] = copy.deepcopy(d[name])
+            setattr(obj, name, cautious)
+    return obj
+
+
+def _plain(v: Any) -> Any:
+    if is_dataclass(v):
+        return v.to_dict()
+    if isinstance(v, list):
+        return [_plain(x) for x in v]
+    if isinstance(v, dict):
+        return {k: _plain(x) for k, x in v.items()}
+    return v
+
+
+class Record:
+    """What every kept thing shares: to_dict() writes its fields, and the ones a newer Bodega wrote too
+    (`newer`: what this one doesn't know, kept as it was). CHOICES: a field that holds one of a few words ->
+    (those words, the cautious one for any other)."""
+
+    newer: dict
+    CHOICES: dict[str, tuple[tuple, Any]] = {}
+
+    def to_dict(self) -> dict:
+        out = copy.deepcopy(self.newer)
+        for f in fields(self):
+            if f.name != "newer":
+                out[f.name] = _plain(getattr(self, f.name))
+        for name, (_allowed, cautious) in self.CHOICES.items():
+            if name in self.newer and getattr(self, name) == cautious:  # not changed since: as it was
+                out[name] = copy.deepcopy(self.newer[name])
+        return out
 
 
 # ---------------------------------------------------------------------------- gear
@@ -56,26 +139,23 @@ LOG_KINDS = ("service", "repair", "note")
 
 
 @dataclass
-class LogEntry:
+class LogEntry(Record):
     """One line in a piece's maintenance log."""
 
     date: str = ""  # ISO
     kind: str = "service"  # service / repair / note (a service resets the reminder)
     text: str = ""
     cost: str = ""
+    newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
+    CHOICES = {"kind": (LOG_KINDS, "note")}
 
     @classmethod
     def from_dict(cls, d: dict) -> LogEntry:
-        e = cls(**_known(cls, d))
-        for k in ("date", "text", "cost"):
-            setattr(e, k, _text(getattr(e, k)))
-        if e.kind not in LOG_KINDS:
-            e.kind = "note"
-        return e
+        return _read(cls, d)
 
 
 @dataclass
-class Item:
+class Item(Record):
     """One piece of gear (or several of the same: qty with a serial number per unit).
 
     `parent` is the id of the item this one lives with (a cage that only fits the FX6 belongs to the FX6).
@@ -102,39 +182,18 @@ class Item:
     extras: list[str] = field(default_factory=list)  # sections added by hand: link, serials, works, notes
     created: str = field(default_factory=now_iso)
     updated: str = field(default_factory=now_iso)
-
-    def to_dict(self) -> dict:
-        return asdict(self)
+    newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
+    CHOICES = {"status": (ITEM_STATUSES, "repair")}  # a status it doesn't know: not available
 
     @classmethod
     def from_dict(cls, d: dict) -> Item:
-        it = cls(**_known(cls, d))
+        it = _read(cls, d)
         it.qty = clamp_qty(it.qty)
-        it.serials = [_text(s) for s in it.serials] if isinstance(it.serials, list) else []
-        if it.status not in ITEM_STATUSES:
-            it.status = "ready"
-        for k in (
-            "name",
-            "brand",
-            "series",
-            "department",
-            "group",
-            "value",
-            "day_rate",
-            "parent",
-            "link",
-            "notes",
-        ):
-            setattr(it, k, _text(getattr(it, k)))
-        it.extras = [x for x in it.extras if isinstance(x, str)] if isinstance(it.extras, list) else []
-        it.rentable = bool(it.rentable)
-        it.photo = it.photo if isinstance(it.photo, str) and PHOTO_NAME.fullmatch(it.photo) else ""
-        raw = it.log if isinstance(it.log, list) else []
-        it.log = [LogEntry.from_dict(e) for e in raw if isinstance(e, dict)]
-        try:
-            it.service_days = max(0, min(3650, int(it.service_days)))
-        except (TypeError, ValueError):
-            it.service_days = 0
+        it.serials = [_text(s) for s in it.serials]
+        it.extras = [x for x in it.extras if isinstance(x, str)]
+        it.photo = it.photo if PHOTO_NAME.fullmatch(it.photo) else ""
+        it.log = [LogEntry.from_dict(e) for e in it.log if isinstance(e, dict)]
+        it.service_days = max(0, min(3650, it.service_days))
         return it
 
     def serial_list(self) -> list[str]:
@@ -143,19 +202,20 @@ class Item:
 
 
 @dataclass
-class PackageLine:
+class PackageLine(Record):
     item_id: str = ""
     qty: int = 1
+    newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
 
     @classmethod
     def from_dict(cls, d: dict) -> PackageLine:
-        line = cls(**_known(cls, d))
+        line = _read(cls, d)
         line.qty = clamp_qty(line.qty)
         return line
 
 
 @dataclass
-class Package:
+class Package(Record):
     """A set of gear you rent out together ("FX6 Run && Gun", "Interview Light Kit")."""
 
     id: str = field(default_factory=new_id)
@@ -167,23 +227,19 @@ class Package:
     day_rate: str = ""  # the package's own day rate (pricing "fixed")
     created: str = field(default_factory=now_iso)
     updated: str = field(default_factory=now_iso)
-
-    def to_dict(self) -> dict:
-        return asdict(self)
+    newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
+    CHOICES = {"pricing": (PRICINGS, "sum")}  # pricing it doesn't know: the gear's full rates
 
     @classmethod
     def from_dict(cls, d: dict) -> Package:
-        p = cls(**_known(cls, d))
-        p.lines = [PackageLine.from_dict(x) for x in (d.get("lines") or []) if isinstance(x, dict)]
-        if p.pricing not in PRICINGS:
-            p.pricing = "discount"
-        p.discount, p.day_rate = _text(p.discount), _text(p.day_rate)
+        p = _read(cls, d)
+        p.lines = [PackageLine.from_dict(x) for x in p.lines if isinstance(x, dict)]
         return p
 
 
 # ---------------------------------------------------------------------------- people
 @dataclass
-class Client:
+class Client(Record):
     """Someone you rent to. Saved once (New Renter…) and picked on every rental."""
 
     id: str = field(default_factory=new_id)
@@ -193,23 +249,18 @@ class Client:
     phone: str = ""
     address: str = ""
     notes: str = ""  # ID checked, insurance on file…
-
-    def to_dict(self) -> dict:
-        return asdict(self)
+    newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
 
     @classmethod
     def from_dict(cls, d: dict) -> Client:
-        c = cls(**_known(cls, d))
-        for f in fields(cls):
-            setattr(c, f.name, _text(getattr(c, f.name)))
-        return c
+        return _read(cls, d)
 
     def is_blank(self) -> bool:
         return not any((self.name.strip(), self.company.strip(), self.email.strip()))
 
 
 @dataclass
-class Business:
+class Business(Record):
     """Your profile: who rents the gear out, how it's priced, and the agreement's standard terms."""
 
     id: str = field(default_factory=new_id)
@@ -231,31 +282,19 @@ class Business:
     deposit_pct: str = ""  # security deposit, as a percent of the replacement value
     terms: str = ""  # the agreement's standard terms, one clause per paragraph
     note: str = ""  # a short closing line on every agreement
-
-    def to_dict(self) -> dict:
-        return asdict(self)
+    newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
 
     @classmethod
     def from_dict(cls, d: dict) -> Business:
-        b = cls(**_known(cls, d))
-        try:
-            b.week_days = int(b.week_days)
-        except (TypeError, ValueError):
-            b.week_days = 3
-        if b.week_days not in WEEK_DAYS:
-            b.week_days = 3
-        b.weekend_deal = bool(b.weekend_deal)
-        for k in ("name", "tagline", "email", "phone", "website", "address", "logo", "currency", "prefix"):
-            setattr(b, k, _text(getattr(b, k)))
-        for k in ("rate_pct", "value_tax", "rental_tax", "deposit_pct", "terms", "note", "color"):
-            setattr(b, k, _text(getattr(b, k)))
+        b = _read(cls, d)
+        b.week_days = b.week_days if b.week_days in WEEK_DAYS else 3
         b.currency = b.currency or "$"
         return b
 
 
 # ---------------------------------------------------------------------------- rentals
 @dataclass
-class RentalLine:
+class RentalLine(Record):
     """One line on a rental: a piece of gear (with what's attached to it), a package, or a flat fee.
 
     A line can have its own dates: on one production the FX6 package goes out Sunday to Sunday while the
@@ -270,22 +309,19 @@ class RentalLine:
     return_date: str = ""
     locked_day: str = ""  # what the whole line cost a day when its rental was booked (blank: priced live)
     locked_qty: int = 0  # …for this many
+    newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
+    CHOICES = {"kind": (LINE_KINDS, "item")}
 
     @classmethod
     def from_dict(cls, d: dict) -> RentalLine:
-        line = cls(**_known(cls, d))
-        line.pickup, line.return_date = _text(line.pickup), _text(line.return_date)
-        if line.kind not in LINE_KINDS:
-            line.kind = "item"
+        line = _read(cls, d)
         line.qty = clamp_qty(line.qty)
-        line.rate, line.name, line.ref = _text(line.rate), _text(line.name), _text(line.ref)
-        line.locked_day = _text(line.locked_day)
         line.locked_qty = clamp_qty(line.locked_qty) if line.locked_day else 0
         return line
 
 
 @dataclass
-class CheckRow:
+class CheckRow(Record):
     """One piece on a rental's check-out / check-in list."""
 
     item_id: str = ""
@@ -293,22 +329,17 @@ class CheckRow:
     back: bool = False  # ticked when it came back
     note: str = ""  # its condition, damage
     photos: list[str] = field(default_factory=list)  # condition photos (file names in the photos folder)
+    newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
 
     @classmethod
     def from_dict(cls, d: dict) -> CheckRow:
-        c = cls(**_known(cls, d))
-        c.item_id, c.note = _text(c.item_id), _text(c.note)
-        c.out, c.back = bool(c.out), bool(c.back)
-        c.photos = (
-            [x for x in c.photos if isinstance(x, str) and PHOTO_NAME.fullmatch(x)]
-            if isinstance(c.photos, list)
-            else []
-        )
+        c = _read(cls, d)
+        c.photos = [x for x in c.photos if isinstance(x, str) and PHOTO_NAME.fullmatch(x)]
         return c
 
 
 @dataclass
-class Rental:
+class Rental(Record):
     id: str = field(default_factory=new_id)
     number: str = ""
     auto_number: bool = True  # Bodega picked the number (it follows the profile and year until typed over)
@@ -338,29 +369,15 @@ class Rental:
     checked_in: str = ""  # when it was checked back in
     created: str = field(default_factory=now_iso)
     updated: str = field(default_factory=now_iso)
-
-    def to_dict(self) -> dict:
-        d = asdict(self)
-        d["client"] = self.client.to_dict()
-        return d
+    newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
+    CHOICES = {"status": (RENTAL_STATUSES, "booked")}  # a status it doesn't know: it holds its gear
 
     @classmethod
     def from_dict(cls, d: dict) -> Rental:
-        r = cls(**_known(cls, d))
-        r.client = Client.from_dict(d.get("client") or {}) if isinstance(d.get("client"), dict) else Client()
-        r.lines = [RentalLine.from_dict(x) for x in (d.get("lines") or []) if isinstance(x, dict)]
-        if r.status not in RENTAL_STATUSES:
-            r.status = "quote"
-        for k in ("number", "project", "pickup", "return_date", "billed_days", "discount", "tax_rate"):
-            setattr(r, k, _text(getattr(r, k)))
-        for k in ("deposit", "terms", "note", "business_id"):
-            setattr(r, k, _text(getattr(r, k)))
-        for k in ("auto_number", "weekend_deal", "show_serials", "show_checks"):
-            setattr(r, k, bool(getattr(r, k)))
+        r = _read(cls, d)
+        r.lines = [RentalLine.from_dict(x) for x in r.lines if isinstance(x, dict)]
         r.week_days = r.week_days if r.week_days in WEEK_DAYS else 0
-        raw = r.checks if isinstance(r.checks, list) else []
-        r.checks = [CheckRow.from_dict(x) for x in raw if isinstance(x, dict)]
-        r.checked_out, r.checked_in = _text(r.checked_out), _text(r.checked_in)
+        r.checks = [CheckRow.from_dict(x) for x in r.checks if isinstance(x, dict)]
         return r
 
     def own_dates(self, line: RentalLine) -> bool:

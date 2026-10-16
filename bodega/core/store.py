@@ -72,6 +72,12 @@ def write_text(path: Path, text: str) -> None:
         raise
 
 
+# The data folder's format, kept in settings.json ("format"). Raise it when a file's shape changes, with a step
+# in UPGRADES that brings a folder from the version before up to it (each step one version, each with a test).
+# Files from before formats were written are format 1.
+FORMAT = 1
+UPGRADES: dict[int, Callable[[Library], None]] = {}  # from this version to the next
+
 ID_OK = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 
@@ -142,6 +148,7 @@ class Library:
         # id): still in memory, tried again by save_again(). on_unsaved is told the moment a write fails.
         self.unsaved: set[str] = set()
         self.on_unsaved: Callable[[], None] | None = None
+        self.newer_format = False
 
     # ------------------------------------------------------------------ files
     @property
@@ -194,6 +201,10 @@ class Library:
                 self.rentals[r.id] = r
         s = read_json(self.root / "settings.json", {})
         self.settings = s if isinstance(s, dict) else {}
+        fmt = self.settings.get("format")
+        fmt = fmt if isinstance(fmt, int) and not isinstance(fmt, bool) and fmt >= 1 else 1
+        self.newer_format = fmt > FORMAT  # saved by a newer Bodega: what it added is kept as it was
+        self._upgrade(fmt)
         for b in self.businesses.values():  # a logo is a file name in the logos folder, nothing more
             b.logo = Path(b.logo).name if b.logo else ""
         self.untangle()
@@ -203,6 +214,27 @@ class Library:
             len(self.items), len(self.packages), len(self.rentals), len(self.clients), self.root,
         )  # fmt: skip
         return self
+
+    def _upgrade(self, fmt: int) -> None:
+        """A folder from an older format, brought up one version at a time and saved (a safety copy first)."""
+        if fmt >= FORMAT:
+            return
+        from bodega.core import backups
+
+        backups.safety_copy(self.root, f"before-format-{FORMAT}")
+        for v in range(fmt, FORMAT):
+            UPGRADES[v](self)
+            log.info("data folder upgraded from format %d to %d", v, v + 1)
+        try:
+            self.save_items()
+            self.save_packages()
+            self.save_clients()
+            self.save_businesses()
+            for r in self.rentals.values():
+                self.save_rental(r)
+            self.save_settings()
+        except OSError:
+            pass  # kept as unsaved, and tried again with the next save
 
     def _settle_rentals(self) -> None:
         """Rentals booked before prices locked at booking: lock them now, at today's prices."""
@@ -309,6 +341,9 @@ class Library:
         self._write(r.id, self._rental_dir / f"{r.id}.json", r.to_dict())
 
     def save_settings(self) -> None:
+        fmt = self.settings.get("format")
+        newer = fmt if isinstance(fmt, int) and not isinstance(fmt, bool) else 0
+        self.settings["format"] = max(FORMAT, newer)  # never says older than what wrote the folder
         self._write("settings", self.root / "settings.json", self.settings)
 
     # ------------------------------------------------------------------ gear
@@ -692,7 +727,7 @@ class Library:
         r.status = "quote"
         r.auto_number = True
         r.number = self._issue(b, dates.today().year)
-        r.lines = [RentalLine.from_dict(vars(ln).copy()) for ln in src.lines]
+        r.lines = [RentalLine.from_dict(ln.to_dict()) for ln in src.lines]
         r.created = now_iso()
         self.save_rental(r)
         return r

@@ -14,6 +14,9 @@
 - When Bodega can't save (the disk is full, say), a banner across the top says so and stays until it can, with Try
   Again; your profile card at the bottom of the sidebar says Not Saved. Bodega keeps trying, and tells you when it's
   saved. Quitting while something isn't saved asks first: Try Again, Quit Anyway or Cancel.
+- An odd value in one of Bodega's files (a kit whose name is a number, say) no longer stops Bodega from opening.
+- If a newer Bodega saved your files and you open them with this one, it says so, and keeps everything the newer
+  one added instead of dropping it the next time it saves. A rental status it doesn't know keeps its gear held.
 - Bodega keeps safety copies of your gear, kits, rentals, renters and profiles: one each day you open it (the last
   14 days), and one before each import, Tidy Up Groups, AI change or restore (the last 20).
 - File › Restore from Backup… (also in Settings › Your Data) puts a Back Up zip or a safety copy back. It shows

@@ -26,7 +26,9 @@ bodega/
   core/            Gear, packages, rentals. No Qt imports.
     model.py       Item (brand = company, series, qty, serials, value, day_rate, parent = what it goes with,
                    extras = parts added by hand), Package + PackageLine, Client (a "renter"), Business (a "profile": pricing + terms), Rental + RentalLine (lines may
-                   have their own pickup/return); from_dict() tolerates old/new files
+                   have their own pickup/return); from_dict() reads every field through one
+                   shared reader (_read: plain values coerced, broken lists skip the record), keeps fields from a
+                   newer Bodega (`newer`), reads an unknown status as the cautious one (CHOICES)
     pricing.py     THE pricing rules (see its docstring): replacement value, auto day rate, stock() (a gear sheet's
                    totals), with_attached() (attached gear, shared out across the parent's units, rounded up),
                    packages, billed days (week_days, weekend deal, typed billed days), line_dates/line_days
@@ -145,7 +147,8 @@ tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTD
 - Rental lines are compared by identity (`rental_panel._index`), never `==` (two lines can be equal).
 - A line has its own dates only when `Rental.own_dates(line)`; blank dates mean the rental's.
 - Renters are saved only on purpose (the renter dialog). Rentals keep their own copy; quotes and bookings follow edits.
-- New model fields need defaults that mean "off"/empty: old files are read through `from_dict()`.
+- New model fields need defaults that mean "off"/empty: old files are read through `from_dict()`. A change to a
+  file's shape (a renamed field) raises `store.FORMAT`, with a step in `store.UPGRADES` and a test for it.
 - Personal details and real gear lists never go in the code or the repo (it's public). Use core/sample.py.
 - Imports are absolute (`from bodega.core import pricing`), one module per job; no Qt in core/ or services/.
 - **Anything a link points at goes through core/web.py** (fetch, web_link). Never urllib a URL from data directly.

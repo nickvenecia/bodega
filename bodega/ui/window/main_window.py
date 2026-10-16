@@ -139,6 +139,8 @@ class MainWindow(
         self.go(view if isinstance(view, str) else "gear")
         self.history = History(self.lib)  # undo/redo starts from how things are when the window opens
         backups.daily_copy(self.lib.root)  # the first time Bodega opens today: a safety copy
+        if self.lib.newer_format:
+            QTimer.singleShot(0, self, self._say_newer_format)
         QTimer.singleShot(tokens.UPDATE_CHECK_DELAY_MS, self._auto_check_updates)
 
     # ------------------------------------------------------------------ building
@@ -739,6 +741,16 @@ class MainWindow(
         super().showEvent(e)
         if self.titlebar is not None:
             QTimer.singleShot(0, self.titlebar.fit)
+
+    def _say_newer_format(self) -> None:
+        from bodega.ui.dialogs.common import notice
+
+        notice(
+            self,
+            "Saved by a Newer Bodega",
+            "Your gear and rentals were last saved by a newer version of Bodega. Update Bodega to see everything; "
+            "until then, what the newer version added is kept just as it was.",
+        )
 
     def closeEvent(self, e):
         if not self.may_quit():
