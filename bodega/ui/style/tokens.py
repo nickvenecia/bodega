@@ -148,6 +148,11 @@ LIFT_STEP_MS = 16  # dragging a row: how often the other rows move (about 60 a s
 LIFT_EASE = 0.3  # …and how far towards their new place each step (smaller is slower)
 LIFT_ROWS_SHOWN = 3  # rows drawn on the lifted card when several move
 LIFT_SHADOW_STEPS = 6
+# (§6.2) hover's lift on the accent-filled controls: a touch larger over a soft shadow, at dur-hover
+LIFT_SCALE = 0.04  # how much larger (a 28-point button grows about a point each side)
+LIFT_MS = 120
+LIFT_SHADOW_BLUR = 10
+LIFT_SHADOW_DROP = 3
 GLASS_EDGE_FADE = 60  # the hairline is brightest along the top, settling over this many px
 QUIT_WAIT_MS = 1500  # how long quitting waits for a price or update check to finish
 SAVE_DELAY_MS = 400  # save this long after the last keystroke
@@ -372,6 +377,7 @@ DARK = {
     "TOAST_TRACK": "rgba(255, 255, 255, 0.18)",  # a job's progress track (and its spinner's) on the toast
     "TOAST_BUTTON": "rgba(255, 255, 255, 0.14)",  # a job's Stop, a capsule on the toast
     "SCRIM": "rgba(0, 0, 0, 0.50)",  # (scrim) the window, dimmed (and blurred) under a sheet, Settings or a palette
+    "LIFT_SHADOW": "rgba(0, 0, 0, 0.50)",  # (hover's lift) under a lifted accent control
     "SHEET_SHADOW": "rgba(0, 0, 0, 0.60)",  # (shadow-lg) a sheet's and Settings' shadow…
     "SHEET_RING": "rgba(255, 255, 255, 0.10)",  # …and its hairline ring
     "TOAST_DONE": "#30D158",  # its icon: it worked
@@ -454,6 +460,7 @@ LIGHT = {
     "TOAST_TRACK": "rgba(255, 255, 255, 0.18)",
     "TOAST_BUTTON": "rgba(255, 255, 255, 0.14)",
     "SCRIM": "rgba(0, 0, 0, 0.25)",
+    "LIFT_SHADOW": "rgba(0, 0, 0, 0.16)",  # (hover's lift, as shadow-lifted)
     "SHEET_SHADOW": "rgba(0, 0, 0, 0.20)",
     "SHEET_RING": "rgba(0, 0, 0, 0.08)",
     "TOAST_DONE": "#30D158",  # (the dark look's: these sit on the dark toast)

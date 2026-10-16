@@ -189,6 +189,8 @@ def test_g28_no_motion_under_reduce_motion(monkeypatch):
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "1")
     names = [k for k in dir(tokens) if k.endswith("_MS") and "SPINNER" not in k and "TOAST" not in k]
     moving = [
-        k for k in names if k in ("DOCK_MS", "FADE_MS", "SEG_SLIDE_MS", "TURN_MS", "SHEET_FADE_MS", "SHEET_RISE_MS")
+        k
+        for k in names
+        if k in ("DOCK_MS", "FADE_MS", "SEG_SLIDE_MS", "TURN_MS", "SHEET_FADE_MS", "SHEET_RISE_MS", "LIFT_MS")
     ]
     assert moving and all(access.duration(getattr(tokens, k)) == 0 for k in moving)

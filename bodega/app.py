@@ -33,6 +33,7 @@ from bodega import APP_NAME, __version__
 from bodega.core import errors
 from bodega.core.log import get_logger, setup_logging
 from bodega.core.paths import ASSETS, data_dir, log_dir, use_data_dir
+from bodega.ui.components import hover
 from bodega.ui.components.widgets import ComboItemDelegate
 from bodega.ui.style import theme, tokens
 
@@ -184,6 +185,12 @@ class _RoundPopups(QObject):
     def eventFilter(self, obj, ev):
         if ev.type() == QEvent.Type.Polish and isinstance(obj, QDialog) and obj.parentWidget() is not None:
             self._lets_go(obj)
+        if (
+            ev.type() in (QEvent.Type.Enter, QEvent.Type.Leave)
+            and isinstance(obj, QWidget)
+            and obj.objectName() in hover.LIFTED
+        ):  # the accent controls lift under the pointer (§6.2)
+            hover.hovered(obj, ev.type() == QEvent.Type.Enter)
         if (
             ev.type() == QEvent.Type.KeyPress
             and isinstance(obj, QMenu)

@@ -135,6 +135,8 @@ bodega/
                    Settings is SHEET_KIND = "window"; still() the blurred picture), access.py (the system's Reduce
                    Motion, Increase Contrast, Reduce Transparency: every
                    animation asks duration()/reduce_motion(); tokens.use(contrast=, opaque=)),
+                   hover.py (hover's lift on the accent-filled controls: LiftEffect, a touch larger over a soft
+                   shadow while hovered; the app's event filter calls hovered()),
                    datefield.py (DateField: typed or picked from its month popover, the standard's G.22),
                    empty.py (EmptyPage: where a table would be with nothing in it: a title, a line, one button;
                    empty gear takes a dropped spreadsheet),
