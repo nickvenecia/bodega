@@ -6,8 +6,9 @@ Bodega will notice (it becomes the release notes and the update window), so this
 
 ## Start here
 
-- **State**: version 1.3.0, on this work's branch, not merged yet (main is 1.2.1). Merging it releases 1.3.0: CI tags it and publishes the six downloads. CI hasn't run on this branch yet (it runs on main, on
-  pull requests, or by hand): open the pull request, or run "Build Bodega" by hand on the branch, before merging.
+- **State**: version 1.3.0, on this work's branch, not merged yet (main is 1.2.1). Merging it releases 1.3.0: CI
+  tags it and publishes the six downloads. CI hasn't run on this branch yet (it runs on main, on pull requests, or
+  by hand): open the pull request, or run "Build Bodega" by hand on the branch, before merging.
 - **Checks, with what they should say**:
   - `ruff format . && ruff check . && mypy && python -m pytest -q`: no changes, no problems, "Success: no issues
     found", every test passes (421 test functions, some run in several cases; the run ends without pytest's summary
