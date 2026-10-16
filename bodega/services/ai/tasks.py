@@ -41,6 +41,8 @@ FIELD_LABELS = {
     "name": "Name", "brand": "Company", "series": "Series", "value": "Price", "link": "Link", "group": "Group",
 }  # fmt: skip
 CHAT_FIELDS = ("group", "name", "brand", "series")  # what a request in the chat may change
+RULE_KEYS = ("brand", "group", "series")  # what a chat rule may pick pieces by (the same words, any case)
+RULE_FIELDS = ("group", "brand", "series")  # what a rule may change (never names: each piece's is its own)
 BATCH = 30  # pieces per question (find_links, tidy_names)
 PAGE_TEXT = 1500  # characters of a page's words handed to the AI
 INVENTORY_LINES = 600  # pieces described when answering a question
@@ -561,7 +563,10 @@ def chat(
         "When asked to change gear, you may only change these fields: group (move pieces into an existing or a "
         "new group), name, brand (the company), series. Change only what was asked. "
         'Always reply as JSON: {"reply": "what you say to the person", "changes": [{"n": 3, "field": "group", '
-        '"value": "Aputure"}]}, with an empty changes list when nothing should change.',
+        '"value": "Aputure"}], "rules": []}, with empty lists when nothing should change. To change every piece '
+        "that shares a company, group or series (also ones not listed here), give a rule instead of listing "
+        'each: {"where": {"brand": "Aputure"}, "field": "group", "value": "Aputure"}; a rule may pick by brand, '
+        "group or series and change group, brand or series.",
         f"Groups: {', '.join(groups) or '(none)'}\n<inventory>\n{inventory_text(shown, lookup, numbered=True)}\n"
         f"</inventory>\n\nMessage: {q}",
     )
@@ -580,9 +585,36 @@ def chat(
         c = _change(shown[row["n"]], field, new, AI_SAID)
         if c and not any(x.item_id == c.item_id and x.field == c.field for x in out):
             out.append(c)
+    for c in _by_rules(got.get("rules"), items):
+        if not any(x.item_id == c.item_id and x.field == c.field for x in out):
+            out.append(c)
     return reply or ("Changes to review." if out else "No answer came back. Try asking another way."), Result(
         out, []
     )
+
+
+def _by_rules(rules, items: list[Item]) -> list[Change]:
+    """A chat's rules ("every Aputure piece goes in group Aputure"), matched by Bodega against all the gear, not
+    only the pieces the AI was shown. Each becomes changes to review, like any other."""
+    out: list[Change] = []
+    for rule in rules if isinstance(rules, list) else []:
+        if (
+            not isinstance(rule, dict)
+            or not isinstance(rule.get("where"), dict)
+            or rule.get("field") not in RULE_FIELDS
+        ):
+            continue
+        where = {k: clean_text(v, LIMITS[k]).casefold() for k, v in rule["where"].items() if k in RULE_KEYS}
+        if not where or not all(where.values()) or len(where) != len(rule["where"]):
+            continue  # a rule that picks by anything else, or by nothing, picks nothing
+        field = rule["field"]
+        new = clean_text(rule.get("value", ""), LIMITS[field])
+        for it in items:
+            if all(str(getattr(it, k)).strip().casefold() == v for k, v in where.items()):
+                c = _change(it, field, new, AI_SAID)
+                if c:
+                    out.append(c)
+    return out
 
 
 def inventory_text(items: list[Item], lookup: dict[str, Item], numbered: bool = False) -> str:

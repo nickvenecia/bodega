@@ -541,3 +541,34 @@ def test_a_chat_answer_can_only_change_what_the_chat_may(provider):
     )
     _text, got = tasks.chat(Setup("anthropic", "m"), PLANTED, [it], {}, [])
     assert [(c.field, c.new) for c in got.changes] == [("group", "Cameras Ignore this")]
+
+
+def test_a_chat_rule_reaches_every_matching_piece_even_ones_not_shown(provider, monkeypatch):
+    _seen, replies = provider
+    monkeypatch.setattr(tasks, "INVENTORY_LINES", 2)  # the AI only sees the first two pieces
+    gear = [Item(name=f"Aputure {n}", brand="Aputure", group="Lights") for n in range(5)]
+    gear.append(Item(name="C-Stand", brand="Matthews", group="Grip"))
+    replies.append(
+        anthropic_reply(
+            json.dumps(
+                {
+                    "reply": "Moved every Aputure light.",
+                    "changes": [],
+                    "rules": [
+                        {"where": {"brand": "aputure"}, "field": "group", "value": "Aputure"},
+                        {
+                            "where": {"notes": "x"},
+                            "field": "group",
+                            "value": "Nope",
+                        },  # picks by what it mayn't
+                        {"where": {"brand": "Matthews"}, "field": "name", "value": "Renamed"},  # names: never
+                    ],
+                }
+            )
+        )
+    )
+    _reply, got = tasks.chat(
+        Setup("anthropic", "m"), "put all the Aputure gear in its own group", gear, {}, []
+    )
+    assert sorted(c.item_id for c in got.changes) == sorted(i.id for i in gear[:5])  # all five, not two
+    assert all(c.field == "group" and c.new == "Aputure" and c.why == "AI suggestion" for c in got.changes)

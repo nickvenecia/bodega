@@ -163,6 +163,9 @@
   Bodega remembers the name the sheet gave it.
 - On a Mac, the menu bar has a Gear menu (Rent This…, Update with AI, Make It Its Own Item) and a Rental menu
   (Agreement…, Check Out…, Check In…, Send to Saldo…, Add to Calendar, Mark as Cancelled…) for what's open.
+- Asking the Assistant to change every piece from one company or in one group ("put all the Aputure gear in its
+  own group") now reaches all of them, even in a big inventory: Bodega finds every match itself, and you review
+  them all before anything changes.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.
