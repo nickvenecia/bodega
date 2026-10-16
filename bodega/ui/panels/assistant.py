@@ -4,8 +4,9 @@ brings the chat back where you left it, still running whatever job it was doing.
 the ⋯ has AI Settings.
 
 Ask a question or for a change, or start a job (Update from Links, Find Missing Links, Tidy Up Names, Organize
-Groups). Jobs run in the background; what they find opens in the Review window, and nothing changes until you
-approve it there.
+Groups). A change asked for in the chat waits in a card in the conversation: Decline, or Change N Items (Review…
+to pick some). Jobs run in the background and what they find opens in the Review window. Nothing changes until
+you say so.
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ import html
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QFrame,
     QGridLayout,
     QLabel,
     QLineEdit,
@@ -23,9 +25,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from bodega.core import words
 from bodega.services.ai.providers import Setup
 from bodega.ui.components.panels import SidePanel
-from bodega.ui.components.widgets import add_chip, hbox, hint, primary_button, vbox
+from bodega.ui.components.widgets import ElidedLabel, add_chip, hbox, hint, primary_button, vbox
 from bodega.ui.components.worker import Worker
 from bodega.ui.style import theme, tokens
 
@@ -46,15 +49,69 @@ JOBS = [
 ]
 
 
+class ChangeCard(QFrame):
+    """A change asked for in the chat, in the conversation until you answer: what would change (the first few),
+    then Decline or Change N Items; Review… opens them in the Review window to pick some."""
+
+    SHOWN = 5
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setObjectName("Card")
+        lay = vbox(self, tokens.SPACE_3, tokens.SPACE_2)
+        self.title = QLabel("Suggested Changes")
+        self.title.setObjectName("CardTitle")
+        lay.addWidget(self.title)
+        self.rows = vbox(spacing=tokens.SPACE_1)
+        lay.addLayout(self.rows)
+        row = hbox(spacing=tokens.SPACE_2)
+        self.review = QPushButton("Review…")
+        self.review.setObjectName("LinkBtn")
+        self.review.setToolTip("Pick which of them to make")
+        row.addWidget(self.review)
+        row.addStretch(1)
+        self.decline = QPushButton("Decline")
+        self.go = primary_button("Change")
+        row.addWidget(self.decline)
+        row.addWidget(self.go)
+        lay.addLayout(row)
+        self.hide()
+
+    def show_changes(self, changes: list, name_of) -> None:
+        while self.rows.count():
+            w = self.rows.takeAt(0).widget()
+            if w is not None:
+                w.setParent(None)
+                w.deleteLater()
+        for c in changes[: self.SHOWN]:  # (an AI's words: cleaned before they got here, shown as plain text)
+            one = QWidget()
+            two = vbox(one, 0, 0)
+            name = ElidedLabel(name_of(c.item_id))
+            name.setObjectName("ItemTitle")
+            what = ElidedLabel(f"{c.label}: {c.old or '—'} → {c.new}")
+            what.setObjectName("Meta")
+            two.addWidget(name)
+            two.addWidget(what)
+            self.rows.addWidget(one)
+        if len(changes) > self.SHOWN:
+            self.rows.addWidget(hint(f"and {len(changes) - self.SHOWN:,} more"))
+        pieces = len({c.item_id for c in changes})
+        self.go.setText(f"Change {words.count(pieces, 'Item')}")
+        self.show()
+
+
 class AssistantPanel(SidePanel):
     job_wanted = Signal(str)  # "links", "find", "names", "groups": the window gathers the gear and starts it
     setup_wanted = Signal()
-    changes_found = Signal(object)  # a request in the chat came back with changes: review them
+    changes_found = Signal(object)  # a request in the chat came back with changes: Review… them
+    apply_wanted = Signal(list)  # Change N Items: make these changes
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__("Assistant", more=True, scroll=False, parent=parent)
         self.worker: Worker | None = None
         self.ask_job = None  # set by the window: () -> (question -> answer)
+        self.name_of = lambda item_id: item_id  # set by the window: a piece's name, for the change card
+        self.pending = None  # changes asked for in the chat, waiting for an answer in the card
         self.clear_btn = self.header_icon("edit", "Clear Chat")
         self.clear_btn.clicked.connect(self.clear_chat)
         self.more_menu.addAction(theme.menu_icon("cog"), "AI Settings…", self.setup_wanted.emit)
@@ -99,6 +156,11 @@ class AssistantPanel(SidePanel):
         self.log.setObjectName("Notes")
         self.log.hide()
         lay.addWidget(self.log, 1)
+        self.card = ChangeCard()
+        self.card.decline.clicked.connect(lambda: self._decide("decline"))
+        self.card.go.clicked.connect(lambda: self._decide("change"))
+        self.card.review.clicked.connect(lambda: self._decide("review"))
+        lay.addWidget(self.card)
 
         self.busy = QWidget()
         bl = hbox(self.busy, 0, tokens.SPACE_2)
@@ -148,9 +210,10 @@ class AssistantPanel(SidePanel):
     # State
     def show_setup(self, setup: Setup, scope: str) -> None:
         ready = setup.ready()
+        self._ready = ready
         self.connect_btn.setVisible(not ready)
         self.scope.setText(scope)
-        busy = self.running()
+        busy = self.running() or self.pending is not None
         for b in self.job_buttons.values():  # off, it says why
             b.setEnabled(ready and not busy)
             b.setToolTip(
@@ -158,12 +221,14 @@ class AssistantPanel(SidePanel):
                 if ready and not busy
                 else "Add an API key first"
                 if not ready
+                else "Answer the suggested changes first"
+                if self.pending is not None
                 else "One job at a time"
             )
-        self.ask_btn.setEnabled(ready and not self.running())
-        self.question.setEnabled(ready)
+        self.ask_btn.setEnabled(ready and not busy)
+        self.question.setEnabled(ready and self.pending is None)
         for b in self.examples:
-            b.setEnabled(ready)
+            b.setEnabled(ready and self.pending is None)
 
     def running(self) -> bool:
         return self.worker is not None and self.worker.isRunning()
@@ -187,7 +252,7 @@ class AssistantPanel(SidePanel):
     def _finished(self) -> None:
         self.busy.hide()
         for b in (*self.job_buttons.values(), self.ask_btn):
-            b.setEnabled(True)
+            b.setEnabled(self.pending is None)
 
     def _stop(self) -> None:
         if self.worker is not None:
@@ -205,10 +270,34 @@ class AssistantPanel(SidePanel):
         self.question.setFocus()
 
     def clear_chat(self) -> None:
-        """Clear Chat: the conversation goes, the hello comes back (a running job carries on)."""
+        """Clear Chat: the conversation goes, the hello comes back (a running job carries on; changes waiting
+        for an answer are declined)."""
+        if self.pending is not None:
+            self._decide("decline", quiet=True)
         self.log.clear()
         self.log.hide()
         self.hello.show()
+
+    def _waiting(self, on: bool) -> None:
+        """While changes wait for an answer, nothing else can be asked."""
+        for w in (self.question, self.ask_btn, *self.examples, *self.job_buttons.values()):
+            w.setEnabled(not on and getattr(self, "_ready", True))
+        if not on:
+            self.question.setFocus()
+
+    def _decide(self, how: str, quiet: bool = False) -> None:
+        """The card's answer: "change" all, "decline", or "review" them in the Review window."""
+        result, self.pending = self.pending, None
+        self.card.hide()
+        self._waiting(False)
+        if result is None:
+            return
+        if how == "change":
+            self.apply_wanted.emit(list(result.changes))
+        elif how == "review":
+            self.changes_found.emit(result)
+        elif not quiet:
+            self.say("Bodega", "Nothing changed.")
 
     def say(self, who: str, text: str) -> None:
         """Add a line to the conversation (always as plain text: nothing in an answer is formatting)."""
@@ -233,6 +322,7 @@ class AssistantPanel(SidePanel):
         reply, result = got
         self.say("AI", reply)
         if result.changes:
-            n = len(result.changes)
-            self.say("Bodega", f"{n} change{'s' if n != 1 else ''} to review.")
-            self.changes_found.emit(result)
+            self.pending = result
+            self.card.show_changes(result.changes, self.name_of)
+            self._waiting(True)
+            self.card.go.setFocus()

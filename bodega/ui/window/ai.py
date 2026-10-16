@@ -8,6 +8,7 @@ from dataclasses import replace
 
 from PySide6.QtWidgets import QDialog
 
+from bodega.core import words
 from bodega.core.model import Item
 from bodega.services.ai import tasks
 from bodega.services.ai.providers import Setup
@@ -34,7 +35,9 @@ class AIMixin:
         a.job_wanted.connect(lambda key: self.ai_job(key))
         a.setup_wanted.connect(self.open_ai_setup)
         a.close_wanted.connect(self.close_assistant)
-        a.changes_found.connect(lambda result: self._ai_review("Suggested Changes", result))
+        a.changes_found.connect(lambda result: self._ai_review("Suggested Changes", result, in_chat=True))
+        a.apply_wanted.connect(lambda changes: self._ai_apply(changes, in_chat=True))
+        a.name_of = lambda item_id: self.lib.items[item_id].name if item_id in self.lib.items else "A piece"
         a.ask_job = self._ai_question
         return a
 
@@ -136,7 +139,7 @@ class AIMixin:
         if it is not None:
             self.open_ai_assistant("links" if it.link.strip() else "find", [it])
 
-    def _ai_review(self, title: str, result: tasks.Result) -> None:
+    def _ai_review(self, title: str, result: tasks.Result, in_chat: bool = False) -> None:
         if not result.changes:
             msg = result.problems[0] if result.problems else "Everything already looks right."
             self.assistant.say("Bodega", f"{title}: {msg}")
@@ -144,10 +147,21 @@ class AIMixin:
         names = {it.id: it.name for it in self.lib.items.values()}
         d = ReviewDialog(title, result, names, self)
         if d.exec() != QDialog.DialogCode.Accepted:
+            if in_chat:
+                self.assistant.say("Bodega", "Nothing changed.")
             return
+        self._ai_apply(d.chosen(), in_chat)
+
+    def _ai_apply(self, changes: list, in_chat: bool = False) -> None:
+        """Make the changes you said yes to (a safety copy first), and say so: in the chat, if they were asked
+        for there, else as a toast."""
         self.flush()
-        n = tasks.apply(self.lib, d.chosen())
+        n = tasks.apply(self.lib, changes)
         if self.items.it is not None:
             self.items.load(self.items.it)
         self.refresh()
-        self.toast(f"Updated {n} thing{'s' if n != 1 else ''}. A safety copy of how things were is kept.", "done")
+        said = f"Changed {words.count(n, 'thing')}. A safety copy of how things were is kept."
+        if in_chat:
+            self.assistant.say("Bodega", said)
+        else:
+            self.toast(said, "done")

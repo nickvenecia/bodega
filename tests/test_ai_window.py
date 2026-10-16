@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import pytest
+from PySide6.QtWidgets import QLabel
 
 from bodega.core import sample, web
 from bodega.core.store import Library
@@ -237,19 +238,10 @@ def test_cancel_in_review_changes_nothing(win, monkeypatch):
     assert not list((win.lib.root / "backups").glob("Bodega * before-ai.zip"))  # (and nothing to undo)
 
 
-def test_a_change_asked_for_in_the_chat_goes_through_review(win, monkeypatch):
-    from bodega.ui.dialogs import ai_review
-
+def _asked_for_a_change(win, monkeypatch):
     providers.save_key("anthropic", "sk-test")
     Setup("anthropic", "test-model").to_settings(win.lib.settings)
     win.open_ai_assistant()
-    reviewed = []
-
-    def approve(self):
-        reviewed.append([c.new for c in self.chosen()])
-        return ai_review.ReviewDialog.DialogCode.Accepted
-
-    monkeypatch.setattr(ai_review.ReviewDialog, "exec", approve)
     _answers(
         monkeypatch,
         json.dumps({"reply": "Moved it.", "changes": [{"n": 0, "field": "group", "value": "Cases"}]}),
@@ -257,8 +249,43 @@ def test_a_change_asked_for_in_the_chat_goes_through_review(win, monkeypatch):
     win.assistant.question.setText("put the first piece in a group called Cases")
     win.assistant._ask()
     _wait(win.assistant.worker)
-    assert reviewed == [["Cases"]]  # it came to Review before anything changed
+    return win.assistant
+
+
+def test_a_change_asked_for_in_the_chat_waits_in_a_card(win, monkeypatch):
+    a = _asked_for_a_change(win, monkeypatch)
+    assert a.card.isVisibleTo(a) and a.card.go.text() == "Change 1 Item"
+    piece, what = a.card.rows.itemAt(0).widget().findChildren(QLabel)
+    assert what.text() == "Group: Body → Cases" and piece.text()
+    assert not a.question.isEnabled() and not a.ask_btn.isEnabled()  # one thing at a time
+    assert not any(i.group == "Cases" for i in win.lib.items.values())  # nothing yet
+    a.card.go.click()
     assert any(i.group == "Cases" for i in win.lib.items.values())
+    assert "Changed 1 thing" in a.log.toPlainText() and a.question.isEnabled()  # said in the chat
+    assert list((win.lib.root / "backups").glob("Bodega * before-ai.zip"))
+
+
+def test_declining_a_change_in_the_chat_changes_nothing(win, monkeypatch):
+    a = _asked_for_a_change(win, monkeypatch)
+    a.card.decline.click()
+    assert not a.card.isVisibleTo(a) and "Nothing changed." in a.log.toPlainText()
+    assert not any(i.group == "Cases" for i in win.lib.items.values())
+
+
+def test_review_from_the_chat_picks_in_the_review_window(win, monkeypatch):
+    from bodega.ui.dialogs import ai_review
+
+    a = _asked_for_a_change(win, monkeypatch)
+    reviewed = []
+
+    def approve(self):
+        reviewed.append([c.new for c in self.chosen()])
+        return ai_review.ReviewDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(ai_review.ReviewDialog, "exec", approve)
+    a.card.review.click()
+    assert reviewed == [["Cases"]] and any(i.group == "Cases" for i in win.lib.items.values())
+    assert "Changed 1 thing" in a.log.toPlainText()
 
 
 def test_the_assistant_header_clears_the_chat_and_offers_settings(win, monkeypatch):
