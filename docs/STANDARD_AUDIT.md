@@ -31,8 +31,8 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **222 fixed, 3 partly, 8 not
-started (larger redesigns), 19 waiting on the owner, and 1 no longer applies** (a web page's rule).
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **222 fixed, 3 partly, 7 not
+started (larger redesigns), 20 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
 |---|---|---|---|---|---|---|---|
@@ -62,7 +62,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 222 · Partly 3 · Open 8 · Waiting on the owner 19 · No longer applies 1.**
+**Of the 253 failures: Fixed 222 · Partly 3 · Open 7 · Waiting on the owner 20 · No longer applies 1.**
 
 ### Partly: what's left
 
@@ -80,7 +80,6 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | C-53 | S2 | The print window has no column ticks or order, no letterhead options, no presets. |
 | C-55 | S3 | The table is drawn straight on the page, not in a card. |
 | C-61 | S2 | The print window has no filter cards (column, from, to). |
-| C-120 | S3 | Settings › General is sections, not grouped rows in cards; Profiles is one long form. |
 | I-09 | S3 | Scroll bars are drawn by Bodega's stylesheet, not the system's own. |
 | T-13 | S3 | Tests find controls by their code names, not by role and visible words. |
 | V-16 | S2 | Text sizes are fixed points: nothing follows the system's text size, no 200% check (a layout pass). |
@@ -92,6 +91,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | AI-13 | S1 | a key stored as the repository secret BODEGA_EVAL_KEY: the evaluation (services/ai/evals.py) then runs on every change |
 | AI-18 | S3 | what files the assistant would take (a spreadsheet to import, a photo to name a piece: photos cost more and go to your provider); the standard says build no door to a room that isn't built |
 | AI-28 | S2 | question 15 |
+| C-120 | S3 | question 31: General, AI, Account, Keyboard Shortcuts and Your Data are grouped rows kept as made; Profiles keeps Save Changes until then |
 | C-129 | S2 | question 8 |
 | D-08 | S1 | the whole-dollar lists in PROJECT_ADDENDUM.md |
 | D-20 | S3 | question 13 |
@@ -808,6 +808,9 @@ is followed.
     have it unless you attach it. Is that how you want it?
 30. Commit email: keep your personal address as the author email on a public repository, or switch to GitHub's
     private noreply address? (G-04, G-05)
+31. Settings › Profiles: keep each change as it's made, as the rest of Settings now does (the standard), or keep
+    Save Changes? Kept as made, a profile's day-rate percent, sales tax and deposit would reach quotes as each field
+    is left, not once at a Save; today they wait for Save Changes. (C-120)
 
 ## This round
 

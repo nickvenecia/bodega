@@ -54,6 +54,7 @@ NOT_A_CONTROL = {
     "RecordStatus": "a record's status words in its head (G.17: a dot and a word)",
     "StatusLine": "a status line's words, there to be read aloud",
     "Disclosure": "a card's disclosure row: its title words and chevron",
+    "RowAction": "an action row in a group of rows: the whole row is the button (G.12)",
 }
 OWN_HEIGHT = {"FilterChip": tokens.FILTER_CHIP_H}  # (G.10.6) (the top bar's search is bar-h: checked by itself)
 

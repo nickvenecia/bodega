@@ -173,7 +173,7 @@ def main(out: Path, sheet: Path | None = None) -> int:
         d.show()
         shot(d, out / f"{name}.png")
         d.close()
-    for pane in ("general", "profiles", "ai", "shortcuts"):
+    for pane in ("general", "profiles", "ai", "shortcuts", "data"):
         d = SettingsDialog(w.lib, w, pane)
         d.show()
         shot(d, out / f"13-settings-{pane}.png")

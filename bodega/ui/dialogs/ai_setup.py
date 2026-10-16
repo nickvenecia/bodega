@@ -1,34 +1,32 @@
-"""AI setup: pick a provider, paste your key (it goes in the keychain), pick a model from its live list.
+"""Settings › AI: pick a provider, paste your key (it goes in the keychain), pick a model from its live list. Grouped
+rows (the standard's §4.12, G.12), and every change is kept as it's made: there's no Save.
 
-The key checks itself (the standard's §14.10): pasted, or typed and left to rest, or on leaving the field, it's tried
-once against the provider's list of models; a ✓ or ! sits beside it and the line under the form says what came
-back ("Key works · 12 models"). A key that plainly can't be right is said without sending anything. There's no Test
-button. The models show by the names the provider gives them, the list is kept for the day and a ↻ asks again.
+The key checks itself (the standard's §14.10): pasted, or typed and left to rest, or on leaving the field, it's kept
+in the keychain (unless it plainly can't be right, which is said without sending anything) and tried once against
+the provider's list of models; a ✓ or ! sits beside it and the line under the rows says what came back ("Key works ·
+12 models"). There's no Test button. The models show by the names the provider gives them, the list is kept for the
+day and a ↻ asks again.
 """
 
 from __future__ import annotations
 
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QWidget
+from PySide6.QtCore import QTimer, Signal
+from PySide6.QtWidgets import QComboBox, QLineEdit, QWidget
 
 from bodega.core import dates, errors, settings, words
 from bodega.core.store import Library
 from bodega.services import secrets
 from bodega.services.ai import providers, usage
 from bodega.services.ai.providers import PROVIDERS, Setup
-from bodega.ui.components import sheet
+from bodega.ui.components.rows import Group
 from bodega.ui.components.widgets import (
     COUNT_TYPED,
-    Embeddable,
     IconLabel,
-    Section,
-    button_row,
     circle_button,
     combo,
     hbox,
     hint,
     only,
-    primary_button,
     sized,
     status_line,
     vbox,
@@ -36,7 +34,7 @@ from bodega.ui.components.widgets import (
 from bodega.ui.components.worker import Worker
 from bodega.ui.dialogs.update import open_url
 from bodega.ui.style import tokens
-from bodega.ui.style.tokens import DIALOG_W_WIDE, SPACE_2, SPACE_3, SPACE_5
+from bodega.ui.style.tokens import SPACE_2, SPACE_3
 
 SENT = (
     "Bodega uses your own AI account; its key is kept in this computer's keychain. When you use AI, it sends "
@@ -51,102 +49,87 @@ BILLED = (
 )
 
 
-class AISetupDialog(Embeddable, QDialog):
+class AISettings(QWidget):
+    """Settings' AI section. `changed` once something is kept (the window shows the Assistant ready, or not)."""
+
+    changed = Signal()
+
     def __init__(self, lib: Library, parent: QWidget | None = None):
         super().__init__(parent)
-        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.lib = lib
-        self.setWindowTitle("AI")
-        self.setMinimumWidth(DIALOG_W_WIDE)
         self._worker: Worker | None = None
+        self._loading = True
         start = Setup.from_settings(lib.settings)
-        lay = vbox(self, SPACE_5, SPACE_3)
-        self.title_label = QLabel("AI")
-        self.title_label.setObjectName("DialogTitle")
-        lay.addWidget(self.title_label)
+        lay = vbox(self, 0, tokens.GROUP_GAP)
 
-        sec = Section("Provider")
-        row = hbox(spacing=SPACE_2)
-        self.provider = combo([(p.key, p.label, "") for p in PROVIDERS.values()], start.provider or "anthropic")
+        g = Group("Provider")
+        self.provider = sized(
+            combo([(p.key, p.label, "") for p in PROVIDERS.values()], start.provider or "anthropic"), "popup"
+        )
+        g.control("Provider", self.provider)
         self.provider.currentIndexChanged.connect(lambda _i: self._provider_changed())
-        row.addWidget(self.provider, 1)
-        self.get_key = QPushButton("Get Key ↗")
-        self.get_key.setObjectName("LinkBtn")
-        self.get_key.clicked.connect(lambda: open_url(self._p().keys_page))
-        row.addWidget(self.get_key)
-        sec.add(row)
-        lay.addWidget(sec)
+        self.address = sized(QLineEdit(start.base_url), "name")
+        self.address.setPlaceholderText("https://…/v1")
+        self.address.setToolTip("Or http://localhost:11434/v1 for a model on this computer")
+        g.control("Address", self.address)
+        self.address_row = self.address.parentWidget()
+        self.address.editingFinished.connect(self._apply)
+        self.get_key = g.action("Get a Key ↗", lambda: open_url(self._p().keys_page))
+        lay.addWidget(g)
 
-        self.address_sec = Section("Address")
-        self.address = QLineEdit(start.base_url)
-        self.address.setPlaceholderText("https://…/v1   (or http://localhost:11434/v1 for a model on this computer)")
-        self.address_sec.add(self.address)
-        lay.addWidget(self.address_sec)
-
-        sec = Section("API Key")
-        row = hbox(spacing=SPACE_2)
-        self.key = QLineEdit()
+        g = Group("API Key")
+        box = QWidget()
+        row = hbox(box, 0, SPACE_2)
+        self.key = sized(QLineEdit(), "name")
         self.key.setEchoMode(QLineEdit.EchoMode.Password)  # always hidden: a key is pasted, not remembered
-        row.addWidget(self.key, 1)
+        self.key.setAccessibleName("API Key")
+        row.addWidget(self.key)
         self.key_mark = IconLabel("", "GOOD", tokens.ICON)  # ✓ or ! once it's been tried
         row.addWidget(self.key_mark)
-        sec.add(row)
-        lay.addWidget(sec)
+        g.control("Key", box)
+        self.forget = g.action("Remove Key", self._remove_key, danger=True)
+        lay.addWidget(g)
         self._key_rest = QTimer(self, singleShot=True, interval=tokens.KEY_CHECK_MS, timeout=self._check_key)
         self.key.textEdited.connect(lambda _t: self._key_rest.start())  # pasted, or typed and left to rest
         self.key.editingFinished.connect(self._check_now)
 
-        sec = Section("Model")
-        row = hbox(spacing=SPACE_2)
-        self.model = QComboBox()
+        g = Group("Model")
+        box = QWidget()
+        row = hbox(box, 0, SPACE_2)
+        self.model = sized(QComboBox(), "name")
         self.model.setEditable(True)  # a model the list doesn't show can be typed
         self.model.lineEdit().setPlaceholderText("Pick one, or type a model's name")
+        self.model.setAccessibleName("Model")
         if start.model:
             self.model.addItem(start.model, start.model)
-        row.addWidget(self.model, 1)
+        row.addWidget(self.model)
         self.load = circle_button("retry", "Ask for the List Again")
         self.load.clicked.connect(self._load_models)
         row.addWidget(self.load)
-        sec.add(row)
-        lay.addWidget(sec)
+        g.control("Model", box)
+        self.model.activated.connect(lambda _i: self._apply())
+        self.model.lineEdit().editingFinished.connect(self._apply)
+        lay.addWidget(g)
 
-        sec = Section("Daily Limit")  # the standard's quota: a warning at 80%, a stop at 100%
-        row = hbox(spacing=SPACE_2)
+        g = Group("Daily Limit", "A warning at 80% of it, and no more questions that day at 100%.")
         self.limit = sized(only(QLineEdit(str(settings.value(lib.settings, "ai_daily_limit"))), COUNT_TYPED), "short")
         self.limit.setPlaceholderText("None")
         self.limit.setToolTip("Questions to your AI a day; blank or 0: no limit")
-        self.limit.setAccessibleName("Daily Limit, Questions")
-        row.addWidget(self.limit)
-        row.addWidget(hint("questions a day"))
-        row.addStretch(1)
-        sec.add(row)
-        self.usage = hint(usage.METER.summary())  # what's been asked, today and this month
-        sec.add(self.usage)
-        lay.addWidget(sec)
+        g.control("Questions a Day", self.limit)
+        self.limit.editingFinished.connect(self._apply)
+        self.usage = g.value("Asked", usage.METER.summary())  # what's been asked, today and this month
+        lay.addWidget(g)
 
-        self.forget = QPushButton("Remove Key")  # a red row at the form's foot
-        self.forget.setObjectName("Danger")
-        self.forget.clicked.connect(self._remove_key)
-        lay.addWidget(self.forget)
-
+        notes = QWidget()
+        nl = vbox(notes, (tokens.GROUP_INSET, 0, tokens.GROUP_INSET, 0), SPACE_3)
         self.status = status_line()
-        lay.addWidget(self.status)
-        for words_ in (SENT, BILLED):  # what goes out and what it costs: footnotes, under the form
-            note = hint(words_)
-            note.setWordWrap(True)
-            lay.addWidget(note)
-
-        buttons = button_row()
-        self.cancel_btn = cancel = QPushButton("Cancel")
-        cancel.clicked.connect(self.reject)
-        save = primary_button("Save")
-        save.setDefault(True)
-        save.clicked.connect(self._save)
-        buttons.addWidget(cancel)
-        buttons.addWidget(save)
-        lay.addLayout(buttons)
+        nl.addWidget(self.status)
+        for words_ in (SENT, BILLED):  # what goes out and what it costs: footnotes, under the rows
+            nl.addWidget(hint(words_))
+        lay.addWidget(notes)
         self._provider_changed(first=True)
         self._models_for_today()
+        self._loading = False
 
     # What's picked
     def _p(self) -> providers.Provider:
@@ -170,19 +153,21 @@ class AISetupDialog(Embeddable, QDialog):
     def _provider_changed(self, first: bool = False) -> None:
         p = self._p()
         saved = bool(providers.key_for(p.key))
-        self.address_sec.setVisible(p.key == "custom")
-        self.get_key.setVisible(bool(p.keys_page))
+        self.address_row.setVisible(p.key == "custom")
+        self.get_key.setText(f"Get a Key from {p.label} ↗")
+        self.get_key.parentWidget().setVisible(bool(p.keys_page))
         self.key.clear()
         self.key.setPlaceholderText(
             "Saved in your keychain"
             if saved
             else ("Paste your key (if it needs one)" if not p.needs_key else "Paste your key")
         )
-        self.forget.setVisible(saved)
+        self.forget.parentWidget().setVisible(saved)
         self.key_mark.set_icon("")
         if not first:
             self.model.clear()
             self.status.setText("")
+            self._apply()  # (the provider is kept as it's picked)
             self._models_for_today()
         if not secrets.available():
             self.status.setText("This computer has no keychain, so Bodega can't keep a key safely.")
@@ -206,7 +191,8 @@ class AISetupDialog(Embeddable, QDialog):
             self._check_key()
 
     def _check_key(self) -> None:
-        """Try the key once against the provider's list of models (which fills the Model list too)."""
+        """Keep the key in the keychain, then try it once against the provider's list of models (which fills the
+        Model list too). One that plainly can't be right is said, and neither kept nor sent."""
         key = self._typed_key()
         if key is None:
             return
@@ -216,6 +202,13 @@ class AISetupDialog(Embeddable, QDialog):
             self.key_mark.set_icon("alert")
             self.status.setText(problem)
             return
+        try:
+            providers.save_key(self._p().key, key)
+        except OSError as e:
+            self.status.setText(errors.plain(e, "save the key"))
+            return
+        self.forget.parentWidget().setVisible(True)
+        self.changed.emit()
         self._load_models(checking=True)
 
     def _models_for_today(self) -> None:
@@ -285,23 +278,21 @@ class AISetupDialog(Embeddable, QDialog):
         self._provider_changed()
         self.status.setText("Key removed from your keychain.")
 
-    def _save(self) -> None:
-        key = self._typed_key()
-        try:
-            if self._p().key == "custom":
-                providers.check_address(self.address.text())  # first: nothing is saved for a bad address
-            if key:
-                providers.save_key(self._p().key, key)
-        except OSError as e:
-            self.status.setText(errors.plain(e, "save the key"))
+    def _apply(self) -> None:
+        """Keep what's picked as it's picked: the provider, its address, the model and the daily limit (the key is
+        kept as it's checked). An address that can't be used is said, and the one before stays."""
+        if self._loading:
             return
+        if self._p().key == "custom" and self.address.text().strip():
+            try:
+                providers.check_address(self.address.text())
+            except OSError as e:
+                self.status.setText(errors.plain(e, "use that address"))
+                return
         self._setup().to_settings(self.lib.settings)
         typed = self.limit.text().strip()
         self.lib.settings["ai_daily_limit"] = int(typed) if typed.isdigit() else 0
         usage.METER.set_limit(self.lib.settings["ai_daily_limit"])  # from the next question on
-        self.usage.setText(usage.METER.summary())
+        self.usage.set_full_text(usage.METER.summary())
         self.lib.save_settings()
-        if self.embedded:
-            self._provider_changed(first=True)
-            self.status.setText("Saved.")
-        self.accept()
+        self.changed.emit()

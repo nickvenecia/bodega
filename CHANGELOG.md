@@ -342,6 +342,11 @@
 - Fields on a piece, a kit, a rental and a renter are sized to what they hold: an amount, a percent or a rental
   number is short, a name or a link is wider, and a dropdown is as wide as its choice, instead of every field
   stretching across the panel.
+- Settings › General, AI, Keyboard Shortcuts and Your Data are laid out as the Mac's System Settings are: rows in
+  rounded groups, each with its name on the left and its switch, choice or value on the right. Your Data's actions
+  (Show Folder, Back Up…, Restore…, the imports and exports) are rows you click.
+- Settings › AI keeps each change as you make it, with no Save: a key you paste goes straight into your keychain and
+  is tried at once, and Remove Key is a red row under it.
 - The Assistant's answers say which of your gear they drew on ("From your gear: …"). A change your AI is only
   guessing at is marked Not Sure: Review leaves it unticked, and the chat takes you to Review instead of making it.
 - Letters are spaced the way Apple spaces them at each size: a touch tighter in everyday words, a little looser in

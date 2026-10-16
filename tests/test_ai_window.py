@@ -95,14 +95,18 @@ def test_assistant_is_the_right_panel(win):
     assert not win.dock.opened
 
 
-def test_ai_setup_saves_to_keychain_not_settings(win, keychain):
-    from bodega.ui.dialogs.ai_setup import AISetupDialog
+def test_ai_setup_saves_to_keychain_not_settings(win, keychain, monkeypatch):
+    """Settings › AI keeps each change as it's made (no Save): the key in the keychain, never in settings."""
+    from bodega.ui.dialogs.ai_setup import AISettings
 
-    d = AISetupDialog(win.lib, win)
+    d = AISettings(win.lib, win)
+    monkeypatch.setattr(d, "_load_models", lambda **_k: None)  # (no provider to ask here)
     d.provider.setCurrentIndex(d.provider.findData("kimi"))
+    assert win.lib.settings["ai"]["provider"] == "kimi"  # kept as it's picked
     d.key.setText("sk-kimi-abc")
+    d._check_key()  # (pasted: kept, then tried)
     d.model.setEditText("kimi-model")
-    d._save()
+    d.model.lineEdit().editingFinished.emit()
     assert providers.key_for("kimi") == "sk-kimi-abc"
     assert win.lib.settings["ai"] == {"provider": "kimi", "model": "kimi-model", "base_url": ""}
     assert "sk-kimi-abc" not in (win.lib.root / "settings.json").read_text(encoding="utf-8")
@@ -186,7 +190,7 @@ def test_feedback_waits_in_the_outbox(win, data_folder):
     assert saved["message"].startswith("Love it") and saved["details"]["bodega"]
 
 
-def test_settings_sections_edit_in_place(win, keychain):
+def test_settings_sections_edit_in_place(win, keychain, monkeypatch):
     from bodega.ui.dialogs.settings import PANES, SettingsDialog
 
     d = SettingsDialog(win.lib, win, "ai")
@@ -194,13 +198,16 @@ def test_settings_sections_edit_in_place(win, keychain):
     for key, _label, _icon in PANES:
         d.show_pane(key)
     d.show_pane("ai")
-    # AI saves right in its section, no second window
+    # AI keeps each change right in its section as it's made, no second window and no Save
     e = d.ai_editor
+    monkeypatch.setattr(e, "_load_models", lambda **_k: None)  # (no provider to ask here)
     e.provider.setCurrentIndex(e.provider.findData("kimi"))
     e.key.setText("sk-kimi-abc")
+    e._check_key()
     e.model.setEditText("kimi-model")
-    e._save()
-    assert providers.key_for("kimi") == "sk-kimi-abc" and e.status.text() == "Saved." and e.isVisibleTo(d)
+    e.model.lineEdit().editingFinished.emit()
+    assert providers.key_for("kimi") == "sk-kimi-abc" and e.isVisibleTo(d)
+    assert win.lib.settings["ai"]["model"] == "kimi-model"
     # a profile, edited in place
     p = d.profile_editor
     p.name.setText("Renamed Rentals")
@@ -242,9 +249,9 @@ def test_a_big_job_says_how_many_questions_first(win, monkeypatch):
 
 def test_a_model_the_provider_dropped_is_kept_and_said(qapp, data_folder, monkeypatch):
     from bodega.core.store import Library
-    from bodega.ui.dialogs.ai_setup import AISetupDialog
+    from bodega.ui.dialogs.ai_setup import AISettings
 
-    d = AISetupDialog(Library(data_folder).load())
+    d = AISettings(Library(data_folder).load())
     d.model.setCurrentText("retired-model-1")
     monkeypatch.setattr(
         d, "_run", lambda _job, done, _msg, _failed=None: done([("model-a", "Model A"), ("model-b", "Model B")])
@@ -257,19 +264,21 @@ def test_a_model_the_provider_dropped_is_kept_and_said(qapp, data_folder, monkey
 
 def test_a_pasted_key_checks_itself_and_models_show_by_name(qapp, data_folder, keychain, monkeypatch):
     from bodega.services.ai import providers as prov
-    from bodega.ui.dialogs.ai_setup import AISetupDialog
+    from bodega.ui.dialogs.ai_setup import AISettings
 
     lib = Library(data_folder).load()
-    d = AISetupDialog(lib)
+    d = AISettings(lib)
     asked = []
     monkeypatch.setattr(prov, "named_models", lambda setup, key=None: asked.append(key) or [("claude-x", "Claude X")])
     d.key.setText("sk-oops")  # (Anthropic's keys start sk-ant-)
     d._check_key()
     assert not asked and "start with sk-ant-" in d.status.text()  # said without sending it
+    assert not prov.key_for("anthropic")  # …and not kept
     d.key.setText("sk-ant-good")
     d._check_key()
     _wait(d._worker)
     assert asked == ["sk-ant-good"] and d.status.text() == "Key works · 1 model"
+    assert prov.key_for("anthropic") == "sk-ant-good"  # kept as it was pasted (there's no Save)
     assert d.model.itemText(0) == "Claude X" and d._setup().model == "claude-x"  # the name shown, the id used
     assert lib.settings["ai_models"]["models"] == [["claude-x", "Claude X"]]  # kept for the day
     d.deleteLater()

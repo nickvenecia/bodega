@@ -137,6 +137,8 @@ bodega/
                    animation asks duration()/reduce_motion(); tokens.use(contrast=, opaque=)),
                    hover.py (hover's lift on the accent-filled controls: LiftEffect, a touch larger over a soft
                    shadow while hovered; the app's event filter calls hovered()),
+                   rows.py (Group: grouped rows, G.12: a name, a card of rows, a note; value(), control(),
+                   switch(), action()),
                    datefield.py (DateField: typed or picked from its month popover, the standard's G.22),
                    empty.py (EmptyPage: where a table would be with nothing in it: a title, a line, one button;
                    empty gear takes a dropped spreadsheet),
@@ -167,9 +169,10 @@ bodega/
     dialogs/       common.py (Alert: confirm and notice, Return says yes; ask_name, tidy_preview, about),
                    palette.py (Search Everything, ⌘K: places, records by core/search's *_hay, the menus' commands),
                    checklist.py (CheckDialog: tick, scan, note, photos, each kept as made; Mark as Out / Returned),
-                   shortcuts.py (Settings › Keyboard Shortcuts, read from the menus); ProfileDialog, AISetupDialog
-                   and SignInDialog are Embeddable (widgets.py): the same form stands alone or sits in Settings, settings.py (Settings: a glass sidebar of sections that edit in place; one window at a time),
-                   ai_setup.py,
+                   shortcuts.py (Settings › Keyboard Shortcuts, read from the menus); ProfileDialog and SignInDialog
+                   are Embeddable (widgets.py): the same form stands alone or sits in Settings, settings.py (Settings:
+                   a glass sidebar of sections that edit in place, in grouped rows (components/rows.py); one window
+                   at a time), ai_setup.py (AISettings: Settings › AI, each change kept as it's made),
                    ai_review.py, account.py (sign in), feedback.py, import_sheet.py,
                    gear_picker.py, preview.py (the page window), profile.py, client.py, update.py
   app.py           QApplication, fonts, stylesheet, rounded popups, every QLabel plain text, one window at a time,

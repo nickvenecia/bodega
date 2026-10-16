@@ -332,6 +332,17 @@ QPushButton#SideSearch {{ background: {tokens.FILL}; border: 1px solid transpare
 QPushButton#SideSearch:hover {{ background: {tokens.FILL_3}; }}
 #CardTitle {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #Card {{ background: {tokens.BLOCK}; border: none; border-radius: {RADIUS_LG}px; }}
+/* grouped rows (components/rows.py: G.12) */
+#GroupName {{ color: {tokens.MUTED}; font-size: {tokens.TEXT_BODY}px; font-weight: {tokens.WEIGHT_MEDIUM}; }}
+#GroupCard {{ background: {tokens.CARD}; border: none; border-radius: {RADIUS_LG}px; }}
+#GroupNote {{ color: {tokens.MUTED}; font-size: {tokens.TEXT_CALLOUT}px; }}
+#RowValue {{ color: {tokens.MUTED}; }}
+QPushButton#RowAction {{ background: transparent; border: none; border-radius: {RADIUS_LG}px; color: {tokens.ACCENT_TEXT};
+    text-align: left; padding: 0 {tokens.GROUP_INSET}px; min-height: {tokens.ROW_H - tokens.HAIRLINE}px;
+    max-height: {tokens.ROW_H - tokens.HAIRLINE}px; }}
+QPushButton#RowAction:pressed {{ background: {tokens.ROW_HOVER}; }}
+QPushButton#RowAction[danger="true"] {{ color: {tokens.BAD}; }}
+QPushButton#RowAction:focus {{ border: {tokens.FOCUS_RING}px solid {tokens.ACCENT}; }}
 QPlainTextEdit#BigName {{ font-size: {TEXT_RECORD}px; font-weight: {WEIGHT_BOLD}; color: {tokens.TEXT};
     background: transparent; border: 1px solid transparent; border-radius: {RADIUS}px; padding: 0 {SPACE_1}px;
     selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}

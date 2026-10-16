@@ -13,7 +13,7 @@ settings (Send Feedback, About) have their own windows.
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QStackedWidget, QWidget
 
 from bodega import version_label
@@ -24,18 +24,15 @@ from bodega.services import account
 from bodega.ui.components import sheet
 from bodega.ui.components.glass import GlassRoot
 from bodega.ui.components.panels import LeftPanel
+from bodega.ui.components.rows import Group
 from bodega.ui.components.widgets import (
     AccentPicker,
-    ElidedLabel,
     FitScroll,
     SearchField,
-    Section,
     Segmented,
     Toast,
-    ToggleRow,
     combo,
     hbox,
-    hint,
     set_combo,
     vbox,
 )
@@ -195,39 +192,24 @@ class SettingsDialog(QDialog):
     @staticmethod
     def _column() -> tuple[QWidget, object]:
         w = QWidget()
-        lay = vbox(w, (0, 0, tokens.SPACE_3, tokens.SPACE_4), tokens.SPACE_3)
+        lay = vbox(w, (0, 0, tokens.SPACE_3, tokens.SPACE_4), tokens.GROUP_GAP)  # (groups of rows: G.12)
         return w, lay
-
-    def _row(self, text: str, *buttons: QPushButton) -> object:
-        row = hbox(spacing=tokens.SPACE_2)
-        label = ElidedLabel(text)
-        label.setObjectName("Muted")
-        row.addWidget(label, 1)
-        for b in buttons:
-            row.addWidget(b)
-        return row
 
     # General
     def _build_general(self) -> None:
         w, lay = self._column()
-        look = Section("Appearance")
-        self.look = Segmented(LOOKS)
+        look = Group()  # (its first row says what it is)
+        self.look = look.control("Appearance", Segmented(LOOKS))
         self.look.set_value(settings.value(self.lib.settings, "appearance"))
         self.look.changed.connect(self.win.set_look)
-        look.add(self.look)
-        lay.addWidget(look)
-        accent = Section("Accent Color")
-        self.accent = AccentPicker(settings.value(self.lib.settings, "accent"))
+        self.accent = look.control("Accent Color", AccentPicker(settings.value(self.lib.settings, "accent")))
         self.accent.picked.connect(self.win.set_accent)
-        accent.add(self.accent)
-        lay.addWidget(accent)
-        upd = Section("Updates")
-        self.auto = ToggleRow("Check for Updates Automatically", settings.value(self.lib.settings, "auto_update"))
+        lay.addWidget(look)
+        upd = Group("Updates")
+        self.auto = upd.switch("Check for Updates Automatically", settings.value(self.lib.settings, "auto_update"))
         self.auto.toggled.connect(self._auto)
-        upd.add(self.auto)
-        version = ElidedLabel(f"Version {version_label()}")
-        version.setObjectName("Muted")
-        upd.add(version)  # checking now is a command: the profile menu and Bodega › Check for Updates…
+        upd.value("Version", version_label())
+        upd.action("Check for Updates…", lambda: self._then(self.win.check_updates))
         lay.addWidget(upd)
         lay.addStretch(1)
         self._fill("general", w)
@@ -333,13 +315,12 @@ class SettingsDialog(QDialog):
 
     # AI
     def _build_ai(self) -> None:
-        from bodega.ui.dialogs.ai_setup import AISetupDialog
+        from bodega.ui.dialogs.ai_setup import AISettings
 
-        d = AISetupDialog(self.lib)
-        d.embed()
+        d = AISettings(self.lib)
         d.layout().setContentsMargins(0, 0, tokens.SPACE_3, tokens.SPACE_4)
         d.layout().addStretch(1)  # packed at the top, like the other sections
-        d.accepted.connect(self.win._ai_state)
+        d.changed.connect(self.win._ai_state)  # (kept as it's changed: there's no Save)
         self.ai_editor = d
         self._fill("ai", d)
 
@@ -352,9 +333,12 @@ class SettingsDialog(QDialog):
             self.rows["account"].set_label((who.name or who.email) if who else "Sign In")
         if who is not None:
             w, lay = self._column()
-            out = QPushButton("Sign Out")
-            out.clicked.connect(self._sign_out)
-            lay.addLayout(self._row(f"Signed in as {who.email}", out))
+            card = Group()
+            if who.name:
+                card.value("Name", who.name)
+            card.value("Signed In As", who.email)
+            card.action("Sign Out", self._sign_out)
+            lay.addWidget(card)
             lay.addStretch(1)
             self._fill("account", w)
             return
@@ -382,11 +366,10 @@ class SettingsDialog(QDialog):
     def _build_shortcuts(self) -> None:
         from bodega.ui.dialogs.shortcuts import ShortcutsList
 
-        top = Section("Single Keys")
-        self.single = ToggleRow("Use Single-Key Shortcuts", settings.value(self.lib.settings, "single_keys"))
+        top = Group("Single Keys", "N, E, D, /, ? and A work alone, outside text fields.")
+        self.single = top.switch("Use Single-Key Shortcuts", settings.value(self.lib.settings, "single_keys"))
+        self.single.setToolTip("Turn them off if you type by voice")
         self.single.toggled.connect(self._single_keys)
-        top.add(self.single)
-        top.add(hint("N, E, D, /, ? and A work alone, outside text fields. Turn them off if you type by voice."))
         self._fill("shortcuts", ShortcutsList(self.win.menuBar(), self.win.single_acts, top))
 
     def _single_keys(self, on: bool) -> None:
@@ -397,59 +380,28 @@ class SettingsDialog(QDialog):
     # Your Data
     def _build_data(self) -> None:
         w, lay = self._column()
-        where = Section("Saved on This Computer")
-        path = ElidedLabel(str(data_dir()), mode=Qt.TextElideMode.ElideMiddle)
-        path.setObjectName("Muted")
-        path.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        where.add(path)
-        show = QPushButton("Show Folder")
-        show.clicked.connect(self.win.open_data_folder)
-        back = QPushButton("Back Up…")
-        back.clicked.connect(lambda: self._then(self.win.back_up))
-        restore = QPushButton("Restore…")
+        where = Group("Saved on This Computer")
+        where.value("Folder", str(data_dir()), middle=True)
+        where.action("Show Folder", self.win.open_data_folder)
+        where.action("Back Up…", lambda: self._then(self.win.back_up))
+        restore = where.action("Restore…", lambda: self._then(self.win.restore))
         restore.setToolTip("Put a backup or a safety copy back in place of everything")
-        restore.clicked.connect(lambda: self._then(self.win.restore))
-        row = hbox(spacing=tokens.SPACE_2)
-        row.addWidget(show)
-        row.addWidget(back)
-        row.addWidget(restore)
-        row.addStretch(1)
-        where.add(row)
         lay.addWidget(where)
-        moving = Section("Import && Export")
-        for group in (
-            (("Import Spreadsheet…", self.win.import_sheet), ("Import from Google Sheets…", self.win.import_google)),
-            (
-                ("Export Gear as CSV…", self.win.export_csv),
-                ("Export Kits as CSV…", self.win.export_kits_csv),
-                ("Export Rentals as CSV…", self.win.export_rentals_csv),
-            ),
-        ):
-            row = hbox(spacing=tokens.SPACE_2)
-            for label, run in group:
-                b = QPushButton(label)
-                b.clicked.connect(lambda _c=False, run=run: self._then(run))
-                row.addWidget(b)
-            row.addStretch(1)
-            moving.add(row)
-        lay.addWidget(moving)
-        safety = Section("Safety Copies")
-        safety.add(
-            hint(
-                f"Bodega keeps a copy of your gear, kits, rentals, renters and profiles each day you open it "
-                f"(the last {backups.DAILY_KEPT} days) and before a big change: an import, Tidy Up Groups, an "
-                f"AI's changes or a restore (the last {backups.CHANGES_KEPT}). Restore… starts with them."
-            )
-        )
+        safety = Group("Safety Copies", "Restore… starts with them.")
+        safety.value("Each Day You Open Bodega", f"The last {backups.DAILY_KEPT}")
+        safety.value("Before an Import, Tidy Up, AI Changes or a Restore", f"The last {backups.CHANGES_KEPT}")
         lay.addWidget(safety)
-        private = Section("Renters' Details")
-        private.add(
-            hint(
-                "Your renters' names, emails, phones and addresses are kept on this computer as plain files, and "
-                "every backup holds them too. Turn on FileVault (Mac) or BitLocker (Windows) so a lost computer "
-                "doesn't give them away, and keep backups somewhere private."
-            )
-        )
+        come_in = Group("Import")  # (data comes in where data lives: §4.12)
+        come_in.action("Import Spreadsheet…", lambda: self._then(self.win.import_sheet))
+        come_in.action("Import from Google Sheets…", lambda: self._then(self.win.import_google))
+        lay.addWidget(come_in)
+        out = Group("Export")
+        out.action("Export Gear as CSV…", lambda: self._then(self.win.export_csv))
+        out.action("Export Kits as CSV…", lambda: self._then(self.win.export_kits_csv))
+        out.action("Export Rentals as CSV…", lambda: self._then(self.win.export_rentals_csv))
+        lay.addWidget(out)
+        private = Group("Renters' Details", "Turn on FileVault (Mac) or BitLocker (Windows) to keep them safe.")
+        private.value("Kept", "On this computer, and in every backup")
         lay.addWidget(private)
         lay.addStretch(1)
         self._fill("data", w)
