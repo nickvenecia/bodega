@@ -187,12 +187,11 @@ class Sidebar(LeftPanel):
                 self._place(p.key, under).as_child()
         self._place("calendar", rent)  # a different view (a timeline), so its own row
         self.lay.addStretch(1)
-        folded = lib.settings.get("sidebar_folded", list(FOLDED_AT_FIRST))
-        if not isinstance(folded, list):
-            folded = list(FOLDED_AT_FIRST)
+        folded = settings.value(lib.settings, "sidebar_folded")
+        folded = list(FOLDED_AT_FIRST) if folded is None else folded
         # rows added since your folds were saved start folded too (once; after that it's your choice)
-        seen = lib.settings.get("sidebar_rows_seen")
-        seen = set(seen) if isinstance(seen, list) else {"gear", "kits"}
+        seen = settings.value(lib.settings, "sidebar_rows_seen")
+        seen = {"gear", "kits"} if seen is None else set(seen)
         folded += [k for k in FOLDED_AT_FIRST if k not in seen and k not in folded]
         lib.settings["sidebar_rows_seen"] = sorted(seen | set(FOLDED_AT_FIRST) | {"kits"})
         lib.settings["sidebar_folded"] = sorted(set(folded))

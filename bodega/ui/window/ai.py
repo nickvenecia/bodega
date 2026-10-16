@@ -8,7 +8,7 @@ from dataclasses import replace
 
 from PySide6.QtWidgets import QDialog
 
-from bodega.core import words
+from bodega.core import settings, words
 from bodega.core.model import Item
 from bodega.services.ai import tasks
 from bodega.services.ai.providers import Setup
@@ -91,7 +91,7 @@ class AIMixin:
 
     def _model_name(self, setup: Setup) -> str:
         """The model's name as the provider's list gave it (kept by AI Settings), or "" (never its id)."""
-        kept = self.lib.settings.get("ai_models")
+        kept = settings.value(self.lib.settings, "ai_models")
         if not isinstance(kept, dict) or kept.get("provider") != setup.provider:
             return ""
         for row in kept.get("models", []):

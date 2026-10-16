@@ -127,17 +127,15 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self._wire()
         self._menus()
         self.look_changed()
-        groups = self.lib.settings.get("groups", {})
-        groups = groups if isinstance(groups, dict) else {}
+        groups = settings.value(self.lib.settings, "groups")
         for panel in (self.items, self.packages, self.rentals):
             g = groups.get(panel.KEY)
             if isinstance(g, dict):
                 panel.set_open_groups(g)
-        hidden = self.lib.settings.get("hidden_columns")
-        if isinstance(hidden, list):
+        hidden = settings.value(self.lib.settings, "hidden_columns")
+        if hidden is not None:
             self.gear_table.hidden_cols = {x for x in hidden if isinstance(x, str)}
-            known = self.lib.settings.get("columns_known")
-            known = set(known) if isinstance(known, list) else set()
+            known = set(settings.value(self.lib.settings, "columns_known"))
             self.gear_table.hidden_cols |= {"earned"} - known  # columns added since start tucked away
         self.lib.settings["columns_known"] = ["earned"]
         self.gear_table.set_column_order(
@@ -396,16 +394,14 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
 
     def _divide_for(self, view: str) -> str:
         """How the gear table is divided: by group in All Gear, by company inside a group (each remembered)."""
-        saved = self.lib.settings.get("divide")
-        saved = saved if isinstance(saved, dict) else {}
+        saved = settings.value(self.lib.settings, "divide")
         place = "grp" if view.startswith("grp:") else "all"
         default = "brand" if place == "grp" else "group"
         got = saved.get(place, default)
         return got if got in {k for k, _l, _t in DIVIDES} else default
 
     def _view_picked(self) -> None:
-        saved = self.lib.settings.get("divide")
-        saved = saved if isinstance(saved, dict) else {}
+        saved = settings.value(self.lib.settings, "divide")
         saved["grp" if self.view_key.startswith("grp:") else "all"] = self.view_menu.divide
         self.lib.settings["divide"] = saved
         self.refresh()
@@ -896,8 +892,8 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         if self._restored:
             super().show()
             return
-        geo = self.lib.settings.get("geometry")
-        if isinstance(geo, str) and geo and self._fits_after(geo):
+        geo = settings.value(self.lib.settings, "geometry")
+        if geo and self._fits_after(geo):
             super().show()
         elif self.titlebar is not None:  # the Mac: fill the free area ourselves (zooming is unreliable here)
             titlebar.fill_screen(self)

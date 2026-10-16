@@ -28,6 +28,19 @@ DEFAULTS: dict[str, tuple[type, object]] = {  # key -> (what it holds, its defau
     "column_order": (list, []),  # the gear list's columns, in the order you put them
     "ai_models": (dict, {}),  # the provider's list of models, kept for the day it was asked
     "companies_guessed": (bool, False),  # gear from before Company existed got its company once
+    "groups": (dict, {}),  # which cards are open in each panel ("gear", "kit", "rental")
+    "hidden_columns": (list, None),  # the gear list's columns you hid (None: never chosen, the list's own)
+    "columns_known": (list, []),  # the columns there were when you last chose (newer ones start hidden)
+    "divide": (dict, {}),  # how the gear list is divided: in All Gear ("all") and in a group ("grp")
+    "sidebar_folded": (list, None),  # the sidebar rows you folded (None: the ones folded at first)
+    "sidebar_rows_seen": (list, None),  # the rows there were when you last folded
+    "sheet_pricing": (dict, {}),  # the day rate % and tax a sheet had, before there was a profile
+    "group_list": (list, None),  # your groups, in your order (None: in the order your gear has them)
+    "departments": (list, None),  # (the same, from before groups had their own list)
+    "ai": (dict, {}),  # the AI provider, model and address (the key is in the keychain, never here)
+    "numbers": (dict, {}),  # the last rental number given in each series (never given again)
+    "last_update_check": (float, 0.0),  # when Bodega last asked for an update (seconds)
+    "format": (int, 0),  # the data folder's format (core/store.py FORMAT): what wrote it
 }
 
 

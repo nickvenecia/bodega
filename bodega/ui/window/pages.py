@@ -128,8 +128,8 @@ class PagesMixin:
             panel.clear("Nothing to show.")
 
     def _export_folder(self) -> Path:
-        saved = self.lib.settings.get("export_dir")
-        if isinstance(saved, str) and Path(saved).is_dir():
+        saved = settings.value(self.lib.settings, "export_dir")
+        if saved and Path(saved).is_dir():
             return Path(saved)
         return documents_dir()
 

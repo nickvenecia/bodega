@@ -472,14 +472,19 @@ class Library:
         b = self.businesses.get(cur) or next(iter(self.businesses.values()), None)
         if b is not None:
             return b
-        fallback = Business()
-        sheet = self.settings.get("sheet_pricing")
-        if isinstance(sheet, dict):
-            for key in ("rate_pct", "value_tax"):  # a 0 the sheet says is kept: only blank means "not set"
-                said = sheet.get(key)
-                if said is not None and str(said).strip():
-                    setattr(fallback, key, str(said).strip())
-        return fallback
+        return self.with_sheet_pricing(Business())
+
+    def with_sheet_pricing(self, b: Business) -> Business:
+        """`b` with the day rate % and tax a sheet had, if one came in before there was a profile (a 0 the sheet
+        says is kept: only blank means "not set")."""
+        from bodega.core import settings
+
+        sheet = settings.value(self.settings, "sheet_pricing")
+        for key in ("rate_pct", "value_tax"):
+            said = sheet.get(key)
+            if said is not None and str(said).strip():
+                setattr(b, key, str(said).strip())
+        return b
 
     def brands(self) -> list[str]:
         """Every company your gear is from, A to Z."""

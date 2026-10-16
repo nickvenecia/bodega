@@ -11,7 +11,7 @@ from __future__ import annotations
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
-from bodega.core import dates, errors, words
+from bodega.core import dates, errors, settings, words
 from bodega.core.store import Library
 from bodega.services import secrets
 from bodega.services.ai import providers
@@ -201,7 +201,7 @@ class AISetupDialog(Embeddable, QDialog):
 
     def _models_for_today(self) -> None:
         """The list from today, kept; else, with a key saved, asked for now (in the background)."""
-        kept = self.lib.settings.get("ai_models")
+        kept = settings.value(self.lib.settings, "ai_models")
         p = self._p()
         if isinstance(kept, dict) and kept.get("provider") == p.key and kept.get("day") == dates.iso(dates.today()):
             rows = [tuple(r) for r in kept.get("models", []) if isinstance(r, list) and len(r) == 2]

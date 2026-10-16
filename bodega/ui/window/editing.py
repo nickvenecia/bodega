@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from bodega.core import pricing
+from bodega.core import pricing, settings
 from bodega.core.log import get_logger
 from bodega.core.model import Business, Item, Package, PackageLine, Rental, RentalLine, new_id, now_iso
 from bodega.ui.components.widgets import one_stop
@@ -512,11 +512,7 @@ class EditingMixin:
         )
         start = current
         if current is None:
-            start = Business()
-            sheet = self.lib.settings.get("sheet_pricing")
-            if isinstance(sheet, dict):
-                start.rate_pct = str(sheet.get("rate_pct") or start.rate_pct)
-                start.value_tax = str(sheet.get("value_tax") or start.value_tax)
+            start = self.lib.with_sheet_pricing(Business())  # a sheet's pricing, if one came before a profile
         return current, start, can_delete
 
     def profile_saved(self, d: ProfileDialog, current: Business | None, for_rental: bool = False) -> str:
@@ -559,8 +555,7 @@ class EditingMixin:
         self.toast("New rentals will start with these terms.", "done")
 
     def _groups_changed(self, key: str, state: dict) -> None:
-        groups = self.lib.settings.get("groups", {})
-        groups = groups if isinstance(groups, dict) else {}
+        groups = settings.value(self.lib.settings, "groups")
         groups[key] = state
         self.lib.settings["groups"] = groups
 
