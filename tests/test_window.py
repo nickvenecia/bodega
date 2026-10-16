@@ -1907,3 +1907,52 @@ def test_every_page_the_page_window_offers_is_one_the_window_builds(win):
             got = win.view(d.key)
             assert got is not None and got[0].kind, (kind, d.key)
         assert pages.doc("no such page") is pages.docs[0]  # an old setting's page: the first instead
+
+
+def test_circles_swatches_lists_and_popups_are_measured_to_the_standard(win):
+    """The rest of T-11: every circle is round and at its height (the bar's 36, the rest 28: ✕, ⋯, ‹ ›), the
+    accent swatches are SWATCH across, every dropdown's rows are LIST_ROW_H, and no menu is narrower than
+    MENU_MIN_W."""
+    from PySide6.QtWidgets import QComboBox, QToolButton
+
+    from bodega.ui.components.widgets import AccentPicker
+    from bodega.ui.dialogs.settings import SettingsDialog
+    from bodega.ui.style import tokens
+
+    win.open("gear", next(iter(win.lib.items)))
+    QApplication.processEvents()
+    seen = []
+    for place in ("gear", "calendar"):
+        win.go(place)
+        if place == "gear":
+            win.open("gear", next(iter(win.lib.items)))
+        QApplication.processEvents()
+        for b in win.findChildren(QToolButton):
+            if b.objectName() in ("Circle", "CirclePrimary") and b.isVisible():
+                seen.append(b)
+                assert b.width() == b.height() in (tokens.CONTROL_H, tokens.BAR_CTRL_H), (b.toolTip(), b.size())
+    tips = {b.toolTip() for b in seen}
+    assert {"Earlier", "Later", "Close"} <= tips  # the calendar's ‹ ›, a panel's ✕ (and the bar's, measured too)
+    assert win.view_menu.height() == tokens.BAR_CTRL_H  # the filter, right after the search: one of the bar's
+    pager = win.dock.findChild(QWidget, "Pager") or next(iter(win.findChildren(QWidget, "Pager")), None)
+    if pager is not None:
+        for b in (pager.prev, pager.next):  # floating glass, as the bar is: the bar's circles
+            assert b.width() == b.height() == tokens.BAR_CTRL_H
+    combos = [c for c in win.items.findChildren(QComboBox) if c.count()]
+    assert combos
+    for c in combos:
+        c.view().ensurePolished()
+        assert c.view().sizeHintForRow(0) == tokens.LIST_ROW_H + tokens.LIST_GAP, c.currentText()
+    for m in [win.new_menu, win.items.more_menu]:
+        m.ensurePolished()
+        m.adjustSize()
+        assert m.width() >= tokens.MENU_MIN_W, [a.text() for a in m.actions()]
+    s = SettingsDialog(win.lib, win, "general")
+    s.show()
+    QApplication.processEvents()
+    picker = s.findChild(AccentPicker)
+    assert picker is not None
+    for i in range(len(picker.keys)):
+        ring = picker._rect(i)
+        assert ring.width() == ring.height() == tokens.SWATCH + 4 * tokens.SWATCH_RING  # the swatch, ringed
+    s.done(0)

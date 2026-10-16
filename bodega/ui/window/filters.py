@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtWidgets import QLabel, QMenu, QPushButton, QToolButton, QWidget, QWidgetAction
 
@@ -109,6 +109,8 @@ class FilterButton(QToolButton):
     def __init__(self, companies, parent=None):
         super().__init__(parent)
         self.setObjectName("Circle")
+        self.setProperty("bar", True)  # one of the bar's circles, at its size (G.14), right after the search
+        self.setIconSize(QSize(tokens.ICON_BAR, tokens.ICON_BAR))
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.companies = companies  # () -> list of company names
@@ -140,7 +142,7 @@ class FilterButton(QToolButton):
 
     def show_state(self) -> None:
         on = self.filter.active()
-        self.setIcon(theme.icon("filter", theme.ACCENT if on else theme.MUTED))
+        self.setIcon(theme.icon("filter", theme.ACCENT if on else theme.MUTED, tokens.ICON_BAR))
         if bool(self.property("active")) != on:
             self.setProperty("active", on)
             self.style().unpolish(self)

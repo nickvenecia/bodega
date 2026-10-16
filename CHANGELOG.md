@@ -200,6 +200,7 @@
 - The gear jobs (Update from Links…, Find Missing Links…, Tidy Up Names…, Organize Groups…, and Update with AI… on
   a piece) are written the same way everywhere, each with "…": each ends in Review, and nothing changes until you
   approve.
+- The filter button beside the search is the same size as the other round buttons in the bar.
 - The calendar works from the keyboard: Tab reaches it, the arrow keys move from rental to rental (the one you're on
   has a ring), Return opens it, and VoiceOver or Narrator says each one ("JLF-2026-001, Northwind Media, Oct 18–25,
   Booked").
