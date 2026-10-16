@@ -201,6 +201,69 @@ def ask_choice(
     return pick.currentData()
 
 
+def pick_from(parent: QWidget, title: str, choices: list[tuple[str, str]], action: str) -> str | None:
+    """One of many choices ((key, words) each) from a list you can search: type to narrow it, ↓ into the list,
+    Return or a double-click picks. The key, or None if cancelled."""
+    from PySide6.QtWidgets import QListWidget, QListWidgetItem
+
+    from bodega.core import search
+    from bodega.ui.components.widgets import SearchField
+
+    d = QDialog(parent)
+    d.setWindowTitle(title)
+    d.setMinimumWidth(DIALOG_W)
+    lay = vbox(d, SPACE_5, SPACE_3)
+    t = QLabel(title)
+    t.setObjectName("DialogTitle")
+    lay.addWidget(t)
+    find = SearchField()
+    find.setPlaceholderText("Search")
+    find.setAccessibleName("Search")
+    lay.addWidget(find)
+    box = QListWidget()
+    box.setObjectName("Picker")
+    box.setFixedHeight(PICKER_LIST_H)
+    for key, words in choices:
+        item = QListWidgetItem(words)
+        item.setData(Qt.ItemDataRole.UserRole, key)
+        box.addItem(item)
+    box.setCurrentRow(0)
+    lay.addWidget(box)
+
+    def narrow(text: str) -> None:
+        wanted = search.words(text)
+        first = None
+        for i in range(box.count()):
+            item = box.item(i)
+            hide = not search.matches(search.folded(item.text()), wanted)
+            item.setHidden(hide)
+            if not hide and first is None:
+                first = item
+        if first is not None:
+            box.setCurrentItem(first)
+
+    find.textChanged.connect(narrow)
+    find.down_wanted.connect(box.setFocus)
+    find.returnPressed.connect(
+        lambda: box.currentItem() is not None and not box.currentItem().isHidden() and d.accept()
+    )
+    box.itemDoubleClicked.connect(lambda _i: d.accept())
+    row = button_row()
+    cancel = QPushButton("Cancel")
+    cancel.clicked.connect(d.reject)
+    go = QPushButton(action)
+    go.setObjectName("Primary")
+    go.setDefault(True)
+    go.clicked.connect(d.accept)
+    row.addWidget(cancel)
+    row.addWidget(go)
+    lay.addLayout(row)
+    find.setFocus()
+    if d.exec() != QDialog.DialogCode.Accepted or box.currentItem() is None or box.currentItem().isHidden():
+        return None
+    return box.currentItem().data(Qt.ItemDataRole.UserRole)
+
+
 def tidy_preview(parent: QWidget, moves: list) -> bool:
     """Show what Tidy Up Groups would do (old group → new group, how many) and ask before doing it."""
     from collections import Counter

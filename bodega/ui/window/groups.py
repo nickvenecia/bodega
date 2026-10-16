@@ -14,17 +14,20 @@ from bodega.ui.window.tables import ID
 
 
 class GroupsMixin:
-    def _move_menu(self, parent: QMenu, ids: list[str]) -> QMenu:
-        """Move To ▸ a group (or a new one)."""
+    def move_to(self, ids: list[str]) -> None:
+        """Move To…: pick a group from a list you can search (or No Group, or a new one)."""
+        from bodega.ui.dialogs.common import pick_from
+
         n = len(ids)
-        m = QMenu("Move To" if n == 1 else f"Move {n} To", parent)
-        m.setIcon(theme.menu_icon("export"))
-        for g in self.lib.groups():
-            m.addAction(g, lambda g=g: self.move_gear(ids, g))
-        m.addSeparator()
-        m.addAction("No Group", lambda: self.move_gear(ids, ""))
-        m.addAction(theme.menu_icon("plus"), "New Group…", lambda: self._move_to_new_group(ids))
-        return m
+        choices = [(f"grp:{g}", g) for g in self.lib.groups()]
+        choices += [("none", "No Group"), ("new", "New Group…")]
+        picked = pick_from(self, "Move To" if n == 1 else f"Move {n} To", choices, "Move")
+        if picked == "new":
+            self._move_to_new_group(ids)
+        elif picked == "none":
+            self.move_gear(ids, "")
+        elif picked:
+            self.move_gear(ids, picked[4:])
 
     def _move_to_new_group(self, ids: list[str]) -> None:
         from bodega.ui.dialogs.common import ask_name

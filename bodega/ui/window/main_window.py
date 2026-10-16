@@ -741,7 +741,12 @@ class MainWindow(
             if obj_id not in ids:
                 ids = [obj_id]
             m = QMenu(self)
-            m.addMenu(self._move_menu(m, ids))
+            n = len(ids)
+            m.addAction(  # a list to search, once this menu has closed (never a menu over a menu)
+                theme.menu_icon("export"),
+                "Move To…" if n == 1 else f"Move {n} To…",
+                lambda: QTimer.singleShot(0, self, lambda: self.move_to(ids)),
+            )
             m.addAction(theme.menu_icon("arrow-up"), "Move Up", lambda: self.step_gear(-1, ids))
             m.addAction(theme.menu_icon("arrow-down"), "Move Down", lambda: self.step_gear(1, ids))
             m.addSeparator()

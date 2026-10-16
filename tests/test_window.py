@@ -1398,3 +1398,37 @@ def test_a_filter_shows_as_a_chip_that_takes_it_off(win):
     chips[0].click()
     QApplication.processEvents()  # (once the click is over)
     assert not win.view_menu.filter.active() and not win.filter_chips.isVisibleTo(win)
+
+
+def test_move_to_picks_a_group_from_a_list_you_can_search(win, monkeypatch):
+    from bodega.ui.dialogs import common
+
+    asked = []
+
+    def pick(_parent, title, choices, action):
+        asked.append((title, [w for _k, w in choices]))
+        return next(k for k, w in choices if w == win.lib.groups()[-1])
+
+    monkeypatch.setattr(common, "pick_from", pick)
+    it = next(i for i in win.lib.items.values() if not i.parent and i.group != win.lib.groups()[-1])
+    win.move_to([it.id])
+    assert asked[0][0] == "Move To" and asked[0][1][-2:] == ["No Group", "New Group…"]
+    assert win.lib.items[it.id].group == win.lib.groups()[-1]
+
+
+def test_the_picker_narrows_as_you_type(qapp, monkeypatch):
+    from PySide6.QtWidgets import QDialog, QListWidget
+
+    from bodega.ui.dialogs import common
+
+    def run(d):
+        box = d.findChild(QListWidget)
+        field = next(w for w in d.findChildren(QWidget) if type(w).__name__ == "SearchField")
+        QTest.keyClicks(field, "len")
+        shown = [box.item(i).text() for i in range(box.count()) if not box.item(i).isHidden()]
+        assert shown == ["Lenses"]
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(QDialog, "exec", run)
+    got = common.pick_from(None, "Move To", [("a", "Lights"), ("b", "Lenses"), ("c", "Grip")], "Move")
+    assert got == "b"
