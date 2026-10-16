@@ -104,6 +104,33 @@ class MenusMixin:
             a.setCheckable(True)
             a.triggered.connect(lambda _c=False, k=key: self.set_look(k))
             self.look_actions[key] = a
+        # the open piece's and the open rental's commands, in the menu bar too (not only in their panels)
+        gm = bar.addMenu("Gear")
+        self.gear_acts = [
+            act(gm, "Rent This…", self.rent_this),
+            act(gm, "Update with AI", lambda: self._with_open_piece(self.ai_this_piece)),
+            act(gm, "Make It Its Own Item", lambda: self._with_open_piece(self.detach)),
+        ]
+        gm.aboutToShow.connect(self._record_menu_state)
+        rm = bar.addMenu("Rental")
+        self.rental_acts = {
+            "agreement": act(
+                rm, "Agreement…", lambda: self._with_open_rental(lambda i: self.show_pages(("rental", i)))
+            ),
+            "out": act(
+                rm, "Check Out…", lambda: self._with_open_rental(lambda i: self.check_rental(i, False))
+            ),
+            "in": act(rm, "Check In…", lambda: self._with_open_rental(lambda i: self.check_rental(i, True))),
+            "saldo": act(rm, "Send to Saldo…", lambda: self._with_open_rental(self.send_to_saldo)),
+            "calendar": act(rm, "Add to Calendar", lambda: self._with_open_rental(self.add_to_calendar)),
+        }
+        rm.addSeparator()
+        self.rental_acts["cancel"] = act(
+            rm,
+            "Mark as Cancelled…",
+            lambda: self.rentals.r is not None and self.cancel_rental(self.rentals.r),
+        )
+        rm.aboutToShow.connect(self._record_menu_state)
         b = bar.addMenu("Profile")
         act(b, "Edit Profile…", lambda: self.edit_business(False))
         act(b, "Add a Profile…", lambda: self.edit_business(True))
@@ -226,6 +253,29 @@ class MenusMixin:
             return
         self._after_history()
         self.toast(f"Redid the change to {what}.", "done")
+
+    def _with_open_piece(self, do) -> None:
+        if kind_of(self.view_key) == "gear" and self.items.it is not None and self.dock.opened:
+            do(self.items.it.id)
+
+    def _with_open_rental(self, do) -> None:
+        if kind_of(self.view_key) == "rentals" and self.rentals.r is not None and self.dock.opened:
+            do(self.rentals.r.id)
+
+    def _record_menu_state(self) -> None:
+        """The Gear and Rental menus work on what's open: off while nothing is."""
+        it = self.items.it if kind_of(self.view_key) == "gear" and self.dock.opened else None
+        for a in self.gear_acts:
+            a.setEnabled(it is not None)
+        if it is not None:
+            self.gear_acts[2].setEnabled(bool(it.parent))
+        r = self.rentals.r if kind_of(self.view_key) == "rentals" and self.dock.opened else None
+        for a in self.rental_acts.values():
+            a.setEnabled(r is not None)
+        if r is not None:
+            self.rental_acts["out"].setEnabled(r.holds_gear() and not r.is_out())
+            self.rental_acts["in"].setEnabled(r.is_out())
+            self.rental_acts["cancel"].setEnabled(not r.deletable() and not r.is_cancelled())
 
     def _edit_menu_state(self) -> None:
         """Undo and Redo say what they'd change back ("Undo Change to Gear"), or "Undo Typing" in a text box."""

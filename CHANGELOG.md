@@ -161,6 +161,8 @@
   it matches, or by how much it's off.
 - A piece you renamed after importing it isn't brought in a second time when you import the same sheet again:
   Bodega remembers the name the sheet gave it.
+- On a Mac, the menu bar has a Gear menu (Rent This…, Update with AI, Make It Its Own Item) and a Rental menu
+  (Agreement…, Check Out…, Check In…, Send to Saldo…, Add to Calendar, Mark as Cancelled…) for what's open.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

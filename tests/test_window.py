@@ -1457,3 +1457,16 @@ def test_a_piece_renamed_after_an_import_isnt_imported_twice(win, tmp_path):
     win._item_edited(it)
     win.flush()
     assert win.import_file(sheet, ask=False) == 0  # the same sheet again: it's known by the sheet's name
+
+
+def test_the_menu_bar_has_the_open_rentals_commands(win):
+    tops = {a.text(): a.menu() for a in win.menuBar().actions() if a.menu()}
+    assert {"Gear", "Rental"} <= set(tops)
+    r = next(iter(win.lib.rentals.values()))
+    win.open("rentals", r.id)
+    win._record_menu_state()
+    acts = win.rental_acts
+    assert acts["agreement"].isEnabled() and acts["out"].isEnabled() != acts["in"].isEnabled()
+    win.deselect()
+    win._record_menu_state()
+    assert not acts["agreement"].isEnabled()  # nothing open: nothing to act on
