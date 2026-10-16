@@ -113,7 +113,7 @@ class AIMixin:
         else:
             w = Worker(lambda progress, cancel: run(use, copies, progress, cancel), self)
         w.done.connect(lambda result: self._ai_review(title, result))
-        w.failed.connect(lambda e: self.assistant.say("Bodega", e))
+        w.failed.connect(lambda e: self.assistant.say("Bodega", e, "problem"))
         self.assistant.start(w, f"{title}…")
 
     def _may_ask(self, key: str, chosen: list[Item], setup) -> bool:
@@ -148,7 +148,7 @@ class AIMixin:
         d = ReviewDialog(title, result, names, self)
         if d.exec() != QDialog.DialogCode.Accepted:
             if in_chat:
-                self.assistant.say("Bodega", "Nothing changed.")
+                self.assistant.nothing_changed()
             return
         self._ai_apply(d.chosen(), in_chat)
 
@@ -160,8 +160,7 @@ class AIMixin:
         if self.items.it is not None:
             self.items.load(self.items.it)
         self.refresh()
-        said = f"Changed {words.count(n, 'thing')}. A safety copy of how things were is kept."
         if in_chat:
-            self.assistant.say("Bodega", said)
+            self.assistant.changes_made(n)  # said on its card, in the conversation
         else:
-            self.toast(said, "done")
+            self.toast(f"Changed {words.count(n, 'thing')}. A safety copy of how things were is kept.", "done")

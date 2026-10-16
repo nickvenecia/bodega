@@ -186,11 +186,15 @@
   edge, so it's easy to see where the keyboard is.
 - The Assistant's sign is now a sparkle, the usual sign for AI, and its button stays lit while the Assistant is
   open.
-- A change you ask the Assistant for now waits in a card in the conversation, saying what would change: Decline, or
-  Change 3 Items (Review… to pick some of them). While it waits, nothing else can be asked, and what happened is
-  said in the conversation.
-- The Assistant's header has Clear Chat, to start over, and a ⋯ with AI Settings…. Before the first question it
-  offers a few to try: click one and it's in the box, ready to send.
+- The Assistant reads like Messages: your words in blue bubbles on the right, its answers as plain words, and
+  notes from Bodega in a quiet box. Point at a message for Copy, and on yours Edit and Ask Again. The message field
+  grows as you type, Return sends and Shift-Return starts a new line, and Send (Stop while it works) sits inside it.
+  While it thinks, "Thinking…" shimmers and the field's edge turns in blue (still, with Reduce Motion on).
+- A change you ask the Assistant for waits in a card in the conversation, saying what would change: Decline, or
+  Change 3 Items (Review… to pick some of them). While it waits, the field reads Accept or Decline Above and Esc
+  leaves the Assistant open; afterwards the card says what happened.
+- The Assistant's header has Clear Chat (the trash can) and ⋯ with Copy Conversation and AI Settings…. Before the
+  first question it offers a few to try: click one and it's in the field, ready to send.
 - Delete… and Remove… in menus are red, words and icon, so they're easy to tell from the rest.
 - Anything that's off (a button, a field, a switch, a menu item) is dimmed the same way everywhere, as on a Mac.
 - Copying from a saved PDF now gives the right characters: a rental number like JLF-2026-001 and a phone number in

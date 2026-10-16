@@ -663,7 +663,10 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.dock.set_open(False)
 
     def escape(self) -> None:
-        """Esc closes one layer at a time: the search's words first, then the search itself, then the panel."""
+        """Esc closes one layer at a time: the search's words first, then the search itself, then the panel (but
+        not the Assistant while a change waits for Accept or Decline)."""
+        if self.assistant_showing() and self.assistant.pending is not None:
+            return
         if self.search.hasFocus():
             if self.search.text():
                 self.search.clear()

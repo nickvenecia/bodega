@@ -254,6 +254,38 @@ QFrame#Banner {{ background: {tokens.BANNER}; border: 1px solid {tokens.BANNER_E
 #Pager QToolButton#Circle {{ background: transparent; border-color: transparent; }}
 #Pager QToolButton#Circle:hover {{ background: {tokens.FILL}; }}
 #PagerText {{ color: {tokens.MUTED}; font-weight: {WEIGHT_MEDIUM}; }}
+/* the assistant's conversation (panels/assistant.py; the standard's G.25) */
+#Conversation, #ConversationBody {{ background: transparent; border: none; }}
+#Mine {{ background: {tokens.ACCENT_FILL}; border-radius: {tokens.BUBBLE_R}px; border-bottom-right-radius: {tokens.BUBBLE_TAIL_R}px; }}
+#MineText {{ color: {tokens.ON_ACCENT}; }}
+#Answer {{ color: {tokens.TEXT}; }}
+#ChatNote {{ background: {tokens.FILL_2}; border-radius: {RADIUS}px; }}
+#ChatNote[tone="problem"] {{ background: {tokens.WARN_SOFT}; }}
+#ChatNote[tone="done"] {{ background: {tokens.GOOD_SOFT}; }}
+#ChatNote QLabel {{ color: {tokens.TEXT}; }}
+QToolButton#MsgAction {{ background: transparent; border: none; border-radius: {tokens.MSG_ACTION // 2}px; }}
+QToolButton#MsgAction:hover {{ background: {tokens.FILL_2}; }}
+#Thinking {{ color: {tokens.MUTED}; font-weight: {WEIGHT_MEDIUM}; }}
+#ChangeCard {{ background: {tokens.CARD}; border: 1px solid {tokens.BORDER}; border-radius: {RADIUS_LG}px; }}
+#ChangeTitle {{ color: {tokens.TEXT}; font-weight: {WEIGHT_BOLD}; }}
+#Outcome {{ color: {tokens.MUTED}; }}
+#Outcome[tone="done"] {{ color: {tokens.GOOD}; }}
+#Composer {{ background: {tokens.FIELD}; border: 1px solid {tokens.FIELD_BORDER}; border-radius: {tokens.COMPOSER_MIN_H // 2}px; min-height: {tokens.COMPOSER_MIN_H - 2}px; }}
+QPlainTextEdit#MessageBox {{ background: transparent; border: none; padding: 0; color: {tokens.TEXT}; font-size: {TEXT_MD}px;
+    selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
+QToolButton#Send {{ background: {tokens.ACCENT_FILL}; border: none; border-radius: {tokens.SEND_D // 2}px; }}
+QToolButton#Send:hover {{ background: {tokens.ACCENT_FILL_HOVER}; }}
+QToolButton#Send[stop="true"] {{ background: {tokens.TEXT}; }}
+QToolButton#Send:disabled {{ background: {tokens.FILL_3}; }}
+#HeadGroup {{ background: {tokens.RAISED}; border: 1px solid {tokens.GLASS_STROKE}; border-radius: {CONTROL_H // 2 + 1}px; }}
+#HeadGroup QToolButton#Circle {{ background: transparent; border-color: transparent; }}
+#HeadGroup QToolButton#Circle:hover {{ background: {tokens.FILL}; }}
+#Suggestions {{ background: {tokens.CARD}; border: 1px solid {tokens.BORDER}; border-radius: {RADIUS_LG}px; }}
+QPushButton#Suggestion {{ background: transparent; border: none; border-bottom: 1px solid {tokens.BORDER}; border-radius: 0;
+    text-align: left; padding: {SPACE_2_5}px {SPACE_3 + tokens.SPACE_0_5}px; min-height: {tokens.ROW_H - 2 * SPACE_2_5}px; max-height: none; color: {tokens.TEXT}; }}
+QPushButton#Suggestion[last="true"] {{ border-bottom-color: transparent; }}
+QPushButton#Suggestion:hover {{ background: {tokens.FILL_2}; }}
+QPushButton#Suggestion:pressed {{ background: {tokens.FILL}; }}
 #CardTitle {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #Card {{ background: {tokens.BLOCK}; border: none; border-radius: {RADIUS_LG}px; }}
 QPlainTextEdit#BigName {{ font-size: {TEXT_RECORD}px; font-weight: {WEIGHT_BOLD}; color: {tokens.TEXT};
@@ -411,6 +443,7 @@ _SVG = {
     "chevron-up": '<path d="m6 15 6-6 6 6"/>',
     "scissors": '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/>',
     "link": '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    "stop": '<rect x="7" y="7" width="10" height="10" rx="2"/>',
     "trash": '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>',
     "list-x": '<path d="M11 12H3M16 6H3M16 18H3"/><path d="m15 10 4 4M19 10l-4 4"/>',
     "export": '<path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M20 14v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5"/>',

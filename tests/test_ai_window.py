@@ -268,7 +268,7 @@ def test_a_change_asked_for_in_the_chat_waits_in_a_card(win, monkeypatch):
 def test_declining_a_change_in_the_chat_changes_nothing(win, monkeypatch):
     a = _asked_for_a_change(win, monkeypatch)
     a.card.decline.click()
-    assert not a.card.isVisibleTo(a) and "Nothing changed." in a.log.toPlainText()
+    assert not a.card.foot.isVisibleTo(a) and a.card.outcome.text() == "Declined. Nothing changed."  # it says so
     assert not any(i.group == "Cases" for i in win.lib.items.values())
 
 
@@ -307,3 +307,56 @@ def test_the_assistant_header_clears_the_chat_and_offers_settings(win, monkeypat
     settings = next(x for x in a.more_menu.actions() if x.text() == "AI Settings…")
     settings.trigger()
     assert opened == [True]
+
+
+def test_the_message_field_sends_on_return_and_starts_a_line_on_shift_return(win, monkeypatch):
+    from PySide6.QtCore import Qt
+    from PySide6.QtTest import QTest
+
+    providers.save_key("anthropic", "sk-test")
+    Setup("anthropic", "test-model").to_settings(win.lib.settings)
+    _answers(monkeypatch, "Four lenses.")
+    win.open_ai_assistant()
+    a = win.assistant
+    a.question.setText("how many")
+    QTest.keyClick(a.question, Qt.Key.Key_Return, Qt.KeyboardModifier.ShiftModifier)
+    QTest.keyClicks(a.question, "lenses?")
+    assert a.question.text() == "how many\nlenses?" and a.worker is None  # a new line, nothing sent
+    QTest.keyClick(a.question, Qt.Key.Key_Return)
+    _wait(a.worker)
+    assert "Four lenses." in a.chat.text() and a.question.text() == ""
+
+
+def test_a_message_can_be_copied_edited_and_asked_again(win, monkeypatch):
+    from PySide6.QtGui import QGuiApplication
+
+    from bodega.ui.panels.assistant import Message
+
+    providers.save_key("anthropic", "sk-test")
+    Setup("anthropic", "test-model").to_settings(win.lib.settings)
+    _answers(monkeypatch, "Plenty.")
+    win.open_ai_assistant()
+    a = win.assistant
+    a.question.setText("what's it worth?")
+    a._ask()
+    _wait(a.worker)
+    mine, answer = [m for m in a.chat.parts if isinstance(m, Message)]
+    assert mine.kind == "mine" and answer.kind == "answer" and len(answer.actions) == 1  # Copy only, on answers
+    answer.copy.click()
+    assert QGuiApplication.clipboard().text() == "Plenty."
+    mine.edit.click()
+    assert a.question.text() == "what's it worth?"  # the words go back in the field
+    a.question.setText("")
+    mine.again.click()  # Ask Again
+    _wait(a.worker)
+    assert a.chat.text().count("Plenty.") == 2
+
+
+def test_esc_leaves_the_assistant_open_while_a_change_waits(win, monkeypatch):
+    a = _asked_for_a_change(win, monkeypatch)
+    win.escape()
+    assert win.assistant_showing() and a.pending is not None
+    assert a.question.placeholderText() == "Accept or Decline Above"
+    a.card.decline.click()
+    win.escape()
+    assert not win.dock.opened
