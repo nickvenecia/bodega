@@ -171,7 +171,7 @@ class CommandPalette(QDialog):
         self.panel = QFrame(self)
         self.panel.setObjectName("Palette")
         lay = vbox(self.panel, 0, 0)
-        head = QWidget()
+        head = self.head = QWidget()
         head.setObjectName("PaletteHead")
         hl = hbox(head, (tokens.PALETTE_PAD_X, tokens.SPACE_3, tokens.PALETTE_PAD_X, tokens.SPACE_3), tokens.SPACE_3)
         hl.addWidget(IconLabel("search", "MUTED", tokens.ICON_LG))
@@ -267,7 +267,7 @@ class CommandPalette(QDialog):
         self.setGeometry(QRect(w.mapToGlobal(w.rect().topLeft()), w.size()))
         width = min(tokens.PALETTE_W, w.width() - 2 * tokens.SPACE_5)
         rows = sum(self.list.sizeHintForRow(i) for i in range(self.list.count())) + 2 * tokens.SPACE_2_5
-        head = self.panel.layout().itemAt(0).widget().sizeHint().height()
+        head = self.head.sizeHint().height()
         most = min(tokens.PALETTE_MAX_H, int(w.height() * tokens.PALETTE_MAX_SHARE))
         body = (self.none.sizeHint().height() + 2 * tokens.SPACE_5) if self.none.isVisibleTo(self) else rows
         self.panel.setGeometry((w.width() - width) // 2, tokens.PALETTE_TOP, width, min(most, head + body))

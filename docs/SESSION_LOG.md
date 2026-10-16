@@ -36,8 +36,9 @@ Bodega will notice (it becomes the release notes and the update window), so this
   - Python's cycle collector is off; the app checks for cycles on the window's thread every 50 ms and the tests
     collect between tests (`app._MainThreadGC`, CONTRIBUTING rule 20). Left on, it can free Qt objects mid-restyle
     or on a job's thread. Checked only every 2 seconds (as it first was), cycles waited long enough for Qt to reuse
-    the address of an object it had deleted while Python still held a stand-in for it: CI crashed building a
-    rental's lines (a menu action came back as a layout item).
+    the address of an object it had deleted while Python still held a stand-in for it. The real holders of such
+    stand-ins were found: a layout asked for its items (`itemAt`) keeps their stand-ins as long as it lives, and
+    menus kept actions Qt made. Both are now ruled out (CONTRIBUTING rules 21 and 22, with tests).
   - Every thread is a `components.worker.Background`: Qt stops the whole app if a running thread is destroyed, and a
     window takes its threads with it. When the window goes first, its thread is let go of and ends on its own
     (`tests/test_threads.py`, which also fails on any plain `QThread`).
@@ -145,5 +146,11 @@ menu (D-04). 26 wait on the owner (questions 8 to 30, and the departures propose
 - **A test that floods its log can take the build machine with it.** A warning repeated in a loop fills the disk
   and memory before any time limit ends the run, and the run's log is lost with the machine. §17 could ask for a
   cap on repeated warnings and on a run's output.
+- **A toolkit's stand-ins can outlive what they stand for.** In Qt for Python, asking a layout for an item, or
+  keeping an action Qt made, leaves a Python object pointing at memory Qt frees later; a new object at that address
+  then crashes the app, far from the cause and only now and then. Worth a line in §17's toolkit notes: keep what
+  you made, never what the toolkit hands back, and test that no such stand-ins are left after closing a screen.
+- **Name parametrized tests.** A test named after its own 2 MB parameter stopped the Windows test machine dead, with
+  no log: the runner keeps the name in an environment variable. A cap on a test's name is a cheap guard.
 - **A wall calendar's today.** G.22 sets today in the date picker (accent words, Semibold); a month or week view of
   bookings isn't specified, and Apple's Calendar uses a filled circle. Worth a row.

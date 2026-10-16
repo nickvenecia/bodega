@@ -76,3 +76,19 @@ def test_every_text_file_is_read_and_written_as_utf8():
                     if text:
                         loose.append(f"{p.relative_to(ROOT.parent).as_posix()}:{node.lineno}")
     assert loose == [], loose
+
+
+def test_no_layout_is_asked_for_its_items():
+    """A layout's widgets come from widgets.widgets_of, never `layout.itemAt(n)`: PySide keeps the stand-in for an
+    item it was asked for as long as the layout lives, and when Qt throws the item away (a rental's lines rebuilt)
+    the next object made at its address meets it. That crashed CI on the Intel Mac, the Apple Mac and Linux.
+    (A list's own itemAt(point), in tables.py, gives its rows, which are Bodega's.)"""
+    asked = []
+    for where in (ROOT, ROOT.parent / "tests"):
+        for p in where.rglob("*.py"):
+            if p.name == "tables.py":
+                continue
+            for node in ast.walk(ast.parse(p.read_text(encoding="utf-8"))):
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "itemAt":
+                    asked.append(f"{p.relative_to(ROOT.parent).as_posix()}:{node.lineno}")
+    assert asked == [], asked

@@ -130,8 +130,8 @@
   while a background job ran (the test machines hit it on a Mac). That now happens only between clicks and keys.
 - Closing a window while it was still working in the background (Settings loading the list of models, a price
   check, an update downloading) could close Bodega at once. Now the work is told to stop and ends on its own.
-- A rare crash after checking a rental out or in (its lines are built again) is fixed: the menus a line keeps
-  are now ones Bodega can see being cleared away.
+- A rare crash is fixed that could come while a rental's lines were built again (after checking it out or in,
+  say) or while Settings opened: Bodega kept hold of parts of a screen that had already been cleared away.
 - The top of each panel works the same way for a piece, a kit and a rental: Print (a rental's agreement, a kit's
   sheet) and ⋯ sit together in one capsule, and the next step stands on its own beside it: Check Out… or
   Check In… for a rental, + Rent This for a piece. They used to sit across the bottom of the panel.

@@ -107,10 +107,8 @@ class Section(QWidget):
             self._name(item)
         else:
             self.lay.addLayout(item)
-            for i in range(item.count()):
-                w = item.itemAt(i).widget()
-                if w is not None:
-                    self._name(w)
+            for w in widgets_of(item, self):
+                self._name(w)
 
     def _name(self, w: QWidget) -> None:
         """A field is known by its label (a screen reader says "Company, text field", not just "text field")."""
@@ -318,10 +316,21 @@ def repolish(w: QWidget) -> None:
     w.update()
 
 
+def widgets_of(layout: QLayout, host: QWidget | None = None) -> list[QWidget]:
+    """The widgets a layout holds, in its order: found among its widget's children (`host`, else the layout's own
+    widget), never by asking the layout for its items. PySide keeps the stand-in for an item it was asked for as
+    long as the layout lives; when Qt then throws that item away (a row rebuilt, a field moved), the stand-in
+    stays at the dead address, and the next object Qt makes there meets it: CI crashed on that three ways."""
+    host = host if host is not None else layout.parentWidget()
+    if host is None:
+        return []
+    found = [w for w in host.findChildren(QWidget, options=Qt.FindChildOption.FindDirectChildrenOnly)]
+    return sorted((w for w in found if layout.indexOf(w) >= 0), key=layout.indexOf)
+
+
 def rows_done(layout: QLayout) -> None:
     """A list of rows (each an "ItemBox") is built, or searched: the last one shown has no hairline under it."""
-    rows = [layout.itemAt(n).widget() for n in range(layout.count())]
-    rows = [w for w in rows if w is not None and w.objectName() == "ItemBox" and not w.isHidden()]
+    rows = [w for w in widgets_of(layout) if w.objectName() == "ItemBox" and not w.isHidden()]
     for w in rows:
         if w.property("last") != (w is rows[-1]):
             w.setProperty("last", w is rows[-1])

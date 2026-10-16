@@ -115,7 +115,9 @@ def test_the_filter_chips_sit_above_the_figures_with_clear_all_first(win):
     chips = win.filter_chips
     assert chips.isVisibleTo(win) and [c.text() for c in chips.chips] == ["In Repair", "Sony"]
     assert chips.geometry().bottom() < win.figure_row.geometry().top()  # (G.10.6) under the title, above the figures
-    first = chips.lay.itemAt(0).widget()
+    from bodega.ui.components.widgets import widgets_of
+
+    first = widgets_of(chips.lay)[0]
     assert first is chips.clear_all and first.height() == chips.chips[0].height()
     divide = win.view_menu.divide
     QTest.mouseClick(chips.clear_all, Qt.MouseButton.LeftButton)

@@ -104,6 +104,11 @@ packaging/     Installer files per OS
     `menu.addAction(text, …)`. Python hears when Qt deletes an action Python made, never one Qt made: kept, that
     one outlives its action when a rebuilt row is thrown away, and the next object Qt makes at the same address
     meets it and crashes (`tests/test_code_rules.py` checks).
+22. A layout's widgets come from `widgets.widgets_of(layout)`, never `layout.itemAt(n)`: PySide keeps the stand-in
+    for an item it was asked for as long as the layout lives, Qt throws the item away without telling it (a row
+    rebuilt, a field moved), and the next object made at that address crashes. The same goes for anything Qt made
+    itself: keep the widget you made, not what Qt hands back for it (`tests/test_memory.py` and
+    `tests/test_code_rules.py` check).
 
 ---
 

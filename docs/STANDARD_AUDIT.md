@@ -31,7 +31,7 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **201 fixed, 16 partly, 19 not
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **202 fixed, 16 partly, 18 not
 started (larger redesigns), 16 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
@@ -62,7 +62,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 201 · Partly 16 · Open 19 · Waiting on the owner 16 · No longer applies 1.**
+**Of the 253 failures: Fixed 202 · Partly 16 · Open 18 · Waiting on the owner 16 · No longer applies 1.**
 
 ### Partly: what's left
 
@@ -106,7 +106,6 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | T-13 | S3 | Tests find controls by their code names, not by role and visible words. |
 | V-16 | S2 | Text sizes are fixed points: nothing follows the system's text size, no 200% check (a layout pass). |
 | V-26 | S3 | The light look's greys are fixed values, not tinted from the accent. |
-| V-41 | S3 | The app icon is drawn by code with fixed numbers; there's no single vector source. |
 | V-42 | S3 | No style sets its own line height (plain-text labels in Qt take the font's). |
 
 ### Waiting on the owner
@@ -151,7 +150,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 - **R**: R-01, R-05
 - **S**: S-17, S-25
 - **T**: T-01, T-03, T-05, T-06, T-11, T-12, T-14, T-16
-- **V**: V-04, V-08, V-09, V-11, V-13, V-14, V-15, V-17, V-18, V-19, V-23, V-24, V-25, V-32, V-33, V-36, V-37, V-40
+- **V**: V-04, V-08, V-09, V-11, V-13, V-14, V-15, V-17, V-18, V-19, V-23, V-24, V-25, V-32, V-33, V-36, V-37, V-40, V-41
 - **W**: W-02, W-03, W-04, W-06, W-09, W-10, W-11, W-12, W-14, W-15, W-16, W-17, W-18, W-19, W-20, W-21, W-22
 - **X**: X-01, X-06, X-08
 

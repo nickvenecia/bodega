@@ -69,6 +69,16 @@ def test_opening_and_closing_screens_leaves_nothing_behind(qapp, data_folder, mo
         tracemalloc.stop()
     assert len(QApplication.allWidgets()) == widgets, "a screen left widgets behind"
     assert grew_kb < MEMORY_LIMIT_KB, f"{ROUNDS} rounds of screens kept {grew_kb} KB"
+    # and no layout holds a Python stand-in for one of its items: Qt throws items away without telling Python,
+    # and a new object at the same address then meets the old stand-in (widgets.widgets_of)
+    from PySide6.QtWidgets import QLayout, QWidgetItem
+
+    held = [
+        o
+        for o in gc.get_objects()
+        if isinstance(o, QWidgetItem) and any(isinstance(r, QLayout) for r in gc.get_referrers(o))
+    ]
+    assert held == [], f"{len(held)} layout items held through their layouts"
     w.close()
 
 
