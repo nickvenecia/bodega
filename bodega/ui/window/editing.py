@@ -185,7 +185,7 @@ class EditingMixin:
 
     def cancel_rental(self, r) -> None:
         """A rental that's been booked is cancelled, never deleted: its number, prices and history stay."""
-        if r.status == "cancelled":
+        if r.is_cancelled():
             self.toast(f"{r.number} is cancelled and kept, with its number and history.")
             return
         if not confirm(
@@ -591,7 +591,7 @@ class EditingMixin:
         if d.exec() != CheckDialog.DialogCode.Accepted:
             return
         r.checks = d.rows
-        if d.mark and (back or r.status == "out" or self.may_hold(r, "out")):
+        if d.mark and (back or r.is_out() or self.may_hold(r, "out")):
             self.lib.set_status(r, "returned" if back else "out")
         self._dirty_rentals.add(r.id)
         self.flush()

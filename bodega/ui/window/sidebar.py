@@ -10,7 +10,7 @@ from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRe
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QFrame, QGraphicsOpacityEffect, QLabel, QPushButton, QToolButton, QWidget
 
-from bodega.core import dates, pricing
+from bodega.core import pricing
 from bodega.core.store import Library
 from bodega.ui.components.panels import LeftPanel, NavRow
 from bodega.ui.components.widgets import (
@@ -364,18 +364,13 @@ class Sidebar(LeftPanel):
         self.rows["kits"].set_count(len(lib.packages))
         self.show_who()
         rentals = list(lib.rentals.values())
-        out = [r for r in rentals if r.status == "out"]
+        out = [r for r in rentals if r.is_out()]
         late = sum(1 for r in out if pricing.late(r))
         # late says so in words, not only in red ("2 late"): color is never the only sign
         self.rows["out"].set_count(
             f"{late} late" if late else len(out), "late" if late else ("out" if out else "")
         )
-        today = dates.iso(dates.today())
-        self.rows["upcoming"].set_count(
-            sum(
-                1 for r in rentals if r.status in ("quote", "booked") and (r.return_date or r.pickup) >= today
-            )
-        )
+        self.rows["upcoming"].set_count(sum(1 for r in rentals if pricing.coming_up(r)))
         # folded, All Rentals still shows when something's out (amber) or late (red)
         folded = self.rows["rentals"].folded
         tone = ("late" if late else ("out" if out else "")) if folded else ""

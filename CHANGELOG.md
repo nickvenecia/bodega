@@ -139,6 +139,8 @@
 - More of Bodega works from the keyboard: Tab reaches the sidebar's section headings, each line of a rental and
   the gear that goes with a piece, and Return or Space opens or folds them. A switch shows a ring when the keyboard
   is on it.
+- Coming Up goes by every line's dates: a rental with gear that goes out later than the rest stays in Coming Up
+  until its last line's dates go by.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

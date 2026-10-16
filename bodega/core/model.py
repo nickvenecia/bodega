@@ -19,6 +19,7 @@ from typing import Any
 
 ITEM_STATUSES = ("ready", "repair", "retired")
 RENTAL_STATUSES = ("quote", "booked", "out", "returned", "cancelled")
+HOLDING = ("booked", "out")  # the statuses that hold a rental's gear (picking one over a shortage asks first)
 PRICINGS = ("sum", "discount", "fixed")  # a package costs what its gear adds up to, less a %, or a set rate
 WEEK_DAYS = (2, 3, 4, 5, 7)  # how many days a 7-day week is billed as
 LINE_KINDS = ("item", "package", "fee")
@@ -428,4 +429,18 @@ class Rental(Record):
 
     def holds_gear(self) -> bool:
         """Booked and out rentals keep their gear from being promised twice."""
-        return self.status in ("booked", "out")
+        return self.status in HOLDING
+
+    # what a rental is, asked by every screen (never a status word compared there)
+    def is_quote(self) -> bool:
+        return self.status == "quote"
+
+    def is_out(self) -> bool:
+        return self.status == "out"
+
+    def is_cancelled(self) -> bool:
+        return self.status == "cancelled"
+
+    def on_calendar(self) -> bool:
+        """Everything but a cancelled rental shows on the calendar."""
+        return not self.is_cancelled()

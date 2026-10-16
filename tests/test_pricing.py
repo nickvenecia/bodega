@@ -211,3 +211,27 @@ def test_a_suggested_deposit_is_the_profiles_percent_or_ten(lib):
     plain.deposit_pct = "20"
     assert pricing.suggested_deposit(lib, r, plain) == money.whole(value * Decimal("0.20"))
     assert pricing.deposit_pct(None) == pricing.DEFAULT_DEPOSIT_PCT
+
+
+def test_coming_up_goes_by_every_lines_dates(lib):
+    today = date(2026, 10, 16)
+    r = Rental(status="booked", pickup="2026-10-01", return_date="2026-10-05")
+    assert not pricing.coming_up(r, today)
+    r.lines = [RentalLine("item", "x", 1, pickup="2026-10-20", return_date="2026-10-22")]
+    assert pricing.coming_up(r, today)  # one line still to go out
+    r.status = "out"
+    assert not pricing.coming_up(r, today)  # out is Out Now, not Coming Up
+    assert pricing.coming_up(Rental(status="quote"), today)  # no dates yet: still to come
+
+
+def test_booked_ahead_is_the_gear_on_bookings_still_to_come(lib):
+    r = next(iter(lib.rentals.values()))
+    r.status = "booked"
+    r.pickup = (date.today() + timedelta(days=3)).isoformat()
+    r.return_date = (date.today() + timedelta(days=5)).isoformat()
+    for line in r.lines:
+        line.pickup = line.return_date = ""
+    ids = pricing.booked_ahead(lib)
+    assert ids and ids <= set(lib.items)
+    r.status = "cancelled"
+    assert not pricing.booked_ahead(lib)

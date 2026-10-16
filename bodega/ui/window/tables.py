@@ -1122,13 +1122,10 @@ class RentalTable(Table):
 
     def fill(self, lib: Library, which: str) -> None:
         keep, col, order = self._fill_start()
-        today = dates.iso(dates.today())
         for r in lib.rentals.values():
-            if which == "out" and r.status != "out":
+            if which == "out" and not r.is_out():
                 continue
-            if which == "upcoming" and not (
-                r.status in ("quote", "booked") and (r.return_date or r.pickup) >= today
-            ):
+            if which == "upcoming" and not pricing.coming_up(r):  # the same rule as the sidebar's count
                 continue
             b = lib.businesses.get(r.business_id)
             cur = (b.currency if b else "$") or "$"

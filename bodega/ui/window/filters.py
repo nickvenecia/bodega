@@ -17,7 +17,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtWidgets import QLabel, QMenu, QToolButton, QWidgetAction
 
-from bodega.core import dates, maintenance, money, pricing
+from bodega.core import maintenance, money, pricing
 from bodega.ui.style import theme
 
 DIVIDES = [("group", "Group"), ("brand", "Company"), ("none", "No Dividers")]
@@ -66,12 +66,7 @@ class GearFilter:
         if not self.active():
             return None
         out = pricing.units_out(lib) if self.show in ("in", "out") else {}
-        booked: set[str] = set()
-        if self.show == "booked":
-            today = dates.today()
-            for r in lib.rentals.values():
-                if r.status == "booked":
-                    booked.update(b.item_id for b in pricing.bookings(lib, r) if b.end >= today)
+        booked = pricing.booked_ahead(lib) if self.show == "booked" else set()
         show, company, missing = self.show, self.company.casefold(), self.missing
 
         def keep(item_id: str) -> bool:

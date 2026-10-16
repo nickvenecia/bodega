@@ -742,7 +742,7 @@ class MainWindow(
             items.append(("file", "Agreement…", lambda: self.show_pages(("rental", obj_id))))
             r = self.lib.rentals.get(obj_id)
             if r is not None and not r.deletable():  # a booked rental is cancelled, never deleted
-                if r.status != "cancelled":
+                if not r.is_cancelled():
                     items += [("", "-", None), ("x", "Mark as Cancelled…", lambda: self.cancel_rental(r))]
                 menu(self, items).exec(pos)
                 return

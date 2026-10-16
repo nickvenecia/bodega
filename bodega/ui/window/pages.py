@@ -142,7 +142,7 @@ class PagesMixin:
         if self.page is not None:
             kind, ref = self.page_ctx
             r = self.lib.rentals.get(ref) if kind == "rental" else None
-            self.page.panel.saved_hint(path.name, r is not None and r.status == "quote", r is not None)
+            self.page.panel.saved_hint(path.name, r is not None and r.is_quote(), r is not None)
 
     def save_pdf(self) -> None:
         pages = self.page_list()
@@ -215,7 +215,7 @@ class PagesMixin:
         body = document.summary_text(self.lib, r, b)
         body += (
             "\n\nThe quote is attached."
-            if r.status == "quote"
+            if r.is_quote()
             else "\n\nThe agreement is attached. Please sign and send it back before pickup."
         )
         if b and b.name:
@@ -237,7 +237,7 @@ class PagesMixin:
 
     def _mark_booked(self) -> None:
         r = self._page_rental()
-        if r is not None and r.status == "quote":
+        if r is not None and r.is_quote():
             if not self.may_hold(r, "booked"):
                 return
             self.lib.set_status(r, "booked")

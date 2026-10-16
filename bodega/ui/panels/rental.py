@@ -14,7 +14,7 @@ from PySide6.QtCore import QTimer, Signal
 from PySide6.QtWidgets import QFrame, QLabel, QLineEdit, QMenu, QPushButton, QToolButton, QWidget
 
 from bodega.core import dates, money, pricing
-from bodega.core.model import RENTAL_STATUSES, Client, Rental, RentalLine
+from bodega.core.model import HOLDING, RENTAL_STATUSES, Client, Rental, RentalLine
 from bodega.core.store import Library
 from bodega.core.terms import terms_for
 from bodega.services import saldo
@@ -75,9 +75,6 @@ def _billed(d: pricing.Days) -> str:
 def _index(lines: list[RentalLine], line: RentalLine) -> int:
     """Where this very line is (two lines can be equal, so never compare them)."""
     return next((i for i, x in enumerate(lines) if x is line), -1)
-
-
-HOLDS = ("booked", "out")  # statuses that hold their gear: picking one over a shortage asks first
 
 
 class _Head(QFrame):
@@ -357,9 +354,7 @@ class RentalPanel(DetailsBase):
         self.shorts: list[pricing.Short] = []
         g = self.groups
         self.check = self.footer_button("Check Out…", "check", primary=False)
-        self.check.clicked.connect(
-            lambda: self.r and self.check_wanted.emit(self.r.id, self.r.status == "out")
-        )
+        self.check.clicked.connect(lambda: self.r and self.check_wanted.emit(self.r.id, self.r.is_out()))
         self.sheet = self.footer_button("Agreement…", "receipt")
         self.menu_action("copy", "Duplicate", lambda: self.r and self.duplicate_wanted.emit(self.r.id))
         self.menu_action(
@@ -586,7 +581,7 @@ class RentalPanel(DetailsBase):
         if r is None:
             return
         self.delete_act.setText("Delete Rental…" if r.deletable() else "Mark as Cancelled…")
-        self.delete_act.setVisible(r.deletable() or r.status != "cancelled")
+        self.delete_act.setVisible(r.deletable() or not r.is_cancelled())
 
     def show_history(self) -> None:
         """Its history, newest first (it's written as it's saved)."""
@@ -632,16 +627,16 @@ class RentalPanel(DetailsBase):
     def _show_check(self) -> None:
         """Check Out… while it's booked, Check In… while it's out; otherwise it steps aside."""
         r = self.r
-        on = r is not None and r.status in ("booked", "out")
+        on = r is not None and r.holds_gear()
         self.check.setVisible(on)
         if on:
-            self.check.setText("Check In…" if r.status == "out" else "Check Out…")
+            self.check.setText("Check In…" if r.is_out() else "Check Out…")
 
     def _status_picked(self, _i: int) -> None:
         if self._loading or self.r is None:
             return
         new = self.status.currentData()
-        if new in HOLDS and new != self.r.status and pricing.shortages(self.lib, self.r) and self.may_hold:
+        if new in HOLDING and new != self.r.status and pricing.shortages(self.lib, self.r) and self.may_hold:
             set_combo(self.status, self.r.status)  # asked once the pick is over (it may be said no to)
             r = self.r
             QTimer.singleShot(0, self, lambda: self._ask_to_hold(r, new))

@@ -250,6 +250,14 @@ def span_of(r: Rental) -> tuple[date | None, date | None]:
     return (min(starts) if starts else None, max(ends) if ends else None)
 
 
+def coming_up(r: Rental, today: date | None = None) -> bool:
+    """Coming Up: a quote or a booking whose dates (any line's) haven't all gone by."""
+    if r.status not in ("quote", "booked"):
+        return False
+    end = span_of(r)[1]
+    return end is None or end >= (today or dates.today())
+
+
 def periods(r: Rental) -> list[tuple[date | None, date | None]]:
     """The different date ranges on this rental, in order (one, unless lines have their own dates)."""
     seen: list[tuple[date | None, date | None]] = []
@@ -563,6 +571,18 @@ def rentals_with(
         if units and not (upcoming_only and last is not None and last < today and r.status != "out"):
             out.append((r, units, first, last))
     return sorted(out, key=lambda x: (x[2] or today, x[0].number))
+
+
+def booked_ahead(lib) -> set[str]:
+    """The gear on a booked rental whose dates haven't gone by (what the gear filter's Booked shows)."""
+    today = dates.today()
+    return {
+        b.item_id
+        for r in lib.rentals.values()
+        if r.status == "booked"
+        for b in bookings(lib, r)
+        if b.end >= today
+    }
 
 
 def units_out(lib) -> dict[str, int]:

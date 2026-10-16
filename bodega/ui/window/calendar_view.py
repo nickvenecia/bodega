@@ -185,7 +185,7 @@ def rental_spans(lib: Library, start: date, end: date) -> list[tuple[Rental, lis
     """Each rental (not cancelled) with its stretches of dates that touch start..end."""
     rows = []
     for r in lib.rentals.values():
-        if r.status == "cancelled":
+        if not r.on_calendar():
             continue
         spans = []
         for a, z in pricing.periods(r):
