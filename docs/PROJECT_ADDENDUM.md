@@ -98,19 +98,23 @@ ask the owner for it.
 - Retention periods: kept until the person deletes them
 
 ## AI (§14)
-One block per feature (`services/ai/tasks.py`); every feature is off until the person sets a key, and changes nothing
-until approved in Review.
+One block per feature (`services/ai/tasks.py`). Every feature is off until the person sets a key, runs on that
+person's own provider account, and changes nothing until approved in Review. What each request sends: the gear
+involved, up to 600 pieces per request, with each piece's name, company, series, group, quantity, status, what it cost
+and what goes with what. Renters and rentals are never sent. Answers are capped at 4,096 tokens on Anthropic; the
+other providers have no cap yet (audit AI-09).
 
 - **Update from Links**. Purpose: read a piece's product page (or, when a store refuses, another page found and
-  checked) for a price and a tidier name. Reads: the chosen gear's names, links and prices. Proposes: name, brand,
-  series, value. Must refuse: anything but gear details. Model: the person's choice. Quotas: none beyond the per-call
-  cap.
-- **Find Missing Links**. Purpose: find a product page for gear without a link; every link is fetched and matched
-  before it's suggested. Proposes: links.
-- **Tidy Up Names**. Purpose: consistent names. Proposes: name, brand, series.
+  checked) for a price and a tidier name. Proposes: name, company, series, price paid. Must refuse: anything but those
+  pieces' details.
+- **Find Missing Links**. Purpose: a product page for gear without a link; every link is fetched (through
+  `core/web.py`) and matched before it's suggested. Proposes: links.
+- **Tidy Up Names**. Purpose: consistent names. Proposes: name, company, series.
 - **Organize Groups**. Purpose: sort gear into sensible groups. Proposes: groups.
-- **Assistant** (chat). Purpose: answer questions about the gear and propose changes asked for. Reads: the gear in
-  view. Proposes: group, name, brand, series only.
+- **Assistant** (chat). Purpose: answer questions about the gear and make changes asked for. Proposes: group, name,
+  company, series only. Must refuse: anything outside the gear (not written down yet: audit AI-01).
+- Model and provider: the person's choice (Anthropic, OpenAI, Gemini, Kimi, OpenRouter, DeepSeek, Mistral, xAI, Groq,
+  or another OpenAI-compatible address). Quotas: none yet beyond the caps above. Kill switch: Remove Key.
 
 ## Process (§18)
 - Commit attribution rule: **no tool, assistant, co-author or session lines**. A commit message is a short plain
