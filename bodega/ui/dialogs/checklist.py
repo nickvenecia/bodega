@@ -30,6 +30,7 @@ from bodega.ui.components.widgets import (
     hbox,
     hint,
     icon_button,
+    status_line,
     vbox,
 )
 from bodega.ui.style import tokens
@@ -119,7 +120,7 @@ class CheckDialog(Guarded, QDialog):
         self.scan.setPlaceholderText("Scan a label, or tick each piece")
         self.scan.returnPressed.connect(self._scanned)
         lay.addWidget(self.scan)
-        self.status = hint("")
+        self.status = status_line()
         lay.addWidget(self.status)
         body = QWidget()
         bl = vbox(body, (0, 0, tokens.SPACE_3, 0), tokens.SPACE_2)
@@ -138,7 +139,7 @@ class CheckDialog(Guarded, QDialog):
         self.scroll.setWidget(body)
         lay.addWidget(self.scroll, 1)
         row = button_row()
-        self.progress = hint("")
+        self.progress = status_line()
         row.insertWidget(0, self.progress)
         cancel = QPushButton("Cancel")
         cancel.clicked.connect(self.reject)

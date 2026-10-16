@@ -55,7 +55,7 @@ class NavRow(QFrame):
         )
         self.arrow = QToolButton()  # shown on rows with rows under them; keeps its room on the others
         self.arrow.setObjectName("NavArrow")
-        self.arrow.setFixedSize(tokens.SMALL_H, tokens.SMALL_H)  # never under control-sm (20)
+        self.arrow.setFixedSize(tokens.TARGET_MIN, tokens.TARGET_MIN)  # inside a row that's a target too
         self.arrow.setCursor(Qt.CursorShape.PointingHandCursor)
         self.arrow.clicked.connect(lambda: self.fold_wanted.emit(self.key))
         keep = self.arrow.sizePolicy()

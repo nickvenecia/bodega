@@ -134,3 +134,17 @@ def test_screen_readers_hear_dates_lines_the_card_and_the_accent(win):
     assert picker.accessibleName() == "Accent Color"
     assert picker.accessibleDescription() == tokens.ACCENTS["purple"][0]
     picker.deleteLater()
+
+
+def test_a_status_line_is_heard_as_it_changes(qapp, monkeypatch):
+    from bodega.ui.components import widgets
+
+    heard = []
+    monkeypatch.setattr(widgets, "announce", lambda _w, text: heard.append(text))
+    line = widgets.status_line()
+    line.show()
+    line.setText("Checking…")
+    line.setText("Checking…")  # the same words again: said once
+    line.setText("$5,998 at B&H")
+    assert heard == ["Checking…", "$5,998 at B&H"]
+    line.deleteLater()

@@ -279,6 +279,26 @@ def announce(w: QWidget, text: str) -> None:
         pass
 
 
+class StatusLabel(QLabel):
+    """A status line (Checking…, a clash under a field, how far a check-out has got): a screen reader hears
+    each new message as it appears, without the focus moving."""
+
+    def setText(self, text: str) -> None:
+        changed = text != self.text()
+        super().setText(text)
+        if changed and text and self.isVisible():
+            announce(self, text)
+
+
+def status_line(text: str = "", hinted: bool = True) -> StatusLabel:
+    """A StatusLabel: in the hint's look (`hinted`), or plain for its own object name."""
+    lbl = StatusLabel(text)
+    if hinted:
+        lbl.setObjectName("Hint")
+    lbl.setWordWrap(True)
+    return lbl
+
+
 def repolish(w: QWidget) -> None:
     w.style().unpolish(w)
     w.style().polish(w)

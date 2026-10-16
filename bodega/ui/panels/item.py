@@ -53,6 +53,7 @@ from bodega.ui.components.widgets import (
     qty_field,
     repolish,
     set_combo,
+    status_line,
     suggestions,
     to_qdate,
     vbox,
@@ -287,7 +288,7 @@ class ItemPanel(DetailsBase):
         # under the link only while there's something to say: Checking…, then the price found (a problem is a toast)
         self.price_row = QWidget()
         prow = hbox(self.price_row, spacing=tokens.SPACE_2)
-        self.price_found = QLabel()
+        self.price_found = status_line(hinted=False)
         self.price_found.setObjectName("Meta")
         self.price_found.setWordWrap(True)
         self.use_price = QPushButton("Use It")

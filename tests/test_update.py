@@ -196,13 +196,13 @@ def test_mac_and_windows_helpers(tmp_path: Path, monkeypatch):
 
 def test_update_window(monkeypatch):
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from PySide6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication, QLabel
 
     from bodega.ui.dialogs.update import UpdateDialog
 
     app = QApplication.instance() or QApplication([])
     d = UpdateDialog(update.parse_release(GITHUB_ANSWER))
-    assert "9.1.0" in d.findChild(type(d.status), "DialogTitle").text()
+    assert "9.1.0" in d.findChild(QLabel, "DialogTitle").text()
     shown = d.notes.toPlainText()
     assert "Faster glitches" in shown and "Download" not in shown
     assert d.btn_go.isHidden() and "GitHub Desktop" in d.status.text()  # from the code: nothing to install

@@ -9,7 +9,17 @@ from bodega.core.store import Library
 from bodega.services import secrets
 from bodega.services.ai import providers
 from bodega.services.ai.providers import PROVIDERS, Setup
-from bodega.ui.components.widgets import Embeddable, Section, button_row, combo, hbox, hint, set_combo, vbox
+from bodega.ui.components.widgets import (
+    Embeddable,
+    Section,
+    button_row,
+    combo,
+    hbox,
+    hint,
+    set_combo,
+    status_line,
+    vbox,
+)
 from bodega.ui.components.worker import Worker
 from bodega.ui.dialogs.update import open_url
 from bodega.ui.style.tokens import DIALOG_W_WIDE, SPACE_2, SPACE_3, SPACE_5
@@ -89,7 +99,7 @@ class AISetupDialog(Embeddable, QDialog):
         sec.add(row)
         lay.addWidget(sec)
 
-        self.status = hint("")
+        self.status = status_line()
         lay.addWidget(self.status)
 
         buttons = button_row()

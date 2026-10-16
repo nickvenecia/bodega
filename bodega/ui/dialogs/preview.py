@@ -13,7 +13,6 @@ from PySide6.QtGui import QImage, QPainter
 from PySide6.QtWidgets import (
     QDialog,
     QFrame,
-    QLabel,
     QMenu,
     QPushButton,
     QScrollArea,
@@ -23,7 +22,7 @@ from PySide6.QtWidgets import (
 
 from bodega.doc import export
 from bodega.doc.render import Page
-from bodega.ui.components.widgets import PanelHeader, Segmented, hbox, vbox
+from bodega.ui.components.widgets import PanelHeader, Segmented, hbox, status_line, vbox
 from bodega.ui.style import theme, tokens
 
 
@@ -127,7 +126,7 @@ class PreviewPanel(QFrame):
         bottom = QFrame()
         bottom.setObjectName("PanelBottom")
         row = hbox(bottom, tokens.SPACE_4, tokens.SPACE_2)
-        self.status = QLabel()
+        self.status = status_line(hinted=False)
         self.status.setObjectName("Muted")
         row.addWidget(self.status, 1)
         self.btn_show = QPushButton("Show File")

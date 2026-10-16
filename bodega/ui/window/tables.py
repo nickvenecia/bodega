@@ -284,23 +284,6 @@ class Table(QTreeWidget):
             ids = [self.current_id()]
         return ids
 
-    def first_id(self) -> str:
-        """The first row showing, top to bottom (dividers skipped)."""
-
-        def walk(row):
-            for i in range(row.childCount()):
-                r = row.child(i)
-                if r.isHidden():
-                    continue
-                if r.data(0, ID):
-                    return r.data(0, ID)
-                got = walk(r)
-                if got:
-                    return got
-            return ""
-
-        return walk(self.invisibleRootItem())
-
     def current_id(self) -> str:
         it = self.currentItem()
         return it.data(0, ID) if it is not None else ""

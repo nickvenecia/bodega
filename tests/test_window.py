@@ -1204,3 +1204,24 @@ def test_late_says_so_in_words_not_only_in_red(win):
     win.lib.save_rental(r)
     win.refresh()
     assert win.sidebar.rows["out"].count.text() == "1 late"
+
+
+def test_a_toast_never_hides_the_row_youre_on(win):
+    from PySide6.QtCore import QRect
+    from PySide6.QtWidgets import QAbstractItemView
+
+    win.go("gear")
+    t = win.gear_table
+    rows = [r for r in t.showing_rows()]
+    row = rows[len(rows) // 2]
+    t.setCurrentItem(row)
+    t.scrollToItem(row, QAbstractItemView.ScrollHint.PositionAtBottom)
+    QApplication.processEvents()
+    win.toast("Saved Sony FX6.", "done")
+    QApplication.processEvents()
+
+    def on_window():
+        rect = t.visualItemRect(row)
+        return QRect(t.viewport().mapTo(win, rect.topLeft()), rect.size())
+
+    assert not on_window().intersects(win.toaster.geometry())

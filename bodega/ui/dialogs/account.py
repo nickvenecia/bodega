@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.core import errors
 from bodega.services import account
-from bodega.ui.components.widgets import Embeddable, Section, button_row, hint, vbox
+from bodega.ui.components.widgets import Embeddable, Section, button_row, hint, status_line, vbox
 from bodega.ui.style import theme, tokens
 
 
@@ -41,7 +41,7 @@ class SignInDialog(Embeddable, QDialog):
         self.forgot.setObjectName("LinkBtn")
         self.forgot.clicked.connect(self._forgot)
         lay.addWidget(self.forgot)
-        self.error = hint("")
+        self.error = status_line()
         self.error.setObjectName("Bad")
         self.error.hide()
         lay.addWidget(self.error)

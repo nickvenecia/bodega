@@ -13,6 +13,7 @@ from pathlib import Path
 from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt, QTimer
 from PySide6.QtGui import QGuiApplication, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QFrame,
     QGridLayout,
     QLabel,
@@ -749,6 +750,18 @@ class MainWindow(
         """A short message over the page. `tone`: "done" (it worked), "problem" (it didn't: say what to do),
         or "" for news."""
         self.toaster.show_message(text, tone)
+        self._clear_of_toast()
+
+    def _clear_of_toast(self) -> None:
+        """A toast never hides the row you're on: the table scrolls it clear (the toast floats at the bottom)."""
+        t = self._table()
+        row = t.currentItem() if t is not None else None
+        if row is None or not self.toaster.isVisible():
+            return
+        rect = t.visualItemRect(row)
+        on_window = QRect(t.viewport().mapTo(self, rect.topLeft()), rect.size())
+        if on_window.intersects(self.toaster.geometry()):
+            t.scrollToItem(row, QAbstractItemView.ScrollHint.PositionAtCenter)
 
     def _toast_area(self) -> QRect:
         """Where toasts float: centred over the page, between the side panels, above the totals."""

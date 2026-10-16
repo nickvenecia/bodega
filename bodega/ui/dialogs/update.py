@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
 from bodega import __version__
 from bodega.core import errors, update
 from bodega.core.log import get_logger
-from bodega.ui.components.widgets import hbox, hint, vbox
+from bodega.ui.components.widgets import hbox, hint, status_line, vbox
 from bodega.ui.style import theme, tokens
 from bodega.ui.style.tokens import (
     DIALOG_W_XWIDE,
@@ -115,7 +115,7 @@ class UpdateDialog(QDialog):
         lay.addWidget(hint(f"You have {__version__}. Your gear, rentals and settings stay as they are."))
         self.notes = Notes(update.whats_new(release.notes))
         lay.addWidget(self.notes, 1)
-        self.status = hint("")
+        self.status = status_line()
         self.status.hide()
         lay.addWidget(self.status)
         self.bar = QProgressBar()

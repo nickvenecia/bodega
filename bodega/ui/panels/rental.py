@@ -37,6 +37,7 @@ from bodega.ui.components.widgets import (
     qty_field,
     repolish,
     set_combo,
+    status_line,
     to_qdate,
     vbox,
 )
@@ -387,7 +388,7 @@ class RentalPanel(DetailsBase):
         sec.add(self.number)
         row.addWidget(sec, 1)
         g["rental"].add(row)
-        self.number_clash = QLabel()
+        self.number_clash = status_line(hinted=False)
         self.number_clash.setObjectName("Warn")
         self.number_clash.setWordWrap(True)
         self.number_clash.hide()
@@ -434,7 +435,7 @@ class RentalPanel(DetailsBase):
         arow.addWidget(self.add_fee)
         arow.addStretch(1)
         g["gear"].add(arow)
-        self.short_hint = QLabel()
+        self.short_hint = status_line(hinted=False)
         self.short_hint.setObjectName("Bad")
         self.short_hint.setWordWrap(True)
         self.short_hint.hide()
@@ -681,6 +682,8 @@ class RentalPanel(DetailsBase):
         self.refresh_clients()
         self.recalc()
         self.changed.emit(self.r)
+        if not self.r.lines:  # a new rental: the dates come next (the keyboard goes on from there)
+            QTimer.singleShot(0, self, self.pickup.setFocus)
 
     def _add_fee(self) -> None:
         if self.r is None:

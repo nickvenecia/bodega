@@ -19,10 +19,11 @@ SPACE_0_5 = 2  # the hairline gaps: a key cap's top and bottom, a number under a
 # ---------------------------------------------------------------- control sizes (the standard's A.5, pointer)
 CONTROL_H = 28  # (control-h) EVERY button, dropdown, text field, segmented control and icon circle
 SMALL_H = 20  # (control-sm) chips, token buttons, small icon buttons
+TARGET_MIN = 24  # a small target inside a row that's clickable too: never less (WCAG 2.5.8's 24-point circle)
 BAR_CTRL_H = 36  # (bar-h) the bar's circles and search field
 ROW_H = 44  # (row-h) list rows and grouped rows: a table's rows, an on/off setting
 CHOICE_ROW_H = 32  # (choice-row) menus, dropdown lists, pickers, the sidebar
-SECTION_ADD = 20  # a sidebar section's plain + (a gray glyph, the Mac's size)
+SECTION_ADD = TARGET_MIN  # a sidebar section's plain + (a gray glyph; its row is a target too)
 INDICATOR = 16  # (check) a checkbox
 TOGGLE_ROW_H = ROW_H  # an on/off setting: label left, switch right
 TOGGLE_W, TOGGLE_H = 44, 26  # (switch) its track; the knob is the height − 4

@@ -115,6 +115,11 @@
 - AI Review's From column says "AI suggestion" for changes no web page backs up, so you know which to check.
 - If your AI provider stops offering the model you chose, AI Settings keeps it and says so, instead of quietly
   switching to another one.
+- The sidebar's fold arrows and the small + buttons are a little bigger, easier to hit.
+- Screen readers now hear status lines as they change: Checking…, a number another rental has, gear that's short,
+  how far a check-out has got.
+- A message at the bottom of the window never covers the row you're on: the list scrolls it clear.
+- After you pick a renter for a new rental, the keyboard goes on to the pickup date.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.
