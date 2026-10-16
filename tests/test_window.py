@@ -350,7 +350,9 @@ def test_dividers_totals_and_attached(win):
 
     cage_row = next(r for r in t.item_rows() if r.data(0, 256) == cage.id)
     assert cage_row.data(0, WITH) == fx6.name  # says what it goes with, in its own column
-    assert cage_row.text(GEAR_COL["with"]) == fx6.name and not t.isColumnHidden(GEAR_COL["with"])
+    assert cage_row.text(GEAR_COL["with"]) == fx6.name and t.any_with and "with" not in t.hidden_cols
+    # shown, unless the window is too narrow for it (the test screen is 800 wide): then it steps aside for Name
+    assert not t.isColumnHidden(GEAR_COL["with"]) or "with" in t._squeezed
     b = win.lib.pricing()
     everything = pricing.Stock()
     for it in win.lib.items.values():
