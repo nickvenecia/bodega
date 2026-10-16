@@ -20,6 +20,8 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 _status: dict = {"code": 0}
 QT_NOISE = ("This plugin does not support",)  # the offscreen screen has no window manager to ask
+QT_SHOWN = 20  # Qt's first warnings in a test are written out…
+QT_FLOOD = 500  # …and this many means it's saying it over and over (a loop): the run stops, naming it
 _qt_said: list[str] = []
 
 
@@ -29,7 +31,24 @@ def _qt_message(kind, _context, message: str) -> None:
     bad = kind in (QtMsgType.QtWarningMsg, QtMsgType.QtCriticalMsg, QtMsgType.QtFatalMsg)
     if bad and not message.startswith(QT_NOISE):
         _qt_said.append(message)
-        sys.stderr.write(f"Qt: {message}\n")
+        if kind == QtMsgType.QtFatalMsg:  # Qt stops the run right after this: said where it's seen, not captured
+            _say_now(f"Qt (fatal): {message}")
+        elif len(_qt_said) <= QT_SHOWN:
+            sys.stderr.write(f"Qt: {message}\n")
+        elif len(_qt_said) >= QT_FLOOD:  # a flood fills the machine's disk and memory before any time limit ends it
+            _say_now(f"Stopped: Qt warned {len(_qt_said)} times. The last: {message}")
+            os._exit(3)
+
+
+def _say_now(text: str) -> None:
+    """Out to the terminal at once, past pytest's capture (the run is about to end, and what it captured with it)."""
+    capture = _status["config"].pluginmanager.getplugin("capturemanager") if "config" in _status else None
+    if capture is not None:
+        capture.suspend_global_capture(in_=False)
+    test = os.environ.get("PYTEST_CURRENT_TEST", "")
+    sys.stderr.write(f"\n{text}" + (f" (during {test})" if test else "") + "\n")
+    sys.stderr.flush()
+    sys.stdout.flush()
 
 
 def pytest_configure(config):
