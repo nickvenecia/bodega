@@ -70,3 +70,25 @@ def test_opening_and_closing_screens_leaves_nothing_behind(qapp, data_folder, mo
     assert len(QApplication.allWidgets()) == widgets, "a screen left widgets behind"
     assert grew_kb < MEMORY_LIMIT_KB, f"{ROUNDS} rounds of screens kept {grew_kb} KB"
     w.close()
+
+
+def test_cycles_are_collected_only_on_the_windows_thread(qapp):
+    """Python's own collector is off (it would run on any thread, mid-Qt); Bodega's runs between events, on the
+    window's thread, and frees what's left in cycles."""
+    import gc
+    import weakref
+
+    assert not gc.isenabled() and qapp._gc.timer.isActive()
+
+    class Loop:
+        pass
+
+    gc.collect()  # (a clean start: nothing older is due)
+    a, b = Loop(), Loop()
+    a.other, b.other = b, a
+    gone = weakref.ref(a)
+    del a, b
+    assert gone() is not None  # a cycle: counting references alone never frees it
+    made = [[] for _ in range(gc.get_threshold()[0] + 1)]  # enough made that a collection is due
+    qapp._gc.collect()
+    assert gone() is None and made

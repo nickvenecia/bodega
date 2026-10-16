@@ -139,6 +139,7 @@ KEY_CHECK_MS = 700  # a typed API key is tried once it rests this long
 SAVE_MAX_MS = 3000  # …and never longer than this after the first unsaved change
 MIDNIGHT_SLACK_MS = 1000  # the new day's refresh runs just after midnight
 SAVE_RETRY_MS = 20000  # after a save failed: try again this often while it lasts
+GC_MS = 2000  # Python's cycle collector runs on the window's thread this often (app._MainThreadGC)
 AI_ASK_ABOVE = 5  # an AI job that may ask this many questions or more says so first
 SALDO_CHECK_MS = 300  # how long to wait for Saldo to answer "are you open?"
 TABLE_DELAY_MS = 350  # refresh the table this long after an edit

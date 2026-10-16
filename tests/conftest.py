@@ -10,6 +10,7 @@ turning a green run red in CI. Once every test has finished, leave with pytest's
 
 from __future__ import annotations
 
+import gc
 import os
 import sys
 
@@ -111,6 +112,7 @@ def _no_leftover_windows():
         w.close()
         w.deleteLater()
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    gc.collect()  # what the test left in cycles goes now, between tests (the app collects only on its own thread)
 
 
 @pytest.fixture(autouse=True)

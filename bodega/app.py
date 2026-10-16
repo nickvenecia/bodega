@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import logging
 import os
 import secrets
@@ -305,6 +306,30 @@ def _crash_log() -> None:
         log.debug("no crash log", exc_info=True)
 
 
+class _MainThreadGC(QObject):
+    """Python's cycle collector runs here, on the window's thread, between events. Left to itself it runs whenever
+    enough has been made, on whatever thread is running (a background job's too) and in the middle of Qt's own work
+    (restyling every window, say); freeing a Qt object there crashes Bodega, a known trap of Qt from Python. Plain
+    reference counting still frees almost everything at once; only cycles wait, a couple of seconds at most."""
+
+    def __init__(self, app: QApplication):
+        super().__init__(app)
+        gc.disable()
+        self._limits = gc.get_threshold()
+        self.timer = QTimer(self, interval=tokens.GC_MS, timeout=self.collect)
+        self.timer.start()
+
+    def collect(self) -> None:
+        """What Python would have collected by now, oldest generations only when they're due."""
+        made, young, old = gc.get_count()
+        if made > self._limits[0]:
+            gc.collect(0)
+            if young > self._limits[1]:
+                gc.collect(1)
+                if old > self._limits[2]:
+                    gc.collect(2)
+
+
 def setup_app(app: QApplication) -> None:
     """Fonts, stylesheet and look (also used by the tests and screenshots)."""
     app.setApplicationName(APP_NAME)
@@ -330,6 +355,8 @@ def setup_app(app: QApplication) -> None:
         )
     app._round = _RoundPopups(app)
     app.installEventFilter(app._round)
+    if getattr(app, "_gc", None) is None:
+        app._gc = _MainThreadGC(app)
 
 
 def saved_look() -> tuple[str, str]:

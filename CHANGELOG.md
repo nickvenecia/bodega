@@ -105,6 +105,8 @@
   from the ZIP code. An address you typed before stays as you typed it, and prints the same.
 - When Check Price can't read a price, it says why under the link, and that stays until you close it, check again
   or open another piece (it used to be a message that went by itself).
+- Bodega could crash now and then on a Mac, at random (while switching between light and dark, say): Python freed
+  leftover objects in the middle of Qt's own work. It now does that only between events, on the window's thread.
 - The Undo and Stop buttons in a message work from the moment it appears (a quick click could miss them while it
   slid in).
 - After Duplicate, only the copy is picked in the list: the piece you copied stayed picked with it, so Delete could

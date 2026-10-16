@@ -97,6 +97,9 @@ packaging/     Installer files per OS
 19. A delayed call names what it belongs to: `QTimer.singleShot(ms, owner, fn)`, never `(ms, fn)`. If the owner is
     gone first (a window closed and deleted), Qt drops the call instead of running it on something that's no longer
     there; on a Mac that once crashed the next window. `tests/test_code_rules.py` checks every call.
+20. Python's cycle collector is off and runs on the window's thread between events (app.py `_MainThreadGC`):
+    never turn it back on, and never call `gc.collect()` from a background job. Left to itself it runs on any
+    thread, in the middle of Qt's own work, and freeing a Qt object there crashes Bodega at random.
 
 ---
 

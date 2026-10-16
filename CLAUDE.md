@@ -150,6 +150,7 @@ bodega/
                    ai_review.py, account.py (sign in), feedback.py, import_sheet.py,
                    gear_picker.py, preview.py (the page window), profile.py, client.py, update.py
   app.py           QApplication, fonts, stylesheet, rounded popups, every QLabel plain text, one window at a time,
+                   Python's cycle collector only on the window's thread, between events (_MainThreadGC),
                    --smoke-test
   cli.py           `python -m bodega cli sample OUT.pdf --doc agreement|quote|inventory|ratecard|package`,
                    `python -m bodega cli import SHEET.xlsx OUT.pdf`,
