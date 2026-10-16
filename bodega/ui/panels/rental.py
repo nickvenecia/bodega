@@ -45,6 +45,7 @@ from bodega.ui.components.widgets import (
     repolish,
     rows_done,
     set_combo,
+    sized,
     status_line,
     to_qdate,
     vbox,
@@ -404,11 +405,11 @@ class RentalPanel(DetailsBase):
         # rental
         row = hbox(spacing=tokens.SPACE_2)
         sec = Section("Status")
-        self.status = combo([(k, RENTAL_WORDS[k], STATUS_TIPS[k]) for k in RENTAL_STATUSES], "quote")
+        self.status = sized(combo([(k, RENTAL_WORDS[k], STATUS_TIPS[k]) for k in RENTAL_STATUSES], "quote"), "popup")
         sec.add(self.status)
         row.addWidget(sec, 1)
         sec = Section("Rental No.")
-        self.number = QLineEdit()
+        self.number = sized(QLineEdit(), "short")  # (fields sized by what they hold: C-90)
         sec.add(self.number)
         row.addWidget(sec, 1)
         g["rental"].add(row)
@@ -418,7 +419,7 @@ class RentalPanel(DetailsBase):
         self.number_clash.hide()
         g["rental"].add(self.number_clash)
         sec = Section("Production")
-        self.project = QLineEdit()
+        self.project = sized(QLineEdit(), "name")
         self.project.setPlaceholderText("Project name (optional)")
         sec.add(self.project)
         g["rental"].add(sec)
@@ -437,7 +438,7 @@ class RentalPanel(DetailsBase):
         g["rental"].add(self.weekend)
         row = hbox(spacing=tokens.SPACE_2)
         sec = Section("Billed Days")
-        self.billed = only(QLineEdit(), WHOLE_TYPED)
+        self.billed = sized(only(QLineEdit(), WHOLE_TYPED), "short")
         self.billed.setFixedWidth(tokens.NUM_FIELD_W)
         self.billed.setToolTip("Leave blank and Bodega works it out")
         sec.add(self.billed)
@@ -470,17 +471,17 @@ class RentalPanel(DetailsBase):
         # money
         row = hbox(spacing=tokens.SPACE_2)
         sec = Section("Discount %")
-        self.discount = percent_field(placeholder="None")
+        self.discount = sized(percent_field(placeholder="None"), "short")
         sec.add(self.discount)
         row.addWidget(sec, 1)
         sec = Section("Sales Tax %")
-        self.tax = percent_field(placeholder="None")
+        self.tax = sized(percent_field(placeholder="None"), "short")
         sec.add(self.tax)
         row.addWidget(sec, 1)
         g["money"].add(row)
         sec = Section("Security Deposit")
         drow = hbox(spacing=tokens.SPACE_2)
-        self.deposit = MoneyField()
+        self.deposit = sized(MoneyField(), "short")
         self.deposit.setPlaceholderText("None")
         self.deposit.setToolTip("Refundable: on the agreement, not in the total")
         self.suggest = QPushButton("Suggest")
@@ -516,7 +517,7 @@ class RentalPanel(DetailsBase):
         sec.add(self.terms)
         g["agreement"].add(sec)
         sec = Section("Closing Note")
-        self.note = QLineEdit()
+        self.note = sized(QLineEdit(), "name")
         sec.add(self.note)
         g["agreement"].add(sec)
         row = hbox()

@@ -339,6 +339,9 @@
   to anyone, so Bodega now checks the key with OpenRouter first and says plainly when it isn't accepted.
 - Buttons in your accent color (Save, Import Spreadsheet…, the + in the top bar) lift a little under the pointer,
   a touch larger over a soft shadow, and settle back as it leaves. With Reduce Motion on, they lift at once.
+- Fields on a piece, a kit, a rental and a renter are sized to what they hold: an amount, a percent or a rental
+  number is short, a name or a link is wider, and a dropdown is as wide as its choice, instead of every field
+  stretching across the panel.
 - The Assistant's answers say which of your gear they drew on ("From your gear: …"). A change your AI is only
   guessing at is marked Not Sure: Review leaves it unticked, and the chat takes you to Review instead of making it.
 - Letters are spaced the way Apple spaces them at each size: a touch tighter in everyday words, a little looser in

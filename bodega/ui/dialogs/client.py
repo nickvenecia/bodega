@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
 from bodega.core.model import Client
 from bodega.ui.components import sheet
 from bodega.ui.components.address import AddressFields
-from bodega.ui.components.widgets import Guarded, ReturnMovesOn, Section, TextBox, hbox, primary_button, vbox
+from bodega.ui.components.widgets import Guarded, ReturnMovesOn, Section, TextBox, hbox, primary_button, sized, vbox
 from bodega.ui.style.tokens import DIALOG_W_WIDE, SPACE_2, SPACE_3, SPACE_4, SPACE_5, TEXT_BOX_H
 
 
@@ -76,7 +76,7 @@ class ClientDialog(Guarded, QDialog):
 
     def _line(self, row, label: str, value: str, placeholder: str) -> QLineEdit:
         sec = Section(label)
-        f = QLineEdit(value)
+        f = sized(QLineEdit(value), "name")  # (a name, an email or a phone: the standard's C-90)
         f.setPlaceholderText(placeholder)
         sec.add(f)
         row.addWidget(sec, 1)

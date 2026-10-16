@@ -29,6 +29,7 @@ from bodega.ui.components.widgets import (
     qty_field,
     rows_done,
     set_combo,
+    sized,
     vbox,
 )
 from bodega.ui.panels.base import DetailsBase
@@ -85,14 +86,14 @@ class PackagePanel(DetailsBase):
         g["gear"].add(arow)
 
         sec = Section("Priced By")
-        self.pricing = combo(PRICINGS, "discount")
+        self.pricing = sized(combo(PRICINGS, "discount"), "popup")  # (sized by what each holds: C-90)
         sec.add(self.pricing)
         g["price"].add(sec)
         self.disc_sec = Section("Discount %")
-        self.discount = percent_field(placeholder="15")
+        self.discount = sized(percent_field(placeholder="15"), "short")
         self.disc_sec.add(self.discount)
         self.fixed_sec = Section("Day Rate")
-        self.fixed = MoneyField()
+        self.fixed = sized(MoneyField(), "short")
         self.fixed_sec.add(self.fixed)
         row = hbox(spacing=tokens.SPACE_2)
         row.addWidget(self.disc_sec, 1)
