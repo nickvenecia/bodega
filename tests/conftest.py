@@ -13,10 +13,13 @@ from __future__ import annotations
 import gc
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+if sys.platform == "win32":  # the offscreen screen looks for fonts beside Qt, where PySide ships none: Bodega's own
+    os.environ.setdefault("QT_QPA_FONTDIR", str(Path(__file__).resolve().parents[1] / "bodega" / "assets" / "fonts"))
 
 _status: dict = {"code": 0}
 QT_NOISE = ("This plugin does not support",)  # the offscreen screen has no window manager to ask
