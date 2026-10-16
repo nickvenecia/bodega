@@ -180,6 +180,8 @@
 - The share button shows once there's gear to print, and File › Print Inventory List…, Print Rate Card… and Print
   Labels… are off until then. A button that's off says why when you point at it (Rent This, Check Price, the
   Assistant's jobs).
+- Settings › Your Data has Import & Export: Import Spreadsheet…, Import from Google Sheets… and Export Gear as
+  CSV…. These, Back Up… and Restore… close Settings first, so one window never opens on top of another.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

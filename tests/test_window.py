@@ -1533,3 +1533,22 @@ def test_with_no_gear_there_is_nothing_to_share_and_off_buttons_say_why(qapp, da
     win.open("gear", it.id)
     assert not win.items.rent.isEnabled() and win.items.rent.toolTip() == "Not for rent"
     win.close()
+
+
+def test_your_data_imports_once_settings_has_closed(win, monkeypatch):
+    from PySide6.QtWidgets import QPushButton
+
+    from bodega.ui.dialogs.settings import SettingsDialog
+
+    ran = []
+    monkeypatch.setattr(win, "import_sheet", lambda: ran.append(SettingsDialog))
+    d = SettingsDialog(win.lib, win, "data")
+    d.show()
+    b = next(x for x in d.findChildren(QPushButton) if x.text() == "Import Spreadsheet…")
+    d.find.setText("csv")
+    assert not d.rows["data"].isHidden()  # Settings' search finds it there
+    d.find.clear()
+    b.click()
+    assert not d.isVisible()
+    QApplication.processEvents()
+    assert ran  # after Settings closed: never a window over a window

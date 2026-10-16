@@ -13,7 +13,7 @@ settings (Send Feedback, About) have their own windows.
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QStackedWidget, QWidget
 
 from bodega import version_label
@@ -47,7 +47,8 @@ FINDS = {  # what each section holds, for Settings' search (with its name)
     "ai": "ai assistant provider key model anthropic openai gemini claude",
     "account": "account sign in sign out email password",
     "shortcuts": "keyboard shortcuts keys",
-    "data": "data folder backup back up restore safety copies renters details log",
+    "data": "data folder backup back up restore safety copies renters details log import export spreadsheet csv "
+    "google sheets",
 }
 PANES = [
     ("general", "General", "cog"),
@@ -127,6 +128,12 @@ class SettingsDialog(QDialog):
         self.show_pane(pane if shown else "general")
 
     # ------------------------------------------------------------------ moving around
+    def _then(self, run) -> None:
+        """Settings closes first, then `run` opens its own window (one window at a time)."""
+        if self._profile_may_go():
+            self.accept()
+            QTimer.singleShot(0, self.win, run)
+
     def _find(self, text: str) -> None:
         """Only the sections that hold what's typed (by their names and what's in them)."""
         from bodega.core import search
@@ -372,10 +379,10 @@ class SettingsDialog(QDialog):
         show = QPushButton("Show Folder")
         show.clicked.connect(self.win.open_data_folder)
         back = QPushButton("Back Up…")
-        back.clicked.connect(self.win.back_up)
+        back.clicked.connect(lambda: self._then(self.win.back_up))
         restore = QPushButton("Restore…")
         restore.setToolTip("Put a backup or a safety copy back in place of everything")
-        restore.clicked.connect(self.win.restore)
+        restore.clicked.connect(lambda: self._then(self.win.restore))
         row = hbox(spacing=tokens.SPACE_2)
         row.addWidget(show)
         row.addWidget(back)
@@ -383,6 +390,19 @@ class SettingsDialog(QDialog):
         row.addStretch(1)
         where.add(row)
         lay.addWidget(where)
+        moving = Section("Import && Export")
+        row = hbox(spacing=tokens.SPACE_2)
+        for label, run in (
+            ("Import Spreadsheet…", self.win.import_sheet),
+            ("Import from Google Sheets…", self.win.import_google),
+            ("Export Gear as CSV…", self.win.export_csv),
+        ):
+            b = QPushButton(label)
+            b.clicked.connect(lambda _c=False, run=run: self._then(run))
+            row.addWidget(b)
+        row.addStretch(1)
+        moving.add(row)
+        lay.addWidget(moving)
         safety = Section("Safety Copies")
         safety.add(
             hint(
