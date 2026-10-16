@@ -464,6 +464,36 @@ def test_status_and_numbers(win):
     assert Library(win.lib.root).load().rentals[r.id].status == "booked"
 
 
+def test_a_typed_number_another_rental_has_is_said_under_it(win):
+    first = next(iter(win.lib.rentals.values()))
+    win.new("rentals")
+    panel = win.rentals
+    panel.number.setText(first.number)
+    panel.number.textEdited.emit(first.number)
+    assert panel.number_clash.isVisibleTo(panel) and "already has this number" in panel.number_clash.text()
+    panel.number.setText(first.number + "b")
+    panel.number.textEdited.emit(first.number + "b")
+    assert not panel.number_clash.isVisibleTo(panel)
+
+
+def test_next_number_in_the_profile_form(qapp, data_folder):
+    from bodega.ui.dialogs.profile import ProfileDialog
+
+    lib = sample.fill(Library(data_folder).load())
+    b = next(iter(lib.businesses.values()))
+    d = ProfileDialog(b, False, next_for=lambda prefix: lib.number_after(prefix, 2026))
+    free = lib.number_after(b.prefix, 2026)
+    assert d.next_field.text() == f"{free:03d}" and d.save.isEnabled()
+    d.next_field.setText("000")
+    d.next_field.textEdited.emit("000")
+    assert not d.save.isEnabled() and not d.next_note.isHidden()
+    d.next_field.setText("120")
+    d.next_field.textEdited.emit("120")
+    assert d.save.isEnabled() and d.next_note.isHidden()
+    d._save()
+    assert d.next_number == 120
+
+
 def test_import_into_the_window(win, tmp_path):
     import openpyxl
 

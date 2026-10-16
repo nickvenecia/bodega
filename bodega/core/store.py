@@ -118,6 +118,9 @@ def clean_prefix(text: str) -> str:
     return re.sub(r"[^A-Za-z0-9]", "", text).upper()[:8]
 
 
+NUMBER = re.compile(r"^([A-Za-z0-9]{1,8})-(\d{4})-(\d{1,6})$")  # a rental number: PREFIX-YEAR-001
+
+
 def terms_for(b: Business) -> str:
     who = b.name.strip() or "the owner"
     return (b.terms or DEFAULT_TERMS).replace("{owner}", who)
@@ -546,33 +549,87 @@ class Library:
         return self.clients.get(c.id)
 
     # ------------------------------------------------------------------ rentals
-    def next_number(self, b: Business, year: int, skip: str = "") -> str:
-        prefix = clean_prefix(b.prefix) or initials(b.name)
-        pat = re.compile(rf"^{re.escape(prefix)}-{year}-(\d+)$")
+    # A rental number is never given twice: settings "numbers" keeps the last one Bodega gave in each series
+    # ("JLF-2026": 7), and a deleted rental's number stays spent. A rental keeps its number once it has one.
+    def _spent(self) -> dict[str, int]:
+        s = self.settings.get("numbers")
+        if not isinstance(s, dict):
+            return {}
+        return {k: v for k, v in s.items() if isinstance(k, str) and isinstance(v, int) and v > 0}
+
+    def _spend(self, series: str, n: int) -> None:
+        spent = self._spent()
+        if n > spent.get(series, 0):
+            spent[series] = n
+            self.settings["numbers"] = spent
+            self.save_settings()
+
+    def _spend_number(self, number: str) -> None:
+        """A number that was given (or typed) stays spent, whatever happens to its rental."""
+        if m := NUMBER.match(number.strip()):
+            self._spend(f"{m.group(1).upper()}-{m.group(2)}", int(m.group(3)))
+
+    def number_after(self, prefix: str, year: int, skip: str = "") -> int:
+        """The next number free in a series: past every number in use and every one given before."""
+        prefix = clean_prefix(prefix)
+        pat = re.compile(rf"^{re.escape(prefix)}-{year}-(\d+)$", re.IGNORECASE)
         used = [
             int(m.group(1))
             for r in self.rentals.values()
             if r.id != skip and (m := pat.match(r.number.strip()))
         ]
-        return f"{prefix}-{year}-{(max(used) + 1 if used else 1):03d}"
+        return max([*used, self._spent().get(f"{prefix}-{year}", 0)]) + 1
+
+    def next_number(self, b: Business, year: int, skip: str = "") -> str:
+        """What the next rental of this profile would be called (nothing is spent by asking)."""
+        prefix = clean_prefix(b.prefix) or initials(b.name)
+        return f"{prefix}-{year}-{self.number_after(prefix, year, skip):03d}"
+
+    def _issue(self, b: Business, year: int) -> str:
+        """Give out the next number: it's spent from now on, kept or not."""
+        prefix = clean_prefix(b.prefix) or initials(b.name)
+        n = self.number_after(prefix, year)
+        self._spend(f"{prefix}-{year}", n)
+        return f"{prefix}-{year}-{n:03d}"
+
+    def set_next_number(self, b: Business, n: int, year: int | None = None) -> bool:
+        """Profile › Next Number: this year's series carries on from n (a series from another system).
+        Never lower than a number already given. Returns False if n was too low."""
+        year = year or dates.today().year
+        prefix = clean_prefix(b.prefix) or initials(b.name)
+        if n < self.number_after(prefix, year):
+            return False
+        self._spend(f"{prefix}-{year}", n - 1)
+        return True
+
+    def number_taken(self, number: str, skip: str = "") -> Rental | None:
+        """Another rental that already has this number (letters' case and spaces aside), or None."""
+        key = number.strip().casefold()
+        if not key:
+            return None
+        return next(
+            (r for r in self.rentals.values() if r.id != skip and r.number.strip().casefold() == key), None
+        )
 
     def renumber(self, r: Rental) -> bool:
-        """A quote whose number Bodega picked follows its profile and year. Returns True if it changed."""
+        """A quote whose number Bodega picked takes its profile's series when its profile changes (the old
+        number stays spent). A new date never changes it. Returns True if it changed."""
         b = self.businesses.get(r.business_id)
         if not r.auto_number or r.status != "quote" or b is None:
             return False
-        year = (dates.parse(r.pickup) or dates.today()).year
-        number = self.next_number(b, year, skip=r.id)
-        if r.number.startswith(f"{clean_prefix(b.prefix) or initials(b.name)}-{year}-"):
+        prefix = clean_prefix(b.prefix) or initials(b.name)
+        if r.number.upper().startswith(f"{prefix}-"):
             return False
-        r.number = number
+        m = NUMBER.match(r.number.strip())
+        self._spend_number(r.number)
+        r.number = self._issue(b, int(m.group(2)) if m else dates.today().year)
         return True
 
     def new_rental(self, b: Business) -> Rental:
         start = dates.plus(dates.today(), 1)
         r = Rental(
             business_id=b.id,
-            number=self.next_number(b, start.year),
+            number=self._issue(b, start.year),
             pickup=dates.iso(start),
             return_date=dates.iso(dates.plus(start, 1)),
             weekend_deal=b.weekend_deal,
@@ -589,14 +646,15 @@ class Library:
         r.id = new_id()
         r.status = "quote"
         r.auto_number = True
-        r.number = self.next_number(b, (dates.parse(r.pickup) or dates.today()).year)
+        r.number = self._issue(b, dates.today().year)
         r.lines = [RentalLine.from_dict(vars(ln).copy()) for ln in src.lines]
         r.created = now_iso()
         self.save_rental(r)
         return r
 
     def delete_rental(self, r_id: str) -> None:
-        self.rentals.pop(r_id, None)
+        if (r := self.rentals.pop(r_id, None)) is not None:
+            self._spend_number(r.number)
         f = self._rental_dir / f"{r_id}.json"
         try:
             f.unlink(missing_ok=True)

@@ -410,6 +410,8 @@ class EditingMixin:
         else:
             self.lib.businesses[b.id] = b
             self.lib.save_businesses()
+        if d.next_number:
+            self.lib.set_next_number(b, d.next_number)
         self.lib.settings["business"] = b.id
         if self._on_rental():
             r = self.rentals.r

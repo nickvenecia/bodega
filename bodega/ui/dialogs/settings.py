@@ -17,6 +17,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QStackedWidget, QWidget
 
 from bodega import __version__
+from bodega.core import dates
 from bodega.core.paths import data_dir
 from bodega.core.store import Library
 from bodega.services import account
@@ -205,7 +206,13 @@ class SettingsDialog(QDialog):
             self.profile_pick = None
             pick = None
         current, start, can_delete = self.win.profile_start(None if self._adding else pick)
-        d = ProfileDialog(start, can_delete, w, new=current is None)
+        d = ProfileDialog(
+            start,
+            can_delete,
+            w,
+            new=current is None,
+            next_for=lambda prefix: lib.number_after(prefix, dates.today().year),
+        )
         d.embed()
         d.layout().setContentsMargins(0, tokens.SPACE_2, 0, tokens.SPACE_4)
         d.side_margin(0)

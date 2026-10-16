@@ -5,6 +5,12 @@
 - A rental's prices hold once it's booked. A quote still follows your current day rates, kit prices and profile
   pricing; once you book it (and while it's out, returned or cancelled), each line keeps the rate and name it had
   then, so changing a piece's day rate later never rewrites what you agreed with a renter.
+- A rental number is never given out twice. Deleting the newest rental used to hand its number to the next one, so
+  two renters could end up with agreements carrying the same number; now a number, once given, stays used.
+- A quote keeps its number when you move its dates into another year.
+- Settings › Profiles › Numbers & Paper has a Next Number, so a series from your old spreadsheet carries on (type 48
+  and the next rental is JLF-2026-048). It never goes below a number already given.
+- When you type a rental number another rental already has, it says so under the field.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

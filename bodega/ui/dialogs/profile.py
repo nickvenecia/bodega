@@ -8,11 +8,12 @@ deposit. Change it and every automatic rate follows. (In the code a profile is a
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QImage, QPainter, QPixmap
+from PySide6.QtGui import QImage, QIntValidator, QPainter, QPixmap
 from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.core import dates
@@ -116,13 +117,22 @@ WEEK_LABELS = {
 
 
 class ProfileDialog(Embeddable, QDialog):
-    """Add or edit a profile. After Save, `.business` holds the result; `.deleted` if Delete was chosen."""
+    """Add or edit a profile. After Save, `.business` holds the result; `.deleted` if Delete was chosen;
+    `.next_number` the number this year's rentals carry on from, when it was changed (else 0)."""
 
     def __init__(
-        self, business: Business | None, can_delete: bool, parent: QWidget | None = None, new: bool = False
+        self,
+        business: Business | None,
+        can_delete: bool,
+        parent: QWidget | None = None,
+        new: bool = False,
+        next_for: Callable[[str], int] | None = None,
     ):
-        """`new` with a business: a new profile that starts from those values."""
+        """`new` with a business: a new profile that starts from those values. `next_for(prefix)` is the
+        next number free in that series this year (without it, there's no Next Number field)."""
         super().__init__(parent)
+        self.next_for = next_for
+        self.next_number = 0
         self.editing = business is not None and not new
         self.business = replace(business) if business else Business()
         self.deleted = False
@@ -203,17 +213,34 @@ class ProfileDialog(Embeddable, QDialog):
         self.prefix.setToolTip("Numbers look like JLF-2026-001, counting up each year.")
         sec.add(self.prefix)
         row.addWidget(sec, 1)
+        sec = Section("Next Number")
+        self.next_field = QLineEdit()
+        self.next_field.setValidator(QIntValidator(1, 999999, self.next_field))
+        self.next_field.setToolTip(
+            "The number this year's next rental gets. Raise it to carry on a series from another system; "
+            "a number already given is never given again."
+        )
+        sec.add(self.next_field)
+        sec.setVisible(next_for is not None)
+        row.addWidget(sec, 1)
+        self.numbers.add(row)
+        self.next_note = QLabel()
+        self.next_note.setObjectName("Warn")
+        self.next_note.setWordWrap(True)
+        self.next_note.hide()
+        self.numbers.add(self.next_note)
+        row = hbox(spacing=SPACE_2)
         sec = Section("Currency")
         self.currency = QLineEdit(b.currency or "$")
         self.currency.setMaxLength(4)
         sec.add(self.currency)
         row.addWidget(sec, 1)
-        self.numbers.add(row)
         sec = Section("Paper Color")
         self.color = combo([(k, v[0], "") for k, v in COLORS.items()], b.color)
         self.color.setToolTip("The accent on agreements, the inventory and the rate card")
         sec.add(self.color)
-        self.numbers.add(sec)
+        row.addWidget(sec, 1)
+        self.numbers.add(row)
         lay.addWidget(self.numbers)
 
         self.agreement = Disclosure("Agreement Terms")
@@ -249,6 +276,8 @@ class ProfileDialog(Embeddable, QDialog):
         self.name.textChanged.connect(self._name_changed)
         for f in (self.rate_pct, self.value_tax, self.prefix, self.currency):
             f.textChanged.connect(lambda _t: self._summaries())
+        self._next_typed = False
+        self.next_field.textEdited.connect(self._next_edited)
         self.week_days.currentIndexChanged.connect(lambda _i: self._summaries())
         for group in (self.contact, self.pricing, self.numbers, self.agreement):
             group.toggled.connect(lambda _on: self._summaries())
@@ -300,8 +329,37 @@ class ProfileDialog(Embeddable, QDialog):
 
     def _name_changed(self, text: str) -> None:
         self.prefix.setPlaceholderText(initials(text))
-        self.save.setEnabled(bool(text.strip()))
         self._summaries()
+
+    def _free(self) -> int:
+        """The lowest Next Number allowed for the series as typed (1 without a store to ask)."""
+        b = self._draft()
+        return self.next_for(b.prefix) if self.next_for is not None else 1
+
+    def _next_edited(self, _t: str) -> None:
+        self._next_typed = True
+        self._summaries()
+
+    def _check_next(self) -> bool:
+        """The typed Next Number, said in the field if it's one already given. True if it can be saved."""
+        free = self._free()
+        if not self._next_typed:
+            self.next_field.setText(f"{free:03d}")
+        text = self.next_field.text().strip()
+        n = int(text) if text.isdigit() else 0
+        b = self._draft()
+        year = dates.today().year
+        if self.next_for is not None and n < free:
+            given = f"{b.prefix}-{year}-{free - 1:03d}" if free > 1 else ""
+            self.next_note.setText(
+                f"Numbers up to {given} are already given, so the next can be {free:03d} or higher."
+                if given
+                else "The next number is 001 or higher."
+            )
+            self.next_note.show()
+            return False
+        self.next_note.hide()
+        return True
 
     def _summaries(self) -> None:
         from bodega.core import money, pricing
@@ -316,8 +374,12 @@ class ProfileDialog(Embeddable, QDialog):
             f"and {money.fmt_short(rate * b.week_days, b.currency)} a week."
         )
         self.pricing.set_summary(f"{money.fmt_rate(b.rate_pct)} a day · {b.week_days}-day week")
+        ok = self._check_next()
+        self.save.setEnabled(bool(b.name) and ok)
+        text = self.next_field.text().strip()
+        n = int(text) if ok and text.isdigit() else self._free()
         self.numbers.set_summary(
-            f"{b.prefix}-{dates.today().year}-001 · {COLORS.get(b.color, COLORS['blue'])[0]}"
+            f"Next {b.prefix}-{dates.today().year}-{n:03d} · {COLORS.get(b.color, COLORS['blue'])[0]}"
         )
 
     # ------------------------------------------------------------------ logo
@@ -381,7 +443,13 @@ class ProfileDialog(Embeddable, QDialog):
 
     # ------------------------------------------------------------------ buttons
     def _save(self) -> None:
+        if not self._check_next():
+            return
         self.business = self._draft()
+        text = self.next_field.text().strip()
+        self.next_number = (
+            int(text) if self._next_typed and text.isdigit() and int(text) > self._free() else 0
+        )
         self.accept()
 
     def _delete(self) -> None:

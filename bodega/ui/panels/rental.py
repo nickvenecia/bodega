@@ -375,6 +375,11 @@ class RentalPanel(DetailsBase):
         sec.add(self.number)
         row.addWidget(sec, 1)
         g["rental"].add(row)
+        self.number_clash = QLabel()
+        self.number_clash.setObjectName("Warn")
+        self.number_clash.setWordWrap(True)
+        self.number_clash.hide()
+        g["rental"].add(self.number_clash)
         sec = Section("Production")
         self.project = QLineEdit()
         self.project.setPlaceholderText("Project name (optional)")
@@ -544,6 +549,18 @@ class RentalPanel(DetailsBase):
         if self.r is not None:
             self.r.auto_number = False
         self._edit("number", t)
+        self._show_clash()
+
+    def _show_clash(self) -> None:
+        """A number another rental already has is said under the field (it's still yours to keep)."""
+        other = self.lib.number_taken(self.r.number, skip=self.r.id) if self.r is not None else None
+        if other is None:
+            self.number_clash.hide()
+            return
+        who = f"{other.client.name}'s rental" if other.client.name.strip() else "Another rental"
+        when = dates.fmt(dates.parse(other.pickup))
+        self.number_clash.setText(f"{who}{' from ' + when if when else ''} already has this number.")
+        self.number_clash.show()
 
     def _pickup_changed(self, q) -> None:
         if self._loading or self.r is None:
@@ -559,8 +576,6 @@ class RentalPanel(DetailsBase):
             self.ret.setDate(to_qdate(self.r.return_date))
             self._loading = False
         self.r.pickup = iso
-        if self.lib.renumber(self.r):
-            self.number.setText(self.r.number)
         self.recalc()
         self.changed.emit(self.r)
 
@@ -599,6 +614,7 @@ class RentalPanel(DetailsBase):
             self.r.business_id = key
             if self.lib.renumber(self.r):
                 self.number.setText(self.r.number)
+                self._show_clash()
             self.recalc()
             self.changed.emit(self.r)
 
@@ -671,6 +687,7 @@ class RentalPanel(DetailsBase):
         set_combo(self.status, r.status)
         self._show_check()
         self.number.setText(r.number)
+        self._show_clash()
         self.project.setText(r.project)
         self.pickup.setDate(to_qdate(r.pickup))
         self.ret.setDate(to_qdate(r.return_date or r.pickup))

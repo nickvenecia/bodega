@@ -41,7 +41,8 @@ bodega/
                    page); agreements group lines by date range when they differ; summary_text() for email
     store.py       Library: gear.json, packages.json, rentals/<id>.json, clients.json, businesses.json, settings.json;
                    atomic writes, unreadable files set aside; DEFAULT_TERMS ({owner} = profile name); numbering
-                   PREFIX-YEAR-001; delete_item detaches what was attached and leaves rentals the name;
+                   PREFIX-YEAR-001, never given twice (settings "numbers": the last given in each series;
+                   set_next_number, number_taken); delete_item detaches what was attached and leaves rentals the name;
                    groups() in your order (settings "group_list"), add/rename/remove/step, put_in_group()
                    (what goes with it comes along, emptied groups go), apply_groups(); pricing() never None
     tidy.py        Tidy Up Groups: GROUPS, RULES (by name), RENAMES (by old group); suggest(), changes()
