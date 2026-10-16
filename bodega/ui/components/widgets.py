@@ -26,7 +26,6 @@ from PySide6.QtWidgets import (
     QAbstractSpinBox,
     QButtonGroup,
     QComboBox,
-    QDateEdit,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -1080,52 +1079,14 @@ class TitleEdit(QPlainTextEdit):
 
 
 # Fields shared by the panels
-DATE_FORMATS = ("ddd, MMM d, yyyy", "MMM d, yyyy", "M/d/yy")  # the longest that fits is shown
+def date_field():
+    """Every date: typed or picked from its month (components/datefield.py, the standard's G.22)."""
+    from bodega.ui.components.datefield import DateField
 
-
-class DateField(QDateEdit):
-    """A date with a calendar popup, shown as "Sat, Oct 10, 2026", or shorter ("Oct 10, 2026", "10/10/26")
-    when its box is narrow: never cut off."""
-
-    WIDEST = (2026, 9, 30)  # "Wed, Sep 30, 2026": as wide as dates get, so the format holds as dates change
-
-    def resizeEvent(self, e):
-        super().resizeEvent(e)
-        self.fit()
-
-    def showEvent(self, e):
-        super().showEvent(e)
-        self.fit()
-
-    def changeEvent(self, e):  # the stylesheet's font arrives after the first resize
-        super().changeEvent(e)
-        if e.type() in (QEvent.Type.FontChange, QEvent.Type.StyleChange):
-            self.fit()
-
-    def fit(self) -> None:
-        room = self.width() - tokens.CONTROL_H - 2 * tokens.SPACE_2  # less the arrow and the padding
-        widest, fm = QDate(*self.WIDEST), self.fontMetrics()
-        fits = [f for f in DATE_FORMATS if fm.horizontalAdvance(self.locale().toString(widest, f)) <= room]
-        fmt = fits[0] if fits else DATE_FORMATS[-1]
-        if self.displayFormat() != fmt:
-            self.setDisplayFormat(fmt)
-
-
-def date_field() -> DateField:
-    """Every date."""
-    from PySide6.QtCore import QLocale
-
-    d = DateField()
-    d.setCalendarPopup(True)
-    d.setDisplayFormat(DATE_FORMATS[0])
-    d.setLocale(QLocale(QLocale.Language.English, QLocale.Country.UnitedStates))
-    d.setCursor(Qt.CursorShape.PointingHandCursor)
-    return d
+    return DateField()
 
 
 def to_qdate(iso: str):
-    from PySide6.QtCore import QDate
-
     from bodega.core import dates
 
     d = dates.parse(iso) or dates.today()

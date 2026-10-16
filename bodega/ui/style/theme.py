@@ -350,18 +350,14 @@ QPlainTextEdit#Field {{ background: {tokens.FILL}; border: 1px solid transparent
     font-family: inherit; font-size: {TEXT_MD}px; color: {tokens.TEXT}; padding: {SPACE_1}px {SPACE_2}px;
     selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
 QPlainTextEdit#Field:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT_EDGE}; }}
-QPlainTextEdit#Field:disabled, QLineEdit:disabled, QComboBox:disabled, QDateEdit:disabled {{ color: {tokens.TEXT_OFF}; border-color: {tokens.BORDER}; }}
-QDateEdit {{ background: {tokens.FILL}; border: 1px solid transparent; border-radius: {RADIUS}px;
-    padding: 0 {SPACE_3}px; min-height: {_INNER}px; max-height: {_INNER}px;
-    selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
-QDateEdit:hover {{ background: {tokens.FILL_3}; }}
-QDateEdit:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT_EDGE}; }}
-QDateEdit::drop-down {{ border: none; width: {SPACE_5}px; }}
-QDateEdit::down-arrow {{ image: url(__CHEVRON__); width: {SPACE_3}px; height: {SPACE_3}px; }}
-QCalendarWidget QWidget {{ background: {tokens.RAISED}; color: {tokens.TEXT}; }}
-QCalendarWidget QAbstractItemView {{ background: {tokens.CARD}; selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
-QCalendarWidget QToolButton {{ background: transparent; border: none; padding: {SPACE_1}px {SPACE_2}px; font-weight: {WEIGHT_SEMIBOLD}; }}
-QCalendarWidget QToolButton:hover {{ background: {tokens.RAISED_HOVER}; border-radius: {RADIUS_SM}px; }}
+QPlainTextEdit#Field:disabled, QLineEdit:disabled, QComboBox:disabled {{ color: {tokens.TEXT_OFF}; border-color: {tokens.BORDER}; }}
+/* the date field (components/datefield.py): the date in the accent's words, its month in a popover */
+QLineEdit[date="true"] {{ color: {tokens.ACCENT_TEXT}; font-weight: {WEIGHT_MEDIUM}; }}
+QLineEdit[date="true"]:disabled {{ color: {tokens.TEXT_OFF}; }}
+#DatePop {{ background: {tokens.RAISED}; border: 1px solid {tokens.GLASS_STROKE}; border-radius: {tokens.RADIUS_XL}px; }}
+#DatePopTitle {{ font-size: {TEXT_LG}px; font-weight: {WEIGHT_SEMIBOLD}; color: {tokens.TEXT}; }}
+#DatePop QToolButton#Circle {{ background: transparent; border-color: transparent; }}
+#DatePop QToolButton#Circle:hover {{ background: {tokens.ACCENT_TINT}; }}
 #LogoThumb {{ background: {tokens.PAPER}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {RADIUS_SM}px; }}
 
 /* ---------- preview panel */

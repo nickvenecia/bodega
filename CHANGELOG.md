@@ -197,6 +197,9 @@
   brackets came out of agreements as odd symbols (and screen readers read them that way).
 - A rental's lines, a kit's gear and what goes with a piece are now rows with thin lines between them, instead of
   boxes inside a box.
+- New date fields: the date in blue with a calendar sign. Click one (or press ↓) and the month opens under it; the
+  arrow keys move a day or a week, Page Up and Page Down a month, Return chooses. Or just type: 10/16, Oct 16 or
+  today all work, and a date without a year is taken as the nearest one.
 - A piece, kit or rental open on the right has ‹ 2 / 18 › at its foot: step to the one before or after it in the
   list, as the list shows it (your search, filters and sort). ← and → step too, unless you're typing in a field.
 - Drag a column's title in the gear list to put the columns in your own order (Name stays first); right-click a

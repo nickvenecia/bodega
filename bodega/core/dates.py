@@ -99,3 +99,65 @@ def span(a: date | None, b: date | None) -> str:
 
 def plus(d: date, days: int) -> date:
     return d + timedelta(days=days)
+
+
+def _near(month: int, day: int, around: date) -> date | None:
+    """That day in the year that puts it closest to `around` (a later one when it's a tie)."""
+    best = None
+    for year in (around.year - 1, around.year, around.year + 1):
+        try:
+            d = date(year, month, day)
+        except ValueError:
+            continue
+        if best is None or abs((d - around).days) <= abs((best - around).days):
+            best = d
+    return best
+
+
+def typed(text: str, around: date | None = None) -> date | None:
+    """A date as people type one: "today", "tomorrow", "10/16", "10/16/26", "Oct 16", "16 Oct 2026",
+    "October 16, 2026", "2026-10-16". Without a year, the one closest to `around` (the date the field had).
+    None while it doesn't read as a date yet."""
+    import re
+
+    around = around or today()
+    t = text.strip().lower().replace(",", " ").replace(".", " ")
+    if not t:
+        return None
+    if t in ("today", "tod"):
+        return today()
+    if t in ("tomorrow", "tom", "tmrw"):
+        return today() + timedelta(days=1)
+    if t == "yesterday":
+        return today() - timedelta(days=1)
+    if re.fullmatch(r"\d{4}-\d{1,2}-\d{1,2}", t):
+        try:
+            return date(*(int(x) for x in t.split("-")))
+        except ValueError:
+            return None
+    m = re.fullmatch(r"(\d{1,2})/(\d{1,2})(?:/(\d{2}|\d{4}))?", t)
+    if m:
+        month, day, year = int(m[1]), int(m[2]), m[3]
+    else:
+        words = t.split()
+        names = {n.lower(): i + 1 for i, n in enumerate(MONTHS)} | {n.lower(): i + 1 for i, n in enumerate(MONTH_NAMES)}
+        month = next((names[w] for w in words if w in names), 0)
+        nums = [w for w in words if w.isdigit()]
+        if not month or not nums or len(words) != 1 + len(nums) or len(nums) > 2:
+            return None
+        day = int(nums[0]) if len(nums[0]) <= 2 else 0
+        year = None
+        if len(nums) == 2:  # with its year, written out: "Oct 16 2026", or "2026 Oct 16"
+            if len(nums[0]) == 4 and len(nums[1]) <= 2:
+                day, year = int(nums[1]), nums[0]
+            elif len(nums[1]) == 4:
+                year = nums[1]
+            else:
+                return None
+    if year is None:
+        return _near(month, day, around)
+    y = int(year) + (2000 if len(year) == 2 else 0)
+    try:
+        return date(y, month, day)
+    except ValueError:
+        return None

@@ -268,12 +268,14 @@ def test_a_long_name_shows_all_of_itself(qapp):
 def test_scrolling_past_dropdowns_and_dates_leaves_the_cursor_alone(win):
     """Qt gives dropdowns and dates the focus as the wheel goes over them, taking it from the field you're
     typing in. In Bodega they take it from a click or Tab only."""
-    from PySide6.QtWidgets import QComboBox, QDateEdit
+    from PySide6.QtWidgets import QComboBox
+
+    from bodega.ui.components.datefield import DateField
 
     win.go("rentals")
     win.open("rentals", next(iter(win.lib.rentals)))
     QApplication.processEvents()
-    controls = [w for w in win.findChildren(QWidget) if isinstance(w, (QComboBox, QDateEdit)) and w.isVisible()]
+    controls = [w for w in win.findChildren(QWidget) if isinstance(w, (QComboBox, DateField)) and w.isVisible()]
     assert controls
     assert all(w.focusPolicy() == Qt.FocusPolicy.StrongFocus for w in controls)
 
@@ -1150,16 +1152,17 @@ def test_rental_columns_make_room_for_the_renter(win):
 
 
 def test_a_date_is_never_cut_off(qapp):
-    from bodega.ui.components.widgets import DATE_FORMATS, date_field
+    from bodega.ui.components.datefield import DATE_FORMATS
+    from bodega.ui.components.widgets import date_field
 
     d = date_field()
     d.show()
     d.resize(320, 28)
     QApplication.processEvents()
-    assert d.displayFormat() == DATE_FORMATS[0]  # "Sun, Oct 18, 2026" when there's room
+    assert d._fmt == DATE_FORMATS[0]  # "Sun, Oct 18, 2026" when there's room
     d.resize(140, 28)
     QApplication.processEvents()
-    assert d.displayFormat() != DATE_FORMATS[0]
+    assert d._fmt != DATE_FORMATS[0]
     assert d.fontMetrics().horizontalAdvance(d.text()) <= d.width()
     d.close()
     d.deleteLater()
@@ -1696,3 +1699,38 @@ def test_the_record_pager_walks_the_list_as_it_shows(win):
     assert win.items.it.id == ids[1]
     win.search.setText(win.lib.items[ids[1]].name)  # a search: it walks what's left
     assert p.where.text().endswith(f"/ {len(list(t.showing_rows()))}") or p.isHidden()
+
+
+def test_a_date_can_be_typed_or_picked_from_its_month(qapp):
+    from PySide6.QtCore import QDate
+
+    from bodega.ui.components.datefield import DateField
+
+    d = DateField()
+    d.setDate(QDate(2026, 10, 16))
+    d.show()
+    seen = []
+    d.dateChanged.connect(seen.append)
+    d.setFocus()
+    d.selectAll()
+    QTest.keyClicks(d, "10/20")  # counts as soon as it reads as a date
+    assert d.date() == QDate(2026, 10, 20) and seen[-1] == QDate(2026, 10, 20)
+    QTest.keyClick(d, Qt.Key.Key_Return)
+    assert d.text() in ("Tue, Oct 20, 2026", "Oct 20, 2026", "10/20/26")  # written out (Return, or leaving it)
+    d.setFocus()
+    QTest.keyClick(d, Qt.Key.Key_Down)  # ↓ opens the month
+    pop = d._pop
+    wait_for(lambda: pop is not None and pop.isVisible())
+    assert pop.title.text() == "October 2026"
+    for key in (Qt.Key.Key_Right, Qt.Key.Key_Down, Qt.Key.Key_PageDown):  # a day, a week, a month
+        QTest.keyClick(pop, key)
+    assert pop.grid.cursor == QDate(2026, 11, 28) and pop.title.text() == "November 2026"
+    QTest.keyClick(pop, Qt.Key.Key_Return)
+    assert d.date() == QDate(2026, 11, 28) and not pop.isVisible()
+    d.setMinimumDate(QDate(2026, 12, 1))  # (a return can't come before its pickup)
+    assert d.date() == QDate(2026, 12, 1)
+    d.selectAll()
+    QTest.keyClicks(d, "11/5")
+    assert d.date() == QDate(2026, 12, 1)  # before the earliest: not taken
+    d.close()
+    d.deleteLater()
