@@ -31,8 +31,8 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **188 fixed, 21 partly, 23 not
-started (larger redesigns), 20 waiting on the owner, and 1 no longer applies** (a web page's rule).
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **191 fixed, 21 partly, 23 not
+started (larger redesigns), 17 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
 |---|---|---|---|---|---|---|---|
@@ -62,7 +62,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 188 · Partly 21 · Open 23 · Waiting on the owner 20 · No longer applies 1.**
+**Of the 253 failures: Fixed 191 · Partly 21 · Open 23 · Waiting on the owner 17 · No longer applies 1.**
 
 ### Partly: what's left
 
@@ -122,8 +122,6 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 
 | Check | Sev | Decided by |
 |---|---|---|
-| A-11 | S2 | question 23 |
-| AI-14 | S3 | question 15 |
 | AI-28 | S2 | question 15 |
 | C-82 | S2 | question 10 |
 | C-129 | S2 | question 8 |
@@ -140,7 +138,6 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | V-22 | S3 | the accent in PROJECT_ADDENDUM.md |
 | V-28 | S3 | the accent in PROJECT_ADDENDUM.md |
 | W-05 | S3 | question 20 |
-| W-06 | S2 | question 23 |
 | W-08 | S3 | question 20 |
 
 ### No longer applies
@@ -151,8 +148,8 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 
 ### Fixed
 
-- **A**: A-03, A-05, A-06, A-10, A-12, A-13
-- **AI**: AI-01, AI-03, AI-07, AI-08, AI-09, AI-15, AI-16, AI-17, AI-19, AI-20, AI-23, AI-24, AI-29, AI-31
+- **A**: A-03, A-05, A-06, A-10, A-11, A-12, A-13
+- **AI**: AI-01, AI-03, AI-07, AI-08, AI-09, AI-14, AI-15, AI-16, AI-17, AI-19, AI-20, AI-23, AI-24, AI-29, AI-31
 - **C**: C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-19, C-21, C-23, C-24, C-27, C-28, C-29, C-31, C-32, C-34, C-38, C-39, C-42, C-45, C-47, C-50, C-51, C-54, C-58, C-59, C-66, C-67, C-69, C-72, C-100, C-105, C-106, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
 - **D**: D-01, D-02, D-03, D-05, D-06, D-07, D-10, D-11, D-12, D-15, D-16, D-18, D-21, D-23, D-24, D-25, D-26, D-31, D-32, D-34, D-42, D-49, D-51
 - **G**: G-02
@@ -165,7 +162,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 - **S**: S-17, S-25
 - **T**: T-01, T-03, T-05, T-06, T-11, T-12, T-14
 - **V**: V-04, V-08, V-09, V-11, V-13, V-14, V-15, V-17, V-18, V-19, V-23, V-24, V-25, V-32, V-33, V-36, V-37, V-40
-- **W**: W-02, W-03, W-04, W-09, W-10, W-11, W-12, W-14, W-15, W-16, W-17, W-18, W-19, W-20, W-21, W-22
+- **W**: W-02, W-03, W-04, W-06, W-09, W-10, W-11, W-12, W-14, W-15, W-16, W-17, W-18, W-19, W-20, W-21, W-22
 - **X**: X-01, X-06, X-08
 
 ## The top ten fixes
@@ -832,7 +829,7 @@ is followed.
 21. **Answered: as the standard has it.** The menu bar shows on Windows and Linux too. (N-15, I-04)
 22. **Answered: as the standard has it.** What Undo can take back is done at once, with "Deleted. Undo"; Return does
     the action you chose, and the safe choice when the loss is a side effect. (C-27, C-28)
-23. Check Price problems: toasts (as now), or under the link until dismissed? (W-06, A-11)
+23. **Answered: as the standard has it.** A Check Price problem stays under the link until it's closed. (W-06, A-11)
 24. Earned and Paid Off: show them as estimates ("≈")? (W-19)
 25. **Answered: a desktop app.** Rules for web pages (reflow at 320 points) don't apply. (A-02)
 26. Protect main so a pull request merges only once its four builds are green? (O-01)

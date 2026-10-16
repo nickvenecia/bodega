@@ -306,7 +306,8 @@ class ItemPanel(DetailsBase):
         lrow.addWidget(self.check_price)
         lrow.addWidget(self.open_link)
         b.add(lrow)
-        # under the link only while there's something to say: Checking…, then the price found (a problem is a toast)
+        # under the link only while there's something to say: Checking…, then the price found, or what went wrong
+        # (which stays beside the link until you close it, check again or open another piece: the standard's 5.5)
         self.price_row = QWidget()
         prow = hbox(self.price_row, spacing=tokens.SPACE_2)
         self.price_found = status_line(hinted=False)
@@ -317,8 +318,12 @@ class ItemPanel(DetailsBase):
         self.use_price.setCursor(Qt.CursorShape.PointingHandCursor)
         self.use_price.setToolTip("Put this price in Paid Each")
         self.use_price.hide()
+        self.price_close = icon_button("x", "Close")
+        self.price_close.clicked.connect(lambda: self._show_price())
+        self.price_close.hide()
         prow.addWidget(self.price_found, 1)
         prow.addWidget(self.use_price)
+        prow.addWidget(self.price_close)
         self.price_row.setMinimumHeight(tokens.CONTROL_H)  # as tall with Use It as without: no jump
         self.price_row.hide()
         b.add(self.price_row)
@@ -417,6 +422,7 @@ class ItemPanel(DetailsBase):
         self.rate.textEdited.connect(lambda t: self._set("day_rate", t.replace("$", "").replace(",", "").strip()))
         self.rentable.toggled.connect(lambda on: self._set("rentable", on, True))
         self.link.textEdited.connect(lambda t: (self._set("link", t.strip()), self._parts(), self._link_state()))
+        self.link.textEdited.connect(lambda _t: self._price_thread is None and self._show_price())  # (it was another)
         self.open_link.clicked.connect(self._open_link)
         self.check_price.clicked.connect(self._check_price)
         self.use_price.clicked.connect(self._use_price)
@@ -545,9 +551,12 @@ class ItemPanel(DetailsBase):
             else "Add a link first"
         )
 
-    def _show_price(self, text: str = "", use: bool = False) -> None:
+    def _show_price(self, text: str = "", use: bool = False, problem: bool = False) -> None:
         self.price_found.setText(text)
+        self.price_found.setObjectName("Warn" if problem else "Meta")
+        repolish(self.price_found)
         self.use_price.setVisible(use)
+        self.price_close.setVisible(problem)
         self.price_row.setVisible(bool(text))
 
     def _check_price(self) -> None:
@@ -569,9 +578,8 @@ class ItemPanel(DetailsBase):
     def _price_done(self, item_id: str, price: str, store: str, error: str) -> None:
         if self.it is None or self.it.id != item_id:
             return
-        if error or not price:  # a problem is a toast; the line under the link is only for a price found
-            self._show_price()
-            self.toast_wanted.emit(error or "No price on that page.", "problem")
+        if error or not price:
+            self._show_price(error or "No price on that page.", problem=True)
             return
         b = self.b()
         cur = (b.currency if b else "$") or "$"

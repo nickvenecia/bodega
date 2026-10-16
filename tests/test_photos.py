@@ -174,13 +174,17 @@ def test_a_store_that_turns_bodega_away_says_what_to_do(qapp, data_folder, monke
     check.done.connect(lambda *a: got.append(a))
     check.run()  # (in this thread)
     assert got == [(it.id, "", "", said_price)]
-    # Check Price: the problem is a toast, and nothing is left under the link
+    # Check Price: the problem stays under the link, beside what it's about, until it's closed (no timed toast)
     win.items._check_price()
     assert win.items.price_found.text() == "Checking B&H…" and not win.items.check_price.isEnabled()
+    toasts = len(said)
     win.items._price_thread.wait(5000)
     QApplication.processEvents()
-    assert said[-1] == (said_price, "problem")
-    assert win.items.price_row.isHidden() and win.items.check_price.isEnabled()
+    p = win.items
+    assert len(said) == toasts and p.price_found.text() == said_price and p.price_found.objectName() == "Warn"
+    assert p.price_row.isVisibleTo(p) and p.price_close.isVisibleTo(p) and p.check_price.isEnabled()
+    p.price_close.click()
+    assert p.price_row.isHidden()
     win.close()
 
 

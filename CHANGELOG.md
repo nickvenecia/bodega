@@ -100,6 +100,8 @@
   letter on a list no longer jumps to a row by its name.
 - ⌘1 to ⌘4 no longer jump to places: they skipped most of the sidebar. The sidebar, the View menu and Search
   Everything (⌘K) take you anywhere.
+- When Check Price can't read a price, it says why under the link, and that stays until you close it, check again
+  or open another piece (it used to be a message that went by itself).
 - The Undo and Stop buttons in a message work from the moment it appears (a quick click could miss them while it
   slid in).
 - After Duplicate, only the copy is picked in the list: the piece you copied stayed picked with it, so Delete could
