@@ -77,13 +77,13 @@ class GearFilter:
             n = out.get(it.id, 0)
             ok = {
                 "all": True,
-                "in": it.status == "ready" and n < it.qty,
+                "in": it.is_ready() and n < it.qty,
                 "out": n > 0,
                 "booked": it.id in booked,
-                "repair": it.status == "repair",
-                "retired": it.status == "retired",
+                "repair": it.in_repair(),
+                "retired": it.is_retired(),
                 "service": maintenance.needs_service(it),
-                "rentable": it.rentable and it.status != "retired",
+                "rentable": it.can_rent(),
                 "private": not it.rentable,
             }.get(show, True)
             if ok and company:

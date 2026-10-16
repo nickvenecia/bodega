@@ -931,7 +931,7 @@ class ItemPanel(DetailsBase):
         it = self.it
         found = None
         for r, _units, a, z in pricing.rentals_with(self.lib, it):
-            if r.is_out() or r.status == "booked":
+            if r.holds_gear():
                 found = (r, a, z)
                 break
         if found is None:
@@ -954,13 +954,9 @@ class ItemPanel(DetailsBase):
         repolish(self.where)
         self.detail.setText(" · ".join(x for x in (it.brand, it.group) if x))
         self.detail.setVisible(bool(it.brand or it.group))
-        self.rent.setEnabled(it.rentable and it.status != "retired")
+        self.rent.setEnabled(it.can_rent())
         self.rent.setToolTip(  # off, it says why
-            ""
-            if self.rent.isEnabled()
-            else "Retired: it can't go on a rental"
-            if it.status == "retired"
-            else "Not for rent"
+            "" if self.rent.isEnabled() else "Retired: it can't go on a rental" if it.is_retired() else "Not for rent"
         )
 
     def _sums(self, b, cur: str) -> None:

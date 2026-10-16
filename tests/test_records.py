@@ -168,3 +168,42 @@ def test_deleting_gear_keeps_a_safety_copy_first(data_folder):
     piece = next(i for i in lib.items.values() if not lib.rentals_with(i.id))
     lib.delete_items([piece.id])
     assert list((data_folder / "backups").glob("Bodega * before-delete.zip"))
+
+
+def test_what_a_rental_or_a_piece_is_is_asked_of_it():
+    """Every screen and page asks the record (never compares a status word): one place for each rule."""
+    from bodega.core.model import RENTAL_STATUSES, Item, Rental
+
+    said = {
+        s: (r.is_quote(), r.is_booked(), r.is_out(), r.is_returned(), r.is_cancelled(),
+            r.holds_gear(), r.past_quote(), r.is_over(), r.ahead(), r.went_out(), r.on_calendar(), r.deletable())
+        for s in RENTAL_STATUSES
+        for r in [Rental(status=s)]
+    }  # fmt: skip
+    #                 quote  booked out    return cancel holds  past   over   ahead  went   cal    delete
+    assert said == {
+        "quote": (True, False, False, False, False, False, False, False, True, False, True, True),
+        "booked": (False, True, False, False, False, True, True, False, True, False, True, False),
+        "out": (False, False, True, False, False, True, True, False, False, True, True, False),
+        "returned": (False, False, False, True, False, False, True, True, False, True, True, False),
+        "cancelled": (False, False, False, False, True, False, True, True, False, False, False, False),
+    }
+    for status, ready, repair, retired in (("ready", 1, 0, 0), ("repair", 0, 1, 0), ("retired", 0, 0, 1)):
+        it = Item(status=status)
+        assert (it.is_ready(), it.in_repair(), it.is_retired()) == (bool(ready), bool(repair), bool(retired))
+        assert it.can_rent() == (not retired)
+    assert not Item(rentable=False).can_rent()
+
+    import re
+    from pathlib import Path
+
+    word = re.compile(r"""\.status\s*(==|!=|in\b|not in\b)\s*\(?\s*["']""")  # a word, not a web reply's number
+    root = Path(__file__).resolve().parent.parent / "bodega"
+    found = [
+        f"{p.relative_to(root)}:{n}"
+        for p in root.rglob("*.py")
+        if p.name != "model.py"
+        for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1)
+        if word.search(line)
+    ]
+    assert found == [], found

@@ -642,7 +642,7 @@ class RentalPanel(DetailsBase):
         self.r.status = status
         self._show_check()
         self._show_delete()
-        if self.r.status != "quote":
+        if self.r.past_quote():
             self.r.auto_number = False
         self.recalc()
         self.changed.emit(self.r)
@@ -870,7 +870,7 @@ class RentalPanel(DetailsBase):
             self.short_hint.setText(
                 f"{n} piece{'s are' if n != 1 else ' is'} not free on these dates. Open the flagged lines to see why."
             )
-        self.short_hint.setVisible(bool(self.shorts) and r.status in ("quote", "booked", "out"))
+        self.short_hint.setVisible(bool(self.shorts) and not r.is_over())
         rows = {
             "per_day": ("Gear per Day", money.fmt(t.per_day, cur), False),
             "gear": (

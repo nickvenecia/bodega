@@ -11,7 +11,6 @@ from datetime import UTC, date, datetime, timedelta
 
 from bodega.core import pricing
 
-SHOWN = ("booked", "out", "returned", "cancelled")
 PRODID = "-//Bodega//Rentals//EN"
 
 
@@ -78,7 +77,7 @@ def events(lib, r) -> list[list[str]]:
                     f"DTEND;VALUE=DATE:{_day(d + timedelta(days=1))}",
                     f"SUMMARY:{_esc(('Pickup: ' if kind == 'pickup' else 'Return: ') + title)}",
                     f"DESCRIPTION:{_esc(about)}",
-                    f"STATUS:{'CANCELLED' if r.status == 'cancelled' else 'CONFIRMED'}",
+                    f"STATUS:{'CANCELLED' if r.is_cancelled() else 'CONFIRMED'}",
                     "TRANSP:TRANSPARENT",  # an all-day note, not a busy block
                     "END:VEVENT",
                 ]
@@ -88,7 +87,7 @@ def events(lib, r) -> list[list[str]]:
 
 def calendar(lib, rentals=None) -> str:
     """The .ics text for these rentals (or every booked, out, returned or cancelled one)."""
-    chosen = rentals if rentals is not None else [r for r in lib.ordered_rentals() if r.status in SHOWN]
+    chosen = rentals if rentals is not None else [r for r in lib.ordered_rentals() if r.past_quote()]
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",

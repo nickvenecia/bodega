@@ -15,9 +15,6 @@ from decimal import Decimal
 from bodega.core import money, pricing
 from bodega.core.money import ZERO
 
-EARNED = ("out", "returned")
-COMING = ("booked",)
-
 
 @dataclass
 class Earned:
@@ -42,7 +39,7 @@ def _shares(lib, line, b) -> list[tuple[str, Decimal]]:
 def earnings(lib) -> dict[str, Earned]:
     out: dict[str, Earned] = {}
     for r in lib.rentals.values():
-        if r.status not in EARNED + COMING:
+        if not (r.went_out() or r.is_booked()):
             continue
         b = lib.businesses.get(r.business_id) or lib.pricing()
         t = pricing.totals(lib, r, b)
@@ -53,7 +50,7 @@ def earnings(lib) -> dict[str, Earned]:
             for item_id, share in _shares(lib, line, b):
                 e = out.setdefault(item_id, Earned())
                 part = amount * keep * share
-                if r.status in EARNED:
+                if r.went_out():
                     e.amount += part
                     e.rentals.add(r.id)
                     e.days += days.billed

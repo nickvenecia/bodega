@@ -122,7 +122,7 @@ def file_name(text: str) -> str:
 
 # The rental agreement
 def rental_title(r: Rental) -> str:
-    return "Rental Quote" if r.status == "quote" else "Rental Agreement"
+    return "Rental Quote" if r.is_quote() else "Rental Agreement"
 
 
 def build_rental(lib, r: Rental, b: Business | None) -> DocView:
@@ -130,7 +130,7 @@ def build_rental(lib, r: Rental, b: Business | None) -> DocView:
     t = pricing.totals(lib, r, b)
     pick, ret = pricing.span_of(r)
     days = t.days
-    v = DocView(kind="quote" if r.status == "quote" else "agreement", title=rental_title(r))
+    v = DocView(kind="quote" if r.is_quote() else "agreement", title=rental_title(r))
     v.business = b.name if b else ""
     v.tagline = b.tagline if b else ""
     v.contact = _contact(b)
@@ -146,7 +146,7 @@ def build_rental(lib, r: Rental, b: Business | None) -> DocView:
         billed = f"{n} periods"
         v.big_sub = f"{n} date ranges  ·  {dates.span(pick, ret)}"
     v.strip = [
-        ("Quote" if r.status == "quote" else "Rental", r.number),
+        ("Quote" if r.is_quote() else "Rental", r.number),
         ("Pickup", dates.fmt_day(pick)),
         ("Return", dates.fmt_day(ret)),
         ("Billed", billed),
@@ -163,7 +163,7 @@ def build_rental(lib, r: Rental, b: Business | None) -> DocView:
     if r.project.strip():
         v.blocks.append(("Production", r.project.strip()))
 
-    checks = r.show_checks and r.status != "quote"
+    checks = r.show_checks and r.past_quote()
     table = Table(
         [
             Col("Qty", 0.07, "center"),
@@ -248,9 +248,9 @@ def build_rental(lib, r: Rental, b: Business | None) -> DocView:
     v.paragraphs_title = "Terms"
     text = r.terms if r.terms.strip() else (terms_for(b) if b else "")
     v.paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
-    if r.status == "quote":
+    if r.is_quote():
         v.paragraphs.insert(0, "Quote. Prices hold for 14 days. The gear is held for you once the rental is booked.")
-    v.signatures = r.status != "quote"
+    v.signatures = r.past_quote()
     v.note = r.note.strip()
     v.footer = b.name if b else ""
     return v
@@ -291,7 +291,7 @@ def _grouped(lib, items: list[Item]):
 
 def build_inventory(lib, items: list[Item], b: Business | None, title: str = "Equipment Inventory") -> DocView:
     cur = _cur(b)
-    items = [i for i in items if i.status != "retired"]
+    items = [i for i in items if not i.is_retired()]
     v = DocView(kind="inventory", title=title)
     v.business = b.name if b else ""
     v.tagline = b.tagline if b else ""
@@ -330,7 +330,7 @@ def build_inventory(lib, items: list[Item], b: Business | None, title: str = "Eq
             table.rows.append(Row(["", group, "", "", ""], "subheading"))
         for it, depth in rows:
             each = pricing.replacement(it, b)
-            name = it.name + ("  (In Repair)" if it.status == "repair" else "")
+            name = it.name + ("  (In Repair)" if it.in_repair() else "")
             serial = ", ".join(it.serial_list())
             table.rows.append(
                 Row(
@@ -373,7 +373,7 @@ def build_ratecard(lib, items: list[Item], packages: list[Package], b: Business 
             table.rows.append(
                 Row([p.name or "Kit", money.fmt_short(rate, cur), money.fmt_short(rate * wd, cur)], "package", 0, names)
             )  # fmt: skip
-    shown = [i for i in items if i.rentable and i.status != "retired" and not (i.parent and i.parent in lib.items)]
+    shown = [i for i in items if i.can_rent() and not (i.parent and i.parent in lib.items)]
     last_dep = None
     for dep, group, rows in _grouped(lib, shown):
         if dep != last_dep:
@@ -474,7 +474,7 @@ def build_labels(items: list[Item], b: Business | None) -> DocView:
     """A sticker for every unit (retired gear left out), with a QR code a scanner reads back as the piece."""
     v = DocView(kind="labels", title="Labels", business=b.name if b else "")
     for it in items:
-        if it.status == "retired":
+        if it.is_retired():
             continue
         for u in range(it.qty):
             serial = it.serials[u].strip() if u < len(it.serials) else ""

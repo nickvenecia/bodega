@@ -8,7 +8,7 @@ from dataclasses import replace
 
 from bodega.core import pricing, settings
 from bodega.core.log import get_logger
-from bodega.core.model import Business, Item, Package, PackageLine, Rental, RentalLine, new_id, now_iso
+from bodega.core.model import HOLD_VERBS, Business, Item, Package, PackageLine, Rental, RentalLine, new_id, now_iso
 from bodega.ui.components.widgets import one_stop
 from bodega.ui.dialogs.client import ClientDialog
 from bodega.ui.dialogs.common import confirm
@@ -169,7 +169,7 @@ class EditingMixin:
             for s in shorts[:3]
         ]  # fmt: skip
         more = f" And {len(shorts) - 3} more." if len(shorts) > 3 else ""
-        verb = "Book" if status == "booked" else "Mark Out"
+        verb = HOLD_VERBS.get(status, "Mark Out")
         return confirm(
             self,
             f"{verb} {r.number} Anyway?",

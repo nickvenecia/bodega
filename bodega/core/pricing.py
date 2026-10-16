@@ -164,7 +164,7 @@ def stock(lib, item: Item, b: Business | None, attached: bool = True) -> Stock:
     out = Stock()
     gear = with_attached(lib, item, item.qty) if attached else [(item, item.qty, 0)]
     for it, units, _d in gear:
-        if it.status == "retired":
+        if it.is_retired():
             continue
         out.pieces += units
         out.paid += money.cents(max(ZERO, money.parse(it.value)) * units)
@@ -290,7 +290,7 @@ def span_of(r: Rental) -> tuple[date | None, date | None]:
 
 def coming_up(r: Rental, today: date | None = None) -> bool:
     """Coming Up: a quote or a booking whose dates (any line's) haven't all gone by."""
-    if r.status not in ("quote", "booked"):
+    if not r.ahead():
         return False
     end = span_of(r)[1]
     return end is None or end >= (today or dates.today())
@@ -315,7 +315,6 @@ def _days(n: int) -> str:
 
 
 # Rentals
-LOCKED = ("booked", "out", "returned", "cancelled")  # a rental's prices hold from booking on
 
 
 def line_day(lib, line: RentalLine, b: Business | None) -> Decimal:
@@ -370,7 +369,7 @@ def line_gear(lib, line: RentalLine) -> list[tuple[Item, int, int]]:
 def settle(lib, r: Rental, b: Business | None) -> bool:
     """Lock a booked rental's prices, or let a quote follow today's again. True if anything changed."""
     changed = False
-    if r.status in LOCKED:
+    if r.past_quote():
         for line in r.lines:
             if line.kind == "fee" or line.rate.strip() or line.locked_day:
                 continue
@@ -525,7 +524,7 @@ class Short:
 def shortages(lib, r: Rental) -> list[Short]:
     """Gear this rental needs that isn't free on its dates (in repair, retired, or promised elsewhere).
     Each line counts on its own dates, so two lines on different days don't clash."""
-    if r.status in ("returned", "cancelled"):
+    if r.is_over():
         return []
     mine = bookings(lib, r)
     others = [bk for o in lib.rentals.values() if o.id != r.id and o.holds_gear() for bk in bookings(lib, o)]
@@ -537,8 +536,8 @@ def shortages(lib, r: Rental) -> list[Short]:
         it = lib.items.get(item_id)
         if it is None:
             continue
-        if it.status != "ready":
-            out.append(Short(it, max(bk.units for bk in own), 0, "In repair" if it.status == "repair" else "Retired"))
+        if not it.is_ready():
+            out.append(Short(it, max(bk.units for bk in own), 0, "In repair" if it.in_repair() else "Retired"))
             continue
         theirs = [bk for bk in others if bk.item_id == item_id]
         worst_need, worst_free, where = 0, it.qty, set()
@@ -575,7 +574,7 @@ def schedule(lib, item: Item, start: date, days: int) -> list[Day]:
         d = dates.plus(start, n)
         here = [bk for bk in mine if bk.start <= d < bk.end]
         booked = sum(bk.units for bk in here)
-        free = 0 if item.status != "ready" else max(0, item.qty - booked)
+        free = 0 if not item.is_ready() else max(0, item.qty - booked)
         seen: list[Rental] = []
         for bk in here:
             if bk.rental not in seen:
@@ -590,7 +589,7 @@ def rentals_with(lib, item: Item, upcoming_only: bool = True) -> list[tuple[Rent
     today = dates.today()
     out = []
     for r in lib.rentals.values():
-        if upcoming_only and r.status in ("returned", "cancelled"):
+        if upcoming_only and r.is_over():
             continue
         units, first, last = 0, None, None
         for line in r.lines:
@@ -602,7 +601,7 @@ def rentals_with(lib, item: Item, upcoming_only: bool = True) -> list[tuple[Rent
             first = a if first is None or (a and a < first) else first
             z = z or a
             last = z if last is None or (z and z > last) else last
-        if units and not (upcoming_only and last is not None and last < today and r.status != "out"):
+        if units and not (upcoming_only and last is not None and last < today and not r.is_out()):
             out.append((r, units, first, last))
     return sorted(out, key=lambda x: (x[2] or today, x[0].number))
 
@@ -611,7 +610,7 @@ def rentals_with(lib, item: Item, upcoming_only: bool = True) -> list[tuple[Rent
 def booked_ahead(lib) -> set[str]:
     """The gear on a booked rental whose dates haven't gone by (what the gear filter's Booked shows)."""
     today = dates.today()
-    return {b.item_id for r in lib.rentals.values() if r.status == "booked" for b in bookings(lib, r) if b.end >= today}
+    return {b.item_id for r in lib.rentals.values() if r.is_booked() for b in bookings(lib, r) if b.end >= today}
 
 
 @one_pass
@@ -620,7 +619,7 @@ def units_out(lib) -> dict[str, int]:
     today = dates.today()
     out: dict[str, int] = {}
     for r in lib.rentals.values():
-        if r.status != "out":
+        if not r.is_out():
             continue
         for line in r.lines:
             a, _z = line_dates(r, line)
@@ -638,7 +637,7 @@ def out_now(lib) -> dict[str, str]:
     today = dates.today()
     out: dict[str, str] = {}
     for r in lib.rentals.values():
-        if r.status != "out":
+        if not r.is_out():
             continue
         for line in r.lines:
             a, _z = line_dates(r, line)
@@ -651,4 +650,4 @@ def out_now(lib) -> dict[str, str]:
 
 def late(r: Rental) -> bool:
     ret = span_of(r)[1]
-    return r.status == "out" and ret is not None and ret < dates.today()
+    return r.is_out() and ret is not None and ret < dates.today()

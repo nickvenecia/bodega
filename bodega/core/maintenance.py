@@ -37,7 +37,7 @@ def last_service(it: Item) -> date | None:
 
 def due(it: Item, today: date | None = None) -> Due | None:
     """When it's next due for service, or None if it has no reminder (or is retired)."""
-    if it.service_days <= 0 or it.status == "retired":
+    if it.service_days <= 0 or it.is_retired():
         return None
     today = today or dates.today()
     start = last_service(it) or dates.parse((it.created or "")[:10]) or today

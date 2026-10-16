@@ -86,7 +86,7 @@ class GearPicker(QDialog):
                 )
         last = None
         for it in lib.ordered_items():
-            if it.id in exclude or it.status == "retired":
+            if it.id in exclude or it.is_retired():
                 continue
             attached = bool(it.parent and it.parent in lib.items)
             if main_only and attached:
@@ -105,7 +105,7 @@ class GearPicker(QDialog):
                 bits.append(f"+{kids} attached")
             if attached:
                 bits.append(f"on {lib.items[it.parent].name}")
-            if it.status == "repair":
+            if it.in_repair():
                 bits.append("in repair")
             hay = " ".join((it.name, it.brand, it.group, " ".join(it.serials)))
             self._row("item", it.id, it.name or "Untitled Piece", "  ·  ".join(bits), hay)

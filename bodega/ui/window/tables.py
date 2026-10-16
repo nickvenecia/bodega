@@ -363,9 +363,9 @@ class Table(QTreeWidget):
 
 def status_of(it: Item, out: int) -> tuple[str, str]:
     """A piece's status, as the gear list and the piece's own head say it: its word and its color."""
-    if it.status == "repair":
+    if it.in_repair():
         return "Repair", tokens.WARN  # amber, like the In Repair chip everywhere else
-    if it.status == "retired":
+    if it.is_retired():
         return "Retired", tokens.MUTED
     if out >= it.qty:
         return "Out", tokens.WARN

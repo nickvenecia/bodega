@@ -622,7 +622,7 @@ def inventory_text(items: list[Item], lookup: dict[str, Item], numbered: bool = 
         bits = [it.name, it.brand, it.group, f"qty {it.qty}"]
         if it.value:
             bits.append(f"paid {it.value} each")
-        if it.status != "ready":
+        if not it.is_ready():
             bits.append(it.status)
         if parent:
             bits.append(f"goes with {parent.name}")

@@ -94,7 +94,7 @@ def hits(window, typed: str) -> list[Hit]:
             Hit("Gear", it.name or "Untitled Piece", " · ".join(x for x in (it.brand, it.group) if x), "box",
                 search.gear_hay(it, names.get(it.parent, "")), lambda i=it.id: window.open("gear", i))
             for it in lib.ordered_items()
-            if it.status != "retired"
+            if not it.is_retired()
         ]  # fmt: skip
         kits = [
             Hit("Kits", p.name or "Untitled Kit", "Kit", "case", search.kit_hay(p),

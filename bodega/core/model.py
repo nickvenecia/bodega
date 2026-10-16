@@ -27,6 +27,7 @@ RENTAL_WORDS = {  # a rental's status, as people read it (the one table: lists, 
     "cancelled": "Cancelled",
 }
 HOLDING = ("booked", "out")  # the statuses that hold a rental's gear (picking one over a shortage asks first)
+HOLD_VERBS = {"booked": "Book", "out": "Mark Out"}  # what picking each is called, when it asks first
 PRICINGS = ("sum", "discount", "fixed")  # a package costs what its gear adds up to, less a %, or a set rate
 WEEK_DAYS = (2, 3, 4, 5, 7)  # how many days a 7-day week is billed as
 LINE_KINDS = ("item", "package", "fee")
@@ -208,6 +209,21 @@ class Item(Record):
     def serial_list(self) -> list[str]:
         """The serials that were filled in, in unit order."""
         return [s.strip() for s in self.serials[: self.qty] if s.strip()]
+
+    # what a piece is, asked by every screen and page (never a status word compared there)
+    def is_ready(self) -> bool:
+        """Ready to go out (not in repair, not retired)."""
+        return self.status == "ready"
+
+    def in_repair(self) -> bool:
+        return self.status == "repair"
+
+    def is_retired(self) -> bool:
+        return self.status == "retired"
+
+    def can_rent(self) -> bool:
+        """For rent and not retired: it can go on a rental (one in repair can, and is flagged short)."""
+        return self.rentable and not self.is_retired()
 
 
 @dataclass
@@ -420,7 +436,7 @@ class Rental(Record):
 
     def deletable(self) -> bool:
         """Only a quote can be deleted; a rental that's been booked is cancelled instead, and kept."""
-        return self.status == "quote"
+        return self.is_quote()
 
     def own_dates(self, line: RentalLine) -> bool:
         return (
@@ -437,11 +453,33 @@ class Rental(Record):
     def is_quote(self) -> bool:
         return self.status == "quote"
 
+    def is_booked(self) -> bool:
+        return self.status == "booked"
+
     def is_out(self) -> bool:
         return self.status == "out"
 
+    def is_returned(self) -> bool:
+        return self.status == "returned"
+
     def is_cancelled(self) -> bool:
         return self.status == "cancelled"
+
+    def past_quote(self) -> bool:
+        """Booked, or anything after (out, returned, cancelled): its prices hold, and it's a real booking."""
+        return not self.is_quote()
+
+    def is_over(self) -> bool:
+        """Returned or cancelled: nothing ahead of it, so it holds no gear and can't be short."""
+        return self.is_returned() or self.is_cancelled()
+
+    def ahead(self) -> bool:
+        """A quote or a booking: it hasn't gone out yet."""
+        return self.is_quote() or self.is_booked()
+
+    def went_out(self) -> bool:
+        """Out or returned: what it earns has been earned."""
+        return self.is_out() or self.is_returned()
 
     def on_calendar(self) -> bool:
         """Everything but a cancelled rental shows on the calendar."""

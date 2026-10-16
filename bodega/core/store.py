@@ -223,9 +223,7 @@ class Library:
         from bodega.core import pricing
 
         for r in self.rentals.values():
-            if r.status in pricing.LOCKED and pricing.settle(
-                self, r, self.businesses.get(r.business_id) or self.pricing()
-            ):
+            if r.past_quote() and pricing.settle(self, r, self.businesses.get(r.business_id) or self.pricing()):
                 try:
                     self._write(r.id, self._rental_dir / f"{r.id}.json", r.to_dict())
                 except OSError:
@@ -331,7 +329,7 @@ class Library:
         was = self._as_saved.get(r.id)
         if was is None:
             if not r.history:
-                r.happened(f"Made as {'a quote' if r.status == 'quote' else STATUS_EVENTS[r.status].lower()}")
+                r.happened(f"Made as {'a quote' if r.is_quote() else STATUS_EVENTS[r.status].lower()}")
         else:
             status, number = was
             if r.status != status:
@@ -548,7 +546,7 @@ class Library:
         n = 0
         for i in ids:
             it = self.items.get(i)
-            if it is not None and it.status != "retired":
+            if it is not None and not it.is_retired():
                 it.status, it.updated = "retired", now_iso()
                 n += 1
         if n:
@@ -558,9 +556,9 @@ class Library:
     def set_status(self, r: Rental, status: str) -> None:
         """A rental moves on (booked, out, returned, cancelled): marked out or returned, it's time-stamped.
         Saved, which writes its history. (Asking first over a shortage is the window's: may_hold.)"""
-        if status == "out" and r.status != "out":
+        if status == "out" and not r.is_out():
             r.checked_out = now_iso()
-        if status == "returned" and r.status != "returned":
+        if status == "returned" and not r.is_returned():
             r.checked_in = now_iso()
         if status != "quote":
             r.auto_number = False  # its number is settled once it's more than a quote
@@ -708,7 +706,7 @@ class Library:
         self.clients[c.id] = c
         self.save_clients()
         for r in self.rentals.values():
-            if r.client.id == c.id and r.status in ("quote", "booked"):
+            if r.client.id == c.id and r.ahead():
                 r.client = replace(c)
                 self.save_rental(r)
         return c
@@ -781,7 +779,7 @@ class Library:
         """A quote whose number Bodega picked takes its profile's series when its profile changes (the old
         number stays spent). A new date never changes it. Returns True if it changed."""
         b = self.businesses.get(r.business_id)
-        if not r.auto_number or r.status != "quote" or b is None:
+        if not r.auto_number or not r.is_quote() or b is None:
             return False
         prefix = clean_prefix(b.prefix) or initials(b.name)
         if r.number.upper().startswith(f"{prefix}-"):
