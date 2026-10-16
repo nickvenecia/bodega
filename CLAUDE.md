@@ -53,6 +53,7 @@ bodega/
                    first and every number spent; photos and logos are only ever added
     svg.py         SVG logos as untrusted: clean() keeps only the drawing (no outside pictures, links, scripts,
                    DOCTYPE); every SVG logo is drawn through doc/render.svg_logo, which cleans it
+    settings.py    every setting in settings.json with its kind and default (DEFAULTS); value() reads one safely
     terms.py       an agreement's words: DEFAULT_TERMS ({owner} = profile name), DEFAULT_NOTE, terms_for()
     errors.py      what went wrong, in plain words: plain(e, "save the PDF"), the computer's reasons by errno,
                    a short reference (logged) for anything unknown

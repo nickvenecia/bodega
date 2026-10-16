@@ -10,7 +10,7 @@ from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRe
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QFrame, QGraphicsOpacityEffect, QLabel, QPushButton, QToolButton, QWidget
 
-from bodega.core import pricing
+from bodega.core import pricing, settings
 from bodega.core.store import Library
 from bodega.ui.components.panels import LeftPanel, NavRow
 from bodega.ui.components.widgets import (
@@ -277,7 +277,9 @@ class Sidebar(LeftPanel):
         from bodega.services import account
 
         lib = self.lib
-        b = lib.businesses.get(lib.settings.get("business", "")) or next(iter(lib.businesses.values()), None)
+        b = lib.businesses.get(settings.value(lib.settings, "business")) or next(
+            iter(lib.businesses.values()), None
+        )
         who = account.current()
         name = b.name if b and b.name else "Your Profile"
         if lib.unsaved:

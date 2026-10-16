@@ -10,7 +10,7 @@ from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QFileDialog
 
-from bodega.core import dates, errors, importer
+from bodega.core import dates, errors, importer, settings
 from bodega.core.history import History
 from bodega.core.log import get_logger
 from bodega.core.model import Item
@@ -38,7 +38,7 @@ class TransferMixin:
 
         from bodega.ui.dialogs.common import ask_name
 
-        last = self.lib.settings.get("google_sheet", "")
+        last = settings.value(self.lib.settings, "google_sheet")
         link = ask_name(
             self,
             "Import from Google Sheets",

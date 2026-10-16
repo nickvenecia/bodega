@@ -17,7 +17,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QStackedWidget, QWidget
 
 from bodega import version_label
-from bodega.core import backups, dates, errors
+from bodega.core import backups, dates, errors, settings
 from bodega.core.paths import data_dir
 from bodega.core.store import Library
 from bodega.services import account
@@ -198,18 +198,18 @@ class SettingsDialog(QDialog):
         w, lay = self._column()
         look = Section("Appearance")
         self.look = Segmented(LOOKS)
-        self.look.set_value(str(self.lib.settings.get("appearance", "system")))
+        self.look.set_value(settings.value(self.lib.settings, "appearance"))
         self.look.changed.connect(self.win.set_look)
         look.add(self.look)
         lay.addWidget(look)
         accent = Section("Accent Color")
-        self.accent = AccentPicker(str(self.lib.settings.get("accent", "")))
+        self.accent = AccentPicker(settings.value(self.lib.settings, "accent"))
         self.accent.picked.connect(self.win.set_accent)
         accent.add(self.accent)
         lay.addWidget(accent)
         upd = Section("Updates")
         self.auto = ToggleRow(
-            "Check for Updates Automatically", bool(self.lib.settings.get("auto_update", True))
+            "Check for Updates Automatically", settings.value(self.lib.settings, "auto_update")
         )
         self.auto.toggled.connect(self._auto)
         upd.add(self.auto)

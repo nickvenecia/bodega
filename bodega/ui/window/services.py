@@ -7,7 +7,7 @@ from __future__ import annotations
 import time
 
 from bodega import __version__
-from bodega.core import update
+from bodega.core import settings, update
 from bodega.ui.style import theme, tokens
 
 
@@ -49,7 +49,7 @@ class ServicesMixin:
             )
 
     def _auto_check_updates(self) -> None:
-        if not self.lib.settings.get("auto_update", True) or update.install_kind() == "source":
+        if not settings.value(self.lib.settings, "auto_update") or update.install_kind() == "source":
             return
         self.check_updates(quiet=True)  # every time Bodega opens
 

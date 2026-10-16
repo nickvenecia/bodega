@@ -11,7 +11,7 @@ from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QFileDialog
 
-from bodega.core import dates, document, errors
+from bodega.core import dates, document, errors, settings
 from bodega.core.fileutil import reveal
 from bodega.core.log import get_logger
 from bodega.core.looks import palette
@@ -43,7 +43,7 @@ class PagesMixin:
             title = document.rental_title(self.lib.rentals[ctx[1]])
         panel.set_docs(docs, doc if doc in keys else keys[0], title)
         panel.set_rental_tools(ctx[0] == "rental")
-        panel.set_dark(bool(self.lib.settings.get("dark_preview", False)))
+        panel.set_dark(settings.value(self.lib.settings, "dark_preview"))
         panel.save_pdf.connect(self.save_pdf)
         panel.print_wanted.connect(self.print_pages)
         panel.save_png.connect(self.save_png)

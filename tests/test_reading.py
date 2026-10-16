@@ -156,3 +156,15 @@ def test_an_older_format_is_upgraded_one_step_at_a_time(data_folder, monkeypatch
     assert json.loads((data_folder / "settings.json").read_text())["format"] == 2
     assert Library(data_folder).load() and steps == [1]  # once
     assert list((data_folder / "backups").glob("Bodega * before-format-2.zip"))
+
+
+def test_a_setting_of_the_wrong_kind_is_read_as_its_default():
+    from bodega.core import settings
+
+    assert settings.value({}, "appearance") == "system"
+    assert settings.value({"appearance": 7}, "appearance") == "system"  # a hand-edited file: never a crash
+    assert settings.value({"auto_update": "no"}, "auto_update") is True
+    assert settings.value({"auto_update": False}, "auto_update") is False
+    folded = settings.value({}, "folded")
+    folded.append("x")
+    assert settings.value({}, "folded") == []  # the default is never shared between readers

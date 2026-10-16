@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.core import backups, dates, document, money, pricing, update
+from bodega.core import backups, dates, document, money, pricing, settings, update
 from bodega.core.history import History
 from bodega.core.log import get_logger
 from bodega.core.model import Business
@@ -130,16 +130,16 @@ class MainWindow(
             known = set(known) if isinstance(known, list) else set()
             self.gear_table.hidden_cols |= {"earned"} - known  # columns added since start tucked away
         self.lib.settings["columns_known"] = ["earned"]
-        if not self.lib.settings.get("companies_guessed"):  # gear from before Company existed
+        if not settings.value(self.lib.settings, "companies_guessed"):  # gear from before Company existed
             if self.lib.guess_brands():
                 self.lib.save_items()
             self.lib.settings["companies_guessed"] = True
-        folded = self.lib.settings.get("folded", [])
+        folded = settings.value(self.lib.settings, "folded")
         self.gear_table.folded = (
             {x for x in folded if isinstance(x, str)} if isinstance(folded, list) else set()
         )
         self._restored = False  # True: open at the size already set (screenshots), not the saved one
-        view = self.lib.settings.get("view", "gear")
+        view = settings.value(self.lib.settings, "view")
         self.go(view if isinstance(view, str) else "gear")
         self.history = History(self.lib)  # undo/redo starts from how things are when the window opens
         backups.daily_copy(self.lib.root)  # the first time Bodega opens today: a safety copy
@@ -256,7 +256,7 @@ class MainWindow(
         self.kit_table = KitTable()
         self.rental_table = RentalTable()
         self.calendar = CalendarPage()  # Month or Timeline
-        self.calendar.set_mode(str(self.lib.settings.get("calendar_mode", "month")), quiet=True)
+        self.calendar.set_mode(settings.value(self.lib.settings, "calendar_mode"), quiet=True)
         self.calendar.mode_changed.connect(lambda m: self.lib.settings.__setitem__("calendar_mode", m))
         cal_scroll = self.calendar
         self.cal_scroll = cal_scroll
@@ -368,7 +368,7 @@ class MainWindow(
 
     # ------------------------------------------------------------------ where you are
     def business(self) -> Business | None:
-        cur = self.lib.settings.get("business", "")
+        cur = settings.value(self.lib.settings, "business")
         return self.lib.businesses.get(cur) or next(iter(self.lib.businesses.values()), None)
 
     def _grp(self) -> str:
