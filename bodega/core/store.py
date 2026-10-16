@@ -392,9 +392,10 @@ class Library:
         groups.insert(max(0, min(len(groups) - 1, i + step)), groups.pop(i))
         self._save_groups(groups)
 
-    def put_in_group(self, ids: list[str], group: str) -> int:
+    def put_in_group(self, ids: list[str], group: str, save: bool = True) -> int:
         """Put gear in a group. What goes with it comes along. A group the move empties goes away
-        (one you made empty on purpose stays). Returns how many moved."""
+        (one you made empty on purpose stays). Returns how many moved. `save=False`: the caller saves the gear
+        once it has made all its moves (approving many changes at once)."""
         from bodega.core.pricing import with_attached
 
         if group:
@@ -412,7 +413,8 @@ class Library:
         for g in left:
             if g and g != group and not any(i.group == g for i in self.items.values()):
                 self._save_groups([x for x in self.groups() if x != g])
-        self.save_items()
+        if save:
+            self.save_items()
         return n
 
     def reorder_items(self, ids: list[str], anchor_id: str, after: bool = False, brand: bool = False) -> None:

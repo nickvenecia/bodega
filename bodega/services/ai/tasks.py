@@ -649,7 +649,7 @@ def apply(lib, changes: list[Change]) -> int:
         if c.field == "group":
             group = clean_text(c.new, LIMITS["group"])
             if group:
-                lib.put_in_group([it.id], group)  # what goes with it comes along; a new group is made
+                lib.put_in_group([it.id], group, save=False)  # what goes with it comes along; saved below
                 n += 1
             continue
         if c.field == "link":

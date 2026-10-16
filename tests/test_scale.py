@@ -26,6 +26,7 @@ LIMITS_S = {
     "tidy": 1.0,
     "import": 6.0,
     "delete 300": 6.0,
+    "apply 300 changes": 1.5,
 }
 
 
@@ -99,12 +100,19 @@ def test_the_window_stays_quick_at_a_rental_houses_size(qapp, big):
 
 
 def test_the_big_jobs_stay_quick_at_a_rental_houses_size(big, tmp_path):
-    """Tidy Up Groups, an import of every piece and deleting many at once (last: it changes the library)."""
+    """Tidy Up Groups, an import of every piece, approving many changes and deleting many at once (last: they
+    change the library)."""
     from bodega.core import importer, tidy
 
     assert timed(lambda: tidy.changes(big.items)) < LIMITS_S["tidy"]
     sheet = importer.write_csv(list(big.items.values()), big.items, tmp_path / "all.csv")
     assert timed(lambda: importer.read(sheet)) < LIMITS_S["import"]
-    ids = [i.id for i in big.items.values() if i.name.startswith("Piece")][:300]
+    from bodega.services.ai import tasks
+
+    pieces = [i for i in big.items.values() if i.name.startswith("Piece")]
+    changes = [tasks.Change(i.id, "name", i.name, f"{i.name} Mk II") for i in pieces[:200]]
+    changes += [tasks.Change(i.id, "group", i.group, "Grip") for i in pieces[200:300]]
+    assert timed(lambda: tasks.apply(big, changes)) < LIMITS_S["apply 300 changes"]  # (Review's Change 300 Pieces)
+    ids = [i.id for i in pieces[300:600]]
     assert timed(lambda: big.delete_items(ids)) < LIMITS_S["delete 300"]
     assert not any(i in big.items for i in ids)

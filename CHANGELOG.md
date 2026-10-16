@@ -145,8 +145,9 @@
 - Bodega no longer grows in memory as you work: every time Settings, the page window, Search Everything or an alert
   closed, it used to stay in memory until you quit (Settings alone, about a megabyte each time).
 - Much faster with a big inventory: with 3,000 pieces and 2,000 rentals, opening Bodega went from about 10 seconds
-  to under 2, opening a piece from about 5 seconds to a fraction of one, and deleting 300 pieces at once from
-  about 3 seconds to half of one. Undo uses a small fraction of the memory it did, and keeps track twice as fast.
+  to under 2, opening a piece from about 5 seconds to a fraction of one, deleting 300 pieces at once from about 3
+  seconds to half of one, and approving 300 changes in Review from about 2 seconds to a tenth of one. Undo uses a
+  small fraction of the memory it did, and keeps track twice as fast.
 - A right-click on a row offers what the ⋯ in its panel does: Update with AI… on gear; Add to Calendar, Check Out,
   Check In and Send to Saldo on rentals.
 - The share button above the gear list opens the page window straight away (Inventory List, Rate Card, Labels).
