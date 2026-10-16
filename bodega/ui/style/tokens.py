@@ -240,8 +240,6 @@ DARK = {
     "ACCENT_TEXT": "#9CC2FB",  # (accent-text) the accent as words: mixed 45% toward white
     "ON_ACCENT": "#FFFFFF",  # (on-accent) words and icons on the accent fill
     "KNOB": "#FFFFFF",  # a switch's knob, on or off (Apple's)
-    "ACCENT_OFF": "#294063",  # a primary button that's unavailable: its fill at 40%
-    "ACCENT_OFF_TEXT": "#7F8CA1",
     "ACCENT_TINT": "rgba(74, 144, 247, 0.24)",  # (accent-soft) a selection's wash
     "ACCENT_EDGE": "rgba(74, 144, 247, 0.45)",  # (accent-edge) an "on" control's edge
     "GOOD": "#30D158",  # success as words
@@ -318,8 +316,6 @@ LIGHT = {
     "ACCENT_TEXT": "#2B66CA",  # the accent as words on the canvas, at 4.5:1 or more
     "ON_ACCENT": "#FFFFFE",
     "KNOB": "#FFFFFF",  # a switch's knob, on or off (Apple's)
-    "ACCENT_OFF": "#ACC5F1",
-    "ACCENT_OFF_TEXT": "#E6EEFB",
     "ACCENT_TINT": "rgba(47, 111, 219, 0.11)",
     "ACCENT_EDGE": "rgba(47, 111, 219, 0.45)",
     "GOOD": "#1F7A35",
@@ -452,8 +448,6 @@ def accent_set(base: str, scheme: str) -> dict[str, str]:
             "ACCENT_FILL_HOVER": _mix("#000000", fill, 0.15),
             "ACCENT_TEXT": _toward(base, "#000000", canvas),
             "ON_ACCENT": on,
-            "ACCENT_OFF": _mix(fill, "#FFFFFF", 0.4),
-            "ACCENT_OFF_TEXT": _mix("#FFFFFF", _mix(fill, "#FFFFFF", 0.4), 0.6),
             "ACCENT_TINT": _rgba(base, 0.11),
             "ACCENT_EDGE": _rgba(base, 0.45),
             "CARD_SELECTED": _mix(base, "#FFFFFF", 0.11),
@@ -468,8 +462,6 @@ def accent_set(base: str, scheme: str) -> dict[str, str]:
         "ACCENT_FILL_HOVER": _mix("#FFFFFF", fill, 0.06),
         "ACCENT_TEXT": _toward(_mix("#FFFFFF", base, 0.45), "#FFFFFF", canvas),
         "ON_ACCENT": on,
-        "ACCENT_OFF": _mix(fill, DARK["CARD"], 0.4),
-        "ACCENT_OFF_TEXT": _mix("#FFFFFF", _mix(fill, DARK["CARD"], 0.4), 0.4),
         "ACCENT_TINT": _rgba(base, 0.24),
         "ACCENT_EDGE": _rgba(base, 0.45),
         "CARD_SELECTED": _mix(base, DARK["CARD"], 0.24),
@@ -478,9 +470,34 @@ def accent_set(base: str, scheme: str) -> dict[str, str]:
     }
 
 
+DISABLED_ALPHA = 0.4  # anything that's off (a button, a field, a menu item, a switch): drawn at 40%
+
+
+def faded(c: str, under: str | None = None) -> str:
+    """`c` as something that's off: at DISABLED_ALPHA, over `under` (a card, by default)."""
+    if c.startswith("rgba("):
+        *rgb, alpha = (float(x) for x in c[5:-1].split(","))
+        return f"rgba({int(rgb[0])}, {int(rgb[1])}, {int(rgb[2])}, {alpha * DISABLED_ALPHA:g})"
+    return _mix(c, under or globals()["CARD"], DISABLED_ALPHA)
+
+
+def _off() -> None:
+    """The colors of things that are off, from the colors they have when on: one rule, everywhere."""
+    globals().update(
+        TEXT_OFF=faded(TEXT),  # noqa: F821 (set from the look just before)
+        FILL_OFF=faded(FILL_2),  # noqa: F821
+        ACCENT_OFF=faded(ACCENT_FILL),  # noqa: F821  a primary button that's off
+        ACCENT_OFF_TEXT=faded(ON_ACCENT),  # noqa: F821
+        GOOD_OFF=faded(GOOD_FILL),  # noqa: F821  a switch that's on, but off
+        KNOB_OFF=faded(KNOB),  # noqa: F821
+        TRACK_OFF=faded(FILL_3),  # noqa: F821
+    )
+
+
 SCHEME = "dark"
 ACCENT_KEY = APP_ACCENT
 globals().update(DARK)
+_off()
 
 
 def use(scheme: str, accent: str | None = None, contrast: bool = False, opaque: bool = False) -> None:
@@ -512,6 +529,7 @@ def use(scheme: str, accent: str | None = None, contrast: bool = False, opaque: 
         )
     if opaque:
         globals().update(GLASS=_solid(look["GLASS"], look["BG"]), TOAST=_solid(look["TOAST"], look["BG"]))
+    _off()
 
 
 def _solid(c: str, under: str) -> str:

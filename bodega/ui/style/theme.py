@@ -115,7 +115,7 @@ QPushButton {{  /* a word capsule (G.2): fill, text; hover fill-3 */
 }}
 QPushButton:hover {{ background: {tokens.FILL_3}; }}
 QPushButton:pressed {{ background: {tokens.FILL_3}; }}
-QPushButton:disabled {{ color: {tokens.FAINT}; background: {tokens.FILL_2}; }}
+QPushButton:disabled {{ color: {tokens.TEXT_OFF}; background: {tokens.FILL_OFF}; }}
 QPushButton#Raised {{ background: {tokens.RAISED}; border: 1px solid {tokens.GLASS_STROKE}; }}  /* a record's next step */
 QPushButton#Raised:hover, QPushButton#Raised:pressed {{ background: {tokens.RAISED_HOVER}; }}
 QPushButton#Primary {{ background: {tokens.ACCENT_FILL}; color: {tokens.ON_ACCENT}; border-color: {tokens.ACCENT_FILL};
@@ -137,7 +137,7 @@ QToolButton#SectionAdd:hover {{ background: {tokens.CARD_HOVER}; }}
 *[capsule="true"] {{ border-radius: {_INNER // 2}px; padding-left: {SPACE_4}px; }}
 QPushButton#LinkBtn {{ background: transparent; border: none; padding: 0; color: {tokens.ACCENT_TEXT}; text-align: left; }}
 QPushButton#LinkBtn:hover {{ color: {tokens.TEXT}; }}
-QPushButton#LinkBtn:disabled {{ color: {tokens.FAINT}; background: transparent; }}
+QPushButton#LinkBtn:disabled {{ color: {tokens.TEXT_OFF}; background: transparent; }}
 QPushButton#Disclosure {{ background: transparent; border: none; border-radius: 0; padding: 0; text-align: left;
     color: {tokens.MUTED}; font-size: {TEXT_SM}px; font-weight: {WEIGHT_SEMIBOLD}; min-height: {SMALL_H}px; max-height: {SMALL_H}px; }}
 QPushButton#Disclosure:hover {{ color: {tokens.TEXT}; background: transparent; }}
@@ -217,7 +217,7 @@ QComboBox QAbstractItemView::separator {{ height: 1px; background: {tokens.BORDE
 QCheckBox {{ spacing: {SPACE_2}px; min-height: {SMALL_H}px; }}
 QCheckBox::indicator, QTreeView::indicator {{ width: {INDICATOR}px; height: {INDICATOR}px; border-radius: {RADIUS_XS}px; border: 1px solid {tokens.BORDER_CHECK}; background: {tokens.CARD}; }}
 QCheckBox::indicator:checked, QTreeView::indicator:checked {{ background: {tokens.ACCENT_FILL}; border-color: {tokens.ACCENT_FILL}; image: url(__CHECK__); }}
-QCheckBox:disabled {{ color: {tokens.FAINT}; }}
+QCheckBox:disabled {{ color: {tokens.TEXT_OFF}; }}
 QSlider {{ min-height: {SMALL_H}px; }}
 QSlider::groove:horizontal {{ height: {TRACK_H}px; background: {tokens.RAISED}; border-radius: {TRACK_H // 2}px; }}
 QSlider::sub-page:horizontal {{ background: {tokens.ACCENT}; border-radius: {TRACK_H // 2}px; }}
@@ -341,7 +341,7 @@ QPlainTextEdit#Field {{ background: {tokens.FILL}; border: 1px solid transparent
     font-family: inherit; font-size: {TEXT_MD}px; color: {tokens.TEXT}; padding: {SPACE_1}px {SPACE_2}px;
     selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
 QPlainTextEdit#Field:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT_EDGE}; }}
-QPlainTextEdit#Field:disabled, QLineEdit:disabled, QComboBox:disabled, QDateEdit:disabled {{ color: {tokens.FAINT}; border-color: {tokens.BORDER}; }}
+QPlainTextEdit#Field:disabled, QLineEdit:disabled, QComboBox:disabled, QDateEdit:disabled {{ color: {tokens.TEXT_OFF}; border-color: {tokens.BORDER}; }}
 QDateEdit {{ background: {tokens.FILL}; border: 1px solid transparent; border-radius: {RADIUS}px;
     padding: 0 {SPACE_3}px; min-height: {_INNER}px; max-height: {_INNER}px;
     selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
@@ -370,7 +370,7 @@ QMenu {{ min-width: {tokens.MENU_MIN_W}px; }}
 QMenu::item {{ padding: 0 {SPACE_4}px 0 {SPACE_2_5}px; min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px;
     margin: {tokens.LIST_GAP // 2}px 0; }}
 QMenu::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_TEXT}; }}
-QMenu::item:disabled {{ color: {tokens.FAINT}; }}
+QMenu::item:disabled {{ color: {tokens.TEXT_OFF}; }}
 QMenu::icon {{ padding-left: {SPACE_2}px; }}
 QMenu::separator {{ height: 1px; background: {tokens.BORDER}; margin: {SPACE_1}px {SPACE_2_5}px; }}
 QMenu::section {{ color: {tokens.MUTED}; padding: {SPACE_2}px {SPACE_2_5}px {SPACE_1}px {SPACE_2_5}px; font-size: {TEXT_XS}px; font-weight: {WEIGHT_SEMIBOLD}; }}

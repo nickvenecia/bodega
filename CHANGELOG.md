@@ -188,6 +188,7 @@
   open.
 - The Assistant's header has Clear Chat, to start over, and a ⋯ with AI Settings…. Before the first question it
   offers a few to try: click one and it's in the box, ready to send.
+- Anything that's off (a button, a field, a switch, a menu item) is dimmed the same way everywhere, as on a Mac.
 - A deposit of 0% in your profile now means no deposit (it used to suggest 10%), and a sheet's 0% day rate is kept
   as 0%.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles

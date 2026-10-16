@@ -851,7 +851,7 @@ class ToggleRow(QAbstractButton):
         on, enabled = self.isChecked(), self.isEnabled()
         r = self.rect()
         # label
-        p.setPen(theme.qcolor(tokens.TEXT if enabled else tokens.FAINT))
+        p.setPen(theme.qcolor(tokens.TEXT if enabled else tokens.TEXT_OFF))
         text_rect = r.adjusted(0, 0, -(tokens.TOGGLE_W + tokens.SPACE_3), 0)
         label = self.fontMetrics().elidedText(self.text(), Qt.TextElideMode.ElideRight, text_rect.width())
         p.drawText(
@@ -864,13 +864,13 @@ class ToggleRow(QAbstractButton):
         track = QRectF(r.right() - tw + 1, r.center().y() - th / 2 + 1, tw - 1, th - 1)
         fill = tokens.GOOD_FILL if on else tokens.FILL_3  # an on switch is green, as Apple's are
         if not enabled:
-            fill = tokens.GOOD_SOFT if on else tokens.BORDER
+            fill = tokens.GOOD_OFF if on else tokens.TRACK_OFF
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(theme.qcolor(fill))
         p.drawRoundedRect(track, th / 2, th / 2)
         knob = th - 2 * tokens.TOGGLE_INSET
         x = track.right() - tokens.TOGGLE_INSET - knob if on else track.left() + tokens.TOGGLE_INSET
-        p.setBrush(theme.qcolor(tokens.KNOB) if enabled else theme.qcolor(tokens.FAINT))  # white, on or off
+        p.setBrush(theme.qcolor(tokens.KNOB if enabled else tokens.KNOB_OFF))  # white, on or off
         p.drawEllipse(QRectF(x, track.top() + tokens.TOGGLE_INSET, knob, knob))
         if self.hasFocus():  # the keyboard is on it: its ring, around the switch
             p.setBrush(Qt.BrushStyle.NoBrush)

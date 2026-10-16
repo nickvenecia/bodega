@@ -91,3 +91,21 @@ def test_picking_an_accent_in_settings(qapp, data_folder):
     finally:
         set_appearance(qapp, "dark", "")
         win.close()
+
+
+def test_anything_off_is_drawn_at_forty_percent_in_every_look():
+    from pathlib import Path
+
+    try:
+        for scheme in ("dark", "light"):
+            for key in tokens.ACCENTS:
+                tokens.use(scheme, key)
+                assert tokens.faded(tokens.ACCENT_FILL) == tokens.ACCENT_OFF
+                assert tokens.faded(tokens.TEXT) == tokens.TEXT_OFF
+                assert all(COLOR.match(getattr(tokens, k)) for k in ("TEXT_OFF", "FILL_OFF", "ACCENT_OFF_TEXT"))
+        assert tokens.faded("rgba(120, 120, 128, 0.5)") == "rgba(120, 120, 128, 0.2)"
+    finally:
+        tokens.use("dark", tokens.APP_ACCENT)
+    qss = (Path(__file__).resolve().parents[1] / "bodega" / "ui" / "style" / "theme.py").read_text()
+    off = [ln for ln in qss.splitlines() if ":disabled" in ln and "color:" in ln and "transparent" not in ln]
+    assert off and all("_OFF}" in ln for ln in off), off  # one rule: never a hand-picked grey
