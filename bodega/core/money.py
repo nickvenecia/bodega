@@ -34,6 +34,11 @@ def cents(d: Decimal) -> Decimal:
         return ZERO
 
 
+def in_cents(d: Decimal) -> int:
+    """An amount as whole cents, exactly (a sort key that never loses a cent the way a float can)."""
+    return int(cents(Decimal(d)) * 100)
+
+
 def fmt(d: Decimal, symbol: str = "$") -> str:
     """2700 -> "$2,700.00"; -50 -> "−$50.00"."""
     d = cents(d)

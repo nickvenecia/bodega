@@ -12,6 +12,9 @@ from __future__ import annotations
 import re
 import xml.etree.ElementTree as ET
 
+from defusedxml import DefusedXmlException
+from defusedxml.ElementTree import fromstring
+
 MAX_BYTES = 2_000_000  # a logo is a few kilobytes; a big one is a picture pasted in
 SVG_NS = "http://www.w3.org/2000/svg"
 XLINK_NS = "http://www.w3.org/1999/xlink"
@@ -52,8 +55,8 @@ def clean(data: bytes) -> bytes:
             "That SVG asks to read other files, so Bodega won't use it. Save it as a PNG and use that."
         )
     try:
-        root = ET.fromstring(text)  # noqa: S314 — no DOCTYPE or ENTITY got this far, so no entity tricks
-    except ET.ParseError as e:
+        root = fromstring(text, forbid_dtd=True)
+    except (ET.ParseError, DefusedXmlException) as e:
         raise NotALogo("That file isn't an SVG Bodega can read. Use a PNG, JPG or SVG file.") from e
     if _local(root.tag) != "svg":
         raise NotALogo("That file isn't an SVG Bodega can read. Use a PNG, JPG or SVG file.")

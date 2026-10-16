@@ -106,20 +106,7 @@ class TransferMixin:
             if i.parent and i.parent not in ids:
                 i.parent = same.get(i.parent, "")
         self.flush()
-        self.lib.snapshot("before-import")
-        for i in chosen:
-            self.lib.add_item(i)
-        if pricing_found:
-            rate, tax = pricing_found
-            b = self.business()
-            if b is not None:
-                b.rate_pct = rate or b.rate_pct
-                b.value_tax = tax or b.value_tax
-                self.lib.save_businesses()
-            else:
-                self.lib.settings["sheet_pricing"] = {"rate_pct": rate, "value_tax": tax}
-        self.lib.untangle()  # a sheet can say A goes with B and B goes with A
-        self.lib.save_items()
+        self.lib.import_items(chosen, pricing_found, self.business())
         log.info("imported %d items from %s", len(chosen), path.name)
         self.go("gear")
         self.toast(f"Added {len(chosen)} items." + (f" Links for {linked} more." if linked else ""), "done")
@@ -174,7 +161,7 @@ class TransferMixin:
         except OSError as e:
             notice(self, "Couldn't back up", str(e))
             return
-        self.toast("Backed up", "done")
+        self.toast("Backed up. It holds your renters' details, so keep it somewhere private.", "done")
 
     def restore(self) -> None:
         """File › Restore from Backup…: put a Back Up zip or a safety copy back in place of everything, after a

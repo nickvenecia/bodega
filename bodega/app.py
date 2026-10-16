@@ -36,12 +36,25 @@ log = get_logger(__name__)
 
 
 def _server_name() -> str:
+    """Where the open Bodega listens. On Linux a plain name would be a socket in /tmp, which another account
+    on the computer could take first (Bodega would then quit at launch), so it's a path in a folder only this
+    account can use: the session's runtime folder, else Bodega's own data folder."""
     import getpass
 
     try:
         user = getpass.getuser()
     except Exception:
         user = "user"
+    if sys.platform.startswith("linux"):
+        runtime = os.environ.get("XDG_RUNTIME_DIR", "")
+        folder = Path(runtime) if runtime and Path(runtime).is_dir() else data_dir()
+        path = folder / "bodega.sock"
+        if len(str(path)) < 100:  # a socket's path has a length limit
+            try:
+                folder.mkdir(parents=True, exist_ok=True)
+                return str(path)
+            except OSError:
+                log.warning("no folder of its own for the open-window socket")
     return f"bodega-{user}"
 
 

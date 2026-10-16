@@ -32,6 +32,10 @@ jobs:
         run: ruff format --check .
       - name: Lint (style, bugs, security)
         run: ruff check .
+      - name: Known vulnerabilities in what ships (and what builds it)
+        run: |
+          pip install "pip-audit==2.9.0"
+          pip-audit --strict -r requirements-dev.txt
       - name: Is this a release?
         # main with a version that has no tag yet, or a tag pushed by hand (which must match the version: a
         # release whose app reports an older number keeps offering itself as an update)
@@ -95,7 +99,7 @@ jobs:
 
       - name: Install Python packages
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install "pip==25.2"
           pip install -r requirements-dev.txt
 
       - name: Run tests
@@ -205,8 +209,7 @@ jobs:
           Compress-Archive -Path dist\Bodega -DestinationPath out\Bodega-windows-portable.zip
 
       - name: Package (Windows installer)
-        if: runner.os == 'Windows'
-        continue-on-error: true
+        if: runner.os == 'Windows'  # Bodega-windows-setup.exe is a contract (README, update.asset_name): no release without it
         shell: pwsh
         run: |
           if (-not (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }

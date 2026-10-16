@@ -921,10 +921,13 @@ class GearTable(Table):
                 (it.group, (it.group or "~").casefold()),
                 (str(it.qty), it.qty),
                 (status, status),
-                (money.fmt_short(money.whole(st.paid), cur) if st.paid else "", float(st.paid)),
-                (money.fmt_short(money.whole(st.value), cur) if st.value else "", float(st.value)),
-                (money.fmt_short(day, cur) if day else ("—" if not it.rentable else ""), float(day or 0)),
-                (money.fmt_short(made, cur) if made else "", float(made)),
+                (money.fmt_short(money.whole(st.paid), cur) if st.paid else "", money.in_cents(st.paid)),
+                (money.fmt_short(money.whole(st.value), cur) if st.value else "", money.in_cents(st.value)),
+                (
+                    money.fmt_short(day, cur) if day else ("—" if not it.rentable else ""),
+                    money.in_cents(day or 0),
+                ),
+                (money.fmt_short(made, cur) if made else "", money.in_cents(made)),
             ],
             parent,
         )
@@ -1003,9 +1006,9 @@ class KitTable(Table):
                 [
                     (p.name or "New kit", p.name.casefold()),
                     (str(pieces), pieces),
-                    (money.fmt_short(rate, cur), float(rate)),
-                    (money.fmt_short(rate * wd, cur), float(rate * wd)),
-                    (money.fmt_short(money.whole(value), cur), float(value)),
+                    (money.fmt_short(rate, cur), money.in_cents(rate)),
+                    (money.fmt_short(rate * wd, cur), money.in_cents(rate * wd)),
+                    (money.fmt_short(money.whole(value), cur), money.in_cents(value)),
                 ],
             )
             row.setData(0, HAY, (p.name + " " + p.notes).casefold())
@@ -1067,7 +1070,7 @@ class RentalTable(Table):
                     (r.project, r.project.casefold()),
                     (dates.span(a, z), dates.iso(a) if a else ""),
                     ("Late" if tone == "late" else STATUS_WORDS[r.status], tone),
-                    (money.fmt(t.total, cur), float(t.total)),
+                    (money.fmt(t.total, cur), money.in_cents(t.total)),
                 ],
             )
             row.setForeground(4, QColor(getattr(tokens, STATUS_COLORS[tone])))

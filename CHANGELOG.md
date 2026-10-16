@@ -48,6 +48,10 @@
   instead of asking to delete the piece you have open.
 - Screen readers (VoiceOver, Narrator, Orca) now say the name of every round icon button and every place in
   the sidebar, instead of only "button".
+- Attaching gear to a piece now gives it the piece's department as well as its group, as it always meant to.
+- Settings › Your Data says plainly that your files and backups hold your renters' details, and how to keep
+  them private (FileVault or BitLocker). Backing up says so too.
+- On Linux, another account on the same computer can no longer stop Bodega from opening.
 - Bodega keeps safety copies of your gear, kits, rentals, renters and profiles: one each day you open it (the last
   14 days), and one before each import, Tidy Up Groups, AI change or restore (the last 20).
 - File › Restore from Backup… (also in Settings › Your Data) puts a Back Up zip or a safety copy back. It shows

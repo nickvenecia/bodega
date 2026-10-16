@@ -93,3 +93,39 @@ def test_booking_gear_thats_already_promised_asks_first(qapp, data_folder, monke
     QTest.qWait(20)
     assert r.status == "booked" and len(asked) == 2
     w.close()
+
+
+def test_attaching_copies_the_department_and_group_and_never_makes_a_loop(data_folder):
+    from bodega.core.model import Item
+
+    lib = _lib(data_folder)
+    cam = next(i for i in lib.items.values() if i.name.startswith("Sony FX6"))
+    plate = lib.add_item(Item(name="Quick Release Plate", department="Grip", group="Plates"))
+    assert lib.attach([plate.id], cam.id) == 1
+    plate = Library(data_folder).load().items[plate.id]
+    assert (plate.parent, plate.department, plate.group) == (cam.id, cam.department, cam.group)
+    assert lib.attach([cam.id], plate.id) == 0  # the camera can't go with what goes with it
+    lib.detach(plate.id)
+    assert not lib.items[plate.id].parent and lib.items[plate.id].group == cam.group
+
+
+def test_marking_a_rental_out_and_back_stamps_it_and_writes_its_history(data_folder):
+    lib = _lib(data_folder)
+    r = next(iter(lib.rentals.values()))
+    lib.set_status(r, "out")
+    assert r.checked_out and not r.checked_in
+    lib.set_status(r, "returned")
+    again = Library(data_folder).load().rentals[r.id]
+    assert again.checked_in and [e.what for e in again.history][-2:] == ["Marked out", "Marked returned"]
+
+
+def test_an_import_keeps_a_copy_first_and_takes_the_sheets_pricing_only_when_asked(data_folder):
+    from bodega.core.model import Item
+
+    lib = _lib(data_folder)
+    b = next(iter(lib.businesses.values()))
+    rate = b.rate_pct
+    lib.import_items([Item(name="Astera Titan Tube")], None, b)
+    assert b.rate_pct == rate and list((data_folder / "backups").glob("Bodega * before-import.zip"))
+    lib.import_items([Item(name="Astera Helios Tube")], ("5", "9"), b)
+    assert (b.rate_pct, b.value_tax) == ("5", "9")

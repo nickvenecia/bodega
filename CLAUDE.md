@@ -162,6 +162,8 @@ tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTD
 - **An AI's or a web page's words are data.** They pass tasks.clean_text / clean_price, are shown as plain text
   (labels are plain app-wide; tooltips through theme.plain_tip), and change nothing until approved in Review.
 - Deleting gear or a kit keeps every rental's price (store._hold_rental_prices / _keep_rental_prices).
+- Changes that are more than a typed field go through one store operation each: `attach`, `detach`, `retire`,
+  `set_status` (stamps out/returned), `import_items`, `restore`, `delete_items`, `delete_rental`.
 - Only a quote is deleted (`Rental.deletable()`); a booked one is cancelled (`cancel_rental`). Gear rentals point to
   (`store.rentals_with`) is retired, with what's attached. A rental's `history` is only added to (store._note_history
   on save; `Rental.happened()`). Booking or marking out over a shortage asks (`may_hold`).

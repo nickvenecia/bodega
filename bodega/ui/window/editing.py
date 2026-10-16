@@ -196,9 +196,9 @@ class EditingMixin:
             danger=False,
         ):
             return
-        r.status = "cancelled"
-        self._dirty_rentals.add(r.id)
         self.flush()
+        self.lib.set_status(r, "cancelled")
+        self.flush()  # (marks it for undo)
         if self.rentals.r is r:
             self.rentals.load(r)
         self.refresh()
@@ -277,9 +277,7 @@ class EditingMixin:
         )
         if not confirm(self, title, text, "Retire" if not rest else "Retire and Delete", danger=bool(rest)):
             return False
-        for i in ids:
-            self.lib.items[i].status = "retired"
-        self.lib.save_items()
+        self.lib.retire(ids)
         if not rest:
             if self.items.it is not None and self.items.it.id in ids:
                 self.items.load(self.items.it)
@@ -313,27 +311,15 @@ class EditingMixin:
         )  # fmt: skip
         if d.exec() != GearPicker.DialogCode.Accepted:
             return
-        for _kind, ref in d.picked:
-            kid = self.lib.items.get(ref)
-            if kid is None:
-                continue
-            kid.parent = item_id
-            kid.group = it.group
-            for grand, _u, depth in pricing.with_attached(self.lib, kid, 1):
-                if depth:
-                    grand.group = it.group
-        self.lib.save_items()
+        n = self.lib.attach([ref for _kind, ref in d.picked], item_id)
         self.refresh()
         self.items.refresh_attached()
-        n = len(d.picked)
         self.toast(f"Attached {n} to {it.name}.", "done")
 
     def detach(self, item_id: str) -> None:
-        it = self.lib.items.get(item_id)
-        if it is None:
+        if item_id not in self.lib.items:
             return
-        it.parent = ""
-        self.lib.save_items()
+        self.lib.detach(item_id)
         self.refresh()
         if self.items.it is not None:
             self.items.load(self.items.it)
@@ -572,7 +558,6 @@ class EditingMixin:
     # ------------------------------------------------------------------ check out / check in
     def check_rental(self, rental_id: str, back: bool) -> None:
         """Check Out… / Check In…: tick the gear, note its condition; then mark the rental Out or Returned."""
-        from bodega.core.model import now_iso
         from bodega.ui.dialogs.checklist import CheckDialog
 
         r = self.lib.rentals.get(rental_id)
@@ -586,11 +571,8 @@ class EditingMixin:
         if d.exec() != CheckDialog.DialogCode.Accepted:
             return
         r.checks = d.rows
-        if d.mark:
-            if back:
-                r.status, r.checked_in = "returned", now_iso()
-            elif r.status == "out" or self.may_hold(r, "out"):
-                r.status, r.checked_out = "out", now_iso()
+        if d.mark and (back or r.status == "out" or self.may_hold(r, "out")):
+            self.lib.set_status(r, "returned" if back else "out")
         self._dirty_rentals.add(r.id)
         self.flush()
         if self.rentals.r is r:

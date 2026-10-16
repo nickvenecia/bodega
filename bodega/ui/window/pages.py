@@ -242,9 +242,8 @@ class PagesMixin:
         if r is not None and r.status == "quote":
             if not self.may_hold(r, "booked"):
                 return
-            r.status = "booked"
-            r.auto_number = False
-            self.lib.save_rental(r)
+            self.lib.set_status(r, "booked")
+            self.flush()  # (marks it for undo)
             if self.rentals.r is r:
                 self.rentals.load(r)
             if self.page is not None:

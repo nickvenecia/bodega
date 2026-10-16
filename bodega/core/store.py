@@ -523,6 +523,84 @@ class Library:
             self._save_groups(self.groups())
         return it
 
+    # ------------------------------------------------------------------ operations (one place for each change)
+    def attach(self, ids: list[str], parent_id: str) -> int:
+        """These pieces go with that one: each takes its department and group (and so does what's attached to
+        it). A piece can't go with itself or with something attached to it. Saved. Returns how many."""
+        parent = self.items.get(parent_id)
+        if parent is None:
+            return 0
+        above = set()
+        cur = parent
+        while cur is not None and cur.id not in above:
+            above.add(cur.id)
+            cur = self.items.get(cur.parent)
+        n = 0
+        for kid_id in ids:
+            kid = self.items.get(kid_id)
+            if kid is None or kid.id in above:
+                continue
+            kid.parent = parent_id
+            from bodega.core import pricing
+
+            for x, _u, _d in pricing.with_attached(self, kid, 1):
+                x.department, x.group, x.updated = parent.department, parent.group, now_iso()
+            n += 1
+        if n:
+            self.save_items()
+        return n
+
+    def detach(self, item_id: str) -> None:
+        """A piece becomes its own (it keeps its department and group). Saved."""
+        it = self.items.get(item_id)
+        if it is not None and it.parent:
+            it.parent, it.updated = "", now_iso()
+            self.save_items()
+
+    def retire(self, ids: list[str]) -> int:
+        """Gear rentals point to is retired, never deleted: it can't be booked and leaves price lists. Saved."""
+        n = 0
+        for i in ids:
+            it = self.items.get(i)
+            if it is not None and it.status != "retired":
+                it.status, it.updated = "retired", now_iso()
+                n += 1
+        if n:
+            self.save_items()
+        return n
+
+    def set_status(self, r: Rental, status: str) -> None:
+        """A rental moves on (booked, out, returned, cancelled): marked out or returned, it's time-stamped.
+        Saved, which writes its history. (Asking first over a shortage is the window's: may_hold.)"""
+        if status == "out" and r.status != "out":
+            r.checked_out = now_iso()
+        if status == "returned" and r.status != "returned":
+            r.checked_in = now_iso()
+        if status != "quote":
+            r.auto_number = False  # its number is settled once it's more than a quote
+        r.status = status
+        self.save_rental(r)
+
+    def import_items(
+        self, items: list[Item], pricing_found: tuple[str, str] | None, b: Business | None
+    ) -> int:
+        """Add what came in from a sheet (a safety copy first). With `pricing_found`, the profile takes the
+        sheet's day-rate percent and tax (or, with no profile yet, the next one starts with them). Saved."""
+        self.snapshot("before-import")
+        for it in items:
+            self.add_item(it)
+        if pricing_found:
+            rate, tax = pricing_found
+            if b is not None:
+                b.rate_pct = rate or b.rate_pct
+                b.value_tax = tax or b.value_tax
+                self.save_businesses()
+            else:
+                self.settings["sheet_pricing"] = {"rate_pct": rate, "value_tax": tax}
+        self.untangle()  # a sheet can say A goes with B and B goes with A
+        self.save_items()
+        return len(items)
+
     def rentals_with(self, item_id: str) -> list[Rental]:
         """Rentals that have this piece on them, itself or in a kit."""
         kits = {p.id for p in self.packages.values() if any(ln.item_id == item_id for ln in p.lines)}

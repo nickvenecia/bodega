@@ -343,5 +343,14 @@ class SettingsDialog(QDialog):
             )
         )
         lay.addWidget(safety)
+        private = Section("Renters' Details")
+        private.add(
+            hint(
+                "Your renters' names, emails, phones and addresses are kept on this computer as plain files, and "
+                "every backup holds them too. Turn on FileVault (Mac) or BitLocker (Windows) so a lost computer "
+                "doesn't give them away, and keep backups somewhere private."
+            )
+        )
+        lay.addWidget(private)
         lay.addStretch(1)
         self._fill("data", w)
