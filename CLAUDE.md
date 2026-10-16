@@ -6,6 +6,14 @@ Shipped as a PyInstaller app; GitHub Actions builds the downloads.
 The owner is a filmmaker (director/DP/editor/colorist), not a full-time developer. Explain changes in plain words.
 
 ## Read these first
+- **The owner's Universal App Standard** is the destination for how Bodega looks, behaves and is built: Apple first,
+  every value from its Appendix A and G. It is the owner's own document, kept out of the repository: a working copy
+  sits at `docs/UNIVERSAL_APP_STANDARD.md`, excluded through `.git/info/exclude` (never commit or push it). A fresh
+  clone won't have it: ask the owner for it before any change it governs.
+- **[docs/PROJECT_ADDENDUM.md](docs/PROJECT_ADDENDUM.md)**: what the standard leaves to Bodega (accent, platforms,
+  vocabulary, integrations, AI) and every departure from it, with the owner's yes. Follow the standard and the
+  addendum; where this file or DESIGN.md disagrees with them, they win, and the difference is a fix to make (see
+  **[docs/STANDARD_AUDIT.md](docs/STANDARD_AUDIT.md)** for what doesn't meet it yet).
 - **[DESIGN.md](DESIGN.md)**: how the app and the paper look and read. All app values live in `bodega/ui/tokens.py`;
   paper colors in `bodega/core/looks.py`. Never type a size or color anywhere else.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)**: code rules.
