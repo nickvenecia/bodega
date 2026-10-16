@@ -7,7 +7,16 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.services import account, feedback
-from bodega.ui.components.widgets import Guarded, Section, Segmented, TextBox, button_row, hint, vbox
+from bodega.ui.components.widgets import (
+    Guarded,
+    Section,
+    Segmented,
+    TextBox,
+    button_row,
+    hint,
+    primary_button,
+    vbox,
+)
 from bodega.ui.style import tokens
 
 
@@ -46,8 +55,7 @@ class FeedbackDialog(Guarded, QDialog):
         row = button_row()
         cancel = QPushButton("Cancel")
         cancel.clicked.connect(self.reject)
-        self.send = QPushButton("Send")
-        self.send.setObjectName("Primary")
+        self.send = primary_button("Send")
         self.send.setDefault(True)
         self.send.clicked.connect(self._send)
         row.addWidget(cancel)

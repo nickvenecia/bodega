@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.core import errors
 from bodega.services import account
-from bodega.ui.components.widgets import Embeddable, Section, button_row, status_line, vbox
+from bodega.ui.components.widgets import Embeddable, Section, button_row, primary_button, status_line, vbox
 from bodega.ui.style import theme, tokens
 
 
@@ -47,8 +47,7 @@ class SignInDialog(Embeddable, QDialog):
         row = button_row()
         self.cancel_btn = later = QPushButton("Not Now")
         later.clicked.connect(self.reject)
-        self.go = QPushButton("Sign In")
-        self.go.setObjectName("Primary")
+        self.go = primary_button("Sign In")
         self.go.setDefault(True)
         self.go.clicked.connect(self._sign_in)
         row.addWidget(later)

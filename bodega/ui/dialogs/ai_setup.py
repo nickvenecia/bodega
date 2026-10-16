@@ -16,6 +16,7 @@ from bodega.ui.components.widgets import (
     combo,
     hbox,
     hint,
+    primary_button,
     set_combo,
     status_line,
     vbox,
@@ -107,8 +108,7 @@ class AISetupDialog(Embeddable, QDialog):
         self.test.clicked.connect(self._test)
         self.cancel_btn = cancel = QPushButton("Cancel")
         cancel.clicked.connect(self.reject)
-        save = QPushButton("Save")
-        save.setObjectName("Primary")
+        save = primary_button("Save")
         save.setDefault(True)
         save.clicked.connect(self._save)
         buttons.insertWidget(0, self.test)

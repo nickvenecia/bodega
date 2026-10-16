@@ -30,6 +30,7 @@ from bodega.ui.components.widgets import (
     hbox,
     hint,
     icon_button,
+    primary_button,
     status_line,
     vbox,
 )
@@ -149,8 +150,7 @@ class CheckDialog(Guarded, QDialog):
         save = QPushButton("Save")
         save.setToolTip("Keep the ticks and notes, and finish later")
         save.clicked.connect(self.accept)
-        self.go = QPushButton("Mark as Returned" if back else "Mark as Out")
-        self.go.setObjectName("Primary")
+        self.go = primary_button("Mark as Returned" if back else "Mark as Out")
         self.go.setDefault(True)
         self.go.clicked.connect(self._mark)
         for b in (cancel, save, self.go):

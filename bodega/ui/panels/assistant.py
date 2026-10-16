@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
 
 from bodega.services.ai.providers import Setup
 from bodega.ui.components.panels import SidePanel
-from bodega.ui.components.widgets import add_chip, hbox, hint, vbox
+from bodega.ui.components.widgets import add_chip, hbox, hint, primary_button, vbox
 from bodega.ui.components.worker import Worker
 from bodega.ui.style import theme, tokens
 
@@ -120,8 +120,7 @@ class AssistantPanel(SidePanel):
         self.question.setPlaceholderText("Ask, or ask for a change")
         self.question.setToolTip("Like: put the Aputure lights in a group called Aputure")
         self.question.returnPressed.connect(self._ask)
-        self.ask_btn = QPushButton("Ask")
-        self.ask_btn.setObjectName("Primary")
+        self.ask_btn = primary_button("Ask")
         self.ask_btn.clicked.connect(self._ask)
         row.addWidget(self.question, 1)
         row.addWidget(self.ask_btn)

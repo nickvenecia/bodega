@@ -6,7 +6,7 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QDialog, QHeaderView, QLabel, QPushButton, QTreeWidget, QTreeWidgetItem, QWidget
 
 from bodega.services.ai.tasks import Change, Result
-from bodega.ui.components.widgets import button_row, hint, vbox
+from bodega.ui.components.widgets import button_row, hint, primary_button, vbox
 from bodega.ui.style import theme, tokens
 from bodega.ui.window.tables import RowPainter
 
@@ -71,8 +71,7 @@ class ReviewDialog(QDialog):
         none.clicked.connect(lambda: self._tick_all(False))
         cancel = QPushButton("Cancel")
         cancel.clicked.connect(self.reject)
-        self.go = QPushButton()
-        self.go.setObjectName("Primary")
+        self.go = primary_button()
         self.go.setDefault(True)
         self.go.clicked.connect(self.accept)
         buttons.insertWidget(0, every)

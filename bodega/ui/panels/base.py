@@ -7,7 +7,7 @@ from PySide6.QtCore import QTimer, Signal
 from PySide6.QtWidgets import QLabel, QPushButton, QWidget
 
 from bodega.ui.components.panels import SidePanel
-from bodega.ui.components.widgets import Disclosure, hbox, vbox
+from bodega.ui.components.widgets import Disclosure, hbox, primary_button, vbox
 from bodega.ui.style import theme, tokens
 
 
@@ -36,8 +36,7 @@ class DetailsBase(SidePanel):
         self.empty_text = QLabel()
         self.empty_text.setObjectName("EmptyText")
         self.empty_text.setWordWrap(True)
-        self.empty_btn = QPushButton()
-        self.empty_btn.setObjectName("Primary")
+        self.empty_btn = primary_button()
         self.empty_btn2 = QPushButton()
         row = hbox()
         row.addWidget(self.empty_btn)
@@ -91,9 +90,7 @@ class DetailsBase(SidePanel):
 
     def header_button(self, text: str, primary: bool = False) -> QPushButton:
         """A button in the panel's header (Agreement…, Rent This), shown only while something is open."""
-        b = QPushButton(text)
-        if primary:
-            b.setObjectName("Primary")
+        b = primary_button(text) if primary else QPushButton(text)
         self.header.actions.addWidget(b)
         self.header_buttons.append(b)
         b.hide()

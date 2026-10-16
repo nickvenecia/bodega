@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
 from bodega import __version__
 from bodega.core import errors, update
 from bodega.core.log import get_logger
-from bodega.ui.components.widgets import hbox, hint, status_line, vbox
+from bodega.ui.components.widgets import hbox, hint, primary_button, status_line, vbox
 from bodega.ui.style import theme, tokens
 from bodega.ui.style.tokens import (
     DIALOG_W_XWIDE,
@@ -133,8 +133,7 @@ class UpdateDialog(QDialog):
         self.btn_later = QPushButton("Later")
         self.btn_later.clicked.connect(self._later)
         row.addWidget(self.btn_later)
-        self.btn_go = QPushButton("Update Now")
-        self.btn_go.setObjectName("Primary")
+        self.btn_go = primary_button("Update Now")
         self.btn_go.setDefault(True)
         self.btn_go.clicked.connect(self._go)
         row.addWidget(self.btn_go)

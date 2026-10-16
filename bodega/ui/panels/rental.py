@@ -14,7 +14,7 @@ from PySide6.QtCore import QTimer, Signal
 from PySide6.QtWidgets import QFrame, QLabel, QLineEdit, QMenu, QPushButton, QToolButton, QWidget
 
 from bodega.core import dates, money, pricing, words
-from bodega.core.model import HOLDING, RENTAL_STATUSES, Client, Rental, RentalLine
+from bodega.core.model import HOLDING, RENTAL_STATUSES, RENTAL_WORDS, Client, Rental, RentalLine
 from bodega.core.store import Library
 from bodega.core.terms import terms_for
 from bodega.services import saldo
@@ -47,13 +47,6 @@ from bodega.ui.components.widgets import (
 from bodega.ui.panels.base import DetailsBase
 from bodega.ui.style import theme, tokens
 
-STATUS_LABELS = {
-    "quote": "Quote",
-    "booked": "Booked",
-    "out": "Out",
-    "returned": "Returned",
-    "cancelled": "Cancelled",
-}
 STATUS_TIPS = {
     "quote": "Not held yet: the gear can still go to someone else",
     "booked": "The gear is held for these dates",
@@ -391,7 +384,7 @@ class RentalPanel(DetailsBase):
         # rental
         row = hbox(spacing=tokens.SPACE_2)
         sec = Section("Status")
-        self.status = combo([(k, STATUS_LABELS[k], STATUS_TIPS[k]) for k in RENTAL_STATUSES], "quote")
+        self.status = combo([(k, RENTAL_WORDS[k], STATUS_TIPS[k]) for k in RENTAL_STATUSES], "quote")
         sec.add(self.status)
         row.addWidget(sec, 1)
         sec = Section("Rental No.")
@@ -908,7 +901,7 @@ class RentalPanel(DetailsBase):
         )
         g = self.groups
         g["who"].set_summary(r.client.company or r.client.name or "No renter yet")
-        g["rental"].set_summary(f"{STATUS_LABELS[r.status]} · {dates.span(*pricing.span_of(r))}")
+        g["rental"].set_summary(f"{RENTAL_WORDS[r.status]} · {dates.span(*pricing.span_of(r))}")
         n = len([ln for ln in r.lines if ln.kind != "fee"])
         g["gear"].set_summary(f"{n} line{'s' if n != 1 else ''}" + (" · check dates" if self.shorts else ""))
         g["money"].set_summary(money.fmt(t.total, cur))

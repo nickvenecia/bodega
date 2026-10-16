@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
 
 from bodega.doc import export
 from bodega.doc.render import Page
-from bodega.ui.components.widgets import PanelHeader, Segmented, hbox, status_line, vbox
+from bodega.ui.components.widgets import PanelHeader, Segmented, hbox, primary_button, status_line, vbox
 from bodega.ui.style import theme, tokens
 
 
@@ -158,8 +158,7 @@ class PreviewPanel(QFrame):
         self.btn_print.setIcon(theme.icon("printer", theme.TEXT, tokens.ICON_SM))
         self.btn_print.clicked.connect(self.print_wanted.emit)
         row.addWidget(self.btn_print)
-        self.btn_pdf = QPushButton("Save PDF…")
-        self.btn_pdf.setObjectName("Primary")
+        self.btn_pdf = primary_button("Save PDF…")
         self.btn_pdf.clicked.connect(self.save_pdf.emit)
         row.addWidget(self.btn_pdf)
 

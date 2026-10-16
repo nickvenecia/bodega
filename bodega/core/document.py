@@ -13,14 +13,6 @@ from bodega.core import dates, money, pricing, words
 from bodega.core.model import Business, Item, Package, Rental
 from bodega.core.terms import terms_for
 
-STATUS_LABELS = {
-    "quote": "Quote",
-    "booked": "Booked",
-    "out": "Out",
-    "returned": "Returned",
-    "cancelled": "Cancelled",
-}
-
 
 @dataclass
 class Col:

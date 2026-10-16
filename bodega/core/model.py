@@ -19,6 +19,13 @@ from typing import Any
 
 ITEM_STATUSES = ("ready", "repair", "retired")
 RENTAL_STATUSES = ("quote", "booked", "out", "returned", "cancelled")
+RENTAL_WORDS = {  # a rental's status, as people read it (the one table: lists, panels, paper)
+    "quote": "Quote",
+    "booked": "Booked",
+    "out": "Out",
+    "returned": "Returned",
+    "cancelled": "Cancelled",
+}
 HOLDING = ("booked", "out")  # the statuses that hold a rental's gear (picking one over a shortage asks first)
 PRICINGS = ("sum", "discount", "fixed")  # a package costs what its gear adds up to, less a %, or a set rate
 WEEK_DAYS = (2, 3, 4, 5, 7)  # how many days a 7-day week is billed as

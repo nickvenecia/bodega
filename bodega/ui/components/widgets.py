@@ -1238,6 +1238,13 @@ class MoneyField(QLineEdit):
         self._show()
 
 
+def primary_button(text: str = "") -> QPushButton:
+    """The one button that does what a window is for (Save, Import, Send): the accent fill."""
+    b = QPushButton(text)
+    b.setObjectName("Primary")
+    return b
+
+
 def add_chip(text: str, icon: str = "plus") -> QPushButton:
     """A tinted capsule with a small icon (+ Link, + Add Gear): the app's "add something" button."""
     b = QPushButton(text)

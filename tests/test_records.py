@@ -129,3 +129,28 @@ def test_an_import_keeps_a_copy_first_and_takes_the_sheets_pricing_only_when_ask
     assert b.rate_pct == rate and list((data_folder / "backups").glob("Bodega * before-import.zip"))
     lib.import_items([Item(name="Astera Helios Tube")], ("5", "9"), b)
     assert (b.rate_pct, b.value_tax) == ("5", "9")
+
+
+def test_a_rentals_status_is_worded_in_one_place():
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "bodega"
+    copies = [
+        str(f.relative_to(root))
+        for f in root.rglob("*.py")
+        if re.search(r'"quote":\s*"Quote"', f.read_text(encoding="utf-8"))
+    ]
+    assert copies == ["core/model.py"], copies  # model.RENTAL_WORDS: every list, panel and page reads it
+
+
+def test_the_main_button_comes_from_one_helper():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "bodega" / "ui"
+    by_hand = [
+        str(f.relative_to(root))
+        for f in root.rglob("*.py")
+        if 'setObjectName("Primary")' in f.read_text(encoding="utf-8")
+    ]
+    assert by_hand == ["components/widgets.py"], by_hand  # widgets.primary_button() everywhere else

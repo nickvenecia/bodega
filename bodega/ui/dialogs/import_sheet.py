@@ -29,6 +29,7 @@ from bodega.ui.components.widgets import (
     ToggleRow,
     combo,
     hbox,
+    primary_button,
     set_combo,
     vbox,
 )
@@ -197,8 +198,7 @@ class ImportDialog(QDialog):
         buttons.addWidget(self.count, 1)
         cancel = QPushButton("Cancel")
         cancel.clicked.connect(self.reject)
-        self.go = QPushButton("Import")
-        self.go.setObjectName("Primary")
+        self.go = primary_button("Import")
         self.go.setDefault(True)
         self.go.clicked.connect(self._done)
         buttons.addWidget(cancel)

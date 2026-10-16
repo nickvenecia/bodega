@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QListWidget, QListWidg
 from bodega.core import money, pricing, search, words
 from bodega.core.model import Business
 from bodega.core.store import Library
-from bodega.ui.components.widgets import hbox, hint, vbox
+from bodega.ui.components.widgets import hbox, hint, primary_button, vbox
 from bodega.ui.style import theme, tokens
 
 KIND = Qt.ItemDataRole.UserRole
@@ -63,8 +63,7 @@ class GearPicker(QDialog):
         row.addWidget(self.count, 1)
         cancel = QPushButton("Cancel")
         cancel.clicked.connect(self.reject)
-        self.go = QPushButton(action)
-        self.go.setObjectName("Primary")
+        self.go = primary_button(action)
         self.go.setDefault(True)
         self.go.clicked.connect(self._done)
         row.addWidget(cancel)

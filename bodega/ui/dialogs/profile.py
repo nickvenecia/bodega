@@ -36,6 +36,7 @@ from bodega.ui.components.widgets import (
     hbox,
     hint,
     percent_field,
+    primary_button,
     vbox,
 )
 from bodega.ui.style.tokens import (
@@ -266,8 +267,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         buttons.addStretch(1)
         self.cancel_btn = cancel = QPushButton("Cancel")
         cancel.clicked.connect(self.reject)
-        self.save = QPushButton("Save")
-        self.save.setObjectName("Primary")
+        self.save = primary_button("Save")
         self.save.setDefault(True)
         self.save.clicked.connect(self._save)
         buttons.addWidget(cancel)

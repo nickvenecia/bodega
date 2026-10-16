@@ -15,7 +15,16 @@ from PySide6.QtWidgets import (
 )
 
 from bodega.core import words
-from bodega.ui.components.widgets import button_row, combo, hbox, hint, one_stop, suggestions, vbox
+from bodega.ui.components.widgets import (
+    button_row,
+    combo,
+    hbox,
+    hint,
+    one_stop,
+    primary_button,
+    suggestions,
+    vbox,
+)
 from bodega.ui.style import tokens
 from bodega.ui.style.tokens import DIALOG_W, SPACE_3, SPACE_5
 from bodega.ui.style.tokens import IMPORT_LIST_H as PICKER_LIST_H
@@ -158,8 +167,7 @@ def ask_name(
     row = button_row()
     cancel = QPushButton("Cancel")
     cancel.clicked.connect(d.reject)
-    go = QPushButton(action)
-    go.setObjectName("Primary")
+    go = primary_button(action)
     go.setDefault(True)
     go.clicked.connect(d.accept)
     go.setEnabled(bool(text.strip()))
@@ -190,8 +198,7 @@ def ask_choice(
     row = button_row()
     cancel = QPushButton("Cancel")
     cancel.clicked.connect(d.reject)
-    go = QPushButton(action)
-    go.setObjectName("Primary")
+    go = primary_button(action)
     go.setDefault(True)
     go.clicked.connect(d.accept)
     row.addWidget(cancel)
@@ -252,8 +259,7 @@ def pick_from(parent: QWidget, title: str, choices: list[tuple[str, str]], actio
     row = button_row()
     cancel = QPushButton("Cancel")
     cancel.clicked.connect(d.reject)
-    go = QPushButton(action)
-    go.setObjectName("Primary")
+    go = primary_button(action)
     go.setDefault(True)
     go.clicked.connect(d.accept)
     row.addWidget(cancel)
@@ -291,8 +297,7 @@ def tidy_preview(parent: QWidget, moves: list) -> bool:
     row = button_row()
     cancel = QPushButton("Cancel")
     cancel.clicked.connect(d.reject)
-    go = QPushButton("Tidy Up")
-    go.setObjectName("Primary")
+    go = primary_button("Tidy Up")
     go.setDefault(True)
     go.clicked.connect(d.accept)
     row.addWidget(cancel)
@@ -316,8 +321,7 @@ def about(parent: QWidget, version: str, data_folder: str) -> None:
     lay.addWidget(hint(f"Your gear and rentals are saved on this computer only, in {data_folder}"))
     lay.addWidget(hint("Open source under GPL-3.0. Fonts under the SIL Open Font License."))
     row = button_row()
-    ok = QPushButton("Done")
-    ok.setObjectName("Primary")
+    ok = primary_button("Done")
     ok.clicked.connect(d.accept)
     row.addWidget(ok)
     lay.addLayout(row)

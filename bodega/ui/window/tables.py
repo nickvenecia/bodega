@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from bodega.core import dates, earnings, money, pricing, search
-from bodega.core.model import Business, Item
+from bodega.core.model import RENTAL_WORDS, Business, Item
 from bodega.core.store import Library
 from bodega.ui.components import photos
 from bodega.ui.style import theme, tokens
@@ -1120,13 +1120,6 @@ class KitTable(Table):
         self._fill_end(keep, col, order)
 
 
-STATUS_WORDS = {
-    "quote": "Quote",
-    "booked": "Booked",
-    "out": "Out",
-    "returned": "Returned",
-    "cancelled": "Cancelled",
-}
 STATUS_COLORS = {  # token names, read when filling (light and dark differ)
     "quote": "MUTED",
     "booked": "INFO",
@@ -1173,7 +1166,7 @@ class RentalTable(Table):
                     (who or "No renter yet", who.casefold() or "~"),
                     (r.project, r.project.casefold()),
                     (dates.span(a, z), dates.iso(a) if a else ""),
-                    ("Late" if tone == "late" else STATUS_WORDS[r.status], tone),
+                    ("Late" if tone == "late" else RENTAL_WORDS[r.status], tone),
                     (money.fmt(t.total, cur), money.in_cents(t.total)),
                 ],
             )
