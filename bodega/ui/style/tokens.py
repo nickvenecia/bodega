@@ -107,6 +107,7 @@ WINDOW_SIZE = (1600, 1000)
 WINDOW_MIN = (1280, 700)  # the toolbar, table and inspector all fit
 TABLE_ROW_H = ROW_H  # one row in the gear, kit and rental tables
 NAME_MIN = 240  # the gear table's Name column never gets narrower; other columns step aside
+RENTER_MIN = 160  # the rentals table's Renter column, the same way
 GRIP_W = 28  # the grip column you drag a gear row by
 GRIP_GAP = SPACE_1  # between the grip's dots
 CHEVRON = 9  # a divider's open/closed chevron

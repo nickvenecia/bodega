@@ -1093,6 +1093,24 @@ def test_words_cut_short_can_still_be_read_whole(win):
     label.deleteLater()
 
 
+def test_a_search_that_finds_nothing_says_so_with_a_way_back(win):
+    win.go("all")
+    win.search.setText("zzqx nothing like it")
+    QApplication.processEvents()
+    nr = win.no_results
+    assert nr.isVisibleTo(win) and "zzqx" in nr.detail.text() and nr.clear.text() == "Clear Search"
+    nr.clear.click()
+    QApplication.processEvents()
+    assert win.search.text() == "" and not nr.isVisibleTo(win)
+    win.search.setText("cafe zyxw")  # accents never stop a match
+    it = next(iter(win.lib.items.values()))
+    it.name = "Café Zyxw Lens Kit"
+    win.refresh()
+    QApplication.processEvents()
+    rows = {r.data(0, 256): r for r in win.gear_table.item_rows()}
+    assert not nr.isVisibleTo(win) and not rows[it.id].isHidden()  # (with what goes with it)
+
+
 def test_measured_to_the_standard(win):
     """The standard's Appendix A, measured in the real window: controls 28, the bar's circles 36, table rows 44,
     sidebar rows 32, figures that line up."""
@@ -1124,3 +1142,38 @@ def test_measured_to_the_standard(win):
     piece = next(r for r in win.gear_table.item_rows() if r.data(0, ID))
     assert piece.font(GEAR_COL["qty"]).isFeatureSet(QFont.Tag("tnum"))  # figures line up…
     assert not piece.font(GEAR_COL["name"]).isFeatureSet(QFont.Tag("tnum"))  # …words keep their spacing
+
+
+def test_rental_columns_make_room_for_the_renter(win):
+    from bodega.ui.style import tokens
+    from bodega.ui.window.tables import RentalTable
+
+    t = RentalTable()
+    t.fill(win.lib, "all")
+    t.resize(1300, 400)
+    t.show()
+    QApplication.processEvents()
+    assert not any(t.isColumnHidden(c) for c in range(6))
+    t.resize(640, 400)  # a 1280 window with a rental's panel open
+    QApplication.processEvents()
+    assert t.isColumnHidden(2) and t.isColumnHidden(5)  # Production steps aside first, then Total
+    assert t.columnWidth(1) >= tokens.RENTER_MIN - 1
+    assert not any(t.isColumnHidden(c) for c in (0, 1, 3, 4))  # number, renter, dates and status stay
+    t.close()
+    t.deleteLater()
+
+
+def test_a_date_is_never_cut_off(qapp):
+    from bodega.ui.components.widgets import DATE_FORMATS, date_field
+
+    d = date_field()
+    d.show()
+    d.resize(320, 28)
+    QApplication.processEvents()
+    assert d.displayFormat() == DATE_FORMATS[0]  # "Sun, Oct 18, 2026" when there's room
+    d.resize(140, 28)
+    QApplication.processEvents()
+    assert d.displayFormat() != DATE_FORMATS[0]
+    assert d.fontMetrics().horizontalAdvance(d.text()) <= d.width()
+    d.close()
+    d.deleteLater()

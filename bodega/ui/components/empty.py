@@ -7,10 +7,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtWidgets import QFrame, QLabel, QWidget
+from PySide6.QtCore import QEvent, Qt, QTimer, Signal
+from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QWidget
 
-from bodega.ui.components.widgets import IconLabel, hbox, repolish, vbox
+from bodega.ui.components.widgets import IconLabel, hbox, hint, repolish, vbox
 from bodega.ui.style import theme, tokens
 
 SHEETS = (".xlsx", ".xlsm", ".csv")  # what the Import window reads
@@ -153,3 +153,55 @@ class EmptyPage(QWidget):
             return
         e.acceptProposedAction()
         QTimer.singleShot(0, lambda: self.dropped.emit(path))  # after the drag ends: the Import window waits
+
+
+class NoResults(QWidget):
+    """Over a table whose every row a search or a filter hides: "No Results", what hid them, and the way back
+    (Clear Search or Clear Filters). It sits on the table it covers and is hidden, never thrown away, when the
+    rows come back (its button may still be finishing its click)."""
+
+    clear_wanted = Signal(str)  # "search" or "filters"
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setObjectName("NoResults")
+        self._what = "search"
+        lay = vbox(self, tokens.SPACE_5, tokens.SPACE_2)
+        lay.addStretch(2)
+        self.title = QLabel("No Results")
+        self.title.setObjectName("EmptyTitle")
+        self.detail = hint("")
+        self.clear = QPushButton("Clear Search")
+        self.clear.clicked.connect(
+            lambda: QTimer.singleShot(0, self, lambda: self.clear_wanted.emit(self._what))
+        )
+        for w in (self.title, self.detail):
+            w.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            lay.addWidget(w)
+        lay.addSpacing(tokens.SPACE_2)
+        lay.addWidget(self.clear, 0, Qt.AlignmentFlag.AlignHCenter)
+        lay.addStretch(3)
+        self.hide()
+
+    def show_over(self, table, text: str) -> None:
+        """Cover `table` (a QAbstractItemView): nothing matches `text`, or (no text) the filters."""
+        area = table.viewport()
+        if self.parent() is not area:
+            if self.parent() is not None:
+                self.parent().removeEventFilter(self)
+            self.setParent(area)
+            area.installEventFilter(self)
+        searched = text.strip()
+        self._what = "search" if searched else "filters"
+        self.detail.setText(
+            f"Nothing matches \u201c{searched}\u201d." if searched else "Nothing matches these filters."
+        )
+        self.clear.setText("Clear Search" if searched else "Clear Filters")
+        self.setGeometry(area.rect())
+        self.show()
+        self.raise_()
+
+    def eventFilter(self, obj, e):
+        if e.type() == QEvent.Type.Resize and obj is self.parent():
+            self.setGeometry(obj.rect())
+        return False

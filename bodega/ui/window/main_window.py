@@ -30,7 +30,7 @@ from bodega.core.log import get_logger
 from bodega.core.model import Business
 from bodega.core.store import Library
 from bodega.ui.components import titlebar
-from bodega.ui.components.empty import EmptyPage
+from bodega.ui.components.empty import EmptyPage, NoResults
 from bodega.ui.components.glass import Dock, GlassRoot, glass
 from bodega.ui.components.widgets import Banner, ElidedLabel, SearchField, Toast, hbox, vbox
 from bodega.ui.dialogs.preview import PageDialog
@@ -205,7 +205,6 @@ class MainWindow(
         self.btn_ai.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_ai.setProperty("bar", True)
         self.btn_ai.clicked.connect(self.toggle_assistant)
-        right.addWidget(self.btn_ai)
         self.btn_new = QToolButton()
         self.btn_new.setObjectName("CirclePrimary")
         self.btn_new.setIcon(theme.icon("plus", theme.ON_ACCENT, tokens.ICON_BAR))
@@ -214,6 +213,7 @@ class MainWindow(
         self.btn_new.setProperty("bar", True)
         self.btn_new.clicked.connect(lambda: self.new(kind_of(self.view_key)))
         right.addWidget(self.btn_new)
+        right.addWidget(self.btn_ai)  # the assistant comes last, after the page's one main action
         grid.addLayout(right, 0, 2)
         lay.addWidget(bar)
         self.toolbar = bar
@@ -232,6 +232,8 @@ class MainWindow(
         self.cal_scroll = cal_scroll
         self.empty = EmptyPage()  # where the table would be, with nothing in it yet
         self.empty.dropped.connect(self.import_file)
+        self.no_results = NoResults()  # over a table when a search or the filters hide every row
+        self.no_results.clear_wanted.connect(self._clear_hiding)
         for w in (self.gear_table, self.kit_table, self.rental_table, cal_scroll, self.empty):
             self.pages.addWidget(w)
         lay.addWidget(self.pages, 1)
@@ -478,8 +480,10 @@ class MainWindow(
         self.totals.setVisible(t is self.gear_table and bool(self.lib.items))
         if t is None:
             self.count.set_full_text("")
+            self.no_results.hide()
             return
         text = self.search.text()
+        filtered = t is self.gear_table and self.view_menu.filter.active()
         if t is self.gear_table:
             shown = t.show_only(text, self.view_menu.filter.keep(self.lib))
             self._totals(shown)
@@ -489,6 +493,18 @@ class MainWindow(
         else:
             n = sum(1 for i in range(t.topLevelItemCount()) if not t.topLevelItem(i).isHidden())
         self.count.set_full_text(f"{n:,}" if n else "")
+        if n == 0 and t.topLevelItemCount() and (text.strip() or filtered):
+            self.no_results.show_over(t, text)
+        else:
+            self.no_results.hide()
+
+    def _clear_hiding(self, what: str) -> None:
+        """No Results' button: the search, or the filters, put back."""
+        if what == "search":
+            self.search.clear()
+        else:
+            self.view_menu.clear()
+            self.view_menu.changed.emit()
 
     def _totals(self, shown: list[str]) -> None:
         """The bar under the gear table: what the gear showing adds up to (every row is one piece)."""

@@ -87,6 +87,12 @@
   the middle.
 - Deleting a profile names it ("Delete Second Unit?") and says Edit › Undo brings it back, which it does.
 - Settings no longer shows an Account page while there's nothing to sign in to.
+- A search that finds nothing says "No Results" with a Clear Search button (or Clear Filters, when the filters
+  hid everything), instead of an empty table.
+- Search ignores accents as well as capitals: "cafe" finds "Café".
+- The Assistant's button is now last in the bar, after +.
+- With a rental open beside the list, Production and then Total step aside so renters' names have room.
+- Dates are never cut off: a narrow date box shows "Oct 18, 2026" instead of "Sun, Oct 18, 202".
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

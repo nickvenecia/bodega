@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.core import dates, earnings, money, pricing
+from bodega.core import dates, earnings, money, pricing, search
 from bodega.core.model import Business, Item
 from bodega.core.store import Library
 from bodega.ui.components import photos
@@ -149,6 +149,27 @@ class Table(QTreeWidget):
 
     def slide_done(self) -> None:
         """The slide is over: settle anything held still while it ran."""
+        self._step_aside()
+
+    # ------------------------------------------------------------------ narrow
+    STEP_ASIDE: tuple[int, ...] = ()  # columns that make way, in turn, so the wide one keeps WIDE_MIN
+    WIDE_MIN = tokens.NAME_MIN
+
+    def _step_aside(self) -> None:
+        if not self.STEP_ASIDE:
+            return
+        room = self.viewport().width() - self.WIDE_MIN
+        needed = sum(w for _t, w, _a in self.COLUMNS if w)
+        for col in self.STEP_ASIDE:
+            hide = needed > room
+            if hide:
+                needed -= self.COLUMNS[col][1]
+            self.setColumnHidden(col, hide)
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        if not self.sliding:
+            self._step_aside()
 
     def paintEvent(self, e):
         if self._slide is None:
@@ -286,7 +307,7 @@ class Table(QTreeWidget):
 
     def filter(self, text: str) -> int:
         """Hide rows that don't match every word. Returns how many top rows show."""
-        words = text.casefold().split()
+        words = search.words(text)
 
         def walk(row) -> bool:
             kids = any([walk(row.child(i)) for i in range(row.childCount())])
@@ -974,7 +995,7 @@ class GearTable(Table):
         row.setData(0, WHERE, (it.group, it.brand))
         row.setData(0, PHOTO, it.photo)
         hay = (it.name, it.brand, it.series, it.group, it.notes, " ".join(it.serials), on)
-        row.setData(0, HAY, " ".join(hay).casefold())
+        row.setData(0, HAY, search.folded(" ".join(hay)))
         return row
 
     def item_rows(self):
@@ -991,7 +1012,7 @@ class GearTable(Table):
     def show_only(self, text: str, keep=None) -> list[str]:
         """Hide rows that don't match every word of `text` (and `keep(item_id)`, when given).
         Gear that goes with a piece shows only when searching. Returns the ids of the rows left showing."""
-        words = text.casefold().split()
+        words = search.words(text)
         shown: list[str] = []
         for row in self.item_rows():
             ok = all(w in (row.data(0, HAY) or "") for w in words)
@@ -1023,6 +1044,7 @@ class KitTable(Table):
         ("Week", tokens.COL_W["rate"], RIGHT),
         ("Value", tokens.COL_W["value"], RIGHT),
     ]
+    STEP_ASIDE = (4, 3)  # Value, then Week
 
     def fill(self, lib: Library, b: Business | None) -> None:
         keep, col, order = self._fill_start()
@@ -1042,7 +1064,7 @@ class KitTable(Table):
                     (money.fmt_short(money.whole(value), cur), money.in_cents(value)),
                 ],
             )
-            row.setData(0, HAY, (p.name + " " + p.notes).casefold())
+            row.setData(0, HAY, search.folded(p.name + " " + p.notes))
         self._fill_end(keep, col, order)
 
 
@@ -1072,6 +1094,8 @@ class RentalTable(Table):
         ("Status", tokens.COL_W["rental_status"], None),
         ("Total", tokens.COL_W["total"], RIGHT),
     ]
+    STEP_ASIDE = (2, 5, 4)  # Production, then Total (the open rental's panel shows it), then Status
+    WIDE_MIN = tokens.RENTER_MIN
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -1105,7 +1129,9 @@ class RentalTable(Table):
                 ],
             )
             row.setForeground(4, theme.qcolor(getattr(tokens, STATUS_COLORS[tone])))
-            row.setData(0, HAY, " ".join((r.number, r.client.name, r.client.company, r.project)).casefold())
+            row.setData(
+                0, HAY, search.folded(" ".join((r.number, r.client.name, r.client.company, r.project)))
+            )
         self._fill_end(keep, col, order)
 
 

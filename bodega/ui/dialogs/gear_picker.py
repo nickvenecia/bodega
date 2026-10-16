@@ -9,7 +9,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QListWidget, QListWidgetItem, QPushButton, QWidget
 
-from bodega.core import money, pricing
+from bodega.core import money, pricing, search
 from bodega.core.model import Business
 from bodega.core.store import Library
 from bodega.ui.components.widgets import hbox, hint, vbox
@@ -127,7 +127,7 @@ class GearPicker(QDialog):
         it.setCheckState(Qt.CheckState.Unchecked)
         it.setData(KIND, kind)
         it.setData(REF, ref)
-        it.setData(HAY, hay.casefold())
+        it.setData(HAY, search.folded(hay))
         self.list.addItem(it)
 
     def _toggle(self, it: QListWidgetItem) -> None:
@@ -136,7 +136,7 @@ class GearPicker(QDialog):
             it.setCheckState(Qt.CheckState.Unchecked if on else Qt.CheckState.Checked)
 
     def _filter(self, text: str) -> None:
-        words = text.casefold().split()
+        words = search.words(text)
         heading = None
         heading_has = False
         for i in range(self.list.count()):
