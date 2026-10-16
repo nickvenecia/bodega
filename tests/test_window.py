@@ -1322,3 +1322,30 @@ def test_folding_by_keyboard_is_remembered_and_option_click_folds_every_group(wi
     )
     GearTable._divider_clicked(t, dividers[1], 0)  # ⌥-click on an open one folds them all
     assert not any(d.isExpanded() for d in t._dividers())
+
+
+def test_a_rows_menu_has_what_its_panels_more_menu_has(win, monkeypatch):
+    from PySide6.QtCore import QPoint
+    from PySide6.QtWidgets import QMenu
+
+    from bodega.ui.window import main_window, tables
+
+    seen: list[set[str]] = []
+
+    class Noted(QMenu):  # a menu that's noted instead of shown
+        def exec(self, *_a):
+            seen.append({a.text() for a in self.actions()})
+
+    monkeypatch.setattr(main_window, "QMenu", Noted)
+    monkeypatch.setattr(tables, "QMenu", Noted)
+    cases = [
+        ("gear", next(i.id for i in win.lib.items.values() if not i.parent), win.items),
+        ("packages", next(iter(win.lib.packages)), win.packages),
+        ("rentals", next(iter(win.lib.rentals)), win.rentals),
+    ]
+    for kind, obj_id, panel in cases:
+        win.open(kind, obj_id)
+        win._row_menu(kind, obj_id, QPoint(0, 0))
+        mine = {a.text() for a in panel.more_menu.actions() if a.text() and a.isVisible()}
+        missing = mine - seen[-1] - {"Delete Rental…", "Delete Kit…"}  # (the row says Delete…)
+        assert not missing, (kind, missing)

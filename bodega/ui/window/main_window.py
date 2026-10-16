@@ -741,6 +741,9 @@ class MainWindow(
                     "Rent This…",
                     lambda: (self.open("gear", obj_id), self.rent_this()),
                 )
+                m.addAction(
+                    theme.menu_icon("assistant"), "Update with AI", lambda: self.ai_this_piece(obj_id)
+                )
                 m.addSeparator()
                 m.addAction(theme.menu_icon("trash"), "Delete…", lambda: self.delete(kind, obj_id))
             else:
@@ -748,8 +751,14 @@ class MainWindow(
             m.exec(pos)
             return
         items = [("copy", "Duplicate", lambda: self.duplicate(kind, obj_id))]
-        if kind == "rentals":
-            items.append(("file", "Agreement…", lambda: self.show_pages(("rental", obj_id))))
+        if kind == "rentals":  # the same commands as the rental's own ⋯ (and its Agreement…)
+            items += [
+                ("file", "Agreement…", lambda: self.show_pages(("rental", obj_id))),
+                ("calendar", "Add to Calendar", lambda: self.add_to_calendar(obj_id)),
+                ("check", "Check Out…", lambda: self.check_rental(obj_id, False)),
+                ("check", "Check In…", lambda: self.check_rental(obj_id, True)),
+                ("receipt", "Send to Saldo…", lambda: self.send_to_saldo(obj_id)),
+            ]
             r = self.lib.rentals.get(obj_id)
             if r is not None and not r.deletable():  # a booked rental is cancelled, never deleted
                 if not r.is_cancelled():
