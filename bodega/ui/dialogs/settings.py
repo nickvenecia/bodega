@@ -356,7 +356,7 @@ class SettingsDialog(QDialog):
         try:
             account.sign_out()
         except OSError as e:
-            self.win.toast(errors.plain(e, "sign out"), "problem")
+            self.win.toast(errors.plain(e, "sign out"), "error")
         self._build_account()
         self.win.sidebar.show_who()
 

@@ -145,7 +145,7 @@
 - Much faster with a big inventory: with 3,000 pieces and 2,000 rentals, opening Bodega went from about 10 seconds
   to under 2, opening a piece from about 5 seconds to a fraction of one, and deleting 300 pieces at once from
   about 3 seconds to half of one. Undo uses a small fraction of the memory it did, and keeps track twice as fast.
-- A right-click on a row offers what the ⋯ in its panel does: Update with AI on gear; Add to Calendar, Check Out,
+- A right-click on a row offers what the ⋯ in its panel does: Update with AI… on gear; Add to Calendar, Check Out,
   Check In and Send to Saldo on rentals.
 - The share button above the gear list opens the page window straight away (Inventory List, Rate Card, Labels).
   Importing a spreadsheet or a Google Sheet is under the + (and in File).
@@ -163,7 +163,7 @@
   it matches, or by how much it's off.
 - A piece you renamed after importing it isn't brought in a second time when you import the same sheet again:
   Bodega remembers the name the sheet gave it.
-- On a Mac, the menu bar has a Gear menu (Rent This, Update with AI, Make It Its Own Piece) and a Rental menu
+- On a Mac, the menu bar has a Gear menu (Rent This, Update with AI…, Make It Its Own Piece) and a Rental menu
   (Agreement…, Check Out…, Check In…, Send to Saldo…, Add to Calendar, Mark as Cancelled…) for what's open.
 - Asking the Assistant to change every piece from one company or in one group ("put all the Aputure gear in its
   own group") now reaches all of them, even in a big inventory: Bodega finds every match itself, and you review
@@ -195,6 +195,11 @@
 - The words follow Bodega's own: the inventory list and rate card say Gear where they said Item, the Import button
   counts rows ("Import 12 Rows"), and a few labels are shorter (Choose File…, From Link, Use Sheet Pricing, Gear
   Discount, Own Day Rate, a group of None). In AI Settings, what's sent and what it costs now sit under the form.
+- The gear jobs (Update from Links…, Find Missing Links…, Tidy Up Names…, Organize Groups…, and Update with AI… on
+  a piece) are written the same way everywhere, each with "…": each ends in Review, and nothing changes until you
+  approve.
+- When the computer can't do something you asked (read a file, use a photo, sign out, check for updates), the
+  message stays at the bottom of the window until you click it away, instead of fading before you've read it.
 - Undo says what it takes back ("Undo Delete Sony FX6", "Undo Change to JLF-2026-001") and shows you the piece,
   kit or rental it brought back.
 - File › Export Kits as CSV… and Export Rentals as CSV… (also in Settings › Your Data): each kit with its prices and

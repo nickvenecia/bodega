@@ -565,7 +565,7 @@ class AssistantPanel(SidePanel):
         grid.setSpacing(tokens.SPACE_2)
         self.job_buttons: dict[str, QPushButton] = {}
         for n, (key, label, tip) in enumerate(JOBS):
-            b = QPushButton(label)
+            b = QPushButton(f"{label}…")  # each ends in Review: nothing changes until you approve
             b.setToolTip(tip)
             b.setProperty("tip", tip)
             b.clicked.connect(lambda _c=False, k=key: self.job_wanted.emit(k))

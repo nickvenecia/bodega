@@ -266,13 +266,13 @@ def _log_uncaught() -> None:
 
 
 def _say_problem(text: str) -> None:
-    """A problem toast in the main window, once whatever failed is over."""
+    """An error toast in the main window (it stays until closed), once whatever failed is over."""
     from PySide6.QtCore import QTimer
 
     app = QApplication.instance()
     for w in app.topLevelWidgets() if app is not None else []:
         if hasattr(w, "toast") and w.isVisible():
-            QTimer.singleShot(0, w, lambda w=w: w.toast(text, "problem"))
+            QTimer.singleShot(0, w, lambda w=w: w.toast(text, "error"))
             return
 
 

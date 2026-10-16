@@ -145,7 +145,7 @@ class AIMixin:
         )
 
     def ai_this_piece(self, item_id: str) -> None:
-        """⋯ › Update with AI on a piece: its link if it has one, else find one."""
+        """⋯ › Update with AI… on a piece: its link if it has one, else find one."""
         it = self.lib.items.get(item_id)
         if it is not None:
             self.open_ai_assistant("links" if it.link.strip() else "find", [it])

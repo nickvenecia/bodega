@@ -108,7 +108,7 @@ class MenusMixin:
         gm = bar.addMenu("Gear")
         self.gear_acts = [
             act(gm, "Rent This", self.rent_this),
-            act(gm, "Update with AI", lambda: self._with_open_piece(self.ai_this_piece)),
+            act(gm, "Update with AI…", lambda: self._with_open_piece(self.ai_this_piece)),
             act(gm, "Make It Its Own Piece", lambda: self._with_open_piece(self.detach)),
         ]
         gm.addSeparator()  # the group you're in (not only from its right-click menu)

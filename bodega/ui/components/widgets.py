@@ -527,11 +527,14 @@ class Toast(QWidget):
     Its tone's icon says what kind it is: "done" (a green check), "problem" (an amber alert, on an amber-tinted
     toast) or news (an info sign). It never takes a click (what's under it still works); resting the pointer on
     it keeps it up while you read. Painted, so its words are always plain text.
+    "error" is a problem that needs you (a file that couldn't be read, a photo that couldn't be used): it looks
+    like a problem, with a ✕, and stays until it's clicked away or another message takes its place.
     `anchor`: where it centres itself, in the parent's coordinates (the page, between the side panels)."""
 
     TONES = {
         "done": ("check", "TOAST_DONE"),
         "problem": ("alert", "TOAST_PROBLEM"),
+        "error": ("alert", "TOAST_PROBLEM"),
         "": ("info", "TOAST_TEXT"),
     }
 
@@ -559,6 +562,10 @@ class Toast(QWidget):
         self.text, self.tone = text, tone if tone in self.TONES else ""
         ms = ms or (tokens.TOAST_WARN_MS if self.tone == "problem" else tokens.TOAST_MS)
         self._ms = max(ms, len(text) * tokens.TOAST_MS_PER_CHAR)
+        lasts = self.lasts()
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, not lasts)  # an error: a click closes it
+        self.setCursor(Qt.CursorShape.PointingHandCursor if lasts else Qt.CursorShape.ArrowCursor)
+        self.setToolTip(theme.plain_tip("Close") if lasts else "")
         self.place()
         self.raise_()
         # already up (progress, say): just new words, no new entrance
@@ -567,9 +574,23 @@ class Toast(QWidget):
             self._go(1.0, tokens.TOAST_IN_MS, QEasingCurve.Type.OutCubic)
         self.show()
         self.update()
-        self._t.start(self._ms)
+        if lasts:
+            self._t.stop()
+        else:
+            self._t.start(self._ms)
         self.setAccessibleName(text)
         announce(self, text)
+
+    def lasts(self) -> bool:
+        """An error that needs you stays until you close it."""
+        return self.tone == "error"
+
+    def mousePressEvent(self, e) -> None:
+        if self.lasts() and self._pill.contains(e.position()):
+            self.dismiss()
+            e.accept()
+            return
+        super().mousePressEvent(e)
 
     def dismiss(self) -> None:
         if self.isVisible() and not self._leaving:
@@ -582,6 +603,7 @@ class Toast(QWidget):
         area = self.anchor()
         m = glass.shadow_margin()
         icon_w = tokens.ICON + tokens.SPACE_2
+        icon_w += self._close_w()
         pad_x, pad_y = tokens.SPACE_4, tokens.SPACE_3
         widest = max(tokens.ICON, min(tokens.TOAST_MAX_W, area.width() - 2 * tokens.SPACE_5) - 2 * pad_x - icon_w)
         flags = int(Qt.TextFlag.TextWordWrap)
@@ -599,6 +621,10 @@ class Toast(QWidget):
     @staticmethod
     def _font():
         return theme.font(tokens.TEXT_MD, tokens.WEIGHT_MEDIUM)
+
+    def _close_w(self) -> int:
+        """The room an error's ✕ takes, after its words."""
+        return tokens.SPACE_3 + tokens.ICON_SM if self.lasts() else 0
 
     def _go(self, to: float, ms: int, curve) -> None:
         self._anim.stop()
@@ -632,7 +658,7 @@ class Toast(QWidget):
         rise = 0 if access.reduce_motion() else tokens.TOAST_RISE  # Reduce Motion: it fades, never rises
         r = self._pill.translated(0, (1 - self._shown) * rise)
         glass.paint_shadow(p, r, tokens.RADIUS_LG, tokens.TOAST_SHADOW)
-        problem = self.tone == "problem"
+        problem = self.tone in ("problem", "error")
         path = QPainterPath()
         path.addRoundedRect(r, tokens.RADIUS_LG, tokens.RADIUS_LG)
         p.fillPath(path, theme.qcolor(tokens.TOAST_PROBLEM_FILL if problem else tokens.TOAST))
@@ -646,10 +672,14 @@ class Toast(QWidget):
             QSize(tokens.ICON, tokens.ICON), self.devicePixelRatioF()
         )
         p.drawPixmap(QPointF(r.left() + pad_x, r.center().y() - tokens.ICON / 2), icon)
-        text = r.adjusted(pad_x + tokens.ICON + tokens.SPACE_2, 0, -pad_x, 0)
+        text = r.adjusted(pad_x + tokens.ICON + tokens.SPACE_2, 0, -pad_x - self._close_w(), 0)
         p.setFont(self._font())
         p.setPen(theme.qcolor(tokens.TOAST_TEXT))
         p.drawText(text, int(Qt.TextFlag.TextWordWrap | Qt.AlignmentFlag.AlignVCenter), self.text)
+        if self.lasts():
+            s = tokens.ICON_SM
+            close = theme.icon("x", tokens.TOAST_TEXT, s).pixmap(QSize(s, s), self.devicePixelRatioF())
+            p.drawPixmap(QPointF(r.right() - pad_x - s, r.center().y() - s / 2), close)
         p.end()
 
 

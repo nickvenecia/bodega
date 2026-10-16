@@ -62,7 +62,7 @@ class ServicesMixin:
         check = CheckThread(self)
         check.quiet = quiet
         check.found.connect(lambda rel: self._found_release(rel, check.quiet))
-        check.failed.connect(lambda m: None if check.quiet else self.toast(m, "problem"))
+        check.failed.connect(lambda m: None if check.quiet else self.toast(m, "error"))
         check.finished.connect(lambda: setattr(self, "_update_check", None))
         check.finished.connect(check.deleteLater)  # a finished check doesn't stay under the window
         self._update_check = check

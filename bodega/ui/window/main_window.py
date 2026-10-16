@@ -810,7 +810,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
                     "Rent This",
                     lambda: (self.open("gear", obj_id), self.rent_this()),
                 )
-                m.addAction(theme.menu_icon("assistant"), "Update with AI", lambda: self.ai_this_piece(obj_id))
+                m.addAction(theme.menu_icon("assistant"), "Update with AI…", lambda: self.ai_this_piece(obj_id))
                 m.addSeparator()
                 m.addAction(theme.menu_icon("trash"), "Delete…", lambda: self.delete(kind, obj_id))
             else:
@@ -860,7 +860,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
     # Misc
     def toast(self, text: str, tone: str = "") -> None:
         """A short message over the page. `tone`: "done" (it worked), "problem" (it didn't: say what to do),
-        or "" for news."""
+        "error" (the computer couldn't do it: stays until closed) or "" for news."""
         self.toaster.show_message(text, tone)
         self._clear_of_toast()
 

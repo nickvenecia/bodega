@@ -1817,3 +1817,16 @@ def test_the_group_youre_in_has_its_commands_in_the_gear_menu(win, monkeypatch):
     win.go("gear")
     win._record_menu_state()
     assert not any(a.isEnabled() for a in win.group_acts)  # not in a group: off
+
+
+def test_an_error_that_needs_you_stays_until_you_close_it(win):
+    """The standard's toasts: a warning leaves after a while; an error that needs the person stays until it's
+    dismissed (a click on it), and while it's up it takes the click instead of what's under it."""
+    t = win.toaster
+    win.toast("Couldn't read that file: it's open in another app.", "error")
+    assert t.isVisible() and t.lasts() and not t._t.isActive()
+    assert not t.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+    QTest.mouseClick(t, Qt.MouseButton.LeftButton, pos=t._pill.center().toPoint())
+    wait_for(lambda: not t.isVisible())
+    win.toast("Couldn't save.", "problem")  # a warning still goes by itself, and never takes a click
+    assert t._t.isActive() and t.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)

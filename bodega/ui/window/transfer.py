@@ -99,7 +99,7 @@ class TransferMixin:
         try:
             rows = importer.load_rows(path)
         except OSError as e:
-            self.toast(errors.plain(e, "read that file"), "problem")
+            self.toast(errors.plain(e, "read that file"), "error")
             return 0
         have = {(i.name.casefold(), i.department.casefold()): i.id for i in self.lib.items.values()}
         for (
@@ -358,7 +358,7 @@ class TransferMixin:
         w = Worker(job, self)
         w.progress.connect(lambda i, total: self.toast(f"Getting photos… {i + 1} of {total}"))
         w.done.connect(self._photos_came)
-        w.failed.connect(lambda e: self.toast(e, "problem"))
+        w.failed.connect(lambda e: self.toast(e, "error"))
         w.finished.connect(lambda: (setattr(self, "_photo_worker", None), w.deleteLater()))
         self._photo_worker = w
         w.start()

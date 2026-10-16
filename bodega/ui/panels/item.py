@@ -174,7 +174,7 @@ class ItemPanel(DetailsBase):
         lay.setSpacing(tokens.SPACE_3)
 
         self.menu_action("copy", "Duplicate", lambda: self.it and self.duplicate_wanted.emit(self.it.id))
-        self.menu_action("assistant", "Update with AI", lambda: self.it and self.ai_wanted.emit(self.it.id))
+        self.menu_action("assistant", "Update with AI…", lambda: self.it and self.ai_wanted.emit(self.it.id))
         self.menu_action("", "-", None)
         self.menu_action("trash", "Delete…", lambda: self.it and self.delete_wanted.emit(self.it.id))
         self.rent = self.footer_button("Rent This", "receipt")
@@ -689,7 +689,7 @@ class ItemPanel(DetailsBase):
         except ValueError as e:  # not a picture, too big: said plainly by photos
             self.toast_wanted.emit(str(e), "problem")
         except OSError as e:
-            self.toast_wanted.emit(errors.plain(e, "use that photo"), "problem")
+            self.toast_wanted.emit(errors.plain(e, "use that photo"), "error")
 
     def photo_from_link(self) -> None:
         if self.it is not None and web.web_link(self.it.link):
@@ -759,7 +759,7 @@ class ItemPanel(DetailsBase):
             except ValueError as e:
                 self.toast_wanted.emit(str(e), "problem")
             except OSError as e:
-                self.toast_wanted.emit(errors.plain(e, "use that photo"), "problem")
+                self.toast_wanted.emit(errors.plain(e, "use that photo"), "error")
             return True
         link = photos.picture_link(mime) if links else ""
         if link:
