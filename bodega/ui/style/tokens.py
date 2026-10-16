@@ -195,6 +195,7 @@ START_TILE_W = 184  # one way to start on an empty page (three fit beside the in
 START_BADGE = 40  # the circle behind a start tile's icon
 PROFILE_CARD_H = 48
 TOOLBAR_H = 64  # the bar above a table: title, search, New
+PAGE_INSET = 28  # (the large title's inset) a page's title, its list's words and its last button sit this far in
 SEARCH_W = 280  # (bar-search-w) the bar's search field…
 SEARCH_MIN = 160  # the search box at its narrowest
 PAGE_DIALOG_SIZE = (1100, 1000)  # the agreement / inventory / rate card window

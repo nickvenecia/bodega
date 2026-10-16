@@ -8,7 +8,7 @@ finds them too. Right-click the column titles to choose the columns.
 
 from __future__ import annotations
 
-from PySide6.QtCore import QEvent, QPoint, QPointF, QRectF, QSize, Qt, QTimer, Signal
+from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPen, QPixmap, QRegion
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -30,6 +30,19 @@ from bodega.core.store import Library
 from bodega.ui.components import photos
 from bodega.ui.style import theme, tokens
 from bodega.ui.window.lift import Lift
+
+
+def words_inset(view: QTreeWidget) -> int:
+    """How far a cell's words sit inside the cell: its padding, then the style's own margin before the words."""
+    opt = QStyleOptionViewItem()
+    opt.initFrom(view.viewport())
+    opt.rect = QRect(0, 0, tokens.SEARCH_W, tokens.TABLE_ROW_H)
+    opt.features |= QStyleOptionViewItem.ViewItemFeature.HasDisplay
+    opt.text = "x"
+    style = view.style()
+    text = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, opt, view)
+    return text.left() + style.pixelMetric(QStyle.PixelMetric.PM_FocusFrameHMargin, None, view) + 1
+
 
 ID = Qt.ItemDataRole.UserRole
 SORT = Qt.ItemDataRole.UserRole + 1

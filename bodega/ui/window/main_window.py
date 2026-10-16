@@ -50,7 +50,7 @@ from bodega.ui.window.menus import MenusMixin
 from bodega.ui.window.pages import PagesMixin
 from bodega.ui.window.services import ServicesMixin
 from bodega.ui.window.sidebar import Sidebar
-from bodega.ui.window.tables import DIVIDES, ID, GearTable, KitTable, RentalTable, menu
+from bodega.ui.window.tables import DIVIDES, ID, GearTable, KitTable, RentalTable, menu, words_inset
 from bodega.ui.window.transfer import TransferMixin
 
 log = get_logger(__name__)
@@ -177,7 +177,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         bar.setFixedHeight(tokens.TOOLBAR_H)
         # three parts: the title on the left, the search and filters centred, the buttons on the right
         grid = QGridLayout(bar)
-        grid.setContentsMargins(tokens.SPACE_4, 0, tokens.SPACE_2, 0)
+        grid.setContentsMargins(tokens.PAGE_INSET, 0, tokens.PAGE_INSET, 0)  # the page's two edges
         grid.setHorizontalSpacing(tokens.SPACE_4)
         grid.setColumnStretch(0, 1)
         grid.setColumnStretch(2, 1)
@@ -263,10 +263,15 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.no_results.clear_wanted.connect(self._clear_hiding)
         for w in (self.gear_table, self.kit_table, self.rental_table, cal_scroll, self.empty):
             self.pages.addWidget(w)
-        lay.addWidget(self.pages, 1)
+        # one left edge and one right edge: a list's words line up with the title and the bar's last button
+        edge = max(0, tokens.PAGE_INSET - words_inset(self.gear_table))
+        box = QWidget()
+        vbox(box, (edge, 0, edge, 0), 0).addWidget(self.pages)
+        self.calendar.set_edge(tokens.PAGE_INSET - edge)  # (the calendar's own words have no cell around them)
+        lay.addWidget(box, 1)
         self.totals = QFrame()
         self.totals.setObjectName("Totals")
-        tl = hbox(self.totals, (tokens.SPACE_5, tokens.SPACE_3, tokens.SPACE_5, tokens.SPACE_3), tokens.SPACE_5)
+        tl = hbox(self.totals, (tokens.PAGE_INSET, tokens.SPACE_3, tokens.PAGE_INSET, tokens.SPACE_3), tokens.SPACE_5)
         self.total_values: dict[str, QLabel] = {}
         self.total_labels: dict[str, QLabel] = {}
         tl.addStretch(1)

@@ -375,11 +375,15 @@ class CalendarPage(QWidget):
     picked = Signal(str)
     mode_changed = Signal(str)
 
+    def set_edge(self, inset: int) -> None:
+        """How far in the month and its title start, so they line up with the page's title."""
+        self.layout().setContentsMargins(inset, 0, inset, tokens.SPACE_3)
+
     def __init__(self, parent: QWidget | None = None):
         from bodega.ui.components.widgets import FitScroll, Segmented, hbox, vbox
 
         super().__init__(parent)
-        lay = vbox(self, (tokens.SPACE_4, 0, tokens.SPACE_4, tokens.SPACE_3), tokens.SPACE_3)
+        lay = vbox(self, (tokens.PAGE_INSET, 0, tokens.PAGE_INSET, tokens.SPACE_3), tokens.SPACE_3)
         bar = hbox(spacing=tokens.SPACE_2)
         self.title = QLabel()
         self.title.setObjectName("CalTitle")

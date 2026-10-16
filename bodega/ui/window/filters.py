@@ -215,7 +215,7 @@ class FilterChips(QWidget):
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self.lay = hbox(self, (tokens.SPACE_4, 0, tokens.SPACE_4, tokens.SPACE_2), tokens.SPACE_2)
+        self.lay = hbox(self, (tokens.PAGE_INSET, 0, tokens.PAGE_INSET, tokens.SPACE_2), tokens.SPACE_2)
         self.lay.addStretch(1)
         self.chips: list[QPushButton] = []
         self.hide()

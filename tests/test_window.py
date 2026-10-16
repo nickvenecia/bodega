@@ -1534,3 +1534,23 @@ def test_your_data_imports_once_settings_has_closed(win, monkeypatch):
     assert not d.isVisible()
     QApplication.processEvents()
     assert ran  # after Settings closed: never a window over a window
+
+
+def test_every_page_shares_one_left_edge_and_one_right_edge(win):
+    from PySide6.QtCore import QPoint
+
+    from bodega.ui.style import tokens
+    from bodega.ui.window.tables import words_inset
+
+    def x(w, at=0):
+        return w.mapTo(win, QPoint(at, 0)).x()
+
+    for place, table in (("gear", win.gear_table), ("kits", win.kit_table), ("rentals", win.rental_table)):
+        win.go(place)
+        QApplication.processEvents()
+        assert x(win.title) == x(table) + words_inset(table), place  # the title and the list's words
+        assert x(win.btn_ai, win.btn_ai.width()) == x(table, table.width()) - words_inset(table), place
+        assert x(win.title) - x(win.toolbar) == tokens.PAGE_INSET
+    win.go("calendar")
+    QApplication.processEvents()
+    assert x(win.calendar.title) == x(win.title)
