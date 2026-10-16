@@ -185,3 +185,56 @@ def test_clickable_rows_work_from_the_keyboard(win):
     win.open("rentals", r.id)
     heads = [w for w in win.rentals.findChildren(QFrame) if w.objectName() == "LineHead"]
     assert heads and all(h.focusPolicy() == Qt.FocusPolicy.TabFocus for h in heads)  # each line's head
+
+
+def test_every_page_names_what_the_keyboard_can_reach(win):
+    """On every place, in light and dark, with something open: each control you can Tab to has a name."""
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import (
+        QAbstractButton,
+        QAbstractSpinBox,
+        QApplication,
+        QComboBox,
+        QLineEdit,
+        QWidget,
+    )
+
+    from bodega.app import set_appearance
+    from bodega.ui.window.common import PLACES
+
+    def unnamed() -> list[str]:
+        out = []
+        for w in win.findChildren(QWidget):
+            if not w.isVisible() or w.focusPolicy() == Qt.FocusPolicy.NoFocus:
+                continue
+            if isinstance(w.parent(), QAbstractSpinBox | QComboBox):
+                continue  # Qt's own inner part of a box that's named itself
+            named = w.accessibleName().strip()
+            if isinstance(w, QAbstractButton):
+                named = named or w.text().strip()
+            elif isinstance(w, QLineEdit | QComboBox | QAbstractSpinBox):
+                named = named or (w.placeholderText().strip() if isinstance(w, QLineEdit) else "")
+            else:
+                continue  # rows and lists say themselves (their names are tested where they're made)
+            if not named:
+                out.append(f"{type(w).__name__} {w.objectName()!r} {w.toolTip()!r}")
+        return out
+
+    qapp = QApplication.instance()
+    try:
+        for look in ("light", "dark"):
+            set_appearance(qapp, look)
+            for p in PLACES:
+                win.go(p.key)
+                QApplication.processEvents()
+                assert not unnamed(), (look, p.key, unnamed())
+            for kind, where in (
+                ("gear", win.lib.items),
+                ("packages", win.lib.packages),
+                ("rentals", win.lib.rentals),
+            ):
+                win.open(kind, next(iter(where)))
+                QApplication.processEvents()
+                assert not unnamed(), (look, kind, unnamed())
+    finally:
+        set_appearance(qapp, "dark", "")

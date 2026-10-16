@@ -58,6 +58,10 @@ class NavRow(QFrame):
         self.arrow.setFixedSize(tokens.TARGET_MIN, tokens.TARGET_MIN)  # inside a row that's a target too
         self.arrow.setCursor(Qt.CursorShape.PointingHandCursor)
         self.arrow.clicked.connect(lambda: self.fold_wanted.emit(self.key))
+        self.arrow.setFocusPolicy(
+            Qt.FocusPolicy.NoFocus
+        )  # the row folds from the keyboard (← →); no extra stop
+        self.arrow.setAccessibleName(f"Hide {label}")
         keep = self.arrow.sizePolicy()
         keep.setRetainSizeWhenHidden(True)
         self.arrow.setSizePolicy(keep)
@@ -93,6 +97,7 @@ class NavRow(QFrame):
     def set_label(self, text: str) -> None:
         self.label.setText(text)
         self.setAccessibleName(text)
+        self.arrow.setAccessibleName(f"{'Show' if self.folded else 'Hide'} {text}")
 
     def as_child(self) -> None:
         """A row under another: its name starts where the row above's icon is."""

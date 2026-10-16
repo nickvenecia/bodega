@@ -107,8 +107,8 @@
   every few seconds.
 - A piece's Earned figure is marked as an estimate (≈), and pointing at it says how it's worked out.
 - Late rentals say "1 late" in the sidebar, not only in red.
-- Screen readers now name the pickup and return dates, a line's quantity and rate, the accent colors and your
-  profile card, which the keyboard can now reach.
+- Screen readers now name the pickup and return dates, a line's quantity and rate, a kit's quantities, the
+  sidebar's fold arrows, the accent colors and your profile card, which the keyboard can now reach.
 - Quitting while your AI is still on a job, or a photo is still coming from a link, asks first (Stop and Quit).
 - If something unexpected goes wrong, Bodega says so in the window, with a short reference to send with
   feedback, instead of only writing it to its log.
