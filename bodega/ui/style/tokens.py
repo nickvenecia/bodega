@@ -135,6 +135,7 @@ NAME_MIN = 240  # the gear table's Name column never gets narrower; other column
 RENTER_MIN = 160  # the rentals table's Renter column, the same way
 GRIP_W = 28  # the grip column you drag a gear row by (at the row's trailing edge, the standard's 4.18)
 TICK_W = 36  # (G.10.3) the tick column every list leads with; its box is INDICATOR
+LIST_CARD_INSET = (8, 4)  # (G.10.1) a page's list sits this far inside its card: across, then down
 CHECK_STROKE = 1.75  # the tick mark's line inside a ticked box
 GRIP_GAP = SPACE_1  # between the grip's dots
 CHEVRON = 9  # a divider's open/closed chevron
@@ -364,9 +365,9 @@ DARK = {
     "INFO_EDGE": "rgba(90, 176, 255, 0.45)",
     "PAPER": "#FFFFFF",  # the paper (and logo thumbnails) in the preview
     "SHADOW": "rgba(0, 0, 0, 0.55)",  # the paper's shadow on the dark preview
-    "DIVIDER": "#1C1C1E",  # a department or group divider in the gear table: a quiet band (it can't be pressed)
+    "DIVIDER": "#262628",  # a department or group divider in the gear table: a quiet band, a step up from its card
     "DIVIDER_TEXT": "#F5F5F7",  # its name and totals
-    "DIVIDER_HOVER": "#232325",
+    "DIVIDER_HOVER": "#2C2C2E",
     "ROW_HOVER": "rgba(255, 255, 255, 0.05)",  # (row-hover) a table row under the mouse
     "WINDOW_TOP": "#0E0E10",  # the window's backdrop (canvas)
     "WINDOW_BOTTOM": "#0E0E10",

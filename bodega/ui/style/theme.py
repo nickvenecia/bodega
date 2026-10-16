@@ -387,6 +387,7 @@ QToolButton#NavArrow:hover {{ background: {tokens.CARD_HOVER}; border-radius: {R
 #PageTitle {{ font-size: {TEXT_TITLE}px; font-weight: {WEIGHT_BOLD}; }}
 #PageCount {{ color: {tokens.MUTED}; font-size: {TEXT_LG}px; }}
 #Center {{ background: transparent; }}
+QFrame#ListCard {{ background: {tokens.CARD}; border: none; border-radius: {RADIUS_LG}px; }}  /* G.10.1 */
 QTreeWidget#Table {{ background: transparent; border: none; outline: none; font-size: {TEXT_MD}px; }}
 QTreeWidget#Table::item {{ height: {TABLE_ROW_H - 1}px; border-bottom: 1px solid {tokens.BORDER}; padding: 0 {SPACE_2}px; }}
 QTreeWidget#Table::item:hover {{ background: transparent; }}

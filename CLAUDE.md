@@ -156,7 +156,7 @@ bodega/
                    its groups, Kits with each kit; Rentals: All Rentals with Out Now and Coming Up, then Calendar; rows
                    fold, kept in settings "sidebar_folded"; a folded All Rentals still shows out/late; at the bottom:
                    your profile card (its menu: your profiles, Send Feedback, Check for Updates, Settings)); tables.py
-                   (GearTable, KitTable, RentalTable; a tick column first (TICK: the ticks are the selection, a click
+                   (GearTable, KitTable, RentalTable, each in its ListCard (G.10.1); a tick column first (TICK: the ticks are the selection, a click
                    opens, chosen_ids() what's ticked), the gear grip last; COL_W widths; never per-row widgets; gear
                    that goes with a piece is one level under it (G.11): open_pieces, kept in settings "gear_open",
                    family ticks, listed_rows() for ticks and showing_rows() for what you see); lift.py

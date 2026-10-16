@@ -354,6 +354,8 @@
 - Scroll bars behave as your computer's do: they lie over a list, show while you scroll (or point at one, or for a
   moment when a list first shows), and fade a second later. If your Mac, Windows or Linux is set to always show
   scroll bars, Bodega's stay too, with their room kept.
+- The gear, kit and rental lists sit in a rounded card, as the figures above them do, with the column titles in its
+  top. In the dark look, the group bands in the gear list are a shade lighter so they stand out on the card.
 - The Assistant's answers say which of your gear they drew on ("From your gear: …"). A change your AI is only
   guessing at is marked Not Sure: Review leaves it unticked, and the chat takes you to Review instead of making it.
 - Letters are spaced the way Apple spaces them at each size: a touch tighter in everyday words, a little looser in

@@ -32,6 +32,7 @@ from PySide6.QtGui import QColor, QFontMetricsF, QKeySequence, QPainter, QPen, Q
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QFrame,
     QHeaderView,
     QMenu,
     QStyle,
@@ -47,7 +48,7 @@ from bodega.core import dates, earnings, money, pricing, search
 from bodega.core.model import RENTAL_WORDS, Business, Item
 from bodega.core.store import Library
 from bodega.ui.components import access, photos
-from bodega.ui.components.widgets import TickMenu
+from bodega.ui.components.widgets import TickMenu, vbox
 from bodega.ui.style import theme, tokens
 from bodega.ui.window.lift import Lift
 
@@ -181,6 +182,19 @@ class Row(QTreeWidgetItem):
         if isinstance(a, str) or isinstance(b, str):
             return str(a).casefold() < str(b).casefold()
         return a < b
+
+
+class ListCard(QFrame):
+    """A page's list in its card (the standard's G.10.1, C-55): the surface, its corners at radius-lg, and the list
+    inset 4 8 inside it, so the headings sit in the card's rounded top and no row shows in its corners."""
+
+    def __init__(self, table: Table, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setObjectName("ListCard")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.table = table
+        x, y = tokens.LIST_CARD_INSET
+        vbox(self, (x, y, x, y), 0).addWidget(table)
 
 
 class Table(QTreeWidget):

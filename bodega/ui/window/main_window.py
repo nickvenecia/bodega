@@ -52,7 +52,7 @@ from bodega.ui.window.menus import MenusMixin
 from bodega.ui.window.pages import PagesMixin
 from bodega.ui.window.services import ServicesMixin
 from bodega.ui.window.sidebar import Sidebar
-from bodega.ui.window.tables import DIVIDES, ID, GearTable, KitTable, RentalTable, menu, words_inset
+from bodega.ui.window.tables import DIVIDES, ID, GearTable, KitTable, ListCard, RentalTable, menu, words_inset
 from bodega.ui.window.transfer import TransferMixin
 
 log = get_logger(__name__)
@@ -112,7 +112,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.dock = Dock(self.inspector, root, self.sidebar, body)  # …which slides in when something's picked
         self.dock.toggled.connect(lambda _on: self._mark_assistant())
         self.inspector.currentChanged.connect(lambda _i: self._mark_assistant())
-        self.dock.follower = lambda: self.pages.currentWidget()
+        self.dock.follower = self._list_shown
         outer.addLayout(body, 1)
         esc = QShortcut(QKeySequence(Qt.Key.Key_Escape), self)
         esc.activated.connect(self.escape)
@@ -291,10 +291,12 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.empty.dropped.connect(self.import_file)
         self.no_results = NoResults()  # over a table when a search or the filters hide every row
         self.no_results.clear_wanted.connect(self._clear_hiding)
-        for w in (self.gear_table, self.kit_table, self.rental_table, cal_scroll, self.empty):
+        # each list in its card (G.10.1); the stack shows a card, the calendar or the empty page
+        self.cards = {t: ListCard(t) for t in (self.gear_table, self.kit_table, self.rental_table)}
+        for w in (*self.cards.values(), cal_scroll, self.empty):
             self.pages.addWidget(w)
         # one left edge and one right edge: a list's words line up with the title and the bar's last button
-        edge = max(0, tokens.PAGE_INSET - words_inset(self.gear_table))
+        edge = max(0, tokens.PAGE_INSET - words_inset(self.gear_table) - tokens.LIST_CARD_INSET[0])
         box = QWidget()
         box.setProperty("measured", True)  # (its margins come from the style's own words inset, not a typed value)
         vbox(box, (edge, 0, edge, 0), 0).addWidget(self.pages)
@@ -514,7 +516,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         else:
             self.rental_table.fill(lib, view if view in ("out", "upcoming") else "all")
             page = self.rental_table if self.rental_table.topLevelItemCount() else self._empty_page(view)
-        self.pages.setCurrentWidget(page)
+        self.pages.setCurrentWidget(self.cards.get(page, page))
         empty = page is self.empty  # nothing to search or filter
         self.search.setVisible(view != "calendar" and not empty)
         self.view_menu.setVisible(kind == "gear" and not empty)
@@ -939,12 +941,17 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             area.setBottom(self.selbar.geometry().top() - tokens.SPACE_2)
         return area
 
+    def _list_shown(self):
+        """The list on the page now (in its card), or what's there instead (the calendar, the empty page)."""
+        page = self.pages.currentWidget()
+        return page.table if isinstance(page, ListCard) else page
+
     # Ticks: the selection bar
     def _ticks_changed(self) -> None:
         """While rows are ticked, the selection bar floats over the list's foot with what can be done to all of
         them; it goes when none are."""
         t = self._table()
-        ids = t.ticked_ids() if t is not None and self.pages.currentWidget() is t else []
+        ids = t.ticked_ids() if t is not None and self._list_shown() is t else []
         kind = kind_of(self.view_key)
         acts: list = []
         if ids and kind == "gear":

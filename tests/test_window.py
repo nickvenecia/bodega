@@ -98,7 +98,7 @@ def test_empty_gear_page_starts_and_takes_a_dropped_sheet(qapp, data_folder, tmp
     w = MainWindow(Library(data_folder).load())
     w.show()
     w.new("gear")  # the + button: a new piece, open on the right
-    assert len(w.lib.items) == 1 and w.pages.currentWidget() is w.gear_table and w.search.isVisible()
+    assert len(w.lib.items) == 1 and w._list_shown() is w.gear_table and w.search.isVisible()
     w.deselect()  # left blank, so it goes
     assert not w.lib.items and w.pages.currentWidget() is w.empty
 
@@ -292,7 +292,7 @@ def test_every_sidebar_place_opens_and_is_marked(win):
     win.open("packages", next(iter(win.lib.packages)))
     assert win.dock.opened and win.packages.sum_rows["value"].text()
     win.sidebar.pick("gear")
-    assert win.pages.currentWidget() is win.gear_table and not win.dock.opened
+    assert win._list_shown() is win.gear_table and not win.dock.opened
     win.open("gear", next(iter(win.lib.items)))
     assert win.dock.opened and win.items.it is not None
     win.deselect()  # Esc
