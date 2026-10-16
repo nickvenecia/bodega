@@ -14,7 +14,6 @@ from bodega.ui.style import tokens
 from bodega.ui.style.tokens import (
     BAR_CTRL_H,
     BAR_H,
-    CHIP_SM_H,
     CONTROL_H,
     HANDLE,
     ICON,
@@ -235,11 +234,6 @@ QScrollBar:vertical:disabled, QScrollBar::handle:vertical:disabled {{ background
 QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::sub-page {{ height: 0; background: none; }}
 
 /* ---------- cards: packages and rentals */
-#Chip {{ border-radius: {RADIUS_SM}px; padding: 0 {SPACE_2}px; font-size: {TEXT_XS}px; font-weight: {WEIGHT_SEMIBOLD};
-    min-height: {CHIP_SM_H}px; max-height: {CHIP_SM_H}px; border: 1px solid {tokens.BORDER_STRONG}; color: {tokens.MUTED}; }}
-#Chip[tone="booked"] {{ color: {tokens.ACCENT_TEXT}; border-color: {tokens.ACCENT_EDGE}; background: {tokens.ACCENT_TINT}; }}
-#Chip[tone="out"] {{ color: {tokens.WARN}; border-color: {tokens.WARN}; }}
-#Chip[tone="late"], #Chip[tone="short"] {{ color: {tokens.BAD}; border-color: {tokens.BAD_EDGE}; background: {tokens.BAD_TINT}; }}
 #Chip[tone="returned"] {{ color: {tokens.GOOD}; border-color: {tokens.GOOD}; }}
 #Chip[tone="repair"] {{ color: {tokens.WARN}; border-color: {tokens.BORDER_STRONG}; }}
 #Chip[tone="cancelled"], #Chip[tone="retired"] {{ color: {tokens.MUTED}; border-color: {tokens.BORDER}; }}
@@ -327,7 +321,7 @@ QPushButton#Where[tone="late"] {{ background: {tokens.BAD_TINT}; border-color: {
 /* ---------- empty states */
 #EmptyTitle {{ font-size: {TEXT_XL}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #EmptyText {{ color: {tokens.MUTED}; }}
-#StartBadge {{ background: {tokens.ACCENT_TINT}; border: none; border-radius: {tokens.START_BADGE // 2}px; }}
+#StartBadge {{ background: transparent; border: none; }}
 #StartTile {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER}; border-radius: {RADIUS_LG}px; }}
 #StartTile:hover {{ background: {tokens.RAISED_HOVER}; border-color: {tokens.BORDER_HOVER}; }}
 #StartTile:focus, #StartTile[hot="true"] {{ border-color: {tokens.ACCENT}; }}

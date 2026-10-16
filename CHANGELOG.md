@@ -175,6 +175,8 @@
   rental's second card is called Dates & Status (not Rental again, under Rental).
 - A message about a problem stays up longer than good news; a sentence that ends in a name with its own full stop
   ("Northwind Media Inc.") no longer gets a second one.
+- The ways to start on an empty page show their whole names ("Import Spreadsheet…" was cut off at both ends), with
+  their icons on their own. A switch's knob is white whether it's on or off, as on a Mac.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

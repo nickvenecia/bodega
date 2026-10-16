@@ -878,9 +878,7 @@ class ToggleRow(QAbstractButton):
         p.drawRoundedRect(track, th / 2, th / 2)
         knob = th - 2 * tokens.TOGGLE_INSET
         x = track.right() - tokens.TOGGLE_INSET - knob if on else track.left() + tokens.TOGGLE_INSET
-        p.setBrush(
-            theme.qcolor(tokens.ON_ACCENT if on else tokens.TEXT) if enabled else theme.qcolor(tokens.FAINT)
-        )
+        p.setBrush(theme.qcolor(tokens.KNOB) if enabled else theme.qcolor(tokens.FAINT))  # white, on or off
         p.drawEllipse(QRectF(x, track.top() + tokens.TOGGLE_INSET, knob, knob))
         if self.hasFocus():  # the keyboard is on it: its ring, around the switch
             p.setBrush(Qt.BrushStyle.NoBrush)
@@ -1172,13 +1170,6 @@ class QtyField(QLineEdit):
 
 def qty_field(value: int = 1, top: int = MAX_QTY) -> QtyField:
     return QtyField(value, top)
-
-
-def chip(text: str = "", tone: str = "") -> QLabel:
-    lbl = QLabel(text)
-    lbl.setObjectName("Chip")
-    lbl.setProperty("tone", tone)
-    return lbl
 
 
 def set_tone(lbl: QLabel, tone: str, text: str) -> None:

@@ -43,7 +43,7 @@ class StartTile(QFrame):
         self.setFixedWidth(tokens.START_TILE_W)
         if tip:
             self.setToolTip(theme.plain_tip(tip))
-        lay = vbox(self, (tokens.SPACE_4, tokens.SPACE_5, tokens.SPACE_4, tokens.SPACE_5), tokens.SPACE_1)
+        lay = vbox(self, (tokens.SPACE_3, tokens.SPACE_5, tokens.SPACE_3, tokens.SPACE_5), tokens.SPACE_1)
         badge = QFrame()  # the icon, in a circle of the accent's tint
         badge.setObjectName("StartBadge")
         badge.setFixedSize(tokens.START_BADGE, tokens.START_BADGE)

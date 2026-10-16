@@ -89,7 +89,6 @@ TITLEBAR_H = 32  # Bodega's own Mac title bar (fitted to the real one once the w
 SEG_INSET = 2  # gap between a segmented control's frame and its buttons
 ROW_INDENT = 18  # attached gear in the list, per level
 TEXT_BOX_H = 2 * CONTROL_H - SPACE_2  # a two-line text box (addresses, notes)
-CHIP_SM_H = SMALL_H  # the small status chip
 SCROLL_INSET = 2  # a scrollbar's handle sits this far inside its track
 TEXT_BOX_TALL = 4 * CONTROL_H - SPACE_3  # notes
 TEXT_BOX_TERMS = 7 * ROW_H  # the agreement's terms
@@ -242,6 +241,7 @@ DARK = {
     "ACCENT_FILL_HOVER": "#4880D2",
     "ACCENT_TEXT": "#9CC2FB",  # (accent-text) the accent as words: mixed 45% toward white
     "ON_ACCENT": "#FFFFFF",  # (on-accent) words and icons on the accent fill
+    "KNOB": "#FFFFFF",  # a switch's knob, on or off (Apple's)
     "ACCENT_OFF": "#294063",  # a primary button that's unavailable: its fill at 40%
     "ACCENT_OFF_TEXT": "#7F8CA1",
     "ACCENT_TINT": "rgba(74, 144, 247, 0.24)",  # (accent-soft) a selection's wash
@@ -319,6 +319,7 @@ LIGHT = {
     "ACCENT_FILL_HOVER": "#285EBA",
     "ACCENT_TEXT": "#2B66CA",  # the accent as words on the canvas, at 4.5:1 or more
     "ON_ACCENT": "#FFFFFE",
+    "KNOB": "#FFFFFF",  # a switch's knob, on or off (Apple's)
     "ACCENT_OFF": "#ACC5F1",
     "ACCENT_OFF_TEXT": "#E6EEFB",
     "ACCENT_TINT": "rgba(47, 111, 219, 0.11)",

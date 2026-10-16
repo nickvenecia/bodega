@@ -1498,3 +1498,19 @@ def test_a_name_with_its_own_full_stop_gets_one_and_problems_stay_longer(win):
     assert win.toaster.text == "Saved Northwind Media Inc."
     win.toast("Couldn't save.", "problem")
     assert win.toaster._ms >= tokens.TOAST_WARN_MS
+
+
+def test_every_start_tile_says_its_whole_name(qapp, data_folder):
+    from PySide6.QtWidgets import QLabel
+
+    from bodega.ui.window.main_window import MainWindow
+
+    w = MainWindow(Library(data_folder).load())  # nothing yet: the start tiles
+    w.show()
+    QApplication.processEvents()
+    tiles = w.empty.tiles
+    assert tiles
+    for tile in tiles:
+        name = next(lbl for lbl in tile.findChildren(QLabel) if lbl.objectName() == "StartTitle")
+        assert name.fontMetrics().horizontalAdvance(name.text()) <= name.width(), name.text()
+    w.close()
