@@ -30,6 +30,7 @@ from bodega.ui.components.widgets import (
     SearchField,
     Section,
     Segmented,
+    Toast,
     ToggleRow,
     combo,
     hbox,
@@ -103,6 +104,8 @@ class SettingsDialog(QDialog):
 
         self.stack = QStackedWidget()
         body.addWidget(self.stack, 1)
+        # its own messages, over its sections: Settings sits on top of the window, so the window's can't be reached
+        self.toaster = Toast(self, lambda: self.stack.geometry())
         self.panes: dict[str, QWidget] = {}
         for key, label, _icon in PANES:
             page = QWidget()
@@ -313,7 +316,16 @@ class SettingsDialog(QDialog):
         self._adding = False
         self._profile_id = saved or None
         self._build_profiles()
-        self.win.toast("Profile deleted." if not saved else "Profile saved.", "done")
+        if saved:
+            self.toaster.show_message("Profile saved.", "done")
+        else:  # deleted at once, with Undo here (the standard's 4.19)
+            name = current.name if current is not None and current.name else "the profile"
+            self.toaster.show_message(f"Deleted {name}.", "done", action=("Undo", self._undo_delete))
+
+    def _undo_delete(self) -> None:
+        self.win.undo()
+        self._profile_id = None
+        self._build_profiles()
 
     # AI
     def _build_ai(self) -> None:

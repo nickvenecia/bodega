@@ -531,6 +531,8 @@ class Toast(QWidget):
     like a problem, with a ✕, and stays until it's clicked away or another message takes its place.
     show_job() is slow work under way: its words, a bar when how much is known (a spinner while it isn't), and
     Stop; it stays until the job's own last message takes its place.
+    `action` ("Undo", undo): a capsule after its words that does it ("Deleted Sony FX6. Undo"); such a toast stays
+    TOAST_UNDO_MS, and longer while the pointer rests on it (the standard's 4.19: ⌘Z does the same).
     `anchor`: where it centres itself, in the parent's coordinates (the page, between the side panels)."""
 
     TONES = {
@@ -557,9 +559,10 @@ class Toast(QWidget):
         self._t = QTimer(self)
         self._t.setSingleShot(True)
         self._t.timeout.connect(self._time_up)
-        self._stop = None  # a job's Stop
+        self._action = None  # its capsule's job: a job's Stop, a delete's Undo
+        self._action_word = ""
         self._frac: float | None = None  # how far a job is (None: not known, so a spinner)
-        self._stop_rect = QRectF()
+        self._action_rect = QRectF()
         self._turn = QVariantAnimation(self)  # the spinner
         self._turn.setStartValue(0.0)
         self._turn.setEndValue(360.0)
@@ -571,13 +574,14 @@ class Toast(QWidget):
         """Slow work under way ("Backing up: 120 of 800 files"). `total` known: a bar; not: a spinner. `stop`:
         what Stop does (none: no Stop)."""
         self._frac = min(1.0, max(0.0, done / total)) if total > 0 else None
-        self.show_message(text, "job", stop=stop)
+        self.show_message(text, "job", action=("Stop", stop) if stop is not None else None)
 
-    def show_message(self, text: str, tone: str = "", ms: int = 0, stop=None) -> None:
-        """`ms`: how long it stays (0: news and done 3.5 s, a problem longer, as the standard has it)."""
+    def show_message(self, text: str, tone: str = "", ms: int = 0, action=None) -> None:
+        """`ms`: how long it stays (0: news and done 3.5 s, a problem longer, as the standard has it). `action`:
+        (its word, what it does), drawn as a capsule after the words."""
         text = one_stop(text) if tone != "job" else text
         self.text, self.tone = text, tone if tone in self.TONES else ""
-        self._stop = stop if self.tone == "job" else None
+        self._action_word, self._action = action if action is not None else ("", None)
         if self.tone != "job":
             self._frac = None
         spin = self.tone == "job" and self._frac is None
@@ -586,10 +590,16 @@ class Toast(QWidget):
             self._turn.start()
         elif not spin:
             self._turn.stop()
-        ms = ms or (tokens.TOAST_WARN_MS if self.tone == "problem" else tokens.TOAST_MS)
+        ms = ms or (
+            tokens.TOAST_UNDO_MS
+            if self._action is not None
+            else tokens.TOAST_WARN_MS
+            if self.tone == "problem"
+            else tokens.TOAST_MS
+        )
         self._ms = max(ms, len(text) * tokens.TOAST_MS_PER_CHAR)
         lasts = self.lasts()
-        takes_clicks = self.tone == "error" or self._stop is not None  # an error: a click closes it; a job: Stop
+        takes_clicks = self.tone == "error" or self._action is not None  # an error: a click closes it; else its capsule
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, not takes_clicks)
         self.setCursor(Qt.CursorShape.PointingHandCursor if self.tone == "error" else Qt.CursorShape.ArrowCursor)
         self.setToolTip(theme.plain_tip("Close") if self.tone == "error" else "")
@@ -617,12 +627,15 @@ class Toast(QWidget):
             self.dismiss()
             e.accept()
             return
-        if self._stop is not None and self._stop_rect.contains(e.position()):
-            stop, self._stop = self._stop, None
-            self.text = "Stopping…"
-            self.place()
-            self.update()
-            stop()
+        if self._action is not None and self._action_rect.contains(e.position()):
+            act, self._action = self._action, None
+            if self.tone == "job":
+                self.text = "Stopping…"
+                self.place()
+                self.update()
+            else:
+                self.dismiss()
+            QTimer.singleShot(0, self, act)  # once the click is over (what it does may change this toast)
             e.accept()
             return
         super().mousePressEvent(e)
@@ -665,15 +678,15 @@ class Toast(QWidget):
             return tokens.SPINNER_SM + tokens.SPACE_2 if self._frac is None else 0
         return tokens.ICON + tokens.SPACE_2
 
-    def _stop_w(self) -> int:
-        return QFontMetrics(self._font()).horizontalAdvance("Stop") + 2 * tokens.SPACE_2_5
+    def _action_w(self) -> int:
+        return QFontMetrics(self._font()).horizontalAdvance(self._action_word) + 2 * tokens.SPACE_2_5
 
     def _close_w(self) -> int:
         """The room after its words: an error's ✕, or a job's Stop."""
         if self.tone == "error":
             return tokens.SPACE_3 + tokens.ICON_SM
-        if self._stop is not None:
-            return tokens.SPACE_3 + self._stop_w()
+        if self._action is not None:
+            return tokens.SPACE_3 + self._action_w()
         return 0
 
     def _bar_room(self) -> int:
@@ -733,9 +746,10 @@ class Toast(QWidget):
         p.setFont(self._font())
         p.setPen(theme.qcolor(tokens.TOAST_TEXT))
         p.drawText(text, int(Qt.TextFlag.TextWordWrap | Qt.AlignmentFlag.AlignVCenter), self.text)
+        self._paint_action(p, r, words_r)
         if self.tone == "job":
-            self._paint_job(p, r, words_r, text)
-        elif self.lasts():
+            self._paint_bar(p, words_r, text)
+        elif self.tone == "error":
             s = tokens.ICON_SM
             close = theme.icon("x", tokens.TOAST_TEXT, s).pixmap(QSize(s, s), self.devicePixelRatioF())
             p.drawPixmap(QPointF(r.right() - pad_x - s, r.center().y() - s / 2), close)
@@ -754,22 +768,24 @@ class Toast(QWidget):
         angle = float(self._turn.currentValue() or 0.0)
         p.drawArc(ring, int((90 - angle) * 16), -90 * 16)
 
-    def _paint_job(self, p: QPainter, r: QRectF, words_r: QRectF, text: QRectF) -> None:
-        """A job's Stop (a capsule after its words) and, when how far it is is known, its bar under them. Both
-        in the toast's own light colors: on the dark toast the accent would be too faint to read."""
-        pad_x = tokens.SPACE_4
-        if self._stop is not None:
-            sw, sh = self._stop_w(), tokens.SMALL_H + tokens.SPACE_1
-            self._stop_rect = QRectF(r.right() - pad_x - sw, words_r.center().y() - sh / 2, sw, sh)
-            cap = QPainterPath()
-            cap.addRoundedRect(self._stop_rect, sh / 2, sh / 2)
-            p.fillPath(cap, theme.qcolor(tokens.TOAST_BUTTON))
-            p.setPen(theme.qcolor(tokens.TOAST_TEXT))
-            p.drawText(self._stop_rect, int(Qt.AlignmentFlag.AlignCenter), "Stop")
-        else:
-            self._stop_rect = QRectF()
+    def _paint_action(self, p: QPainter, r: QRectF, words_r: QRectF) -> None:
+        """Its capsule after the words (a job's Stop, a delete's Undo), in the toast's own light colors: on the
+        dark toast the accent would be too faint to read."""
+        if self._action is None:
+            self._action_rect = QRectF()
+            return
+        sw, sh = self._action_w(), tokens.SMALL_H + tokens.SPACE_1
+        self._action_rect = QRectF(r.right() - tokens.SPACE_4 - sw, words_r.center().y() - sh / 2, sw, sh)
+        cap = QPainterPath()
+        cap.addRoundedRect(self._action_rect, sh / 2, sh / 2)
+        p.fillPath(cap, theme.qcolor(tokens.TOAST_BUTTON))
+        p.setPen(theme.qcolor(tokens.TOAST_TEXT))
+        p.drawText(self._action_rect, int(Qt.AlignmentFlag.AlignCenter), self._action_word)
+
+    def _paint_bar(self, p: QPainter, words_r: QRectF, text: QRectF) -> None:
+        """A job's bar under its words, when how far it is is known."""
         if self._frac is not None:
-            right = self._stop_rect.right() if self._stop is not None else text.right()
+            right = self._action_rect.right() if self._action is not None else text.right()
             track = QRectF(
                 text.left(), words_r.bottom() - tokens.SPACE_3 + tokens.SPACE_2, right - text.left(), tokens.BAR_H
             )

@@ -87,7 +87,11 @@
 - A gear name too long for its column shows in full when you point at it, and screen readers read cut-off names
   and labels in full. Names in the gear picker and the import list are cut at the end, the data folder's path in
   the middle.
-- Deleting a profile names it ("Delete Second Unit?") and says Edit › Undo brings it back, which it does.
+- Deleting gear, a kit, a quote, a renter or a profile, or removing a group, happens at once and says so with an Undo
+  button in the message ("Deleted Sony FX6. Undo"); ⌘Z does the same. Nothing asks "are you sure?" for what Undo
+  can take back. Gear that's on a rental is still retired instead of deleted, and that still asks.
+- Bodega says it's Bodega when it reads a store's page (it used to say it was a web browser). A store that only lets
+  web browsers in says so, and you can paste the photo from your browser instead.
 - Settings no longer shows an Account page while there's nothing to sign in to.
 - A search that finds nothing says "No Results" with a Clear Search button (or Clear Filters, when the filters
   hid everything), instead of an empty table.

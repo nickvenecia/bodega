@@ -50,7 +50,7 @@ class ClientDialog(Guarded, QDialog):
         buttons = hbox(spacing=SPACE_2)
         buttons.setContentsMargins(0, SPACE_4 - SPACE_3, 0, 0)
         if self.editing and can_delete:
-            delete = QPushButton("Delete Renter…")
+            delete = QPushButton("Delete Renter")  # (at once, with Undo: nothing more to ask)
             delete.setObjectName("Danger")
             delete.clicked.connect(self._delete)
             buttons.addWidget(delete)
@@ -102,14 +102,6 @@ class ClientDialog(Guarded, QDialog):
         self.accept()
 
     def _delete(self) -> None:
-        from bodega.ui.dialogs.common import confirm
-
-        who = self.client.name or self.client.company
-        if confirm(
-            self,
-            f"Delete {who}?",
-            f"{who} will be taken off your renters. Rentals you already made keep their details.",
-            "Delete Renter",
-        ):
-            self.deleted = True
-            self.accept()
+        """Deleted at once (the window says so, with Undo: the standard's 4.19). Rentals keep their own copy."""
+        self.deleted = True
+        self.accept()

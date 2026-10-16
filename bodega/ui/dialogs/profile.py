@@ -262,7 +262,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         buttons = self._buttons = hbox(spacing=SPACE_2)
         buttons.setContentsMargins(SPACE_5, SPACE_4, SPACE_5, 0)
         if self.editing and can_delete:
-            delete = QPushButton("Delete Profile…")
+            delete = QPushButton("Delete Profile")  # (at once, with Undo: nothing more to ask)
             delete.setObjectName("Danger")
             delete.clicked.connect(self._delete)
             buttons.addWidget(delete)
@@ -475,13 +475,6 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         self.accept()
 
     def _delete(self) -> None:
-        from bodega.ui.dialogs.common import confirm
-
-        if confirm(
-            self,
-            f"Delete {self.business.name or 'This Profile'}?",
-            "It goes from your profiles. Undo brings it back.",
-            "Delete Profile",
-        ):
-            self.deleted = True
-            self.accept()
+        """Deleted at once, and said with Undo where it sat (the standard's 4.19)."""
+        self.deleted = True
+        self.accept()

@@ -8,7 +8,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMenu
 
 from bodega.core import words
-from bodega.ui.dialogs.common import confirm
 from bodega.ui.style import theme
 from bodega.ui.window.common import kind_of
 from bodega.ui.window.tables import ID
@@ -124,7 +123,7 @@ class GroupsMixin:
         self._group_actions(m, key[4:])
         m.exec(pos)
 
-    def _groups_edited(self, toast: str = "") -> None:
+    def _groups_edited(self, toast: str = "", undo: bool = False) -> None:
         self.lib.save_settings()
         if self.view_key.startswith("grp:") and self._grp() not in self.lib.groups():
             self.go("gear")
@@ -132,7 +131,9 @@ class GroupsMixin:
             self.refresh()
         if self.items.it is not None:
             self.items.load(self.items.it)
-        if toast:
+        if toast and undo:
+            self.toast_undo(toast)
+        elif toast:
             self.toast(toast, "done")
 
     def new_group(self) -> None:
@@ -162,17 +163,12 @@ class GroupsMixin:
 
     def _remove_group(self, group: str) -> None:
         n = sum(1 for i in self.lib.items.values() if i.group == group)
-        if n and not confirm(
-            self,
-            f"Remove {group}?",
-            ("Its piece stays" if n == 1 else f"Its {n:,} pieces stay") + ", under No Group.",
-            "Remove",
-            danger=False,
-        ):
-            return
-        self.flush()
+        self.flush()  # removed at once, with Undo (the standard's 4.19): its gear stays, under No Group
         self.lib.remove_group(group)
-        self._groups_edited(f"Removed {group}.")
+        stays = ("" if not n else " Its piece stays" if n == 1 else f" Its {n:,} pieces stay") + (
+            ", under No Group." if n else ""
+        )
+        self._groups_edited(f"Removed {group}.{stays}", undo=True)
 
     def tidy_groups(self) -> None:
         """Tidy Up Groups: plain names for everything (SD Cards → Media, 1000c → Lights…), after a look."""

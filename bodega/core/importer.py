@@ -283,7 +283,7 @@ def download_google_sheet(link: str, folder: Path, progress=None, cancel=None) -
     url = google_export_url(link)
     if url is None:
         raise OSError("That isn't a Google Sheets link. It starts with docs.google.com/spreadsheets.")
-    req = urllib.request.Request(url, headers={"User-Agent": "Bodega"})
+    req = urllib.request.Request(url, headers={"User-Agent": web.HEADERS["User-Agent"]})
     try:
         with urllib.request.urlopen(req, timeout=30, context=ssl_context()) as resp:
             kind = (resp.headers.get("Content-Type") or "").lower()

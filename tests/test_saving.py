@@ -225,7 +225,7 @@ def test_deleting_a_profile_names_it_and_undo_brings_it_back(win, answers):
     from bodega.core.model import Business
     from bodega.ui.dialogs.settings import SettingsDialog
 
-    said, asked = answers
+    _said, asked = answers
     second = win.lib.add_business(Business(name="Second Unit")) or next(
         b for b in win.lib.businesses.values() if b.name == "Second Unit"
     )
@@ -233,13 +233,13 @@ def test_deleting_a_profile_names_it_and_undo_brings_it_back(win, answers):
 
     win.history = History(win.lib)  # a profile you've had a while (adding then deleting it undoes itself)
     s = SettingsDialog(win.lib, win, "profiles", profile=second.id)
-    said.append(QDialog.DialogCode.Accepted)
     s.profile_editor._delete()
-    assert asked == ["Delete Second Unit?"]
+    assert asked == []  # the owner's call (the standard's 4.19): deleted at once, nothing asked…
     assert second.id not in win.lib.businesses
+    assert s.toaster.text == "Deleted Second Unit." and s.toaster._action_word == "Undo"  # …said with Undo, in Settings
+    s._undo_delete()
+    assert second.id in win.lib.businesses  # and Undo brings it back
     s.close()
-    win.undo()
-    assert second.id in win.lib.businesses  # the alert's "Edit › Undo brings it back" holds
 
 
 def test_account_settings_wait_for_an_account_service(win):

@@ -858,6 +858,12 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.toaster.show_message(text, tone)
         self._clear_of_toast()
 
+    def toast_undo(self, text: str) -> None:
+        """Something that can be taken back was done ("Deleted Sony FX6."): said with Undo, instead of asking first
+        (the standard's 4.19). ⌘Z does the same."""
+        self.toaster.show_message(text, "done", action=("Undo", self.undo))
+        self._clear_of_toast()
+
     def toast_job(self, text: str, done: int = 0, total: int = 0, stop=None) -> None:
         """Slow work under way, over the page: its words, how far (a bar, or a spinner while that's not known)
         and Stop. It stays until the job's own last toast."""

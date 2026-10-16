@@ -700,9 +700,15 @@ def test_select_all_and_delete(win, monkeypatch):
     assert "selected" in win.count.full_text()
     before = len(win.lib.items)
     t.keyPressEvent(QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Delete, Qt.KeyboardModifier.NoModifier))
-    assert asked and asked[-1].startswith(f"Delete {len(ids)} pieces")
+    assert asked == []  # deleted at once (the standard's 4.19), said with Undo
+    assert win.toaster.text == f"Deleted {len(ids)} pieces." and win.toaster._action_word == "Undo"
     assert len(win.lib.items) == before - len(ids)
     assert all(i not in Library(win.lib.root).load().items for i in ids)
+    win.undo()
+    assert all(i in win.lib.items for i in ids)  # Undo brings them all back
+    win.go("grp:Microphones")
+    t.select_showing()
+    win.delete_gear(t.chosen_ids())
     # Cmd+A then Delete on everything
     win.go("gear")
     t.select_showing()
@@ -1242,7 +1248,7 @@ def test_back_up_runs_without_freezing_the_window(win, monkeypatch, tmp_path):
     monkeypatch.setattr(win, "toast_job", lambda text, *a, **k: (working.append(text), real_job(text, *a, **k)))
     win.back_up()
     assert working[0] == "Backing up…" and not said  # the window carries on while the zip is made…
-    assert win.toaster._stop == win._stop_transfer  # …with Stop
+    assert win.toaster._action == win._stop_transfer and win.toaster._action_word == "Stop"  # …with Stop
     wait_for(lambda: len(said) == 1)
     assert target.exists() and said[0].startswith("Backed up.")
     assert any(w.startswith("Backing up: 1 of") for w in working)  # how far, as it goes
@@ -1258,9 +1264,10 @@ def test_slow_work_says_how_far_it_is_and_offers_stop(win):
     assert t._frac == pytest.approx(0.2) and t._turn.state() != t._turn.State.Running
     QApplication.processEvents()
     t.repaint()
-    assert not t._stop_rect.isEmpty() and t._pill.contains(t._stop_rect)
-    QTest.mouseClick(t, Qt.MouseButton.LeftButton, pos=t._stop_rect.center().toPoint())
-    assert stopped == [1] and t.text == "Stopping…" and t._stop is None
+    assert not t._action_rect.isEmpty() and t._pill.contains(t._action_rect)
+    QTest.mouseClick(t, Qt.MouseButton.LeftButton, pos=t._action_rect.center().toPoint())
+    assert t.text == "Stopping…" and t._action is None
+    wait_for(lambda: stopped == [1])  # (once the click is over)
     win.toast("Stopped. Nothing was saved.")  # the job's own last word takes its place, and goes by itself
     assert not t.lasts() and t._t.isActive()
 
@@ -2074,3 +2081,18 @@ def test_a_buttons_key_in_its_tooltip_is_its_menu_commands(win):
     for button, action in ((win.btn_ai, win.act_assistant), (win.sidebar.search, win.act_search)):
         keys = action.shortcut().toString(QKeySequence.SequenceFormat.NativeText)
         assert keys and button.toolTip().endswith(f"({keys})")
+
+
+def test_a_delete_says_so_with_undo_for_a_while_and_undo_brings_it_back(win):
+    """Q22 and the standard's 4.19: no "are you sure?" for what Undo takes back; the toast's Undo does it."""
+    from bodega.ui.style import tokens
+
+    p = next(iter(win.lib.packages.values()))
+    win.delete("packages", p.id)
+    t = win.toaster
+    assert p.id not in win.lib.packages and t.text.startswith(f"Deleted {p.name}.") and t._action_word == "Undo"
+    assert t._ms >= tokens.TOAST_UNDO_MS and t._t.isActive()  # it goes by itself, after a while
+    QApplication.processEvents()
+    t.repaint()
+    QTest.mouseClick(t, Qt.MouseButton.LeftButton, pos=t._action_rect.center().toPoint())
+    wait_for(lambda: p.id in win.lib.packages)  # Undo, once the click is over

@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
 
+from bodega import __version__
 from bodega.core.log import get_logger
 from bodega.core.net import ssl_context
 
@@ -35,10 +36,9 @@ MAX_BYTES = 6_000_000  # downloaded, and again after unpacking
 MAX_REDIRECTS = 5
 MAX_TEXT = 20_000  # characters of a page's text handed on (to an AI, say)
 HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0 Safari/537.36"
-    ),
+    # Bodega says what it is (the owner's call: it's an app, never a disguised browser). A store that lets only web
+    # browsers in says so (Refused), and Bodega offers another way in: copy the photo in the browser, paste it.
+    "User-Agent": f"Bodega/{__version__} (+https://github.com/nickvenecia/bodega)",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
     "Accept-Encoding": "gzip, deflate",

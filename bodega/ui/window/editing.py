@@ -137,12 +137,14 @@ class EditingMixin:
         if kind == "gear":
             self.delete_gear([obj_id])
             return
+        # deleted at once, with Undo (the standard's 4.19: never ask about what can be taken back)
         if kind == "packages":
             p = self.lib.packages.get(obj_id)
-            if p is None or not confirm(self, f"Delete {p.name or 'this kit'}?", "The gear in it stays.", "Delete"):
+            if p is None:
                 return
             self.lib.delete_package(obj_id)
             self.packages.pkg = None
+            said = f"Deleted {p.name or 'the kit'}. The gear in it stays."
         else:
             r = self.lib.rentals.get(obj_id)
             if r is None:
@@ -150,12 +152,12 @@ class EditingMixin:
             if not r.deletable():
                 self.cancel_rental(r)
                 return
-            if not confirm(self, f"Delete {r.number}?", "PDFs you saved stay where they are.", "Delete"):
-                return
             self._dirty_rentals.discard(obj_id)
             self.lib.delete_rental(obj_id)
             self.rentals.r = None
+            said = f"Deleted {r.number}."
         self.go(self.view_key)
+        self.toast_undo(said)
 
     def may_hold(self, r, status: str) -> bool:
         """Booking or marking out gear that's already promised (or in repair) asks first: a sub-rental can
@@ -222,32 +224,18 @@ class EditingMixin:
                 for x, _u, _d in pricing.with_attached(self.lib, self.lib.items[i], 1):
                     if x.id not in on_rentals:
                         on_rentals.append(x.id)
-        asked = False
-        if on_rentals:
-            if not self._retire_instead(on_rentals, everything):
-                return
-            asked = True  # its alert asked about deleting the rest too
+        if on_rentals and not self._retire_instead(on_rentals, everything):  # retiring isn't deleting: it asks
+            return
         everything = [i for i in everything if i not in on_rentals]
         picked = [i for i in picked if i in everything]
         if not picked:
             return
+        # deleted at once, with Undo (the standard's 4.19); what's attached goes with it, and rentals keep the names
         extra = len(everything) - len(picked)
         names = [self.lib.items[i].name or "Untitled Piece" for i in picked]
-        if len(picked) == 1:
-            title = f"Delete {names[0]}?"
-        elif len(everything) == len(self.lib.items):
-            title = f"Delete all {len(picked)} pieces of gear?"
-        else:
-            title = f"Delete {len(picked)} pieces of gear?"
-        listed = ", ".join(names[:3]) + (f" and {len(names) - 3} more" if len(names) > 3 else "")
-        text = one_stop(listed + ".") + " " if len(picked) > 1 else ""  # ("…Inc." keeps one full stop)
+        said = f"Deleted {names[0]}" if len(picked) == 1 else f"Deleted {len(picked):,} pieces"
         if extra:
-            text += f"The {extra} piece{'s' if extra != 1 else ''} attached go{'' if extra != 1 else 'es'} too. "
-        text += "Rentals that had them keep their names."
-        if not asked and not confirm(
-            self, title, text, "Delete" if len(everything) == 1 else f"Delete {len(everything)}"
-        ):
-            return
+            said += f" and the {extra:,} attached" if extra != 1 or len(picked) != 1 else " and what's attached"
         keyboard = self.gear_table.hasFocus()
         shown = [r.data(0, ID) for r in self.gear_table.showing_rows()]
         gone = set(everything)
@@ -263,7 +251,7 @@ class EditingMixin:
         if keyboard and neighbour:  # deleted from the keyboard: the next row is where the keyboard is now
             self.gear_table.select_id(neighbour)
             self.gear_table.setFocus()
-        self.toast(f"Deleted {n} pieces." if n != 1 else "Deleted it.", "done")
+        self.toast_undo(one_stop(said + "."))
 
     def _retire_instead(self, ids: list[str], everything: list[str]) -> bool:
         """Gear that rentals point to is retired, not deleted (asked first). True to go on with the rest."""
@@ -476,6 +464,8 @@ class EditingMixin:
         if d.deleted:
             self.lib.delete_client(d.client.id)
             self.rentals.refresh_clients()
+            self.refresh()
+            self.toast_undo(f"Deleted {d.client.name or d.client.company or 'the renter'}. Rentals keep their details.")
             return
         c = self.lib.save_client(d.client)
         if r is not None and assign:
