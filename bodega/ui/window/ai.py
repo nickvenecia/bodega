@@ -69,6 +69,13 @@ class AIMixin:
         else:
             self.open_ai_assistant()
 
+    def open_assistant(self) -> None:
+        """A: the assistant, open, with the cursor in its question (it never closes on A: that's ⌘J or ✕)."""
+        if self.assistant_showing():
+            self.assistant.question.setFocus()
+        else:
+            self.open_ai_assistant()
+
     def close_assistant(self) -> None:
         self.dock.set_open(False)
 

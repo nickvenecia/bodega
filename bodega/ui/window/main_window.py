@@ -217,7 +217,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.search.addAction(theme.icon("search", theme.FAINT), QLineEdit.ActionPosition.LeadingPosition)
         self.search.textChanged.connect(lambda _t: self._apply_search())
         self.search.returnPressed.connect(self._scanned)  # a label's QR code, read by a scanner (else: open)
-        self.search.down_wanted.connect(self._into_list)
+        self.search.step_wanted.connect(self._mark_from_search)
         self.search.leave_to = lambda: (self._table() or self.pages).setFocus()  # Esc, once its words are gone
         mid.addWidget(self.search)
         # how the list is divided and what it shows, behind one icon (the accent while a filter hides gear)
@@ -506,24 +506,35 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         if self.history is not None:
             self.history.mark()
 
-    def _into_list(self, open_it: bool = False) -> None:
-        """From the search to the list: the keyboard moves on to the first row showing (`open_it`: open it)."""
+    def _mark_from_search(self, step: int) -> None:
+        """↑ ↓ in the search: the row above or below is marked (not opened) while the cursor stays in the search."""
         t = self._table()
         rows = list(t.showing_rows()) if t is not None else []
         if not rows:
             return
-        row = t.currentItem() if t.currentItem() in rows else rows[0]
-        if open_it or t.currentItem() is not row:
-            t.setCurrentItem(row)
-        t.setFocus()
+        cur = t.currentItem()
+        at = rows.index(cur) if cur in rows else (-1 if step > 0 else len(rows))
+        row = rows[max(0, min(len(rows) - 1, at + step))]
+        t._quiet = True  # marked, not opened: Return opens it
+        t.setCurrentItem(row)
+        t._quiet = False
+        t.scrollToItem(row)
 
     def _scanned(self) -> None:
-        """A scanner types a label's code and presses Return: open that piece. Return on words you typed opens
-        the first match."""
+        """Return in the search: a label's code, typed by a scanner, opens that piece; otherwise the row marked
+        (↑ ↓) opens, or the first match. Return on an empty search does nothing (it never makes anything)."""
         item_id = document.item_from_code(self.search.text())
         if item_id is None:
-            if self.search.text().strip():
-                self._into_list(open_it=True)
+            t = self._table()
+            rows = list(t.showing_rows()) if t is not None else []
+            marked = t.currentItem() in rows if rows else False
+            if rows and (marked or self.search.text().strip()):
+                row = t.currentItem() if marked else rows[0]
+                t._quiet = True
+                t.setCurrentItem(row)
+                t._quiet = False
+                t.setFocus()
+                self.open(kind_of(self.view_key), row.data(0, ID))
             return
         self.search.clear()
         if item_id in self.lib.items:
@@ -806,9 +817,9 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
                 )
                 m.addAction(theme.menu_icon("assistant"), "Update with AI…", lambda: self.ai_this_piece(obj_id))
                 m.addSeparator()
-                m.addAction(theme.menu_icon("trash"), "Delete…", lambda: self.delete(kind, obj_id))
+                m.addAction(theme.menu_icon("trash"), "Delete", lambda: self.delete(kind, obj_id))
             else:
-                m.addAction(theme.menu_icon("trash"), f"Delete {len(ids)}…", lambda: self.delete_gear(ids))
+                m.addAction(theme.menu_icon("trash"), f"Delete {len(ids):,}", lambda: self.delete_gear(ids))
             m.exec(pos)
             return
         items = [("copy", "Duplicate", lambda: self.duplicate(kind, obj_id))]
@@ -826,7 +837,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
                     items += [("", "-", None), ("x", "Mark as Cancelled…", lambda: self.cancel_rental(r))]
                 menu(self, items).exec(pos)
                 return
-        items += [("", "-", None), ("trash", "Delete…", lambda: self.delete(kind, obj_id))]
+        items += [("", "-", None), ("trash", "Delete", lambda: self.delete(kind, obj_id))]
         menu(self, items).exec(pos)
 
     # Groups

@@ -106,7 +106,7 @@ class GroupsMixin:
         m.addAction(theme.menu_icon("arrow-up"), "Move Up", lambda: self._step_group(group, -1))
         m.addAction(theme.menu_icon("arrow-down"), "Move Down", lambda: self._step_group(group, 1))
         m.addSeparator()
-        m.addAction(theme.menu_icon("trash"), "Remove Group…", lambda: self._remove_group(group))
+        m.addAction(theme.menu_icon("trash"), "Remove Group", lambda: self._remove_group(group))
 
     def _place_picked(self, key: str) -> None:
         """A row in the sidebar: a place, or one kit (opens it)."""

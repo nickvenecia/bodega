@@ -1,10 +1,10 @@
-"""Settings › Keyboard Shortcuts (Help › Keyboard Shortcuts, ⌘/): every command that has a key, read from the
+"""Settings › Keyboard Shortcuts (Help › Keyboard Shortcuts, ⌘/ or ?): every command that has a key, read from the
 menus themselves, so the list is never out of date. Shows ⌘ ⇧ ⌥ on the Mac and Ctrl/Shift/Alt elsewhere."""
 
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeySequence
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QLabel, QMenuBar, QWidget
 
 from bodega.ui.components.widgets import Section, hbox, vbox
@@ -36,13 +36,29 @@ def keys_by_menu(bar: QMenuBar) -> list[tuple[str, list[tuple[str, str]]]]:
     return out
 
 
-class ShortcutsList(QWidget):
-    """Every key, grouped by menu (Settings › Keyboard Shortcuts)."""
+def single_keys(acts: list[QAction]) -> list[tuple[str, str]]:
+    """The single keys (window/menus.py SINGLE_KEYS), each by its own key: N, E, D, /, ?, A."""
+    return [(a.text(), a.shortcuts()[0].toString(QKeySequence.SequenceFormat.NativeText)) for a in acts]
 
-    def __init__(self, bar: QMenuBar, parent: QWidget | None = None):
+
+class ShortcutsList(QWidget):
+    """Every key, grouped by menu (Settings › Keyboard Shortcuts); first `top` (the single keys' switch), and the
+    single keys (`singles`) after the menus."""
+
+    def __init__(
+        self,
+        bar: QMenuBar,
+        singles: list[QAction] | None = None,
+        top: Section | None = None,
+        parent: QWidget | None = None,
+    ):
         super().__init__(parent)
         bl = vbox(self, (0, 0, tokens.SPACE_3, tokens.SPACE_4), tokens.SPACE_3)
+        if top is not None:
+            bl.addWidget(top)
         groups = keys_by_menu(bar)
+        if singles:
+            groups.append(("Single Keys", single_keys(singles)))
         groups.append(("Anywhere", [(t, k.toString(QKeySequence.SequenceFormat.NativeText)) for t, k in EXTRA]))
         for title, rows in groups:
             sec = Section(title)

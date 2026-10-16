@@ -139,7 +139,7 @@ class _RoundPopups(QObject):
     (dropdowns, dates and sliders pass the wheel on to the panel, which scrolls instead), and never moves the
     cursor (Qt gives dropdowns and dates the focus as the wheel goes over them: they take it from a click or Tab
     only, so the field you're typing in keeps it while you scroll past). And a field you're typing in keeps its
-    own editing keys: ⌘⌫ / Ctrl+Backspace deletes a word or a line there, never the piece (Delete…). Buttons that
+    own editing keys: ⌘⌫ / Ctrl+Backspace deletes a word or a line there, never the piece (Delete). Buttons that
     are only an icon take their tooltip as their name, for screen readers. And a window Bodega opens on top
     (Settings, the page window, an alert) is let go once it closes, instead of staying in memory until Bodega
     quits (_lets_go)."""

@@ -31,8 +31,8 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **183 fixed, 21 partly, 23 not
-started (larger redesigns) and 26 waiting on the owner**.
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **188 fixed, 21 partly, 23 not
+started (larger redesigns), 20 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
 |---|---|---|---|---|---|---|---|
@@ -62,7 +62,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 183 · Partly 21 · Open 23 · Waiting on the owner 26.**
+**Of the 253 failures: Fixed 188 · Partly 21 · Open 23 · Waiting on the owner 20 · No longer applies 1.**
 
 ### Partly: what's left
 
@@ -122,12 +122,9 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 
 | Check | Sev | Decided by |
 |---|---|---|
-| A-02 | S2 | question 25 |
 | A-11 | S2 | question 23 |
 | AI-14 | S3 | question 15 |
 | AI-28 | S2 | question 15 |
-| C-27 | S2 | question 22 |
-| C-28 | S2 | question 22 |
 | C-82 | S2 | question 10 |
 | C-129 | S2 | question 8 |
 | D-08 | S1 | the whole-dollar lists in PROJECT_ADDENDUM.md |
@@ -136,29 +133,32 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | D-37 | S1 | question 9 |
 | G-03 | S3 | the session log (docs/SESSION_LOG.md), a proposed departure |
 | G-05 | S3 | question 30 |
-| I-12 | S3 | question 19 |
-| I-13 | S2 | question 19 |
-| N-15 | S2 | question 21 |
 | O-01 | S1 | question 26: branch protection (the type check of core/ and services/ now runs in CI) |
 | R-03 | S1 | question 14 |
 | S-16 | S1 | the updater's helper script in PROJECT_ADDENDUM.md |
-| S-23 | S1 | question 27 |
+| S-23 | S1 | question 27: later, by the owner's choice (not wanted yet) |
 | V-22 | S3 | the accent in PROJECT_ADDENDUM.md |
 | V-28 | S3 | the accent in PROJECT_ADDENDUM.md |
 | W-05 | S3 | question 20 |
 | W-06 | S2 | question 23 |
 | W-08 | S3 | question 20 |
 
+### No longer applies
+
+| Check | Sev | Why |
+|---|---|---|
+| A-02 | S2 | Reflow at 320 points is a web page's rule; Bodega is a desktop app (the owner, 2026-10-16). |
+
 ### Fixed
 
 - **A**: A-03, A-05, A-06, A-10, A-12, A-13
 - **AI**: AI-01, AI-03, AI-07, AI-08, AI-09, AI-15, AI-16, AI-17, AI-19, AI-20, AI-23, AI-24, AI-29, AI-31
-- **C**: C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-19, C-21, C-23, C-24, C-29, C-31, C-32, C-34, C-38, C-39, C-42, C-45, C-47, C-50, C-51, C-54, C-58, C-59, C-66, C-67, C-69, C-72, C-100, C-105, C-106, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
+- **C**: C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-19, C-21, C-23, C-24, C-27, C-28, C-29, C-31, C-32, C-34, C-38, C-39, C-42, C-45, C-47, C-50, C-51, C-54, C-58, C-59, C-66, C-67, C-69, C-72, C-100, C-105, C-106, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
 - **D**: D-01, D-02, D-03, D-05, D-06, D-07, D-10, D-11, D-12, D-15, D-16, D-18, D-21, D-23, D-24, D-25, D-26, D-31, D-32, D-34, D-42, D-49, D-51
 - **G**: G-02
-- **I**: I-01, I-02, I-03, I-04, I-06, I-07, I-08, I-10, I-11, I-14, I-19, I-20, I-21, I-23, I-24, I-25, I-26, I-29, I-30, I-31
+- **I**: I-01, I-02, I-03, I-04, I-06, I-07, I-08, I-10, I-11, I-12, I-13, I-14, I-19, I-20, I-21, I-23, I-24, I-25, I-26, I-29, I-30, I-31
 - **K**: K-02, K-03, K-04, K-06, K-07, K-10, K-12
-- **N**: N-01, N-02, N-03, N-04, N-05, N-06, N-17
+- **N**: N-01, N-02, N-03, N-04, N-05, N-06, N-15, N-17
 - **O**: O-04, O-05, O-07, O-09, O-11
 - **P**: P-01, P-02, P-03, P-04, P-09, P-13, P-15, P-16
 - **R**: R-01, R-05
@@ -562,7 +562,7 @@ choice row 32 · bar 36, V-18 the radius scale, V-24 no literals), then the shar
 | I-27 | Bodega imports only a gear list (master data). It keeps no stock ledger, balances, purchase orders or rental history to switch over. |
 | I-28 | No other system's stand-in records are imported: there are no promotions, deals or fake items to migrate. |
 | A-04 | No sessions or timed steps: the account service is a stub that never signs anyone in, so nothing times out. Timed toasts are covered under A-11. |
-| A-09 | Bodega has no single-character shortcuts: every command uses ⌘ or Ctrl, and Delete, Backspace and Esc are outside WCAG 2.1.4. If single-key commands are added (I-13), this switch becomes required. |
+| A-09 | Was N/A; now a Pass: single keys (N, E, D, /, ?, A) are on by default and Settings › Keyboard Shortcuts turns them off, while ⌘ and Ctrl shortcuts stay (window/menus.py SINGLE_KEYS, tests/test_keys.py). |
 | D-13 | No tenants: one person's data in their own per-user folder. Profiles are that person's letterheads, not separate organizations. |
 | D-14 | No accounts or roles: one person on their own computer and no server to check permissions (services/account.py is a stub that isn't connected). |
 | D-17 | No server and nothing is served: photos and logos stay in the person's own data folder. |
@@ -826,14 +826,15 @@ is followed.
 16. **Answered: Bodega says it's Bodega.** It used to tell stores it was a web browser (`core/web.py`).
 17. SVG logos: turn them into PNG when added? (S-17)
 18. The update check runs at every launch; its note says once a day. Which is meant? (S-25)
-19. Single-key commands (N, /, ?, A) with a switch to turn them off, or ⌘-only like Apple's own apps? (I-13, A-09)
+19. **Answered: as the standard has it.** N, E, D, /, ? and A work alone outside text fields, with a switch in
+    Settings › Keyboard Shortcuts to turn them off; ⌘1 to ⌘4 are gone (the sidebar is grouped). (I-12, I-13, A-09)
 20. English and US formats only, or prepare for translation? (W-05, W-08)
-21. A menu bar (or ⋯ menu) on Windows and Linux, so every command has a way in there? (N-15, I-04)
+21. **Answered: as the standard has it.** The menu bar shows on Windows and Linux too. (N-15, I-04)
 22. **Answered: as the standard has it.** What Undo can take back is done at once, with "Deleted. Undo"; Return does
     the action you chose, and the safe choice when the loss is a side effect. (C-27, C-28)
 23. Check Price problems: toasts (as now), or under the link until dismissed? (W-06, A-11)
 24. Earned and Paid Off: show them as estimates ("≈")? (W-19)
-25. Is the 1280 × 700 minimum window a hard need, or should it fit a 1366 × 768 laptop at 125%? (A-02)
+25. **Answered: a desktop app.** Rules for web pages (reflow at 320 points) don't apply. (A-02)
 26. Protect main so a pull request merges only once its four builds are green? (O-01)
 27. **Answered: yes, later.** Code signing (an Apple Developer ID, a Windows certificate), not wanted yet. (S-23)
 28. Dependabot security updates and GitHub secret scanning: on? Take the closed dependency bumps? (S-21, S-20)

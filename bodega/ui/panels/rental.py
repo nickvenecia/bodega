@@ -356,7 +356,7 @@ class RentalPanel(DetailsBase):
         self.menu_action("receipt", "Send to Saldo…", lambda: self.r and self.saldo_wanted.emit(self.r.id))
         self.menu_action("", "-", None)
         self.delete_act = self.menu_action(
-            "trash", "Delete Rental…", lambda: self.r and self.delete_wanted.emit(self.r.id)
+            "trash", "Delete Rental", lambda: self.r and self.delete_wanted.emit(self.r.id)
         )  # a booked one: Mark as Cancelled… (it's never deleted)
         self.sheet.clicked.connect(lambda: self.r and self.sheet_wanted.emit(self.r.id))
 
@@ -573,7 +573,7 @@ class RentalPanel(DetailsBase):
         r = self.r
         if r is None:
             return
-        self.delete_act.setText("Delete Rental…" if r.deletable() else "Mark as Cancelled…")
+        self.delete_act.setText("Delete Rental" if r.deletable() else "Mark as Cancelled…")
         self.delete_act.setVisible(r.deletable() or not r.is_cancelled())
 
     def show_history(self) -> None:

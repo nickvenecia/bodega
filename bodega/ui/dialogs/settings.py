@@ -47,7 +47,7 @@ FINDS = {  # what each section holds, for Settings' search (with its name)
     "numbers prefix next number paper terms agreement note currency",
     "ai": "ai assistant provider key model anthropic openai gemini claude",
     "account": "account sign in sign out email password",
-    "shortcuts": "keyboard shortcuts keys",
+    "shortcuts": "keyboard shortcuts keys single letters voice speech",
     "data": "data folder backup back up restore safety copies renters details log import export spreadsheet csv "
     "google sheets",
 }
@@ -376,7 +376,17 @@ class SettingsDialog(QDialog):
     def _build_shortcuts(self) -> None:
         from bodega.ui.dialogs.shortcuts import ShortcutsList
 
-        self._fill("shortcuts", ShortcutsList(self.win.menuBar()))
+        top = Section("Single Keys")
+        self.single = ToggleRow("Use Single-Key Shortcuts", settings.value(self.lib.settings, "single_keys"))
+        self.single.toggled.connect(self._single_keys)
+        top.add(self.single)
+        top.add(hint("N, E, D, /, ? and A work alone, outside text fields. Turn them off if you type by voice."))
+        self._fill("shortcuts", ShortcutsList(self.win.menuBar(), self.win.single_acts, top))
+
+    def _single_keys(self, on: bool) -> None:
+        self.lib.settings["single_keys"] = on
+        self.lib.save_settings()
+        self.win.use_single_keys(on)
 
     # Your Data
     def _build_data(self) -> None:

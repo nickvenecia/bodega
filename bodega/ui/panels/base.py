@@ -82,7 +82,7 @@ class DetailsBase(SidePanel):
         self.footer.setVisible(self.footer_lay.count() > 0)
 
     def menu_action(self, icon: str, text: str, slot):
-        """A command under the header's ⋯ (Duplicate, Delete…). Returns its QAction (None for "-")."""
+        """A command under the header's ⋯ (Duplicate, Delete). Returns its QAction (None for "-")."""
         if text == "-":
             self.more_menu.addSeparator()
             return None

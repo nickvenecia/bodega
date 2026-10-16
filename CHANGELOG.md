@@ -92,6 +92,16 @@
 - Deleting gear, a kit, a quote, a renter or a profile, or removing a group, happens at once and says so with an Undo
   button in the message ("Deleted Sony FX6. Undo"); ⌘Z does the same. Nothing asks "are you sure?" for what Undo
   can take back. Gear that's on a rental is still retired instead of deleted, and that still asks.
+- Single-key shortcuts, outside text fields: N makes something new (a piece, a kit or a rental, wherever you are),
+  E puts the cursor in the open record (or opens the one you've marked), D deletes it (with Undo), / goes to the
+  search, ? shows the keyboard shortcuts and A opens the assistant. They never act while you type in a field or
+  with ⌘, Ctrl or ⌥ held, and Settings › Keyboard Shortcuts can turn them off (speech typing can set them off).
+- In the search, ↑ and ↓ move through the rows while you keep typing, and Return opens the one marked. Typing a
+  letter on a list no longer jumps to a row by its name.
+- ⌘1 to ⌘4 no longer jump to places: they skipped most of the sidebar. The sidebar, the View menu and Search
+  Everything (⌘K) take you anywhere.
+- After Duplicate, only the copy is picked in the list: the piece you copied stayed picked with it, so Delete could
+  take both.
 - Bodega says it's Bodega when it reads a store's page (it used to say it was a web browser). A store that only lets
   web browsers in says so, and you can paste the photo from your browser instead.
 - Settings no longer shows an Account page while there's nothing to sign in to.

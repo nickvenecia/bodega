@@ -176,7 +176,7 @@ class ItemPanel(DetailsBase):
         self.menu_action("copy", "Duplicate", lambda: self.it and self.duplicate_wanted.emit(self.it.id))
         self.menu_action("assistant", "Update with AI…", lambda: self.it and self.ai_wanted.emit(self.it.id))
         self.menu_action("", "-", None)
-        self.menu_action("trash", "Delete…", lambda: self.it and self.delete_wanted.emit(self.it.id))
+        self.menu_action("trash", "Delete", lambda: self.it and self.delete_wanted.emit(self.it.id))
         self.rent = self.footer_button("Rent This", "receipt")
         self.rent.clicked.connect(lambda: self.it and self.rent_wanted.emit(self.it.id))
 

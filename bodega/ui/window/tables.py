@@ -8,7 +8,7 @@ finds them too. Right-click the column titles to choose the columns.
 
 from __future__ import annotations
 
-from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, QRectF, QSize, Qt, QTimer, Signal
+from PySide6.QtCore import QEvent, QItemSelectionModel, QPoint, QPointF, QRect, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPen, QPixmap, QRegion
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -241,7 +241,10 @@ class Table(QTreeWidget):
             while p is not None:
                 p.setExpanded(True)
                 p = p.parent()
-            self.setCurrentItem(found)
+            # only this row is picked (on a list that picks several, a plain setCurrentItem adds it to the rows
+            # picked before, and Delete would take those too)
+            flags = QItemSelectionModel.SelectionFlag
+            self.setCurrentItem(found, 0, flags.ClearAndSelect | flags.Rows)
             self.scrollToItem(found, QAbstractItemView.ScrollHint.PositionAtCenter)
         else:
             self.clearSelection()
@@ -268,20 +271,8 @@ class Table(QTreeWidget):
         super().keyPressEvent(e)
 
     def keyboardSearch(self, typed: str) -> None:
-        """Typing a name jumps to the first row you can see whose name starts with it (as the Finder does);
-        letters typed in quick succession make one word."""
-        from time import monotonic
-
-        now = monotonic()
-        quick = now - getattr(self, "_typed_at", 0.0) < QApplication.keyboardInputInterval() / 1000
-        self._typed = (getattr(self, "_typed", "") if quick else "") + typed
-        self._typed_at = now
-        wanted = search.folded(self._typed)
-        for r in self.showing_rows():
-            if search.folded(r.text(self.NAME_COL)).startswith(wanted):
-                self.setCurrentItem(r)
-                self.scrollToItem(r)
-                return
+        """Letters never pick a row by its name here (the standard's 6.1): they're the single-key commands (N, E,
+        D, A), and / goes to the search."""
 
     def record_rows(self):
         """Every row that is a record (not a divider), folded away or not, top to bottom."""

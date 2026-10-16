@@ -914,12 +914,13 @@ class ReturnMovesOn(QObject):
 
 
 class SearchField(QLineEdit):
-    """Every search: asks for SEARCH_W, gives way down to SEARCH_MIN on a narrow window. ↓ goes on into the list
-    it searches (`down_wanted`). Esc is one layer at a time, here for every search: its words go first; then,
+    """Every search: asks for SEARCH_W, gives way down to SEARCH_MIN on a narrow window. ↑ and ↓ move through the
+    rows of the list it searches while the cursor stays here (`step_wanted`: -1 or 1), so Return can open the one
+    marked (the standard's 6.1). Esc is one layer at a time, here for every search: its words go first; then,
     with `leave_to` set, the focus goes there (the list it searches); otherwise Esc goes on to the window (a
     dialog closes)."""
 
-    down_wanted = Signal()
+    step_wanted = Signal(int)
     leave_to = None  # () -> None: where an Esc in an empty search takes the focus
 
     def sizeHint(self) -> QSize:
@@ -935,8 +936,8 @@ class SearchField(QLineEdit):
         return super().event(e)
 
     def keyPressEvent(self, e):
-        if e.key() == Qt.Key.Key_Down and not e.modifiers():
-            self.down_wanted.emit()
+        if e.key() in (Qt.Key.Key_Down, Qt.Key.Key_Up) and not e.modifiers() & ~Qt.KeyboardModifier.KeypadModifier:
+            self.step_wanted.emit(1 if e.key() == Qt.Key.Key_Down else -1)
             return
         if e.key() == Qt.Key.Key_Escape and not e.modifiers() and self._esc_is_mine():
             if self.text():

@@ -251,8 +251,14 @@ def pick_from(
         if first is not None:
             box.setCurrentItem(first)
 
+    def step(by: int) -> None:  # ↑ ↓ in the search mark the next choice showing; Return takes it
+        showing = [box.item(i) for i in range(box.count()) if not box.item(i).isHidden()]
+        if showing:
+            at = showing.index(box.currentItem()) if box.currentItem() in showing else (-1 if by > 0 else 0)
+            box.setCurrentItem(showing[max(0, min(len(showing) - 1, at + by))])
+
     find.textChanged.connect(narrow)
-    find.down_wanted.connect(box.setFocus)
+    find.step_wanted.connect(step)
     find.returnPressed.connect(
         lambda: box.currentItem() is not None and not box.currentItem().isHidden() and d.accept()
     )

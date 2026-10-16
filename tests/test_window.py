@@ -1233,8 +1233,23 @@ def test_from_the_search_the_keyboard_goes_on_into_the_list(win):
     assert win.gear_table.currentItem() is first and win.items.it is not None
     assert win.items.it.id == first.data(0, 256)
     win.search.setFocus()
+    QTest.keyClick(win.search, Qt.Key.Key_Down)  # ↓ marks the next row; the cursor stays in the search
+    rows = list(win.gear_table.showing_rows())
+    assert win.search.hasFocus() and win.gear_table.currentItem() is rows[1]
+    assert win.items.it.id == first.data(0, 256)  # marked, not opened…
+    QTest.keyClick(win.search, Qt.Key.Key_Up)
     QTest.keyClick(win.search, Qt.Key.Key_Down)
-    assert win.gear_table.hasFocus()
+    QTest.keyClick(win.search, Qt.Key.Key_Return)  # …until Return
+    assert win.items.it.id == rows[1].data(0, 256) and win.gear_table.hasFocus()
+
+
+def test_return_in_an_empty_search_with_nothing_marked_does_nothing(win):
+    win.go("gear")
+    win.deselect()
+    before = len(win.lib.items)
+    win.search.setFocus()
+    QTest.keyClick(win.search, Qt.Key.Key_Return)
+    assert not win.dock.opened and len(win.lib.items) == before  # a bare Return never makes or opens anything
 
 
 def test_back_up_runs_without_freezing_the_window(win, monkeypatch, tmp_path):
@@ -1289,8 +1304,8 @@ def test_the_places_come_from_one_list(win):
     view = next(m for m in win.menuBar().findChildren(type(win.view_menu.menu())) if m.title() == "View")
     shown = {a.text(): a.shortcut().toString() for a in view.actions()}
     for p in PLACES:
-        if p.keys:
-            assert shown[p.menu or p.title] == p.keys
+        if p.menu:
+            assert shown[p.menu] == ""  # in the View menu, with no number key (the sidebar is grouped)
 
 
 def test_gear_moves_up_and_down_from_the_keyboard(win):
@@ -1364,7 +1379,7 @@ def test_a_rows_menu_has_what_its_panels_more_menu_has(win, monkeypatch):
         win.open(kind, obj_id)
         win._row_menu(kind, obj_id, QPoint(0, 0))
         mine = {a.text() for a in panel.more_menu.actions() if a.text() and a.isVisible()}
-        missing = mine - seen[-1] - {"Delete Rental…", "Delete Kit…"}  # (the row says Delete…)
+        missing = mine - seen[-1] - {"Delete Rental", "Delete Kit"}  # (the row says Delete)
         assert not missing, (kind, missing)
 
 
@@ -1372,13 +1387,14 @@ def test_no_two_commands_share_a_key(win):
     from PySide6.QtGui import QKeySequence
 
     taken: dict[str, str] = {}
-    for top in win.menuBar().actions():
-        for a in top.menu().actions() if top.menu() else []:
-            for keys in a.shortcuts():
-                name = keys.toString(QKeySequence.SequenceFormat.PortableText)
-                assert name not in taken, f"{name}: {taken.get(name)} and {a.text()}"
-                taken[name] = a.text()
-    assert {"Ctrl+N", "Ctrl+F", "Ctrl+Z", "Ctrl+1"} <= set(taken)
+    every = [a for top in win.menuBar().actions() for a in (top.menu().actions() if top.menu() else [])]
+    for a in every + win.single_acts:
+        for keys in a.shortcuts():
+            name = keys.toString(QKeySequence.SequenceFormat.PortableText)
+            assert name not in taken, f"{name}: {taken.get(name)} and {a.text()}"
+            taken[name] = a.text()
+    assert {"Ctrl+N", "Ctrl+F", "Ctrl+Z", "N", "/", "?"} <= set(taken)
+    assert not {"Ctrl+1", "Ctrl+2", "Ctrl+3", "Ctrl+4"} & set(taken)  # the sidebar is grouped: no number keys
 
 
 def test_the_share_button_opens_the_page_window_at_once(win, monkeypatch):
@@ -1841,13 +1857,15 @@ def test_the_sidebar_search_opens_search_everything(win, monkeypatch):
     wait_for(lambda: opened)
 
 
-def test_typing_a_name_in_the_list_jumps_to_it(win):
+def test_typing_letters_on_the_list_never_picks_a_row_by_name(win):
+    """The standard's 6.1: on a page with single keys, letters are commands, never the Finder's type-select."""
     win.go("gear")
     t = win.gear_table
-    target = next(r for r in t.showing_rows() if r.text(t.NAME_COL).startswith("Mini"))
+    first = next(iter(t.showing_rows()))
+    t.setCurrentItem(first)
     t.setFocus()
     QTest.keyClicks(t, "mini v")
-    assert t.currentItem() is target
+    assert t.currentItem() is first
 
 
 def test_a_sidebar_place_says_its_count(win):

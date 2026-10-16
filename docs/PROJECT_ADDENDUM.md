@@ -93,6 +93,9 @@ ask the owner for it.
   profile, removing a group). Only what can't be taken back asks first; Return does the action you chose, and the
   safe choice when the loss is a side effect (the standard's 4.9 and 4.19).
 - **Code signing** (an Apple Developer ID, a Windows certificate): yes, but later; not wanted yet.
+- **Single-key shortcuts, as the standard has them** (N, E, D, /, ? and A outside text fields, on by default, with a
+  switch in Settings › Keyboard Shortcuts); no number keys for places, since the sidebar is grouped. (Settled by
+  "follow all the guidelines and rules related to how it looks and is built".)
 
 ## Integrations (§8.11)
 | System | Direction | What it owns | Credentials |

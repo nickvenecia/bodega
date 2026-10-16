@@ -22,12 +22,10 @@ DEFAULTS: dict[str, tuple[type, object]] = {  # key -> (what it holds, its defau
     "calendar_mode": (str, "month"),  # month / timeline
     "business": (str, ""),  # the profile you work as
     "google_sheet": (str, ""),  # the last Google Sheet link imported
-    "import_columns": (dict, {}),
+    "import_columns": (dict, {}),  # a sheet's header (importer.layout_key) -> which column is which, as you set it
     "ai_usage": (dict, {}),  # what Bodega has asked your AI today and this month (services/ai/usage.py)
-    "ai_daily_limit": (
-        int,
-        300,
-    ),  # questions to your AI a day (0: no limit), usage.DEFAULT_DAILY  # a sheet's header (importer.layout_key) -> which column is which, as you set it
+    "ai_daily_limit": (int, 300),  # questions to your AI a day (0: no limit), usage.DEFAULT_DAILY
+    "single_keys": (bool, True),  # N, E, D, /, ? and A work alone, outside text fields (Settings › Keyboard Shortcuts)
     "export_dir": (str, ""),  # where the last PDF went
     "geometry": (str, ""),  # the window's size and place
     "folded": (list, []),  # gear dividers you folded

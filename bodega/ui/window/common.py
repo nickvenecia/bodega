@@ -21,23 +21,23 @@ GEAR_FILTERS = [
 
 @dataclass(frozen=True)
 class Place:
-    """One place in the sidebar. `under`: the row it sits under; `menu`/`keys`: its View menu item."""
+    """One place in the sidebar. `under`: the row it sits under; `menu`: its View menu item (no number keys: the
+    sidebar is grouped, so numbers wouldn't run down it in order, the standard's 6.1)."""
 
     key: str
     title: str
     icon: str = ""
     under: str = ""
     menu: str = ""
-    keys: str = ""
 
 
 PLACES = (  # in the sidebar's order (each group's own places, like Lenses, come from your gear)
-    Place("gear", "All Gear", "box", menu="All Gear", keys="Ctrl+1"),
-    Place("kits", "Kits", "case", menu="Kits", keys="Ctrl+2"),
-    Place("rentals", "All Rentals", "receipt", menu="Rentals", keys="Ctrl+3"),
+    Place("gear", "All Gear", "box", menu="All Gear"),
+    Place("kits", "Kits", "case", menu="Kits"),
+    Place("rentals", "All Rentals", "receipt", menu="Rentals"),
     Place("out", "Out Now", under="rentals"),
     Place("upcoming", "Coming Up", under="rentals"),
-    Place("calendar", "Calendar", "calendar", menu="Calendar", keys="Ctrl+4"),
+    Place("calendar", "Calendar", "calendar", menu="Calendar"),
 )
 PLACE = {p.key: p for p in PLACES}
 TITLES = {p.key: p.title for p in PLACES}

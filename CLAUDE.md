@@ -120,18 +120,17 @@ bodega/
                    empty gear takes a dropped spreadsheet),
                    titlebar.py (Mac: macOS moves the window; double-click fills the screen or shrinks it, animated
                    via NSWindow setFrame:animate:), worker.py (Worker: background jobs with progress and stop)
-    window/        main_window.py (MainWindow: building, navigation, opening, size and place) made of parts:
-                   menus.py, groups.py, editing.py, transfer.py (import, export, back up), pages.py (the page
-                   window), services.py (settings, account, feedback, updates, light/dark), ai.py (assistant,
-                   jobs, review, apply); common.py (kind_of, TITLES); sidebar.py (Inventory: All Gear with its
-                   groups, Kits with each kit; Rentals: All Rentals with Out Now and Coming Up, then Calendar;
-                   rows fold, kept in settings "sidebar_folded"; a folded All Rentals still shows out/late;
-                   at the bottom: your profile card (its menu: your profiles, Send Feedback, Check for Updates, Settings));
-                   tables.py (GearTable, KitTable, RentalTable; COL_W widths; never per-row widgets); lift.py (Lift: drag
-                   by the grip, drawn live: rows slide apart to show where it lands; off to the left it becomes a
-                   normal drag for the sidebar's groups);
-                   filters.py (FilterButton + GearFilter: divide by, show, company, missing, Clear Filters);
-                   calendar_view.py (CalendarPage: Month, a wall calendar with bars, or Timeline;
+    window/        main_window.py (MainWindow: building, navigation, opening, size and place) made of parts: menus.py
+                   (and SINGLE_KEYS: N E D / ? A), groups.py, editing.py, transfer.py (import, export, back up),
+                   pages.py (the page window), services.py (settings, account, feedback, updates, light/dark), ai.py
+                   (assistant, jobs, review, apply); common.py (kind_of, TITLES); sidebar.py (Inventory: All Gear with
+                   its groups, Kits with each kit; Rentals: All Rentals with Out Now and Coming Up, then Calendar; rows
+                   fold, kept in settings "sidebar_folded"; a folded All Rentals still shows out/late; at the bottom:
+                   your profile card (its menu: your profiles, Send Feedback, Check for Updates, Settings)); tables.py
+                   (GearTable, KitTable, RentalTable; COL_W widths; never per-row widgets); lift.py (Lift: drag by the
+                   grip, drawn live: rows slide apart to show where it lands; off to the left it becomes a normal drag
+                   for the sidebar's groups); filters.py (FilterButton + GearFilter: divide by, show, company, missing,
+                   Clear Filters); calendar_view.py (CalendarPage: Month, a wall calendar with bars, or Timeline;
                    settings "calendar_mode")
     panels/        base.py (DetailsBase: header ⋯, footer_button(text, icon), Cards), item.py (gear: the head
                    (photo beside the TitleEdit name, the status line, company · group), Details / Value & Rate / added parts; Check Price; Update with AI),

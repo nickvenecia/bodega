@@ -64,7 +64,7 @@ class PackagePanel(DetailsBase):
         self.sheet = self.footer_button("Kit Sheet…", "receipt")
         self.menu_action("copy", "Duplicate", lambda: self.pkg and self.duplicate_wanted.emit(self.pkg.id))
         self.menu_action("", "-", None)
-        self.menu_action("trash", "Delete Kit…", lambda: self.pkg and self.delete_wanted.emit(self.pkg.id))
+        self.menu_action("trash", "Delete Kit", lambda: self.pkg and self.delete_wanted.emit(self.pkg.id))
         self.sheet.clicked.connect(lambda: self.pkg and self.sheet_wanted.emit(self.pkg.id))
         self.name = TitleEdit()  # the kit's name as its title, like a piece of gear's
         self.name.setPlaceholderText("FX6 Run && Gun, Interview Kit…".replace("&&", "&"))

@@ -11,11 +11,25 @@ from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QApplication, QLineEdit, QMenu, QPlainTextEdit, QTextEdit, QToolButton
 
 from bodega import version_label
+from bodega.core import settings
 from bodega.core.fileutil import reveal
 from bodega.core.paths import data_dir, log_dir
 from bodega.ui.dialogs.common import about
 from bodega.ui.style import theme, tokens
 from bodega.ui.window.common import PLACES, kind_of
+
+# Single keys (the standard's 6.1): a letter alone, for the commands people use most. They work only outside text
+# fields (a field takes its letters first) with nothing open over the window (a menu or a dialog is its own
+# window), never with ⌘, Ctrl or ⌥ held; Shift doesn't change them. On by default; Settings › Keyboard Shortcuts
+# turns them off (speech typing sets letters off too). The Keyboard Shortcuts list reads this table.
+SINGLE_KEYS = (  # (key, what it does, the window's method)
+    ("N", "New", "new_here"),
+    ("E", "Edit", "edit_open"),
+    ("D", "Delete", "delete_selected"),
+    ("/", "Search This Page", "_focus_search"),
+    ("?", "Keyboard Shortcuts", "show_shortcuts"),
+    ("A", "Assistant", "open_assistant"),
+)
 
 
 class MenusMixin:
@@ -33,7 +47,7 @@ class MenusMixin:
             return a
 
         f = bar.addMenu("File")
-        act(f, "New", lambda: self.new(kind_of(self.view_key)), QKeySequence.StandardKey.New)
+        act(f, "New", self.new_here, QKeySequence.StandardKey.New)
         act(f, "New Gear", lambda: self.new("gear"))
         act(f, "New Kit", lambda: self.new("packages"))
         act(f, "New Rental", lambda: self.new("rentals"))
@@ -83,7 +97,7 @@ class MenusMixin:
         act(e, "Select All", self.select_all, QKeySequence.StandardKey.SelectAll)
         e.addSeparator()
         act(e, "Duplicate", self._duplicate_current, "Ctrl+D")
-        act(e, "Delete…", self.delete_selected, "Ctrl+Backspace")
+        act(e, "Delete", self.delete_selected, "Ctrl+Backspace")
         e.addSeparator()
         act(e, "Move Up", lambda: self.step_gear(-1))  # (no keys: the standard keeps ⌥ off arrows and the like)
         act(e, "Move Down", lambda: self.step_gear(1))
@@ -93,8 +107,8 @@ class MenusMixin:
         self.act_search = act(e, "Search Everything…", self.search_everything, "Ctrl+K")  # places, records, commands
         v = bar.addMenu("View")
         for p in PLACES:  # the same places as the sidebar (window/common.py)
-            if p.keys:
-                act(v, p.menu or p.title, lambda _c=False, k=p.key: self.go(k), p.keys)
+            if p.menu:
+                act(v, p.menu, lambda _c=False, k=p.key: self.go(k))
         act(v, "Close Panel", self.deselect)
         v.addSeparator()
         self.look_actions = {}
@@ -116,7 +130,7 @@ class MenusMixin:
             act(gm, "Rename Group…", lambda: self._with_group(self.rename_group)),
             act(gm, "Move Group Up", lambda: self._with_group(lambda g: self._step_group(g, -1))),
             act(gm, "Move Group Down", lambda: self._with_group(lambda g: self._step_group(g, 1))),
-            act(gm, "Remove Group…", lambda: self._with_group(self._remove_group)),
+            act(gm, "Remove Group", lambda: self._with_group(self._remove_group)),
         ]
         gm.aboutToShow.connect(self._record_menu_state)
         rm = bar.addMenu("Rental")
@@ -165,6 +179,7 @@ class MenusMixin:
         act(h, "Open Log File", lambda: reveal(log_dir() / "bodega.log"))
         act(h, "About Bodega", lambda: about(self, version_label(), str(data_dir())))
         bar.setVisible(True)  # (on a Mac it lives in the screen's own bar)
+        self._single_keys()
 
         # the share button opens the page window at once: Inventory List, Rate Card and Labels are its tabs
         # (importing is in File and the + menus; Export as CSV and Get Photos in File)
@@ -186,6 +201,22 @@ class MenusMixin:
         self.new_menu.addSeparator()
         self.new_menu.addAction(theme.menu_icon("table"), "Import Spreadsheet…", self.import_sheet)
         self.new_menu.addAction(theme.menu_icon("link"), "Import from Google Sheets…", self.import_google)
+
+    def _single_keys(self) -> None:
+        self.single_acts = []
+        for key, text, method in SINGLE_KEYS:
+            a = QAction(text, self)
+            keys = [QKeySequence(key), QKeySequence(f"Shift+{key}")]  # (Shift doesn't change a letter's meaning,
+            a.setShortcuts(keys)  # and a ? is typed with it)
+            a.triggered.connect(getattr(self, method))
+            self.addAction(a)
+            self.single_acts.append(a)
+        self.use_single_keys(settings.value(self.lib.settings, "single_keys"))
+
+    def use_single_keys(self, on: bool) -> None:
+        """Settings › Keyboard Shortcuts: single keys on or off (⌘ and Ctrl shortcuts stay either way)."""
+        for a in self.single_acts:
+            a.setEnabled(on)
 
     def _tips_from_menus(self) -> None:
         """A button that has a menu command names its key as the command has it (never typed twice): ⌘J, ⌘K."""
@@ -367,7 +398,7 @@ class MenusMixin:
             w.selectAll()
 
     def delete_selected(self) -> None:
-        """⌘⌫: delete what's picked (after asking)."""
+        """⌘⌫ or D: delete what's picked, at once, with Undo (gear on a rental is retired instead, after asking)."""
         kind = kind_of(self.view_key)
         if kind == "gear":
             ids = self.gear_table.chosen_ids() or ([self.items.it.id] if self.items.it is not None else [])
@@ -388,5 +419,7 @@ class MenusMixin:
         self.open_settings("shortcuts")
 
     def _focus_search(self) -> None:
-        self.search.setFocus()
-        self.search.selectAll()
+        """⌘F, ⌥⌘F or /: the cursor in this page's search (the calendar has none)."""
+        if self.search.isVisible():
+            self.search.setFocus()
+            self.search.selectAll()

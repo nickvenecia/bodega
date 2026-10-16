@@ -63,6 +63,29 @@ class EditingMixin:
             self.rentals.client.setFocus()
             self._fresh = ("rentals", r.id, _blank(r))
 
+    def new_here(self) -> None:
+        """N (and ⌘N): this page's new thing (a piece on gear pages, a kit on Kits, a rental on rentals)."""
+        self.new(kind_of(self.view_key))
+
+    def edit_open(self) -> None:
+        """E: the record on screen, ready to type in (what's marked in the list opens first); the cursor goes to
+        its first field, as it does in a new one."""
+        kind = kind_of(self.view_key)
+        panel, field = {
+            "gear": (self.items, "it"),
+            "packages": (self.packages, "pkg"),
+            "rentals": (self.rentals, "r"),
+        }[kind]
+        if getattr(panel, field) is None or not self.dock.opened or self.assistant_showing():
+            t = self._table()
+            row = t.currentItem() if t is not None else None
+            if row is None or row not in list(t.showing_rows()):
+                return
+            self.open(kind, row.data(0, ID))
+        first = {"gear": self.items.name, "packages": self.packages.name, "rentals": self.rentals.client}[kind]
+        if first.isEnabled():
+            first.setFocus()
+
     def _drop_fresh(self, keep: str = "") -> None:
         """A new piece, kit or rental you left without filling anything in (Esc, or opening something else)
         isn't kept."""
