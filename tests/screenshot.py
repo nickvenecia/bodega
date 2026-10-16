@@ -138,7 +138,7 @@ def main(out: Path, sheet: Path | None = None) -> int:
     w.set_gear_filter("out")
     shot(w, out / "2b-filtered.png")
     w.set_gear_filter("all")
-    for name, menu in (("2c-filter-menu", w.view_menu.m), ("2d-import-export-menu", w.btn_export.menu())):
+    for name, menu in (("2c-filter-menu", w.view_menu.m), ("2d-new-menu", w.new_menu)):
         menu.popup(w.mapToGlobal(w.rect().center()))
         shot(menu, out / f"{name}.png")
         menu.close()

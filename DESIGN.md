@@ -267,7 +267,7 @@ as one rounded shape across the row (`tables.RowPainter`); a divider under the m
 you click a row and slides out on Esc, a click on empty space or its ✕. The search capsule is centred in the toolbar.
 
 ```
-╭ bodega. ──────────╮  All Gear 18   (⌕ Search                ) (≡)    (⇪) (☺) (+)  ╭ Gear          (⋯)(✕) ╮
+╭ bodega. ──────────╮  All Gear 18   (⌕ Search                ) (≡)    (⇪) (+) (☺)  ╭ Gear          (⋯)(✕) ╮
 │ Inventory ˅    (+)│  Name                       Company   Qty  Status  With Tax  Rate │ Out · Northwind · Oct 25 │
 │ ▸ All Gear      18│  ▾ Body                               4           $6,992  $280│ photo                    │
 │ ▾ Kits           1│  ⋮ Sony FX6 Cinema Camera  +3 Sony     1  In       $6,493  $260│ Sony FX6 Cinema Camera   │
@@ -286,8 +286,9 @@ rentals are the plus underneath.
   a sheet's departments are only read while importing). Tidy Up Groups (`core/tidy.py`) gives them plain names. Each with a count; Out Now turns red when something's late.
 - **The middle is one table** (`ui/tables.py`): a toolbar (`TOOLBAR_H`) with the place's name and count, Search,
   the filter icon (`filters.FilterButton`: Divide By, Show, Company, Missing, Clear Filters; the accent while on),
-  the share button (import, Google Sheets, inventory list, rate card, labels, CSV), the assistant, then **one
-  primary round +**: New Gear or New Group / New Kit / New Rental. With nothing in the place yet, search and the filter
+  the share button (it opens the page window: Inventory List, Rate Card, Labels), then **one primary round +**:
+  New Gear or New Group (and Import Spreadsheet…, Import from Google Sheets…) / New Kit / New Rental, then the
+  assistant, last. With nothing in the place yet, search and the filter
   hide and the empty page shows instead (`EmptyPage`); a spreadsheet dropped on the empty gear page is imported. (A sidebar section's own + is the Mac's: a small
   plain gray glyph, `SectionAdd`, that fades in over `FADE_MS` while the pointer is over its own section.) Columns sort by clicking their header.
   The Calendar (`ui/calendar_view.py`) replaces the table for rentals: one row per rental, a bar per stretch of dates.

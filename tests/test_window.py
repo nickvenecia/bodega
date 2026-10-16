@@ -1349,3 +1349,27 @@ def test_a_rows_menu_has_what_its_panels_more_menu_has(win, monkeypatch):
         mine = {a.text() for a in panel.more_menu.actions() if a.text() and a.isVisible()}
         missing = mine - seen[-1] - {"Delete Rental…", "Delete Kit…"}  # (the row says Delete…)
         assert not missing, (kind, missing)
+
+
+def test_no_two_commands_share_a_key(win):
+    from PySide6.QtGui import QKeySequence
+
+    taken: dict[str, str] = {}
+    for top in win.menuBar().actions():
+        for a in top.menu().actions() if top.menu() else []:
+            for keys in a.shortcuts():
+                name = keys.toString(QKeySequence.SequenceFormat.PortableText)
+                assert name not in taken, f"{name}: {taken.get(name)} and {a.text()}"
+                taken[name] = a.text()
+    assert {"Ctrl+N", "Ctrl+F", "Ctrl+Z", "Ctrl+1", "Ctrl+Alt+Up"} <= set(taken)
+
+
+def test_the_share_button_opens_the_page_window_at_once(win, monkeypatch):
+    shown = []
+    monkeypatch.setattr(win, "show_pages", lambda ctx, doc="": shown.append((ctx, doc)))
+    win.go("gear")
+    assert win.btn_export.menu() is None
+    win.btn_export.click()
+    assert shown == [(("gear", ""), "inventory")]
+    texts = [a.text() for a in win.new_menu.actions()]
+    assert "Import Spreadsheet…" in texts and "Import from Google Sheets…" in texts  # importing lives under +

@@ -33,7 +33,7 @@ sidebar).
 
 ## What it does
 
-**Bring in the list you already keep.** Bodega starts empty. **Import Spreadsheet…** (the share button above the list) opens an Excel (.xlsx) or
+**Bring in the list you already keep.** Bodega starts empty. **Import Spreadsheet…** (under the + above the list, or File) opens an Excel (.xlsx) or
 .csv gear list in the Import window, where you see every piece before it comes in, untick departments or single
 pieces, fix which column is which, and choose whether to attach gear and use the sheet's pricing. It reads lists laid
 out by hand: it finds the Qty / Equipment / Cost / Rent? columns, turns headings like *Camera*, *G&E*, *Audio* into

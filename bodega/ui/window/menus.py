@@ -133,37 +133,26 @@ class MenusMixin:
         act(h, "About Bodega", lambda: about(self, version_label(), str(data_dir())))
         bar.setVisible(sys.platform == "darwin")
 
-        e = QMenu(self.btn_export)  # Import & Export
-        e.addAction(theme.menu_icon("table"), "Import Spreadsheet…", self.import_sheet)
-        e.addAction(theme.menu_icon("link"), "Import from Google Sheets…", self.import_google)
-        e.addSeparator()
-        e.addAction(
-            theme.menu_icon("file"),
-            "Inventory List…",
-            lambda: self.show_pages(("gear", self._grp()), "inventory"),
-        )
-        e.addAction(
-            theme.menu_icon("receipt"), "Rate Card…", lambda: self.show_pages(("gear", ""), "ratecard")
-        )
-        e.addAction(
-            theme.menu_icon("tag"), "Labels…", lambda: self.show_pages(("gear", self._grp()), "labels")
-        )
-        e.addSeparator()
-        e.addAction(theme.menu_icon("table"), "Export Gear as CSV…", self.export_csv)
-        e.addSeparator()
-        e.addAction(theme.menu_icon("image"), "Get Photos from Links…", self.get_photos_from_links)
-        self.btn_export.setMenu(e)
+        # the share button opens the page window at once: Inventory List, Rate Card and Labels are its tabs
+        # (importing is in File and the + menus; Export as CSV and Get Photos in File)
+        self.btn_export.clicked.connect(lambda: self.show_pages(("gear", self._grp()), "inventory"))
 
         g = QMenu(self.sidebar.btn_new_dep)  # the + beside Inventory
         g.addAction(theme.menu_icon("box"), "New Gear", lambda: self.new("gear"))
         g.addAction(theme.menu_icon("folder"), "New Group…", self.new_group)
         g.addAction(theme.menu_icon("case"), "New Kit", lambda: self.new("packages"))
+        g.addSeparator()
+        g.addAction(theme.menu_icon("table"), "Import Spreadsheet…", self.import_sheet)
+        g.addAction(theme.menu_icon("link"), "Import from Google Sheets…", self.import_google)
         self.sidebar.btn_new_dep.setMenu(g)
         self.sidebar.btn_new_dep.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         # the toolbar's + on gear pages: a piece or a group (elsewhere it makes a kit or a rental at once)
         self.new_menu = QMenu(self.btn_new)
         self.new_menu.addAction(theme.menu_icon("box"), "New Gear", lambda: self.new("gear"))
         self.new_menu.addAction(theme.menu_icon("folder"), "New Group…", self.new_group)
+        self.new_menu.addSeparator()
+        self.new_menu.addAction(theme.menu_icon("table"), "Import Spreadsheet…", self.import_sheet)
+        self.new_menu.addAction(theme.menu_icon("link"), "Import from Google Sheets…", self.import_google)
 
     def _app_menu(self) -> None:
         """The profile card's menu: your profiles (pick one to work as), feedback, updates, and Settings."""

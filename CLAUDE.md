@@ -140,7 +140,8 @@ bodega/
   app.py           QApplication, fonts, stylesheet, rounded popups, every QLabel plain text, one window at a time,
                    --smoke-test
   cli.py           `python -m bodega cli sample OUT.pdf --doc agreement|quote|inventory|ratecard|package`,
-                   `python -m bodega cli import SHEET.xlsx OUT.pdf`
+                   `python -m bodega cli import SHEET.xlsx OUT.pdf`,
+                   `python -m bodega cli update-check` (offline: finds this build's own update file)
 scripts/make_icon.py   draws bodega/assets/icon.png ("b." on the dark tile, the full stop in sky blue)
 scripts/release_notes.py   a Release's text: the version's CHANGELOG entries, then the downloads
 tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR [SHEET.xlsx]
