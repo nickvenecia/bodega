@@ -158,7 +158,7 @@ class Sidebar(LeftPanel):
         self.heads: dict[str, SectionHead] = {}
         self.boxes: dict[str, QWidget] = {}  # what folds: a section's list, or the rows under a row
         # each section's + makes something new in it (the window gives Inventory's its menu: gear, group, kit)
-        self.btn_new_dep = self._plus("New gear, group or kit")
+        self.btn_new_dep = self._plus("New Gear, Group or Kit")
         inv = self._section("inventory", "Inventory", self.btn_new_dep)
         self._place("gear", inv)
         self.dep_lay = self._under("gear", inv)

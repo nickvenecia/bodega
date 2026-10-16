@@ -275,7 +275,7 @@ you click a row and slides out on Esc, a click on empty space or its ✕. The se
 │ Rentals ˅      (+)│  …                                                             │ ╭ Value & Rate ───────╮  │
 │ ▸ All Rentals    1│                                                                │ + Photo  + Link  + Notes │
 │   Calendar        │                                                                │                          │
-│ ╭ JL Juniper Lane ⇕╮│  Pieces 38   Paid $21,223   Tax $1,751   With Tax $22,974     │ [     Rent This…       ] │
+│ ╭ JL Juniper Lane ⇕╮│  Pieces 38   Paid $21,223   Tax $1,751   With Tax $22,974     │ [     Rent This       ] │
 ╰───────────────────╯                                                                  ╰──────────────────────────╯
 ```
 Full screen, three columns: **where you are → a big table of it → the one you picked, editable.** Inventory first;
@@ -307,7 +307,7 @@ rentals are the plus underneath.
 - **Money fields read as money** (`widgets.MoneyField`): "$5,998.00" until clicked, then the plain number.
 - **A totals bar under the gear table**: pieces, paid, tax, with tax, day rate, for what's showing.
 - **The right is the one you picked, and it's where you change it** (`INSPECTOR_W`). Header: the title and ⋯
-  (Duplicate, Delete…). Footer: the one main action, full width (Rent This…, Kit Sheet…, Agreement…). The header
+  (Duplicate, Delete…). Footer: the one main action, full width (Rent This, Kit Sheet…, Agreement…). The header
   is `TOOLBAR_H` tall so its line meets the toolbar's. Nothing picked and nothing in the table: it hides.
 - **Gear shows only what it has.** Name, Company, Series, Department, Group, How Many, Status, Value & Rate are
   always there; Link, Serial Numbers, Works With and Notes appear when they hold something or you add them

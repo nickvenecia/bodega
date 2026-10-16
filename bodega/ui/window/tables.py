@@ -1018,7 +1018,7 @@ class GearTable(Table):
             it.id,
             [
                 ("", pos),
-                (it.name or "New item", it.name.casefold()),
+                (it.name or "Untitled Piece", it.name.casefold()),
                 (f"+{kids}" if kids else "", kids),
                 (it.brand, (it.brand or "~").casefold()),
                 (it.series, (it.series or "~").casefold()),
@@ -1109,7 +1109,7 @@ class KitTable(Table):
             row = self.make(
                 p.id,
                 [
-                    (p.name or "New kit", p.name.casefold()),
+                    (p.name or "Untitled Kit", p.name.casefold()),
                     (str(pieces), pieces),
                     (money.fmt_short(rate, cur), money.in_cents(rate)),
                     (money.fmt_short(rate * wd, cur), money.in_cents(rate * wd)),

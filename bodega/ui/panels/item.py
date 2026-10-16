@@ -3,7 +3,7 @@
 Always there: name, company and series, department and group, how many, status, and value and rate (with the
 tax math a gear sheet does). Added only when a piece needs them (+ Add): Link (with Check Price), Serial
 Numbers, Works With and Notes; a stand doesn't need serial numbers. Duplicate and Delete live under ⋯, and
-Rent This… is the button along the bottom.
+Rent This is the button along the bottom.
 
 Works With: gear that goes with a piece (the FX6's cage, the 80c's fresnel) isn't listed in the table; it's
 here, each one click away, and goes wherever its piece goes, onto kits, rentals and agreements.
@@ -166,7 +166,7 @@ class ItemPanel(DetailsBase):
         self.menu_action("assistant", "Update with AI", lambda: self.it and self.ai_wanted.emit(self.it.id))
         self.menu_action("", "-", None)
         self.menu_action("trash", "Delete…", lambda: self.it and self.delete_wanted.emit(self.it.id))
-        self.rent = self.footer_button("Rent This…", "receipt")
+        self.rent = self.footer_button("Rent This", "receipt")
         self.rent.clicked.connect(lambda: self.it and self.rent_wanted.emit(self.it.id))
 
         self.where = QPushButton()
@@ -214,7 +214,7 @@ class ItemPanel(DetailsBase):
         row.addWidget(sec, 1)
         b.add(row)
         sec = Section("Group")
-        self.group = picker("No group")
+        self.group = picker("None")
         sec.add(self.group)
         b.add(sec)
         row = hbox(spacing=tokens.SPACE_2)
@@ -273,7 +273,7 @@ class ItemPanel(DetailsBase):
         self.kids_lay = vbox(self.kids_box, 0, tokens.SPACE_1)
         b.add(self.kids_box)
         arow = hbox()
-        self.attach = add_chip("Add Gear")
+        self.attach = add_chip("Add Gear…")
         self.attach.setToolTip("Gear that goes with this piece: a cage, a handle, a fresnel")
         arow.addWidget(self.attach)
         arow.addStretch(1)

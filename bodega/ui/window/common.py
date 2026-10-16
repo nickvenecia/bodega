@@ -11,7 +11,7 @@ log = get_logger(__name__)
 
 
 GEAR_FILTERS = [
-    ("all", "Everything", ""),
+    ("all", "All Gear", ""),
     ("in", "In", "Not out, not in repair"),
     ("out", "Out", "On a rental that's out"),
     ("repair", "In Repair", ""),

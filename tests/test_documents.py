@@ -59,3 +59,10 @@ def test_a_rentals_summary_for_email_has_its_gear_and_total(lib):
 
 def test_file_names_are_safe():
     assert document.file_name('A/B: "C"') == "A B C"
+
+
+def test_counts_read_right_at_one():
+    from bodega.core import words
+
+    assert words.count(1, "piece") == "1 piece" and words.count(2, "piece") == "2 pieces"
+    assert words.count(1200, "piece") == "1,200 pieces" and words.count(0, "group") == "0 groups"

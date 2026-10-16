@@ -90,7 +90,7 @@ class DetailsBase(SidePanel):
         return self.more_menu.addAction(theme.menu_icon(icon), text, lambda: self.later(slot))
 
     def header_button(self, text: str, primary: bool = False) -> QPushButton:
-        """A button in the panel's header (Agreement…, Rent This…), shown only while something is open."""
+        """A button in the panel's header (Agreement…, Rent This), shown only while something is open."""
         b = QPushButton(text)
         if primary:
             b.setObjectName("Primary")

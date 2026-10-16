@@ -21,7 +21,7 @@ class SignInDialog(Embeddable, QDialog):
         self.word.setObjectName("Wordmark")
         self.word.setTextFormat(Qt.TextFormat.RichText)
         lay.addWidget(self.word)
-        self.title_label = QLabel("Sign in to your account")
+        self.title_label = QLabel("Sign In")
         self.title_label.setObjectName("DialogTitle")
         lay.addWidget(self.title_label)
         if not account.service().connected:

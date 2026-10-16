@@ -9,7 +9,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QListWidget, QListWidgetItem, QPushButton, QWidget
 
-from bodega.core import money, pricing, search
+from bodega.core import money, pricing, search, words
 from bodega.core.model import Business
 from bodega.core.store import Library
 from bodega.ui.components.widgets import hbox, hint, vbox
@@ -78,7 +78,13 @@ class GearPicker(QDialog):
             for p in sorted(lib.packages.values(), key=lambda p: p.name.casefold()):
                 rate = money.fmt_short(pricing.package_rate(lib, p, b), cur)
                 n = sum(u for _i, u, _d in pricing.package_gear(lib, p))
-                self._row("package", p.id, p.name or "New kit", f"{rate}/day  ·  {n} pieces", p.name)
+                self._row(
+                    "package",
+                    p.id,
+                    p.name or "Untitled Kit",
+                    f"{rate} a day  ·  {words.count(n, 'piece')}",
+                    p.name,
+                )
         last = None
         for it in lib.ordered_items():
             if it.id in exclude or it.status == "retired":
@@ -95,7 +101,7 @@ class GearPicker(QDialog):
             if it.qty > 1:
                 bits.append(f"×{it.qty}")
             if it.rentable:
-                bits.append(f"{money.fmt_short(pricing.item_rate(lib, it, b), cur)}/day")
+                bits.append(f"{money.fmt_short(pricing.item_rate(lib, it, b), cur)} a day")
             if kids and main_only:
                 bits.append(f"+{kids} attached")
             if attached:
@@ -103,7 +109,7 @@ class GearPicker(QDialog):
             if it.status == "repair":
                 bits.append("in repair")
             hay = " ".join((it.name, it.brand, it.group, " ".join(it.serials)))
-            self._row("item", it.id, it.name or "New item", "  ·  ".join(bits), hay)
+            self._row("item", it.id, it.name or "Untitled Piece", "  ·  ".join(bits), hay)
         self.search.textChanged.connect(self._filter)
         self.list.itemChanged.connect(lambda _i: self._count())
         self.list.itemActivated.connect(self._toggle)
@@ -163,7 +169,7 @@ class GearPicker(QDialog):
 
     def _count(self) -> None:
         n = len(self._checked())
-        self.count.setText(f"{n} picked" if n else "")
+        self.count.setText(f"{n:,} selected" if n else "")
         self.go.setEnabled(n > 0)
 
     def _done(self) -> None:

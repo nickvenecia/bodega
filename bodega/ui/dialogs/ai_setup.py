@@ -59,7 +59,7 @@ class AISetupDialog(Embeddable, QDialog):
         )
         self.provider.currentIndexChanged.connect(lambda _i: self._provider_changed())
         row.addWidget(self.provider, 1)
-        self.get_key = QPushButton("Get a Key ↗")
+        self.get_key = QPushButton("Get Key ↗")
         self.get_key.setObjectName("LinkBtn")
         self.get_key.clicked.connect(lambda: open_url(self._p().keys_page))
         row.addWidget(self.get_key)

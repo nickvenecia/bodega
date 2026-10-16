@@ -23,7 +23,7 @@ from bodega.ui.style import theme, tokens
 
 DIVIDES = [("group", "Group"), ("brand", "Company"), ("none", "No Dividers")]
 SHOWS = [
-    ("all", "Everything", ""),
+    ("all", "All Gear", ""),
     ("in", "In", "On the shelf: not out, not in repair"),
     ("out", "Out", "On a rental that's out now"),
     ("booked", "Booked", "On a booked rental that hasn't gone out yet"),
@@ -31,7 +31,7 @@ SHOWS = [
     ("retired", "Retired", ""),
     ("service", "Needs Service", "Due for service in the next two weeks, or overdue"),
     ("rentable", "For Rent", ""),
-    ("private", "Not For Rent", ""),
+    ("private", "Not for Rent", ""),
 ]
 MISSING = [
     ("link", "Link"),
@@ -190,7 +190,7 @@ class FilterButton(QToolButton):
         m.addSeparator()
         names = self.companies()
         co = m.addMenu(f"Company: {self.filter.company}" if self.filter.company else "Company")
-        self._choices(co, "company", [("", "Any Company")] + [(n, n) for n in names], self.filter.company)
+        self._choices(co, "company", [("", "All Companies")] + [(n, n) for n in names], self.filter.company)
         miss = m.addMenu("Missing")
         for key, label in MISSING:
             a = miss.addAction(f"No {label}")

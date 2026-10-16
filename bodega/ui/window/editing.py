@@ -233,7 +233,7 @@ class EditingMixin:
         if not picked:
             return
         extra = len(everything) - len(picked)
-        names = [self.lib.items[i].name or "New item" for i in picked]
+        names = [self.lib.items[i].name or "Untitled Piece" for i in picked]
         if len(picked) == 1:
             title = f"Delete {names[0]}?"
         elif len(everything) == len(self.lib.items):
@@ -273,7 +273,7 @@ class EditingMixin:
     def _retire_instead(self, ids: list[str], everything: list[str]) -> bool:
         """Gear that rentals point to is retired, not deleted (asked first). True to go on with the rest."""
         main = [i for i in ids if self.lib.items[i].parent not in ids] or ids  # attached ones go with these
-        names = [self.lib.items[i].name or "New item" for i in main]
+        names = [self.lib.items[i].name or "Untitled Piece" for i in main]
         listed = ", ".join(names[:3]) + (f" and {len(names) - 3} more" if len(names) > 3 else "")
         rest = len([i for i in everything if i not in ids])
         n = len({r.id for i in ids for r in self.lib.rentals_with(i)})
@@ -320,7 +320,7 @@ class EditingMixin:
             cur = self.lib.items[cur.parent]
         already = {k.id for k in pricing.children(self.lib, item_id)}
         d = GearPicker(
-            self.lib, self.lib.pricing(), f"Attach to {it.name or 'This Item'}", "Attach",
+            self.lib, self.lib.pricing(), f"Attach to {it.name or 'This Piece'}", "Attach",
             exclude=up | already, main_only=False, parent=self,
         )  # fmt: skip
         if d.exec() != GearPicker.DialogCode.Accepted:
@@ -359,7 +359,7 @@ class EditingMixin:
         if r is None:
             return
         d = GearPicker(
-            self.lib, self.lib.businesses.get(r.business_id), "Add to the Rental", packages=True, parent=self
+            self.lib, self.lib.businesses.get(r.business_id), "Add to Rental", packages=True, parent=self
         )
         if d.exec() != GearPicker.DialogCode.Accepted:
             return

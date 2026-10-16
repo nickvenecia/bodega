@@ -263,7 +263,7 @@ class SidePanel(QFrame):
         return b
 
     def footer_button(self, text: str, icon: str = "", primary: bool = True) -> QPushButton:
-        """The panel's next step (Rent This…, Agreement…), across the bottom, with its icon: the light raised
+        """The panel's next step (Rent This, Agreement…), across the bottom, with its icon: the light raised
         capsule (`primary` is kept for the callers; the standard gives the accent only to +)."""
         b = QPushButton(text)
         b.setObjectName("Raised")  # a record's next step: raised, never the accent (only + is)

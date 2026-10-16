@@ -409,7 +409,7 @@ class MainWindow(
         kind = kind_of(view)
         self.btn_export.setVisible(kind == "gear")
         self.btn_new.setToolTip(
-            {"gear": "New gear or group", "packages": "New Kit", "rentals": "New Rental"}[kind]
+            {"gear": "New Gear or Group", "packages": "New Kit", "rentals": "New Rental"}[kind]
         )
         gear_page = kind == "gear"  # on gear pages the + asks: a piece, or a group
         self.btn_new.setMenu(self.new_menu if gear_page else None)
@@ -634,10 +634,10 @@ class MainWindow(
         def blank() -> None:
             if kind == "rentals" and not self.lib.businesses:
                 panel.show_empty(
-                    "Add your profile", "", "Add Your Profile…", lambda: self.edit_business(True)
+                    "Add Your Profile", "", "Add Your Profile…", lambda: self.edit_business(True)
                 )
             else:
-                panel.show_empty("Nothing selected", "", "", None)
+                panel.show_empty("Nothing Selected", "", "", None)
                 panel.empty_btn.hide()
 
         self.dock.after_close(blank)  # it slides away still showing what was picked
@@ -759,11 +759,11 @@ class MainWindow(
                 m.addAction(theme.menu_icon("copy"), "Duplicate", lambda: self.duplicate(kind, obj_id))
                 if it is not None and it.parent:
                     m.addAction(
-                        theme.menu_icon("unlink"), "Make It Its Own Item", lambda: self.detach(obj_id)
+                        theme.menu_icon("unlink"), "Make It Its Own Piece", lambda: self.detach(obj_id)
                     )
                 m.addAction(
                     theme.menu_icon("receipt"),
-                    "Rent This…",
+                    "Rent This",
                     lambda: (self.open("gear", obj_id), self.rent_this()),
                 )
                 m.addAction(

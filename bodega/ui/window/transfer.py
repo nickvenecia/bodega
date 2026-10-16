@@ -10,7 +10,7 @@ from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QFileDialog
 
-from bodega.core import dates, errors, importer, settings
+from bodega.core import dates, errors, importer, settings, words
 from bodega.core.history import History
 from bodega.core.log import get_logger
 from bodega.core.model import Item
@@ -125,7 +125,7 @@ class TransferMixin:
             if linked:
                 self.lib.save_items()
                 self.refresh()
-                self.toast(f"Added links to {linked} items.", "done")
+                self.toast(f"Added links to {words.count(linked, 'piece')}.", "done")
             else:
                 self.toast(f"Nothing new in {path.name}." if everything else f"No gear found in {path.name}.")
             return 0
@@ -142,7 +142,11 @@ class TransferMixin:
         self.lib.import_items(chosen, pricing_found, self.business())
         log.info("imported %d items from %s", len(chosen), path.name)
         self.go("gear")
-        self.toast(f"Added {len(chosen)} items." + (f" Links for {linked} more." if linked else ""), "done")
+        self.toast(
+            f"Added {words.count(len(chosen), 'piece')}."
+            + (f" Links for {linked:,} more." if linked else ""),
+            "done",
+        )
         return len(chosen)
 
     def _fill_links(self, sheet: list[Item], have: dict) -> int:

@@ -101,7 +101,7 @@ class MenusMixin:
         v.addSeparator()
         self.look_actions = {}
         looks = v.addMenu("Appearance")
-        for key, label in (("system", "Match the System"), ("light", "Light"), ("dark", "Dark")):
+        for key, label in (("system", "Match System"), ("light", "Light"), ("dark", "Dark")):
             a = looks.addAction(label)
             a.setCheckable(True)
             a.triggered.connect(lambda _c=False, k=key: self.set_look(k))
@@ -109,9 +109,9 @@ class MenusMixin:
         # the open piece's and the open rental's commands, in the menu bar too (not only in their panels)
         gm = bar.addMenu("Gear")
         self.gear_acts = [
-            act(gm, "Rent This…", self.rent_this),
+            act(gm, "Rent This", self.rent_this),
             act(gm, "Update with AI", lambda: self._with_open_piece(self.ai_this_piece)),
-            act(gm, "Make It Its Own Item", lambda: self._with_open_piece(self.detach)),
+            act(gm, "Make It Its Own Piece", lambda: self._with_open_piece(self.detach)),
         ]
         gm.aboutToShow.connect(self._record_menu_state)
         rm = bar.addMenu("Rental")
@@ -135,10 +135,15 @@ class MenusMixin:
         rm.aboutToShow.connect(self._record_menu_state)
         b = bar.addMenu("Profile")
         act(b, "Edit Profile…", lambda: self.edit_business(False))
-        act(b, "Add a Profile…", lambda: self.edit_business(True))
+        act(b, "Add Profile…", lambda: self.edit_business(True))
         act(b, "New Renter…", lambda: self.edit_client(True, assign=False))
         ai = bar.addMenu("AI")
-        act(ai, "Assistant", self.toggle_assistant, "Ctrl+J")
+        self.act_assistant = act(ai, "Show Assistant", self.toggle_assistant, "Ctrl+J")
+        ai.aboutToShow.connect(
+            lambda: self.act_assistant.setText(
+                "Hide Assistant" if self.assistant_showing() else "Show Assistant"
+            )
+        )
         ai.addSeparator()
         act(ai, "Update from Links…", lambda: self.open_ai_assistant("links"))
         act(ai, "Find Missing Links…", lambda: self.open_ai_assistant("find"))

@@ -7,6 +7,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMenu
 
+from bodega.core import words
 from bodega.ui.dialogs.common import confirm
 from bodega.ui.style import theme
 from bodega.ui.window.common import kind_of
@@ -106,7 +107,7 @@ class GroupsMixin:
         m.addAction(theme.menu_icon("arrow-up"), "Move Up", lambda: self._step_group(group, -1))
         m.addAction(theme.menu_icon("arrow-down"), "Move Down", lambda: self._step_group(group, 1))
         m.addSeparator()
-        m.addAction(theme.menu_icon("trash"), "Remove Group", lambda: self._remove_group(group))
+        m.addAction(theme.menu_icon("trash"), "Remove Group…", lambda: self._remove_group(group))
 
     def _place_picked(self, key: str) -> None:
         """A row in the sidebar: a place, or one kit (opens it)."""
@@ -164,7 +165,11 @@ class GroupsMixin:
     def _remove_group(self, group: str) -> None:
         n = sum(1 for i in self.lib.items.values() if i.group == group)
         if n and not confirm(
-            self, f"Remove {group}?", f"Its {n} pieces stay, under No Group.", "Remove", danger=False
+            self,
+            f"Remove {group}?",
+            ("Its piece stays" if n == 1 else f"Its {n:,} pieces stay") + ", under No Group.",
+            "Remove",
+            danger=False,
         ):
             return
         self.flush()
@@ -185,4 +190,6 @@ class GroupsMixin:
             return
         self.lib.snapshot("before-tidy")
         n = self.lib.apply_groups(tidy.suggest(self.lib.items))
-        self._groups_edited(f"Tidied {n} pieces into {len(self.lib.groups())} groups.")
+        self._groups_edited(
+            f"Tidied {words.count(n, 'piece')} into {words.count(len(self.lib.groups()), 'group')}."
+        )

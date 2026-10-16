@@ -244,7 +244,7 @@ class SettingsDialog(QDialog):
             self.profile_pick = combo(choices, self._showing)
             self.profile_pick.activated.connect(lambda _i: self._pick_profile())
             row.addWidget(self.profile_pick, 1)
-            add = QPushButton("Add a Profile")
+            add = QPushButton("Add Profile")
             add.setEnabled(not self._adding)
             add.clicked.connect(self._add_profile)
             row.addWidget(add)
@@ -364,7 +364,7 @@ class SettingsDialog(QDialog):
     # ------------------------------------------------------------------ Your Data
     def _build_data(self) -> None:
         w, lay = self._column()
-        where = Section("Saved On This Computer")
+        where = Section("Saved on This Computer")
         path = ElidedLabel(str(data_dir()), mode=Qt.TextElideMode.ElideMiddle)
         path.setObjectName("Muted")
         path.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)

@@ -54,7 +54,7 @@ class AssistantPanel(SidePanel):
         # which AI it is (or, before there is one, the button to connect one)
         self.who = hint("")
         lay.addWidget(self.who)
-        self.connect_btn = add_chip("Connect an AI")
+        self.connect_btn = add_chip("Add an API Key")
         self.connect_btn.clicked.connect(self.setup_wanted.emit)
         row = hbox()
         row.addWidget(self.connect_btn)

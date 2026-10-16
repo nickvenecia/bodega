@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from bodega.core import dates, money, pricing
+from bodega.core import dates, money, pricing, words
 from bodega.core.model import Business, Item, Package, Rental
 from bodega.core.terms import terms_for
 
@@ -317,7 +317,7 @@ def build_inventory(
     v.number = dates.fmt(dates.today())
     v.big_label = "Replacement Value"
     v.big_value = money.fmt(total, cur)
-    v.big_sub = f"{len(items):,} items  ·  {pieces:,} pieces"
+    v.big_sub = f"{words.count(len(items), 'item')}  ·  {words.count(pieces, 'piece')}"
     groups = []
     for i in items:
         if (i.group or "Other") not in groups:
@@ -502,5 +502,5 @@ def build_labels(items: list[Item], b: Business | None) -> DocView:
                 sub = f"{u + 1} of {it.qty}"
             else:
                 sub = it.brand
-            v.labels.append(Label(it.name or "New item", sub, label_code(it.id)))
+            v.labels.append(Label(it.name or "Untitled Piece", sub, label_code(it.id)))
     return v

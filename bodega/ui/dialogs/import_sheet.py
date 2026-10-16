@@ -20,7 +20,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QListWidget, QListWidgetItem, QPushButton, QWidget
 
-from bodega.core import importer, money
+from bodega.core import importer, money, words
 from bodega.core.model import Item
 from bodega.ui.components.widgets import (
     Disclosure,
@@ -173,7 +173,7 @@ class ImportDialog(QDialog):
         self.list.itemChanged.connect(self._ticked)
         sec.add(self.list)
         row = hbox(spacing=tokens.SPACE_2)
-        all_on = QPushButton("Tick All")
+        all_on = QPushButton("Select All")
         all_on.setObjectName("Ghost")
         all_on.clicked.connect(lambda: self._tick_all(True))
         all_off = QPushButton("Untick All")
@@ -354,7 +354,7 @@ class ImportDialog(QDialog):
             self.count.setText("No gear found. Check which column is the Name under Columns.")
         else:
             self.count.setText(
-                f"{len(keep)} of {found} items, {pieces:,} pieces"
+                f"{len(keep):,} of {words.count(found, 'item')}, {words.count(pieces, 'piece')}"
                 + (f", {attached} attached to other gear" if attached else "")
             )
         self.go.setText(f"Import {len(keep)} Item{'s' if len(keep) != 1 else ''}" if keep else "Import")

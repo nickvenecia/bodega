@@ -107,7 +107,7 @@ class ServicesMixin:
             restart_into(d.plan)
 
     def set_look(self, appearance: str) -> None:
-        """Light, Dark, or Match the System."""
+        """Light, Dark, or Match System."""
         from PySide6.QtWidgets import QApplication
 
         from bodega.app import set_appearance

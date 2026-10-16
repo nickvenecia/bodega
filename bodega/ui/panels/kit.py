@@ -33,7 +33,7 @@ from bodega.ui.style import theme, tokens
 
 PRICINGS = [
     ("discount", "Discount the Gear", "A percent off what the gear costs piece by piece"),
-    ("fixed", "Set a Day Rate", "Your own price for the whole package"),
+    ("fixed", "Set a Day Rate", "Your own price for the whole kit"),
     ("sum", "What the Gear Adds Up To", "No discount"),
 ]
 
@@ -74,7 +74,7 @@ class PackagePanel(DetailsBase):
         self.lines_lay = vbox(self.lines_box, 0, tokens.SPACE_2)
         g["gear"].add(self.lines_box)
         arow = hbox()
-        self.add = add_chip("Add Gear")
+        self.add = add_chip("Add Gear…")
         arow.addWidget(self.add)
         arow.addStretch(1)
         g["gear"].add(arow)
@@ -240,5 +240,5 @@ class PackagePanel(DetailsBase):
             self.price_hint.setText("")
         pieces = sum(u for _i, u, _d in pricing.package_gear(self.lib, p))
         self.groups["gear"].set_summary(f"{pieces} piece{'s' if pieces != 1 else ''}")
-        self.groups["price"].set_summary(f"{money.fmt_short(rate, cur)}/day")
+        self.groups["price"].set_summary(f"{money.fmt_short(rate, cur)} a day")
         self.groups["package"].set_summary(p.name)

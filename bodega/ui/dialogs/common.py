@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from bodega.core import words
 from bodega.ui.components.widgets import button_row, combo, hbox, hint, suggestions, vbox
 from bodega.ui.style import tokens
 from bodega.ui.style.tokens import DIALOG_W, SPACE_3, SPACE_5
@@ -184,7 +185,7 @@ def ask_choice(
     lay.addWidget(t)
     if text:
         lay.addWidget(hint(text))
-    pick = combo([(key, words, "") for key, words in choices], choices[0][0] if choices else "")
+    pick = combo([(key, label, "") for key, label in choices], choices[0][0] if choices else "")
     lay.addWidget(pick)
     row = button_row()
     cancel = QPushButton("Cancel")
@@ -223,8 +224,8 @@ def pick_from(parent: QWidget, title: str, choices: list[tuple[str, str]], actio
     box = QListWidget()
     box.setObjectName("Picker")
     box.setFixedHeight(PICKER_LIST_H)
-    for key, words in choices:
-        item = QListWidgetItem(words)
+    for key, label in choices:
+        item = QListWidgetItem(label)
         item.setData(Qt.ItemDataRole.UserRole, key)
         box.addItem(item)
     box.setCurrentRow(0)
@@ -277,7 +278,9 @@ def tidy_preview(parent: QWidget, moves: list) -> bool:
     t = QLabel("Tidy Up Groups")
     t.setObjectName("DialogTitle")
     lay.addWidget(t)
-    lay.addWidget(hint(f"{len(moves)} pieces get a clearer group. You can rename or move anything after."))
+    lay.addWidget(
+        hint(f"{words.count(len(moves), 'piece')} {'gets' if len(moves) == 1 else 'get'} a clearer group.")
+    )
     box = QListWidget()
     box.setObjectName("Picker")
     pairs = Counter((old or "No Group", new or "No Group") for _it, old, new in moves)
@@ -309,7 +312,7 @@ def about(parent: QWidget, version: str, data_folder: str) -> None:
     word.setObjectName("Wordmark")
     word.setTextFormat(Qt.TextFormat.RichText)
     lay.addWidget(word)
-    lay.addWidget(hint(f"Version {version}. Keep track of your gear, put it in packages, rent it out."))
+    lay.addWidget(hint(f"Version {version}. Keep track of your gear, put it in kits, rent it out."))
     lay.addWidget(hint(f"Your gear and rentals are saved on this computer only, in {data_folder}"))
     lay.addWidget(hint("Open source under GPL-3.0. Fonts under the SIL Open Font License."))
     row = button_row()

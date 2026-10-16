@@ -58,7 +58,7 @@
   are easier to read. Group bands in the gear list are a quiet grey, so blue means something you can press.
   Money in the lists lines up digit for digit. A switch that's on is green, as on a Mac.
 - Buttons, fields, dropdowns and menus follow Apple's own look more closely: fields are soft grey until you
-  type in them, dropdowns show the up-down arrows a Mac uses, the next step at the foot of a panel (Rent This…,
+  type in them, dropdowns show the up-down arrows a Mac uses, the next step at the foot of a panel (Rent This,
   Agreement…) is a plain button so only + stands out, menu rows are a touch more compact, and a delete in a
   menu has a red trash icon. The sidebar is slightly wider, so your profile's name fits.
 - Bodega follows your computer's accessibility settings: with Reduce Motion the side panel and messages simply
@@ -160,13 +160,17 @@
   it matches, or by how much it's off.
 - A piece you renamed after importing it isn't brought in a second time when you import the same sheet again:
   Bodega remembers the name the sheet gave it.
-- On a Mac, the menu bar has a Gear menu (Rent This…, Update with AI, Make It Its Own Item) and a Rental menu
+- On a Mac, the menu bar has a Gear menu (Rent This, Update with AI, Make It Its Own Piece) and a Rental menu
   (Agreement…, Check Out…, Check In…, Send to Saldo…, Add to Calendar, Mark as Cancelled…) for what's open.
 - Asking the Assistant to change every piece from one company or in one group ("put all the Aputure gear in its
   own group") now reaches all of them, even in a big inventory: Bodega finds every match itself, and you review
   them all before anything changes.
 - Esc in Settings' search clears what you typed first; a second Esc closes Settings.
 - Checking for updates while a check is already running doesn't start a second one.
+- Words made consistent across the app: "piece" and "kit" everywhere (never "item" or "package"), "1 piece" and
+  "2 pieces", "a day" rather than "/day", Select All, Match System, Add Profile…, All Gear and All Companies in the
+  filter, and an ellipsis only where a command asks for more before it acts (Rent This acts at once; Add Gear…
+  opens a list). The AI menu says Show Assistant or Hide Assistant.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

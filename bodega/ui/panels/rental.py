@@ -13,7 +13,7 @@ from dataclasses import replace
 from PySide6.QtCore import QTimer, Signal
 from PySide6.QtWidgets import QFrame, QLabel, QLineEdit, QMenu, QPushButton, QToolButton, QWidget
 
-from bodega.core import dates, money, pricing
+from bodega.core import dates, money, pricing, words
 from bodega.core.model import HOLDING, RENTAL_STATUSES, Client, Rental, RentalLine
 from bodega.core.store import Library
 from bodega.core.terms import terms_for
@@ -286,7 +286,9 @@ class LineEditor(QFrame):
             gear = pricing.line_gear(lib, line)
             if line.kind == "package":
                 n = sum(u for _i, u, _d in gear)
-                self.meta.setText(f"Package: {n} pieces, serials and all, go on the agreement.")
+                self.meta.setText(
+                    f"A kit of {words.count(n, 'piece')}: each goes on the agreement, serials and all."
+                )
             else:
                 kids = [f"{k.name}" + (f" ×{u}" if u > 1 else "") for k, u, d in gear if d]
                 self.meta.setText(("With " + ", ".join(kids)) if kids else "")
@@ -436,7 +438,7 @@ class RentalPanel(DetailsBase):
         self.lines_lay = vbox(self.lines_box, 0, tokens.SPACE_2)
         g["gear"].add(self.lines_box)
         arow = hbox(spacing=tokens.SPACE_2)
-        self.add = add_chip("Add Gear")
+        self.add = add_chip("Add Gear…")
         self.add.setToolTip("Kits and gear")
         self.add_fee = add_chip("Add Fee")
         self.add_fee.setToolTip("A flat charge: delivery, a tech, cleaning")
@@ -770,7 +772,7 @@ class RentalPanel(DetailsBase):
         for b in self.lib.businesses.values():
             c.addItem(b.name or "Your profile", b.id)
         c.insertSeparator(c.count())
-        c.addItem("Add a Profile…", ADD_BUSINESS)
+        c.addItem("Add Profile…", ADD_BUSINESS)
         if self.r is not None:
             c.setCurrentIndex(max(0, c.findData(self.r.business_id)))
         c.blockSignals(False)

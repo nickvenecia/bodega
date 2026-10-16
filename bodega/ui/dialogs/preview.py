@@ -3,7 +3,7 @@ prints, and the ways to send it out.
 
 The pages are drawn by doc/render.py, the same steps the PDF uses. The moon turns on the Dark Page (the
 same page in light-on-dark colors; PDFs and prints stay white). The bottom bar holds Save PDF…, Print…
-and ⋯. After saving a rental it offers Show File, Email Renter and, for a quote, Mark as Booked.
+and ⋯. After saving a rental it offers Show File, Email Renter… and, for a quote, Mark as Booked.
 """
 
 from __future__ import annotations
@@ -131,7 +131,7 @@ class PreviewPanel(QFrame):
         row.addWidget(self.status, 1)
         self.btn_show = QPushButton("Show File")
         self.btn_show.clicked.connect(self.show_file.emit)
-        self.btn_email = QPushButton("Email Renter")
+        self.btn_email = QPushButton("Email Renter…")
         self.btn_email.setToolTip("A new email to the renter, with the PDF to drag in")
         self.btn_email.clicked.connect(self.email_wanted.emit)
         self.btn_sent = QPushButton("Mark as Booked")

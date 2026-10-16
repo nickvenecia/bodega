@@ -13,7 +13,7 @@ from bodega.ui.style import tokens
 # keys that work without a menu item
 EXTRA = [
     ("Delete What's Picked", QKeySequence(Qt.Key.Key_Backspace)),
-    ("Close the Panel", QKeySequence(Qt.Key.Key_Escape)),
+    ("Close Panel", QKeySequence(Qt.Key.Key_Escape)),
 ]
 
 

@@ -66,7 +66,7 @@ renting 1 of your 3 lights sends 1 of its 2 fresnels.
 
 **One screen, full size.** The sidebar picks the place (all gear, a department, kits, rentals, the calendar), the
 middle is a big sortable table of it, and the right is the piece you picked, where you change it. If it's out or
-booked, the top says so; click to open that rental. **Rent This…** starts a quote with it. Gear is divided by
+booked, the top says so; click to open that rental. **Rent This** starts a quote with it. Gear is divided by
 department, and a bar under the table adds it all up like your sheet did: pieces, paid, tax, value with tax and
 the day rate for everything. Light or dark follows your computer (View → Appearance), and you can pick the accent color in
 Settings › General.
@@ -77,7 +77,7 @@ the column titles to choose which show. Every piece has a **Company** and **Seri
 from the name for you).
 
 **Only what a piece needs.** Link, Serial Numbers, Works With and Notes are added with **+ Add**, so a C-stand
-doesn't carry empty serial number boxes. Duplicate and Delete are under **⋯**; **Rent This…** sits at the bottom.
+doesn't carry empty serial number boxes. Duplicate and Delete are under **⋯**; **Rent This** sits at the bottom.
 
 **Groups, your way.** Gear is organised by group (Cameras, Lenses, Lights, Grip…), listed in the sidebar.
 **Tidy Up Groups** (⋯, or on import) turns a sheet's headings into plain names: SD Cards becomes Media, 1000c
