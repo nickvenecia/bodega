@@ -130,6 +130,7 @@ LIFT_SHADOW_STEPS = 6
 GLASS_EDGE_FADE = 60  # the hairline is brightest along the top, settling over this many px
 QUIT_WAIT_MS = 1500  # how long quitting waits for a price or update check to finish
 SAVE_DELAY_MS = 400  # save this long after the last keystroke
+KEY_CHECK_MS = 700  # a typed API key is tried once it rests this long
 SAVE_MAX_MS = 3000  # …and never longer than this after the first unsaved change
 MIDNIGHT_SLACK_MS = 1000  # the new day's refresh runs just after midnight
 SAVE_RETRY_MS = 20000  # after a save failed: try again this often while it lasts

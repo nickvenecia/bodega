@@ -206,10 +206,32 @@ def test_a_model_the_provider_dropped_is_kept_and_said(qapp, data_folder, monkey
 
     d = AISetupDialog(Library(data_folder).load())
     d.model.setCurrentText("retired-model-1")
-    monkeypatch.setattr(d, "_run", lambda _job, done, _msg: done(["model-a", "model-b"]))
+    monkeypatch.setattr(
+        d, "_run", lambda _job, done, _msg, _failed=None: done([("model-a", "Model A"), ("model-b", "Model B")])
+    )
     d._load_models()
     assert d.model.currentText() == "retired-model-1"  # never swapped for another without asking
     assert "isn't offered" in d.status.text()
+    d.deleteLater()
+
+
+def test_a_pasted_key_checks_itself_and_models_show_by_name(qapp, data_folder, keychain, monkeypatch):
+    from bodega.services.ai import providers as prov
+    from bodega.ui.dialogs.ai_setup import AISetupDialog
+
+    lib = Library(data_folder).load()
+    d = AISetupDialog(lib)
+    asked = []
+    monkeypatch.setattr(prov, "named_models", lambda setup, key=None: asked.append(key) or [("claude-x", "Claude X")])
+    d.key.setText("sk-oops")  # (Anthropic's keys start sk-ant-)
+    d._check_key()
+    assert not asked and "start with sk-ant-" in d.status.text()  # said without sending it
+    d.key.setText("sk-ant-good")
+    d._check_key()
+    _wait(d._worker)
+    assert asked == ["sk-ant-good"] and d.status.text() == "Key works · 1 model"
+    assert d.model.itemText(0) == "Claude X" and d._setup().model == "claude-x"  # the name shown, the id used
+    assert lib.settings["ai_models"]["models"] == [["claude-x", "Claude X"]]  # kept for the day
     d.deleteLater()
 
 

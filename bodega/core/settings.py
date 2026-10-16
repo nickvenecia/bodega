@@ -26,6 +26,7 @@ DEFAULTS: dict[str, tuple[type, object]] = {  # key -> (what it holds, its defau
     "geometry": (str, ""),  # the window's size and place
     "folded": (list, []),  # gear dividers you folded
     "column_order": (list, []),  # the gear list's columns, in the order you put them
+    "ai_models": (dict, {}),  # the provider's list of models, kept for the day it was asked
     "companies_guessed": (bool, False),  # gear from before Company existed got its company once
 }
 

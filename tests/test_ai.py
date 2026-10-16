@@ -556,3 +556,24 @@ def test_a_chat_rule_reaches_every_matching_piece_even_ones_not_shown(provider, 
     _reply, got = tasks.chat(Setup("anthropic", "m"), "put all the Aputure gear in its own group", gear, {}, [])
     assert sorted(c.item_id for c in got.changes) == sorted(i.id for i in gear[:5])  # all five, not two
     assert all(c.field == "group" and c.new == "Aputure" and c.why == "AI suggestion" for c in got.changes)
+
+
+def test_models_come_with_the_names_their_provider_gives_them(monkeypatch):
+    reply = {"data": [
+        {"id": "claude-sonnet-x", "display_name": "Claude  Sonnet X"},
+        {"id": "plain-model"},
+        {"id": "text-embedding-3"},  # not a chat model
+    ]}  # fmt: skip
+    monkeypatch.setattr(providers, "_call", lambda *_a, **_k: reply)
+    assert providers.named_models(Setup("anthropic")) == [
+        ("claude-sonnet-x", "Claude Sonnet X"),
+        ("plain-model", "plain-model"),
+    ]
+    assert providers.list_models(Setup("anthropic")) == ["claude-sonnet-x", "plain-model"]
+
+
+def test_a_pasted_key_that_cant_be_right_is_said_without_sending_it():
+    assert providers.key_problem("anthropic", "sk-ant-abc") == ""
+    assert "start with sk-ant-" in providers.key_problem("anthropic", "sk-abc")
+    assert "no spaces" in providers.key_problem("openai", "sk-ab c")
+    assert providers.key_problem("kimi", "anything-goes") == ""

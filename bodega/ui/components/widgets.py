@@ -1121,6 +1121,11 @@ class IconLabel(QLabel):
             self._name = name
             self._draw()
 
+    def set_tone(self, tone: str) -> None:
+        if tone != self._tone:
+            self._tone = tone
+            self._draw()
+
     def _draw(self) -> None:
         if self._name:
             self.setPixmap(theme.pixmap(self._name, self._size, getattr(theme, self._tone)))

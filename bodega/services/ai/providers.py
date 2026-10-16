@@ -52,6 +52,8 @@ class Provider:
     needs_key: bool = True
 
 
+MAX_MODEL_NAME = 60  # a model's display name, as a provider gives it, is cut to this
+KEY_STARTS = {"anthropic": "sk-ant-", "openai": "sk-"}  # how these providers' keys always begin
 PROVIDERS: dict[str, Provider] = {
     p.key: p
     for p in (
@@ -238,23 +240,50 @@ def _why(code: int, detail: str) -> str:
 
 def list_models(setup: Setup, key: str | None = None) -> list[str]:
     """The models this key can use, asked of the provider just now (newest names first where it says)."""
+    return [mid for mid, _name in named_models(setup, key)]
+
+
+def named_models(setup: Setup, key: str | None = None) -> list[tuple[str, str]]:
+    """(id, the name to show) for each model this key can use: the provider's own display name where it gives
+    one (Anthropic, Gemini, OpenRouter), else the id. The names are a provider's words: cleaned, plain text."""
     try:
         return _models(_call(setup, "/models", key=key))
     except (KeyError, AttributeError, TypeError, IndexError):
         raise AIError("The provider's list of models came back in a shape Bodega couldn't read.") from None
 
 
-def _models(d: dict) -> list[str]:
+def _models(d: dict) -> list[tuple[str, str]]:
     rows = d.get("data") if isinstance(d, dict) else None
     if not isinstance(rows, list):
         rows = d.get("models") if isinstance(d, dict) else []
-    ids = []
+    out: dict[str, str] = {}
     for m in rows or []:
         mid = str((m.get("id") or m.get("name") or "") if isinstance(m, dict) else m).strip()
         mid = mid.removeprefix("models/")
-        if mid and not any(word in mid.lower() for word in NOT_CHAT):
-            ids.append(mid)
-    return list(dict.fromkeys(ids))
+        if not mid or any(word in mid.lower() for word in NOT_CHAT) or mid in out:
+            continue
+        shown = ""
+        if isinstance(m, dict):
+            for k in ("display_name", "displayName", "name"):
+                v = m.get(k)
+                if isinstance(v, str) and v.strip() and v.strip().removeprefix("models/") != mid:
+                    shown = " ".join(v.split())[:MAX_MODEL_NAME]
+                    break
+        out[mid] = shown or mid
+    return list(out.items())
+
+
+def key_problem(provider: str, key: str) -> str:
+    """What's plainly wrong with a pasted key, said without sending it anywhere ("" when it looks right)."""
+    k = key.strip()
+    if not k:
+        return ""
+    if any(ch.isspace() for ch in k):
+        return "A key has no spaces in it. Copy it again from your provider."
+    start = KEY_STARTS.get(provider)
+    if start and not k.startswith(start):
+        return f"{PROVIDERS[provider].label} keys start with {start}. Copy it again from your provider."
+    return ""
 
 
 def ask(setup: Setup, system: str, user: str, key: str | None = None) -> str:

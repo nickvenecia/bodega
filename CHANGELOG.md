@@ -186,6 +186,9 @@
   edge, so it's easy to see where the keyboard is.
 - The Assistant's sign is now a sparkle, the usual sign for AI, and its button stays lit while the Assistant is
   open.
+- Settings › AI checks your key by itself as you paste it: a ✓ and "Key works · 12 models", or what's wrong in plain
+  words (a key that can't be right is said without sending it). There's no Test button. Models show by the names
+  your provider gives them, the list is kept for the day, and ↻ asks again. Remove Key is a red row at the foot.
 - The Assistant reads like Messages: your words in blue bubbles on the right, its answers as plain words, and
   notes from Bodega in a quiet box. Point at a message for Copy, and on yours Edit and Ask Again. The message field
   grows as you type, Return sends and Shift-Return starts a new line, and Send (Stop while it works) sits inside it.
