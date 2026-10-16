@@ -86,7 +86,18 @@ class AIMixin:
         return items, f"On {group or 'All Gear'}: {n} piece{'s' if n != 1 else ''}."
 
     def _ai_state(self) -> None:
-        self.assistant.show_setup(self.ai_setup(), self._ai_scope()[1])
+        setup = self.ai_setup()
+        self.assistant.show_setup(setup, self._ai_scope()[1], self._model_name(setup))
+
+    def _model_name(self, setup: Setup) -> str:
+        """The model's name as the provider's list gave it (kept by AI Settings), or "" (never its id)."""
+        kept = self.lib.settings.get("ai_models")
+        if not isinstance(kept, dict) or kept.get("provider") != setup.provider:
+            return ""
+        for row in kept.get("models", []):
+            if isinstance(row, list) and len(row) == 2 and row[0] == setup.model and row[1] != row[0]:
+                return str(row[1])
+        return ""
 
     def ai_job(self, key: str, items: list[Item] | None = None) -> None:
         setup = self.ai_setup()

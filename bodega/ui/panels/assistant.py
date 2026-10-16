@@ -527,6 +527,10 @@ class AssistantPanel(SidePanel):
             self.examples.append(b)
             tl.addWidget(b)
         hl.addWidget(tips)
+        self.model_line = hint("")  # the model's name, as its provider calls it (never its id)
+        self.model_line.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.model_line.hide()
+        hl.addWidget(self.model_line)
         privacy = hint(PRIVACY)
         privacy.setWordWrap(True)
         privacy.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -586,9 +590,11 @@ class AssistantPanel(SidePanel):
         self.composer._show_send()
 
     # State
-    def show_setup(self, setup: Setup, scope: str) -> None:
+    def show_setup(self, setup: Setup, scope: str, model_name: str = "") -> None:
         ready = setup.ready()
         self._ready = ready
+        self.model_line.setText(model_name)
+        self.model_line.setVisible(ready and bool(model_name))
         self.connect_btn.setVisible(not ready)
         self.scope.setText(scope)
         busy = self.running() or self.pending is not None

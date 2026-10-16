@@ -382,3 +382,14 @@ def test_esc_leaves_the_assistant_open_while_a_change_waits(win, monkeypatch):
     a.card.decline.click()
     win.escape()
     assert not win.dock.opened
+
+
+def test_the_assistant_names_its_model_as_the_provider_does(win):
+    providers.save_key("anthropic", "sk-ant-test")
+    Setup("anthropic", "claude-x").to_settings(win.lib.settings)
+    win.lib.settings["ai_models"] = {"provider": "anthropic", "day": "2026-10-16", "models": [["claude-x", "Claude X"]]}
+    win.open_ai_assistant()
+    assert win.assistant.model_line.text() == "Claude X" and win.assistant.model_line.isVisibleTo(win.assistant)
+    win.lib.settings["ai_models"] = {}
+    win._ai_state()
+    assert not win.assistant.model_line.isVisibleTo(win.assistant)  # no name known: never the id
