@@ -133,6 +133,9 @@ class Library:
         self.on_unsaved: Callable[[], None] | None = None
         self.why_unsaved: tuple[str, str] | None = None  # the computer's reason, in plain words (errors.reason)
         self.newer_format = False
+        # who's using Bodega: the signed-in account's name (the window sets it from services/account.py), stamped
+        # on each line of a rental's history and each Check Out / Check In tick; blank without an account
+        self.who = ""
         self._as_saved: dict[str, tuple[str, str]] = {}  # each rental's status and number when last saved
 
     # Files
@@ -366,13 +369,13 @@ class Library:
         was = self._as_saved.get(r.id)
         if was is None:
             if not r.history:
-                r.happened(f"Made as {'a quote' if r.is_quote() else STATUS_EVENTS[r.status].lower()}")
+                r.happened(f"Made as {'a quote' if r.is_quote() else STATUS_EVENTS[r.status].lower()}", self.who)
         else:
             status, number = was
             if r.status != status:
-                r.happened(STATUS_EVENTS[r.status])
+                r.happened(STATUS_EVENTS[r.status], self.who)
             if r.number != number and number:
-                r.happened(f"Number changed from {number} to {r.number or '(none)'}")
+                r.happened(f"Number changed from {number} to {r.number or '(none)'}", self.who)
         self._as_saved[r.id] = (r.status, r.number)
 
     def save_settings(self) -> None:

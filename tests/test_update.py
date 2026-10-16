@@ -7,6 +7,7 @@ import hashlib
 import http.server
 import io
 import os
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -311,3 +312,31 @@ def test_every_build_can_find_its_own_update_offline(kind, monkeypatch, capsys):
     assert cli.update_check() == 0
     assert "update check ok" in capsys.readouterr().out
     assert set(cli.ASSETS) >= {n for k in ("windows-installed", "appimage") if (n := update.asset_name(k))}
+
+
+def test_update_from_a_file_starts_the_swap_a_real_update_would(tmp_path: Path, monkeypatch, capsys):
+    """(The standard's T-15) CI updates each packaged build from its own download (cli update-from): this is that
+    command, with the install and the helper faked; build.yml then checks the copy was swapped and still runs."""
+    from bodega import cli
+
+    assert cli.update_from(str(tmp_path / "x.tar.gz")) == 1  # from its code: no
+    assert "update failed" in capsys.readouterr().out
+    folder = tmp_path / "Bodega"
+    folder.mkdir()
+    monkeypatch.setattr(update, "install_kind", lambda: "linux-folder")
+    monkeypatch.setattr(update, "target", lambda _kind: folder)
+    monkeypatch.setattr(update, "data_dir", lambda: tmp_path / "data")
+    started = []
+    monkeypatch.setattr(update, "run", started.append)
+    wrong = tmp_path / "Bodega-windows-portable.zip"
+    wrong.write_bytes(b"zip")
+    assert cli.update_from(str(wrong)) == 1 and "isn't the file" in capsys.readouterr().out
+    tar = tmp_path / "Bodega-linux-x64.tar.gz"
+    with tarfile.open(tar, "w:gz") as t:
+        info = tarfile.TarInfo("Bodega/Bodega")
+        info.size = 3
+        t.addfile(info, io.BytesIO(b"new"))
+    assert cli.update_from(str(tar)) == 0 and "update started" in capsys.readouterr().out
+    (plan,) = started
+    assert plan.script.parent != tmp_path and tar.exists()  # a copy, where a download lands; the file stays
+    shutil.rmtree(plan.script.parent)

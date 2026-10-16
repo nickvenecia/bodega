@@ -3,6 +3,8 @@
 python -m bodega cli sample OUT.pdf [--doc agreement|quote|inventory|ratecard|package] [--dark]
 python -m bodega cli import SHEET.xlsx OUT.pdf [--doc inventory|ratecard]
 python -m bodega cli update-check     (no internet: this copy reads a made-up newer release and finds its file)
+python -m bodega cli update-from FILE  (a packaged copy puts a release file it already has in its own place, as an
+                                      update does: CI's check that its own downloads update an installed copy)
 python -m bodega cli ai-eval [--provider anthropic] [--model NAME]   (your key: from the keychain, or
                                       BODEGA_EVAL_KEY in CI, held for this run only)
 """
@@ -31,12 +33,16 @@ def main(argv: list[str] | None = None) -> int:
     i.add_argument("--doc", choices=("inventory", "ratecard"), default="inventory")
     i.add_argument("--name", default="", help="the name at the top of the page")
     sub.add_parser("update-check", help="check this copy can read a release and pick its own file (offline)")
+    u = sub.add_parser("update-from", help="update this packaged copy from a release file already here (CI)")
+    u.add_argument("file")
     e = sub.add_parser("ai-eval", help="score the AI's naming and grouping against a real model (your key)")
     e.add_argument("--provider", default="anthropic")
     e.add_argument("--model", default="", help="the model (the provider's newest, if left out)")
     args = ap.parse_args(argv)
     if args.cmd == "update-check":
         return update_check()
+    if args.cmd == "update-from":
+        return update_from(args.file)
     if args.cmd == "ai-eval":
         return ai_eval(args.provider, args.model)
 
@@ -140,6 +146,33 @@ def update_check() -> int:
         f"update check ok: {kind} would update to {release.version} with {name or 'nothing (source)'}",
         flush=True,
     )
+    return 0
+
+
+def update_from(file: str) -> int:
+    """What installing an update does once its file is downloaded, from a release file already on this computer (CI
+    gives each packaged build its own download): the file is put where a download lands, and the helper is written
+    and started. It swaps this copy for the file's (an installed copy on Windows: runs the installer) once this
+    command has quit, then opens it. 0 once it's started."""
+    import shutil
+
+    from bodega.core import update
+
+    kind = update.install_kind()
+    why = update.can_update_here(kind)
+    src = Path(file).resolve()
+    want = update.asset_name(kind)
+    if not why and src.name != want:
+        why = f"{src.name} isn't the file that updates this install ({want})"
+    if not why and not src.is_file():
+        why = f"there's no {src.name} here"
+    if why:
+        print(f"update failed: {why}", flush=True)
+        return 1
+    landed = update.new_work_folder() / src.name
+    shutil.copy2(src, landed)
+    update.run(update.prepare(kind, landed))
+    print(f"update started: {kind} from {src.name}; the swap follows once this copy has quit", flush=True)
     return 0
 
 

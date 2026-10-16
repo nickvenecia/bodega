@@ -53,7 +53,9 @@ bodega/
                    PREFIX-YEAR-001, never given twice (settings "numbers": the last given in each series;
                    set_next_number, number_taken); delete_item detaches what was attached and leaves rentals the name;
                    groups() in your order (settings "group_list"), add/rename/remove/step, put_in_group()
-                   (what goes with it comes along, emptied groups go), apply_groups(); pricing() never None
+                   (what goes with it comes along, emptied groups go), apply_groups(); pricing() never None;
+                   save_rentals() writes many rentals side by side (WRITERS); `who` (the signed-in account's name,
+                   set by the window) is stamped on each history line and Check Out / Check In tick, blank without one
     backups.py     safety copies (backups/: one a day, and before an import, Tidy Up, AI changes or a restore)
                    and Restore: read_backup() checks a zip as untrusted, put_back(); Library.restore() keeps a copy
                    first and every number spent; photos and logos are only ever added
@@ -173,7 +175,9 @@ bodega/
                    --smoke-test
   cli.py           `python -m bodega cli sample OUT.pdf --doc agreement|quote|inventory|ratecard|package`,
                    `python -m bodega cli import SHEET.xlsx OUT.pdf`,
-                   `python -m bodega cli update-check` (offline: finds this build's own update file)
+                   `python -m bodega cli update-check` (offline: finds this build's own update file),
+                   `… cli update-from FILE` (a packaged copy updates itself from a release file: CI, each build
+                   from its own download)
 scripts/make_icon.py   draws bodega/assets/icon.png from its one vector source, icon.svg ("b." on the dark tile, the
                        full stop in the accent; `--source` writes the SVG again from the font and tokens)
 scripts/release_notes.py   a Release's text: the version's CHANGELOG entries, then the downloads

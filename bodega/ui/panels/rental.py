@@ -599,7 +599,11 @@ class RentalPanel(DetailsBase):
         r = self.r
         if r is None:
             return
-        lines = [f"{dates.fmt_moment(e.at)} · {e.what}" for e in reversed(r.history) if e.what]
+        lines = [
+            f"{dates.fmt_moment(e.at)} · {e.what}" + (f" · {e.by}" if e.by else "")  # (who: a signed-in account)
+            for e in reversed(r.history)
+            if e.what
+        ]
         self.history.setText("\n".join(lines) or "Nothing yet.")
         where = saldo.where(r)
         self.in_saldo.setText(where)

@@ -1516,6 +1516,25 @@ def test_settings_search_narrows_its_sections(win):
     d.close()
 
 
+def test_settings_starts_with_the_account_once_there_is_one(win, monkeypatch):
+    """(The standard's C-70) With an account service, Settings' first row is the account, reading who's signed in."""
+    from bodega.services import account
+    from bodega.ui.dialogs.settings import SettingsDialog
+
+    class Accounts(account.AccountService):
+        connected = True
+
+    monkeypatch.setattr(account, "_service", Accounts())
+    d = SettingsDialog(win.lib, win)
+    shown = [k for k, r in d.rows.items() if not r.isHidden()]
+    assert shown[0] == "account" and d.rows["account"].label.text() == "Sign In"
+    d.close()
+    monkeypatch.setattr(account, "current", lambda: account.Session("alex@example.com", "t", "Alex Rivera"))
+    d = SettingsDialog(win.lib, win)
+    assert d.rows["account"].label.text() == "Alex Rivera"
+    d.close()
+
+
 def test_a_piece_renamed_after_an_import_isnt_imported_twice(win, tmp_path):
     sheet = tmp_path / "gear.csv"
     sheet.write_text("Item,Qty,Price\nArri SkyPanel S60-C,1,7000\n", encoding="utf-8")

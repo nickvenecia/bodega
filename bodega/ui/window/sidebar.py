@@ -290,6 +290,7 @@ class Sidebar(LeftPanel):
         lib = self.lib
         b = lib.businesses.get(settings.value(lib.settings, "business")) or next(iter(lib.businesses.values()), None)
         who = account.current()
+        lib.who = (who.name or who.email) if who else ""  # stamped on rentals' history and ticks (store.who)
         name = b.name if b and b.name else "Your Profile"
         if lib.unsaved:
             self.profile_card.show_who(name, "Not Saved", problem=True)

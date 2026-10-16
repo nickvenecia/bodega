@@ -109,3 +109,42 @@ def test_a_tick_keeps_the_time_it_was_made(qapp, data_folder):
     row.tick.setChecked(False)
     assert not row.c.out and row.c.out_at == ""
     d.deleteLater()
+
+
+def test_who_did_it_is_kept_once_someone_is_signed_in(qapp, data_folder):
+    """(The standard's D-41 and K-09) A rental's history and each tick say who did it: the signed-in account's name,
+    set by the window (store.who), never typed. With no account, they're blank and nothing shows."""
+    from bodega.ui.dialogs.checklist import CheckDialog
+
+    lib = sample.fill(Library(data_folder).load())
+    r = next(iter(lib.rentals.values()))
+    lib.set_status(r, "out")
+    assert r.history[-1].by == ""  # nobody signed in: blank
+    lib.who = "Alex Rivera"
+    lib.set_status(r, "returned")
+    assert (r.history[-1].what, r.history[-1].by) == ("Marked returned", "Alex Rivera")
+    again = Library(data_folder).load().rentals[r.id]
+    assert again.history[-1].by == "Alex Rivera"  # kept in its file
+    d = CheckDialog(lib, r, back=True)
+    row = next(iter(d.widgets.values()))
+    row.tick.setChecked(True)
+    assert row.c.back_by == "Alex Rivera" and "by Alex Rivera" in row.toolTip()
+    row.tick.setChecked(False)
+    assert row.c.back_by == ""
+    d.deleteLater()
+
+
+def test_the_window_takes_who_from_the_signed_in_account(qapp, data_folder, monkeypatch):
+    from bodega.services import account
+    from bodega.ui.window.main_window import MainWindow
+
+    win = MainWindow(sample.fill(Library(data_folder).load()))
+    assert win.lib.who == ""
+    monkeypatch.setattr(account, "current", lambda: account.Session("alex@example.com", "t", "Alex"))
+    win.sidebar.show_who()
+    assert win.lib.who == "Alex"
+    r = next(iter(win.lib.rentals.values()))
+    win.lib.set_status(r, "cancelled")
+    win.open("rentals", r.id)
+    assert "· Alex" in win.rentals.history.text()
+    win.close()

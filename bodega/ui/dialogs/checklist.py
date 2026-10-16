@@ -40,11 +40,12 @@ from bodega.ui.style import tokens
 class _Row(QFrame):
     edited = Signal()  # a tick, a note or a photo: kept at once
 
-    def __init__(self, c: CheckRow, name: str, units: int, serials: str, back: bool, parent=None):
+    def __init__(self, c: CheckRow, name: str, units: int, serials: str, back: bool, who: str = "", parent=None):
         super().__init__(parent)
         self.setObjectName("CheckRow")
         self.c = c
         self.back = back
+        self.who = who
         lay = vbox(self, (tokens.SPACE_3, tokens.SPACE_2, tokens.SPACE_3, tokens.SPACE_2), tokens.SPACE_1)
         top = hbox(spacing=tokens.SPACE_2)
         self.tick = QCheckBox()
@@ -70,13 +71,15 @@ class _Row(QFrame):
         self._show_photos()
 
     def _ticked(self, on: bool) -> None:
-        """Ticked, with the time it was (what left when, and came back when, if a piece goes missing)."""
+        """Ticked, with the time it was and who ticked it (what left when, and came back when, if a piece goes
+        missing); who is the signed-in account, blank without one."""
         when = now_iso() if on else ""
+        by = self.who if on else ""
         if self.back:
-            self.c.back, self.c.back_at = on, when
+            self.c.back, self.c.back_at, self.c.back_by = on, when, by
         else:
-            self.c.out, self.c.out_at = on, when
-        self.setToolTip(f"Ticked {dates.fmt_moment(when)}" if when else "")
+            self.c.out, self.c.out_at, self.c.out_by = on, when, by
+        self.setToolTip(f"Ticked {dates.fmt_moment(when)}{' by ' + by if by else ''}" if when else "")
         self.edited.emit()
 
     def _show_photos(self) -> None:
@@ -142,7 +145,7 @@ class CheckDialog(QDialog):
             it, n = units.get(c.item_id, (lib.items.get(c.item_id), 1))
             name = it.name if it is not None else "Removed gear"
             serials = ", ".join(it.serial_list()) if it is not None else ""
-            w = _Row(c, name, n, f"S/N {serials}" if serials else "", back)
+            w = _Row(c, name, n, f"S/N {serials}" if serials else "", back, lib.who)
             w.tick.toggled.connect(lambda _on: self._count())
             w.edited.connect(lambda: self.edited.emit(self.rows))
             bl.addWidget(w)

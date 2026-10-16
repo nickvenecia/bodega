@@ -53,10 +53,10 @@ FINDS = {  # what each section holds, for Settings' search (with its name)
     "google sheets",
 }
 PANES = [
+    ("account", "Account", "key"),  # first, as the standard's account card (shown once accounts exist)
     ("general", "General", "cog"),
     ("profiles", "Profiles", "user"),
     ("ai", "AI", "assistant"),
-    ("account", "Account", "key"),
     ("shortcuts", "Keyboard Shortcuts", "keyboard"),
     ("data", "Your Data", "box"),
 ]
@@ -348,6 +348,8 @@ class SettingsDialog(QDialog):
         from bodega.ui.dialogs.account import SignInDialog
 
         who = account.current()
+        if "account" in self.rows:  # its row reads who's signed in, the way the standard's account card does
+            self.rows["account"].set_label((who.name or who.email) if who else "Sign In")
         if who is not None:
             w, lay = self._column()
             out = QPushButton("Sign Out")

@@ -377,6 +377,8 @@ class CheckRow(Record):
     back: bool = False  # ticked when it came back
     out_at: str = ""  # when it was ticked out (ISO time; blank: not ticked, or ticked before this was kept)
     back_at: str = ""  # when it was ticked back in
+    out_by: str = ""  # who ticked it out: the signed-in account's name (blank without one; never typed)
+    back_by: str = ""  # who ticked it back in
     note: str = ""  # its condition, damage
     photos: list[str] = field(default_factory=list)  # condition photos (file names in the photos folder)
     newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
@@ -394,6 +396,7 @@ class RentalEvent(Record):
 
     at: str = ""  # ISO time
     what: str = ""
+    by: str = ""  # who did it (booked, checked out, checked in…): the signed-in account's name; blank without one
     newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
 
     @classmethod
@@ -452,9 +455,9 @@ class Rental(Record):
         r.history = [RentalEvent.from_dict(x) for x in r.history if isinstance(x, dict)]
         return r
 
-    def happened(self, what: str) -> None:
-        """Add a line to its history (it's only ever added to)."""
-        self.history.append(RentalEvent(now_iso(), what))
+    def happened(self, what: str, by: str = "") -> None:
+        """Add a line to its history (it's only ever added to); `by`, who did it, when someone is signed in."""
+        self.history.append(RentalEvent(now_iso(), what, by))
 
     def deletable(self) -> bool:
         """Only a quote can be deleted; a rental that's been booked is cancelled instead, and kept."""
