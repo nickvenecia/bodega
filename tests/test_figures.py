@@ -121,3 +121,43 @@ def test_the_filter_chips_sit_above_the_figures_with_clear_all_first(win):
     QTest.mouseClick(chips.clear_all, Qt.MouseButton.LeftButton)
     QTest.qWait(50)
     assert not win.view_menu.filter.active() and not chips.isVisibleTo(win) and win.view_menu.divide == divide
+
+
+def test_a_pieces_strip_has_its_day_rate_what_it_earned_and_how_much_is_paid_off(data_folder):
+    from decimal import Decimal
+
+    from bodega.core.earnings import Earned
+
+    lib = sample.fill(Library(data_folder).load())
+    b = lib.pricing()
+    it = next(i for i in lib.items.values() if i.rentable and float(i.value or 0) > 0)
+    plain = by_key(figures.piece(lib, it, b, None))
+    assert set(plain) == {"rate"}  # nothing earned yet: no earnings, no share of its cost
+    f = by_key(figures.piece(lib, it, b, Earned(amount=Decimal("100.40"), rentals={"r1"})))
+    assert f["earned"].value == "$100" and f["earned"].label == "Earned, 1 Rental" and "estimate" in f["earned"].tip
+    assert f["payoff"].label == "Paid Off" and f["payoff"].value.endswith("%")
+    paid_back = by_key(figures.piece(lib, it, b, Earned(amount=Decimal(10**6), rentals={"a", "b"})))
+    assert paid_back["payoff"].label == "Paid for Itself" and paid_back["payoff"].tone == "good"
+    booked = by_key(figures.piece(lib, it, b, Earned(coming=Decimal(50))))
+    assert booked["earned"].label == "Booked" and "payoff" not in booked
+    it.rentable = False
+    assert "rate" not in by_key(figures.piece(lib, it, b, None))  # not for rent: no day rate
+
+
+def test_the_strips_sit_under_the_heads_divided_by_hairlines(win):
+    from bodega.ui.window.tables import ID
+
+    win.go("gear")
+    row = next(r for r in win.gear_table.showing_rows() if r.data(0, ID))
+    win.open("gear", row.data(0, ID))
+    strip = win.items.strip
+    assert strip.isVisibleTo(win.items) and strip.cells[0][3].text() == "Day Rate"
+    assert strip.geometry().top() > win.items.name.geometry().top()
+    shown = [c for c in strip.cells if c[1].isVisibleTo(strip)]
+    assert all(line.isVisibleTo(strip) == (n > 0) for n, (line, *_r) in enumerate(shown))  # between figures only
+    assert "rate" not in win.items.sum_rows  # a fact once on a record: the card no longer repeats it
+    kit_id = next(iter(win.lib.packages))
+    win.go("kits")
+    win.open("packages", kit_id)
+    labels = [c[3].text() for c in win.packages.strip.cells if c[1].isVisibleTo(win.packages.strip)]
+    assert labels == ["Day Rate", "Week", "Pieces"]

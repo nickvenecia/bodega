@@ -1256,10 +1256,12 @@ class TitleEdit(QPlainTextEdit):
     textEdited (typing only)."""
 
     textEdited = Signal(str)
+    INSET = 1 + tokens.SPACE_1 + tokens.SPACE_1  # where its words start: its edge, the style's padding, the margin
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setObjectName("BigName")
+        self.document().setDocumentMargin(tokens.SPACE_1)  # (INSET counts on it)
         self.setTabChangesFocus(True)
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)

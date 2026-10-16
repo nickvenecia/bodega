@@ -75,7 +75,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | AI-18 | S3 | The message box has no attach button, and files can't be dropped on the assistant. |
 | AI-30 | S2 | No test tries each real provider once with a bad key to check its refusal reads in plain words. |
 | C-01 | S2 | The start tiles on an empty library are cards that act as buttons. |
-| C-17 | S3 | A piece's head has its photo, name, Where line and company · group, but no strip of figures. |
+| C-17 | S3 | Pieces and kits have their whole head, strip included; a rental's panel has no head yet (the renter as its name, number · status, a strip). |
 | C-49 | S2 | A panel's header has ⋯ and ✕ only: no capsule of its main tools (print, edit). |
 | C-65 | S2 | The right-click menu and the panel's ⋯ offer the same commands, but from two lists (see D-04). |
 | C-70 | S3 | No account card at the top of Settings: there's no account service to show yet (accounts.REQUIRED is off). |

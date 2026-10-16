@@ -122,6 +122,8 @@ def main(out: Path, sheet: Path | None = None) -> int:
         w.go(f"grp:{groups[0]}")
         shot(w, out / "3-group.png")
     w.go("kits")
+    if lib.packages:
+        w.open("packages", next(iter(lib.packages)))  # (its panel: the name, the strip, the gear)
     shot(w, out / "4-kits.png")
     w.go("rentals")
     for e in w.rentals.editors[1:2]:

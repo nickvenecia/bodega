@@ -9,9 +9,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
-from bodega.core import money, pricing
+from bodega.core import earnings, money, pricing
 
-TONES = ("", "warn", "bad")
+TONES = ("", "good", "warn", "bad")
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,7 @@ class Figure:
     value: str
     tone: str = ""
     slice: str = ""  # what pressing it turns on: a gear filter ("out", "repair") or a place ("out", "upcoming")
+    tip: str = ""  # more about it, on hover
 
 
 def gear(lib, group: str = "") -> list[Figure]:
@@ -65,4 +66,52 @@ def rentals(lib) -> list[Figure]:
         Figure("upcoming", "Coming Up", f"{sum(1 for r in rs if pricing.coming_up(r)):,}", slice="upcoming"),
         Figure("late", "Late", f"{late:,}", "bad" if late else ""),
         Figure("quotes", "Quotes", f"{sum(1 for r in rs if r.is_quote()):,}"),
+    ]
+
+
+EARNED_TIP = "An estimate: each rental's gear total, shared out by each piece's day rate"
+
+
+def piece(lib, it, b, earned: earnings.Earned | None) -> list[Figure]:
+    """A piece's strip, under its head: its day rate (all of them, with what goes with it), what it has earned (or,
+    before it has, what's booked), and how much of what it cost that is."""
+    cur = (b.currency if b else "$") or "$"
+    out = []
+    rate = pricing.item_rate(lib, it, b, it.qty)
+    if it.rentable and rate:
+        kids = len(pricing.with_attached(lib, it, 1)) > 1
+        tip = " and ".join(x for x in (f"all {it.qty}" if it.qty > 1 else "", "what goes with it" if kids else "") if x)
+        out.append(Figure("rate", "Day Rate", money.fmt_short(rate, cur), tip=f"For {tip}" if tip else ""))
+    made = earned.amount if earned is not None else money.ZERO
+    coming = earned.coming if earned is not None else money.ZERO
+    n = len(earned.rentals) if earned is not None else 0
+    rentals = f"{n} Rental{'s' if n != 1 else ''}"
+    booked = f"Plus {money.fmt_short(money.whole(coming), cur)} booked. " if coming else ""
+    if made:
+        out.append(
+            Figure("earned", f"Earned, {rentals}", money.fmt_short(money.whole(made), cur), tip=booked + EARNED_TIP)
+        )
+    elif coming:
+        out.append(Figure("earned", "Booked", money.fmt_short(money.whole(coming), cur), tip=EARNED_TIP))
+    share = earnings.paid_off(it, made) if made else None
+    if share is not None:
+        if share >= 1:
+            out.append(
+                Figure("payoff", "Paid for Itself", f"{share:.1f}×", "good", tip="What it has earned, by what it cost")
+            )
+        else:
+            out.append(Figure("payoff", "Paid Off", f"{share * 100:.0f}%", tip="What it has earned, of what it cost"))
+    return out
+
+
+def kit(lib, p, b) -> list[Figure]:
+    """A kit's strip, under its name: its day rate, a week of it, and the pieces in it."""
+    cur = (b.currency if b else "$") or "$"
+    wd = b.week_days if b else 7
+    rate = pricing.package_rate(lib, p, b)
+    pieces = sum(u for _i, u, _d in pricing.package_gear(lib, p))
+    return [
+        Figure("rate", "Day Rate", money.fmt_short(rate, cur)),
+        Figure("week", "Week", money.fmt_short(rate * wd, cur), tip=f"A week is {wd} billed days (your profile)"),
+        Figure("pieces", "Pieces", f"{pieces:,}"),
     ]

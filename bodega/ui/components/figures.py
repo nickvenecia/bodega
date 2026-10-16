@@ -83,3 +83,55 @@ class FigureRow(QWidget):
             else:
                 t.hide()
         self.setVisible(bool(figures))
+
+
+class FigureStrip(QWidget):
+    """A record's figures under its head (the standard's 4.5, G.17): side by side, divided by hairlines, never as
+    tiles; the value in Title 2 Semibold, its name under it. Shows only the figures that apply."""
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setObjectName("FigureStrip")
+        self.lay = hbox(self, 0, 0)
+        self.lay.addStretch(1)
+        self.cells: list[
+            tuple[QFrame, QWidget, QLabel, QLabel]
+        ] = []  # (the hairline before it, the cell, value, label)
+
+    def _cell(self) -> tuple[QFrame, QWidget, QLabel, QLabel]:
+        line = QFrame()
+        line.setObjectName("StripLine")
+        line.setFixedWidth(1)
+        cell = QWidget()
+        cl = vbox(cell, (tokens.STRIP_PAD, 0, tokens.STRIP_PAD, 0), tokens.SPACE_0_5)
+        value = QLabel()
+        value.setObjectName("StripValue")
+        theme.use_tabular(value)  # (its size and weight: the style's #StripValue)
+        label = QLabel()
+        label.setObjectName("FigureLabel")
+        cl.addWidget(value)
+        cl.addWidget(label)
+        n = self.lay.count() - 1  # (before the stretch)
+        self.lay.insertWidget(n, line)
+        self.lay.insertWidget(n + 1, cell)
+        return line, cell, value, label
+
+    def show_for(self, figures: list[Figure]) -> None:
+        while len(self.cells) < len(figures):
+            self.cells.append(self._cell())
+        for n, (line, cell, value, label) in enumerate(self.cells):
+            on = n < len(figures)
+            line.setVisible(on and n > 0)  # between figures only
+            cell.setVisible(on)
+            if not on:
+                continue
+            f = figures[n]
+            value.setText(f.value)
+            label.setText(f.label)
+            if value.property("tone") != f.tone:
+                value.setProperty("tone", f.tone)
+                repolish(value)
+            cell.layout().setContentsMargins(0 if n == 0 else tokens.STRIP_PAD, 0, tokens.STRIP_PAD, 0)  # first: 0
+            cell.setAccessibleName(f"{f.label}: {f.value}")
+            cell.setToolTip(theme.plain_tip(f.tip) if f.tip else "")
+        self.setVisible(bool(figures))

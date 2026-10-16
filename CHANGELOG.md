@@ -105,6 +105,9 @@
   Coming Up, Late and Quotes. Press Out or In Repair to show only that gear, and Out Now or Coming Up to go to
   those rentals; press it again for the whole list. The filters you've turned on sit just above the figures, with
   Clear All first.
+- A piece's panel has a strip of figures under its name: its day rate (for all of them, with what goes with it),
+  what it has earned and on how many rentals, and how much of what it cost that is. A kit's has its day rate, a
+  week of it and its pieces. The Value & Rate and Price cards no longer repeat them.
 - Single-key shortcuts, outside text fields: N makes something new (a piece, a kit or a rental, wherever you are),
   E puts the cursor in the open record (or opens the one you've marked), D deletes it (with Undo), / goes to the
   search, ? shows the keyboard shortcuts and A opens the assistant. They never act while you type in a field or
@@ -120,6 +123,8 @@
   or open another piece (it used to be a message that went by itself).
 - A rare, random crash is guarded against: leftover objects could be cleared away in the middle of drawing, or
   while a background job ran (the test machines hit it on a Mac). That now happens only between clicks and keys.
+- Closing a window while it was still working in the background (Settings loading the list of models, a price
+  check, an update downloading) could close Bodega at once. Now the work is told to stop and ends on its own.
 - The Undo and Stop buttons in a message work from the moment it appears (a quick click could miss them while it
   slid in).
 - After Duplicate, only the copy is picked in the list: the piece you copied stayed picked with it, so Delete could

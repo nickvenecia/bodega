@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, QPointF, QRectF, QSize, QStringListModel, Qt, QThread, QTimer, QUrl, Signal
+from PySide6.QtCore import QPoint, QPointF, QRectF, QSize, QStringListModel, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QPainter, QPainterPath
 from PySide6.QtWidgets import (
     QApplication,
@@ -28,11 +28,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.core import dates, earnings, errors, maintenance, money, prices, pricing, web
+from bodega.core import dates, earnings, errors, figures, maintenance, money, prices, pricing, web
 from bodega.core.log import get_logger
 from bodega.core.model import ITEM_STATUSES, Item, LogEntry
 from bodega.core.store import Library
 from bodega.ui.components import photos
+from bodega.ui.components.figures import FigureStrip
 from bodega.ui.components.widgets import (
     Card,
     ElidedLabel,
@@ -60,12 +61,11 @@ from bodega.ui.components.widgets import (
     to_qdate,
     vbox,
 )
-from bodega.ui.components.worker import Worker
+from bodega.ui.components.worker import Background, Worker
 from bodega.ui.panels.base import DetailsBase
 from bodega.ui.style import theme, tokens
 
 log = get_logger(__name__)
-EARNED_TIP = "An estimate: each rental's gear total, shared out by each piece's day rate"
 
 PASTE_INSTEAD = "In your browser, right-click the photo, choose Copy Image, then paste it here."
 STATUS_LABELS = {"ready": "Ready", "repair": "In Repair", "retired": "Retired"}
@@ -211,13 +211,17 @@ class ItemPanel(DetailsBase):
         self.name = TitleEdit()
         self.name.setPlaceholderText("Name")
         head = QWidget()
-        hl = hbox(head, 0, tokens.SPACE_3)
+        outer = vbox(head, (0, 0, 0, tokens.HEAD_BELOW - lay.spacing()), tokens.STRIP_ABOVE)
+        hl = hbox(spacing=tokens.SPACE_3)
         hl.addWidget(self.photo, 0, Qt.AlignmentFlag.AlignTop)
         col = vbox(spacing=tokens.SPACE_0_5)
         for w in (self.name, self.where, self.detail):
             col.addWidget(w)
         col.addStretch(1)
         hl.addLayout(col, 1)
+        outer.addLayout(hl)
+        self.strip = FigureStrip()  # its day rate, what it has earned, how much of its cost that is
+        outer.addWidget(self.strip)
         lay.addWidget(head)
         b = self._block("details", "Details", removable=False)
         row = hbox(spacing=tokens.SPACE_2)
@@ -268,7 +272,7 @@ class ItemPanel(DetailsBase):
         self.sums = QWidget()
         sl = vbox(self.sums, 0, tokens.SPACE_1)
         self.sum_rows: dict[str, tuple[QLabel, QLabel]] = {}
-        for key in ("tax", "each", "total", "rate", "with", "earned", "payoff"):
+        for key in ("tax", "each", "total"):  # (its day rate and earnings are in the head's strip)
             r = QWidget()
             rl = hbox(r, 0, tokens.SPACE_2)
             k = QLabel()
@@ -987,13 +991,11 @@ class ItemPanel(DetailsBase):
         return self._one_earned[1]
 
     def _sums(self, b, cur: str) -> None:
-        """A gear sheet's math: tax, each with tax, the total for all of them, the day rate."""
+        """A gear sheet's math: tax, each with tax, the total for all of them; the head's strip has the day rate and
+        what it has earned."""
         it = self.it
         paid = max(money.ZERO, money.parse(it.value))
         each = pricing.replacement(it, b)
-        rate = pricing.own_rate(it, b)
-        with_kids = pricing.item_rate(self.lib, it, b, it.qty)
-        has_kids = len(pricing.with_attached(self.lib, it, 1)) > 1
         tax_pct = b.value_tax if b else "0"
         rows = {
             "tax": (
@@ -1003,41 +1005,14 @@ class ItemPanel(DetailsBase):
             ),
             "each": ("Each with Tax", money.fmt(each, cur), bool(paid)),
             "total": (f"All {it.qty} with Tax", money.fmt(each * it.qty, cur), bool(paid) and it.qty > 1),
-            "rate": (
-                "Day Rate" + (f" × {it.qty}" if it.qty > 1 else ""),
-                f"{money.fmt_short(rate * it.qty, cur)} a day",
-                it.rentable and bool(rate),
-            ),
-            "with": (
-                "With What Goes With It",
-                f"{money.fmt_short(with_kids, cur)} a day",
-                it.rentable and has_kids and bool(with_kids),
-            ),
         }
-        e = self._earned(it.id)
-        made = e.amount if e is not None else money.ZERO
-        n = len(e.rentals) if e is not None else 0
-        coming = e.coming if e is not None else money.ZERO
-        what = f"≈ {money.fmt_short(made, cur)} on {n} rental{'s' if n != 1 else ''}"  # an estimate
-        if coming:
-            what += f" (+{money.fmt_short(coming, cur)} booked)"
-        rows["earned"] = ("Earned", what, bool(made or coming))
-        share = earnings.paid_off(it, made)
-        if share is not None and made:
-            rows["payoff"] = (
-                "Paid for Itself" if share >= 1 else "Paid Off",
-                f"{share:.1f}× what it cost" if share >= 1 else f"{share * 100:.0f}%",
-                True,
-            )
-        else:
-            rows["payoff"] = ("", "", False)
         for key, (label, value, show) in rows.items():
             k, v = self.sum_rows[key]
             k.setText(label)
             v.setText(value)
             k.parentWidget().setVisible(show)
-        self.sum_rows["earned"][0].parentWidget().setToolTip(EARNED_TIP)
         self.sums.setVisible(any(show for _l, _v, show in rows.values()))
+        self.strip.show_for(figures.piece(self.lib, it, b, self._earned(it.id)))
 
     def _hints(self) -> None:
         it, b = self.it, self.b()
@@ -1073,10 +1048,11 @@ class KidRow(QFrame):
             super().keyPressEvent(e)
 
 
-class PriceCheck(QThread):
+class PriceCheck(Background):
     """Reads the price from a link without freezing the window."""
 
     done = Signal(str, str, str, str)  # item id, price, store, error
+    SAYS = ("done",)
 
     def __init__(self, item_id: str, url: str, parent=None):
         super().__init__(parent)

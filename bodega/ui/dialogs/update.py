@@ -8,10 +8,9 @@ from __future__ import annotations
 import html
 import math
 import re
-import threading
 from pathlib import Path
 
-from PySide6.QtCore import QSize, QThread, QUrl, Signal
+from PySide6.QtCore import QSize, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QApplication,
@@ -27,6 +26,7 @@ from bodega import __version__
 from bodega.core import errors, update
 from bodega.core.log import get_logger
 from bodega.ui.components.widgets import hbox, hint, primary_button, status_line, vbox
+from bodega.ui.components.worker import Background
 from bodega.ui.style import theme, tokens
 from bodega.ui.style.tokens import (
     DIALOG_W_XWIDE,
@@ -54,11 +54,12 @@ def open_url(url: str) -> None:
         QDesktopServices.openUrl(QUrl(link))
 
 
-class CheckThread(QThread):
+class CheckThread(Background):
     """Asks GitHub for the latest release (never on the window's thread)."""
 
     found = Signal(object)  # update.Release
     failed = Signal(str)
+    SAYS = ("found", "failed")
 
     def run(self) -> None:
         try:
@@ -68,15 +69,15 @@ class CheckThread(QThread):
             self.failed.emit(errors.plain(e, "check for updates"))
 
 
-class DownloadThread(QThread):
+class DownloadThread(Background):
     progress = Signal(float)
     ready = Signal(object)  # update.Plan
     failed = Signal(str)
+    SAYS = ("progress", "ready", "failed")
 
     def __init__(self, release: update.Release, kind: str, parent=None):
         super().__init__(parent)
         self.release, self.kind = release, kind
-        self.cancel = threading.Event()
 
     def run(self) -> None:
         work: Path | None = None

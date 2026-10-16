@@ -266,6 +266,11 @@ QFrame#Banner {{ background: {tokens.BANNER}; border: 1px solid {tokens.BANNER_E
 #FigureTile[on="true"] QLabel#FigureLabel {{ color: {tokens.ACCENT_TEXT}; }}
 #FigureTile:focus {{ border-color: {tokens.ACCENT}; }}  /* (its edge is there at rest, clear: nothing moves) */
 #FigureValue {{ font-size: {tokens.TEXT_TITLE1}px; font-weight: {WEIGHT_BOLD}; }}  /* (G.10.5) Title 1, tabular */
+#StripValue {{ font-size: {tokens.TEXT_TITLE2}px; font-weight: {WEIGHT_SEMIBOLD}; }}  /* (G.17) Title 2, tabular */
+#StripValue[tone="warn"] {{ color: {tokens.WARN}; }}
+#StripValue[tone="bad"] {{ color: {tokens.BAD}; }}
+#StripValue[tone="good"] {{ color: {tokens.GOOD}; }}
+#StripLine {{ background: {tokens.BORDER}; }}
 #FigureValue[tone="warn"] {{ color: {tokens.WARN}; }}
 #FigureValue[tone="bad"] {{ color: {tokens.BAD}; }}
 #FigureLabel {{ color: {tokens.MUTED}; font-size: {tokens.TEXT_CALLOUT}px; }}

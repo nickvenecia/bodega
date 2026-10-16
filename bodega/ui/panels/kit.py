@@ -9,9 +9,10 @@ from __future__ import annotations
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFrame, QLabel, QMenu, QToolButton, QWidget
 
-from bodega.core import money, pricing
+from bodega.core import figures, money, pricing
 from bodega.core.model import Package
 from bodega.core.store import Library
+from bodega.ui.components.figures import FigureStrip
 from bodega.ui.components.widgets import (
     ElidedLabel,
     ListSearch,
@@ -69,6 +70,11 @@ class PackagePanel(DetailsBase):
         self.name = TitleEdit()  # the kit's name as its title, like a piece of gear's
         self.name.setPlaceholderText("FX6 Run && Gun, Interview Kit…".replace("&&", "&"))
         self.form_lay.insertWidget(0, self.name)
+        self.strip = FigureStrip()  # its day rate, a week of it, its pieces
+        gap = self.form_lay.spacing()  # (the form's own gap is part of each)
+        self.strip.setContentsMargins(TitleEdit.INSET, tokens.STRIP_ABOVE - gap, 0, tokens.HEAD_BELOW - gap)  # (under
+        # the name's words)
+        self.form_lay.insertWidget(1, self.strip)
         self.notes = TextBox("What it's good for. Prints on the kit sheet.", tokens.TEXT_BOX_H)
         g["package"].add(self.notes)
 
@@ -100,17 +106,12 @@ class PackagePanel(DetailsBase):
         self.sums = QWidget()
         sl = vbox(self.sums, 0, tokens.SPACE_1)
         self.sum_rows = {}
-        for key, label in (
-            ("rate", "Day Rate"),
-            ("week", "Week"),
-            ("alone", "Without the Kit"),
-            ("value", "Value"),
-        ):
+        for key, label in (("alone", "Without the Kit"), ("value", "Value")):  # (its rate is in the head's strip)
             r = hbox(spacing=tokens.SPACE_2)
             k = QLabel(label)
             k.setObjectName("SumLabel")
             v = QLabel()
-            v.setObjectName("Sum" if key == "rate" else "SumValue")
+            v.setObjectName("SumValue")
             r.addWidget(k, 1)
             r.addWidget(v)
             sl.addLayout(r)
@@ -222,15 +223,13 @@ class PackagePanel(DetailsBase):
         if p is None:
             return
         cur = (b.currency if b else "$") or "$"
-        wd = b.week_days if b else 7
         self.disc_sec.setVisible(p.pricing == "discount")
         self.fixed_sec.setVisible(p.pricing == "fixed")
         alone = pricing.package_sum(self.lib, p, b)
         rate = pricing.package_rate(self.lib, p, b)
         self.fixed.setPlaceholderText(money.fmt_short(alone, cur))
         self.sum_rows["alone"].setText(f"{money.fmt_short(alone, cur)} a day")
-        self.sum_rows["rate"].setText(f"{money.fmt_short(rate, cur)} a day")
-        self.sum_rows["week"].setText(money.fmt_short(rate * wd, cur))
+        self.strip.show_for(figures.kit(self.lib, p, b))
         self.sum_rows["value"].setText(money.fmt_short(money.whole(pricing.package_value(self.lib, p, b)), cur))
         save = alone - rate
         if save > 0 and alone:
