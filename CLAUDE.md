@@ -103,6 +103,8 @@ bodega/
                    Editing before dropping typing, and says what "changed" means), glass.py
                    (GlassRoot backdrop drawn once and reused; Dock: the inspector floats and slides, the content
                    makes room through the row's right margin, a Table slides as two pictures: freeze/thaw),
+                   access.py (the system's Reduce Motion, Increase Contrast, Reduce Transparency: every
+                   animation asks duration()/reduce_motion(); tokens.use(contrast=, opaque=)),
                    empty.py (EmptyPage: where a table would be with nothing in it: tiles, the ways to start;
                    empty gear takes a dropped spreadsheet),
                    titlebar.py (Mac: macOS moves the window; double-click fills the screen or shrinks it, animated

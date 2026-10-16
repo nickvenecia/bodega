@@ -61,6 +61,13 @@
   type in them, dropdowns show the up-down arrows a Mac uses, the next step at the foot of a panel (Rent This…,
   Agreement…) is a plain button so only + stands out, menu rows are a touch more compact, and a delete in a
   menu has a red trash icon. The sidebar is slightly wider, so your profile's name fits.
+- Bodega follows your computer's accessibility settings: with Reduce Motion the side panel and messages simply
+  appear instead of sliding and rising; with Increase Contrast secondary words are darker and every edge is
+  drawn strong; with Reduce Transparency the panels are solid.
+- Keyboard: Tab now reaches the places in the sidebar (Return opens one, the arrow keys move and fold), Esc
+  clears the search before it closes anything, Settings opens with the keyboard on its section, and after
+  deleting a piece from the keyboard the next one is ready.
+- Screen readers hear each field by its label, whether a card is folded, and every message Bodega shows.
 - Bodega keeps safety copies of your gear, kits, rentals, renters and profiles: one each day you open it (the last
   14 days), and one before each import, Tidy Up Groups, AI change or restore (the last 20).
 - File › Restore from Backup… (also in Settings › Your Data) puts a Back Up zip or a safety copy back. It shows

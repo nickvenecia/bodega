@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
 )
 
 from bodega.core.model import MAX_QTY
-from bodega.ui.components import glass
+from bodega.ui.components import access, glass
 from bodega.ui.style import theme, tokens
 
 
@@ -98,8 +98,20 @@ class Section(QWidget):
     def add(self, item: QWidget | QHBoxLayout | QVBoxLayout) -> None:
         if isinstance(item, QWidget):
             self.lay.addWidget(item)
+            self._name(item)
         else:
             self.lay.addLayout(item)
+            for i in range(item.count()):
+                w = item.itemAt(i).widget()
+                if w is not None:
+                    self._name(w)
+
+    def _name(self, w: QWidget) -> None:
+        """A field is known by its label (a screen reader says "Company, text field", not just "text field")."""
+        title = self.label.text().replace("&&", "&")
+        if title and isinstance(w, (QLineEdit, QComboBox, QPlainTextEdit)) and not w.accessibleName():
+            w.setAccessibleName(title)
+            self.label.setBuddy(w)
 
     def set_title(self, title: str) -> None:
         self.label.setText(title)
@@ -223,6 +235,9 @@ class Disclosure(QFrame):
         self.body.setVisible(on)
         self.header.setIcon(theme.icon("chevron" if on else "chevron-right", theme.MUTED))
         self.header.setToolTip("Hide" if on else "Show")
+        self.header.setProperty("named_by_hand", True)
+        self.header.setAccessibleName(self._title.replace("&&", "&"))
+        self.header.setAccessibleDescription("Expanded" if on else "Collapsed")  # its state, said aloud
         self._show_title()
         if emit:
             self.toggled.emit(on)
@@ -236,6 +251,18 @@ class Disclosure(QFrame):
         self.header.set_full_text(
             f" {self._title}" + (f"  ·  {self._summary}" if folded and self._summary else "")
         )
+
+
+def announce(w: QWidget, text: str) -> None:
+    """Say `text` to a screen reader now (a toast, a status line), without moving the focus."""
+    from PySide6.QtGui import QAccessible
+
+    try:
+        from PySide6.QtGui import QAccessibleAnnouncementEvent
+
+        QAccessible.updateAccessibility(QAccessibleAnnouncementEvent(w, text))
+    except (ImportError, RuntimeError, TypeError):  # an older Qt, or no screen reader to tell
+        pass
 
 
 def repolish(w: QWidget) -> None:
@@ -452,6 +479,8 @@ class Toast(QWidget):
         self.show()
         self.update()
         self._t.start(self._ms)
+        self.setAccessibleName(text)
+        announce(self, text)
 
     def dismiss(self) -> None:
         if self.isVisible() and not self._leaving:
@@ -513,7 +542,8 @@ class Toast(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setOpacity(self._shown)
-        r = self._pill.translated(0, (1 - self._shown) * tokens.TOAST_RISE)
+        rise = 0 if access.reduce_motion() else tokens.TOAST_RISE  # Reduce Motion: it fades, never rises
+        r = self._pill.translated(0, (1 - self._shown) * rise)
         glass.paint_shadow(p, r, tokens.RADIUS_LG, tokens.TOAST_SHADOW)
         problem = self.tone == "problem"
         path = QPainterPath()

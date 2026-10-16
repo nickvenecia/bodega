@@ -14,6 +14,7 @@ from bodega.ui.dialogs.common import confirm
 from bodega.ui.dialogs.gear_picker import GearPicker
 from bodega.ui.dialogs.profile import ProfileDialog
 from bodega.ui.window.common import kind_of
+from bodega.ui.window.tables import ID
 
 log = get_logger(__name__)
 
@@ -250,10 +251,23 @@ class EditingMixin:
             self, title, text, "Delete" if len(everything) == 1 else f"Delete {len(everything)}"
         ):
             return
+        keyboard = self.gear_table.hasFocus()
+        shown = [r.data(0, ID) for r in self.gear_table.showing_rows()]
+        gone = set(everything)
+        after = [
+            i
+            for i in shown[max((n for n, i in enumerate(shown) if i in gone), default=-1) + 1 :]
+            if i not in gone
+        ]
+        before = [i for i in shown if i not in gone]
+        neighbour = (after or before[-1:] or [None])[0]  # the row after what went, else the one before
         n = self.lib.delete_items(everything)
         log.info("deleted %d items", n)
         self.items.it = None
         self.go(self.view_key)
+        if keyboard and neighbour:  # deleted from the keyboard: the next row is where the keyboard is now
+            self.gear_table.select_id(neighbour)
+            self.gear_table.setFocus()
         self.toast(f"Deleted {n} pieces." if n != 1 else "Deleted it.", "done")
 
     def _retire_instead(self, ids: list[str], everything: list[str]) -> bool:

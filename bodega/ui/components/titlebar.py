@@ -192,7 +192,9 @@ def animate_to(window: QWidget, rect) -> bool:
         set_frame = ctypes.CFUNCTYPE(
             None, ctypes.c_void_p, ctypes.c_void_p, NSRect, ctypes.c_bool, ctypes.c_bool
         )(address)
-        set_frame(ns_window, sel(b"setFrame:display:animate:"), frame, True, True)
+        from bodega.ui.components import access
+
+        set_frame(ns_window, sel(b"setFrame:display:animate:"), frame, True, not access.reduce_motion())
         return True
     except Exception:
         return False

@@ -99,7 +99,7 @@ class MainWindow(
         self.dock.follower = lambda: self.pages.currentWidget()
         outer.addLayout(body, 1)
         esc = QShortcut(QKeySequence(Qt.Key.Key_Escape), self)
-        esc.activated.connect(self.deselect)
+        esc.activated.connect(self.escape)
         self.setCentralWidget(root)
         self.toaster = Toast(self, self._toast_area)
 
@@ -556,6 +556,17 @@ class MainWindow(
         else:
             self.rentals.r = None
         self.dock.set_open(False)
+
+    def escape(self) -> None:
+        """Esc closes one layer at a time: the search's words first, then the search itself, then the panel."""
+        if self.search.hasFocus():
+            if self.search.text():
+                self.search.clear()
+            else:
+                t = self._table()
+                (t or self.pages).setFocus()
+            return
+        self.deselect()
 
     def deselect(self) -> None:
         """Esc, or a click on empty space: nothing picked, the panel slides away (and a new piece you didn't

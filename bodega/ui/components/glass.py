@@ -16,6 +16,7 @@ from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QRect, QRectF, Qt, QVar
 from PySide6.QtGui import QColor, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap
 from PySide6.QtWidgets import QWidget
 
+from bodega.ui.components import access
 from bodega.ui.style import theme, tokens
 
 
@@ -250,7 +251,9 @@ class Dock(QWidget):
             self.show()
             self.raise_()
         start, end = self._t, (1.0 if on else 0.0)
-        if not animate or not self.root.isVisible():
+        if (
+            not animate or not self.root.isVisible() or access.reduce_motion()
+        ):  # Reduce Motion: it's simply there
             self._at(end)
             self._done()
             return

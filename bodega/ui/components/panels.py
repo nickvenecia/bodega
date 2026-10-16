@@ -46,13 +46,16 @@ class NavRow(QFrame):
         self.setObjectName("Nav")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(
+            Qt.FocusPolicy.TabFocus
+        )  # Tab reaches every place (a click doesn't move the focus)
         self.setFixedHeight(tokens.NAV_H)
         lay = hbox(
             self, (tokens.SPACE_1 if foldable else tokens.SPACE_2, 0, tokens.SPACE_2, 0), tokens.SPACE_1
         )
         self.arrow = QToolButton()  # shown on rows with rows under them; keeps its room on the others
         self.arrow.setObjectName("NavArrow")
-        self.arrow.setFixedSize(tokens.ICON_SM + tokens.SPACE_1, tokens.ICON_SM + tokens.SPACE_1)
+        self.arrow.setFixedSize(tokens.SMALL_H, tokens.SMALL_H)  # never under control-sm (20)
         self.arrow.setCursor(Qt.CursorShape.PointingHandCursor)
         self.arrow.clicked.connect(lambda: self.fold_wanted.emit(self.key))
         keep = self.arrow.sizePolicy()
@@ -84,6 +87,8 @@ class NavRow(QFrame):
     def set_folded(self, on: bool) -> None:
         self.folded = on
         self.recolor()
+        self.setAccessibleDescription("Collapsed" if on else "Expanded")
+        self.arrow.setAccessibleName(f"{'Show' if on else 'Hide'} {self.label.text()}")
 
     def set_label(self, text: str) -> None:
         self.label.setText(text)
@@ -114,6 +119,19 @@ class NavRow(QFrame):
         if e.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit(self.key)
         super().mousePressEvent(e)
+
+    def keyPressEvent(self, e):
+        """From the keyboard: Return or Space opens the place, ↑ ↓ move between places, → ← open and fold."""
+        k = e.key()
+        if k in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
+            QTimer.singleShot(0, self, lambda: self.clicked.emit(self.key))  # once the key is over (rule 16)
+        elif k in (Qt.Key.Key_Down, Qt.Key.Key_Up):
+            self.focusNextPrevChild(k == Qt.Key.Key_Down)
+        elif k in (Qt.Key.Key_Right, Qt.Key.Key_Left) and self.arrow.isVisible():
+            if self.folded == (k == Qt.Key.Key_Right):
+                self.fold_wanted.emit(self.key)
+        else:
+            super().keyPressEvent(e)
 
     def contextMenuEvent(self, e):
         # the menu opens once the right-click is over: Rename Group… or Remove Group there takes this very row

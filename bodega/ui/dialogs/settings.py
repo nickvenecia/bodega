@@ -106,6 +106,12 @@ class SettingsDialog(QDialog):
         self.show_pane(pane if pane in self.panes else "general")
 
     # ------------------------------------------------------------------ moving around
+    def showEvent(self, e):
+        super().showEvent(e)
+        row = self.rows.get(self.current_pane())
+        if row is not None:  # the keyboard starts on the section shown, never on an invisible scroll area
+            row.setFocus()
+
     def show_pane(self, key: str) -> None:
         self.side.select(key)
         self.stack.setCurrentIndex([k for k, _l, _i in PANES].index(key))

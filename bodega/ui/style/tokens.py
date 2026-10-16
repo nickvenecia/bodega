@@ -466,17 +466,39 @@ ACCENT_KEY = APP_ACCENT
 globals().update(DARK)
 
 
-def use(scheme: str, accent: str | None = None) -> None:
+def use(scheme: str, accent: str | None = None, contrast: bool = False, opaque: bool = False) -> None:
     """Switch every color token to the dark or light set, in the chosen accent (None keeps the current one;
-    an unknown or empty one means Bodega's own)."""
+    an unknown or empty one means Bodega's own). `contrast` (Increase Contrast): secondary words take the
+    main text's color, faint ones the secondary's, and every edge is strong. `opaque` (Reduce Transparency):
+    the glass is solid."""
     global SCHEME, ACCENT_KEY
     SCHEME = "light" if scheme == "light" else "dark"
     if accent is not None:
         ACCENT_KEY = accent if accent in ACCENTS else APP_ACCENT
-    globals().update(LIGHT if SCHEME == "light" else DARK)
+    look = LIGHT if SCHEME == "light" else DARK
+    globals().update(look)
     if ACCENT_KEY != APP_ACCENT:
         _name, dark, light = ACCENTS[ACCENT_KEY]
         globals().update(accent_set(light if SCHEME == "light" else dark, SCHEME))
+    if contrast:
+        strong = look["BORDER_STRONG"]
+        globals().update(
+            MUTED=_toward(look["MUTED"], "#000000" if SCHEME == "light" else "#FFFFFF", look["BG"], 7),
+            FAINT=look["MUTED"],
+            BORDER=strong,
+            FIELD_BORDER=strong,
+            GLASS_STROKE=strong,
+        )
+    if opaque:
+        globals().update(GLASS=_solid(look["GLASS"], look["BG"]), TOAST=_solid(look["TOAST"], look["BG"]))
+
+
+def _solid(c: str, under: str) -> str:
+    """An rgba() color as the solid color it makes over `under`."""
+    if not c.startswith("rgba("):
+        return c
+    r, g, b, a = (float(x) for x in c[5:-1].split(","))
+    return _mix(_hex((r, g, b)), under, a)
 
 
 def accent_of(key: str, scheme: str | None = None) -> str:

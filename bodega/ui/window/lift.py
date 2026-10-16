@@ -14,6 +14,7 @@ from PySide6.QtCore import QObject, QPointF, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPixmap
 from PySide6.QtWidgets import QStyle, QStyleOptionViewItem, QTreeWidget, QTreeWidgetItem
 
+from bodega.ui.components import access
 from bodega.ui.style import theme, tokens
 
 # what a row is, for working out where a drop lands: ("item", id) or ("divider", group, "group"/"brand")
@@ -98,13 +99,14 @@ class Lift(QObject):
         elif self.mouse_y > vp.height() - edge:
             bar.setValue(bar.value() + int((self.mouse_y - vp.height() + edge) / 2) + 1)
         self.k = self._target_k()
+        ease = 1.0 if access.reduce_motion() else tokens.LIFT_EASE  # Reduce Motion: rows jump to their place
         for i, r in enumerate(self.rest):  # each row eases towards where it should be
             target = self.base[i] + (self.gap if i >= self.k else 0)
             y = self.cur[id(r)]
-            self.cur[id(r)] = y + (target - y) * tokens.LIFT_EASE if abs(target - y) > 0.5 else float(target)
+            self.cur[id(r)] = y + (target - y) * ease if abs(target - y) > 0.5 else float(target)
         slot = self._slot(self.k)
         if abs(slot - self.slot_y) > 0.5:
-            self.slot_y += (slot - self.slot_y) * tokens.LIFT_EASE
+            self.slot_y += (slot - self.slot_y) * ease
         else:
             self.slot_y = float(slot)
         vp.update()  # the card follows the pointer every step

@@ -285,6 +285,7 @@ QListWidget#Picker::indicator:checked {{ background: {tokens.ACCENT_FILL}; borde
 #ProfileSub[tone="problem"] {{ color: {tokens.WARN}; font-weight: {WEIGHT_SEMIBOLD}; }}
 #Nav {{ background: transparent; border-radius: {tokens.NAV_R}px; }}
 #Nav:hover {{ background: {tokens.ROW_HOVER}; }}
+#Nav:focus {{ border: 1px solid {tokens.ACCENT}; }}
 #Nav[selected="true"] {{ background: {tokens.ACCENT_TINT}; }}
 #NavLabel {{ color: {tokens.TEXT}; font-weight: {WEIGHT_MEDIUM}; }}
 #NavSub {{ color: {tokens.TEXT}; }}
@@ -576,8 +577,10 @@ def system_scheme() -> str:
 def apply(app, appearance: str, folder: Path, accent: str | None = None) -> str:
     """Use the light or dark look ("system" asks the computer), in an accent (None keeps the current one).
     Returns the look in use."""
+    from bodega.ui.components import access
+
     look = system_scheme() if appearance not in ("light", "dark") else appearance
-    tokens.use(look, accent)
+    tokens.use(look, accent, contrast=access.more_contrast(), opaque=access.less_transparency())
     _load_colors()
     hints = app.styleHints()
     if appearance in ("light", "dark") and hasattr(hints, "setColorScheme"):  # title bars match

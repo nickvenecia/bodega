@@ -265,6 +265,10 @@ def setup_app(app: QApplication) -> None:
     hints = app.styleHints()
     if hasattr(hints, "colorSchemeChanged"):
         hints.colorSchemeChanged.connect(lambda _s: _system_changed(app))
+    if hasattr(hints, "accessibility"):  # Increase Contrast turned on or off: redraw in it
+        hints.accessibility().contrastPreferenceChanged.connect(
+            lambda _p: set_appearance(app, getattr(app, "_appearance", "system"))
+        )
     app._round = _RoundPopups(app)
     app.installEventFilter(app._round)
 
