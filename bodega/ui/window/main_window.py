@@ -44,7 +44,7 @@ from bodega.ui.window.ai import AIMixin
 from bodega.ui.window.calendar_view import CalendarPage
 from bodega.ui.window.common import TITLES, kind_of
 from bodega.ui.window.editing import EditingMixin
-from bodega.ui.window.filters import FilterButton
+from bodega.ui.window.filters import FilterButton, FilterChips
 from bodega.ui.window.groups import GroupsMixin
 from bodega.ui.window.menus import MenusMixin
 from bodega.ui.window.pages import PagesMixin
@@ -244,6 +244,9 @@ class MainWindow(
         grid.addLayout(right, 0, 2)
         lay.addWidget(bar)
         self.toolbar = bar
+        self.filter_chips = FilterChips()  # what the filter's hiding, each with its ✕
+        self.filter_chips.removed.connect(self._filter_off)
+        lay.addWidget(self.filter_chips)
         self.banner = Banner("Try Again")  # a save that failed, until it works
         self.banner.acted.connect(self.try_saving_again)
         lay.addWidget(self.banner)
@@ -529,9 +532,11 @@ class MainWindow(
         if t is None:
             self.count.set_full_text("")
             self.no_results.hide()
+            self.filter_chips.show_for(None)
             return
         text = self.search.text()
         filtered = t is self.gear_table and self.view_menu.filter.active()
+        self.filter_chips.show_for(self.view_menu.filter if filtered else None)
         if t is self.gear_table:
             shown = t.show_only(text, self.view_menu.filter.keep(self.lib))
             self._totals(shown)
@@ -545,6 +550,18 @@ class MainWindow(
             self.no_results.show_over(t, text)
         else:
             self.no_results.hide()
+
+    def _filter_off(self, what: str, key: str) -> None:
+        """A filter chip's ✕: that filter comes off (the others stay)."""
+        f = self.view_menu.filter
+        if what == "show":
+            f.show = "all"
+        elif what == "company":
+            f.company = ""
+        else:
+            f.missing.discard(key)
+        self.view_menu.show_state()
+        self.view_menu.changed.emit()
 
     def _clear_hiding(self, what: str) -> None:
         """No Results' button: the search, or the filters, put back."""

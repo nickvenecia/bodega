@@ -13,12 +13,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup
-from PySide6.QtWidgets import QLabel, QMenu, QToolButton, QWidgetAction
+from PySide6.QtWidgets import QLabel, QMenu, QPushButton, QToolButton, QWidget, QWidgetAction
 
 from bodega.core import maintenance, money, pricing
-from bodega.ui.style import theme
+from bodega.ui.components.widgets import hbox
+from bodega.ui.style import theme, tokens
 
 DIVIDES = [("group", "Group"), ("brand", "Company"), ("none", "No Dividers")]
 SHOWS = [
@@ -204,3 +205,47 @@ class FilterButton(QToolButton):
     def _clear(self) -> None:
         self.clear()
         self.changed.emit()
+
+
+class FilterChips(QWidget):
+    """Under the bar while a filter hides gear: one capsule for each ("Out", "Sony", "No Link"), with an ✕ that
+    takes it off. A chip acts once its click is over: taking a filter off rebuilds the chips."""
+
+    removed = Signal(str, str)  # what kind ("show", "company", "missing"), which
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.lay = hbox(self, (tokens.SPACE_4, 0, tokens.SPACE_4, tokens.SPACE_2), tokens.SPACE_2)
+        self.lay.addStretch(1)
+        self.chips: list[QPushButton] = []
+        self.hide()
+
+    def show_for(self, f: GearFilter | None) -> None:
+        on = []
+        if f is not None:
+            if f.show != "all":
+                on.append(("show", f.show, SHOW_LABEL.get(f.show, f.show)))
+            if f.company:
+                on.append(("company", f.company, f.company))
+            on += [("missing", k, f"No {label}") for k, label in MISSING if k in f.missing]
+        if [c.text() for c in self.chips] == [label for _w, _k, label in on]:
+            self.setVisible(bool(on))
+            return
+        for c in self.chips:  # hidden first, then thrown away (one may still be finishing its click)
+            c.hide()
+            c.deleteLater()
+        self.chips = []
+        for n, (what, key, label) in enumerate(on):
+            b = QPushButton(label)
+            b.setObjectName("FilterChip")
+            b.setCursor(Qt.CursorShape.PointingHandCursor)
+            b.setLayoutDirection(Qt.LayoutDirection.RightToLeft)  # the ✕ after the words
+            b.setIcon(theme.icon("x", theme.MUTED, tokens.ICON_SM))
+            b.setToolTip("Take this filter off")
+            b.setAccessibleName(f"Remove filter {label}")
+            b.clicked.connect(
+                lambda _c=False, w=what, k=key: QTimer.singleShot(0, self, lambda: self.removed.emit(w, k))
+            )
+            self.lay.insertWidget(n, b)
+            self.chips.append(b)
+        self.setVisible(bool(on))

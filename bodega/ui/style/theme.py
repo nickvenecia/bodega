@@ -127,6 +127,8 @@ QPushButton#Primary:disabled {{ background: {tokens.ACCENT_OFF}; border-color: {
 QPushButton#Ghost {{ background: transparent; border-color: transparent; color: {tokens.ACCENT_TEXT}; }}  /* quiet */
 QPushButton#Ghost:hover {{ background: {tokens.ACCENT_TINT}; }}
 QPushButton#AddChip {{ background: {tokens.CHIP}; border: 1px solid transparent; color: {tokens.ACCENT_TEXT}; padding: 0 {SPACE_3}px 0 {SPACE_2}px; font-weight: {WEIGHT_SEMIBOLD}; }}
+QPushButton#FilterChip {{ background: {tokens.ACCENT_TINT}; border: 1px solid {tokens.ACCENT_EDGE}; color: {tokens.ACCENT_TEXT}; padding: 0 {SPACE_2}px 0 {SPACE_3}px; min-height: {tokens.CHIP_H}px; max-height: {tokens.CHIP_H}px; }}
+QPushButton#FilterChip:hover {{ background: {tokens.CHIP_HOVER}; }}
 QPushButton#AddChip:hover {{ background: {tokens.CHIP_HOVER}; }}
 QPushButton#AddChip:pressed {{ background: {tokens.ACCENT_TINT}; }}
 QToolButton#SectionAdd {{ background: transparent; border: none; border-radius: {tokens.SECTION_ADD // 2}px;

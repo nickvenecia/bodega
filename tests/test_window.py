@@ -1387,3 +1387,14 @@ def test_a_status_is_a_dot_and_a_word_in_the_text_color(win):
     win.go("rentals")
     r = win.rental_table.topLevelItem(0)
     assert r.data(4, DOT)
+
+
+def test_a_filter_shows_as_a_chip_that_takes_it_off(win):
+    win.go("gear")
+    assert not win.filter_chips.isVisibleTo(win)
+    win.set_gear_filter("repair")
+    chips = win.filter_chips.chips
+    assert win.filter_chips.isVisibleTo(win) and [c.text() for c in chips] == ["In Repair"]
+    chips[0].click()
+    QApplication.processEvents()  # (once the click is over)
+    assert not win.view_menu.filter.active() and not win.filter_chips.isVisibleTo(win)
