@@ -349,8 +349,8 @@ class Table(QTreeWidget):
             self.select_id(keep)
 
 
-def _tone(it: Item, out: int) -> tuple[str, str]:
-    """The status column: what it says and its color."""
+def status_of(it: Item, out: int) -> tuple[str, str]:
+    """A piece's status, as the gear list and the piece's own head say it: its word and its color."""
     if it.status == "repair":
         return "Repair", tokens.WARN  # amber, like the In Repair chip everywhere else
     if it.status == "retired":
@@ -1047,7 +1047,7 @@ class GearTable(Table):
         self.filter("")
 
     def _row(self, it: Item, st, kids: int, cur: str, out: dict, parent, on: str, pos: int) -> Row:
-        status, color = _tone(it, out.get(it.id, 0))
+        status, color = status_of(it, out.get(it.id, 0))
         e = self.earned.get(it.id) if self.earned is not None else None
         made = e.amount if e is not None else money.ZERO
         day = st.day if it.rentable else None

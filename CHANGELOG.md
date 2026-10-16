@@ -188,6 +188,9 @@
   sidebar and the accent colors, so it's easy to see where the keyboard is.
 - The Assistant's sign is now a sparkle, the usual sign for AI, and its button stays lit while the Assistant is
   open.
+- A piece's panel opens with its head as on a Mac: its photo beside its name (press the photo to change it), then a
+  quiet line with a dot and words ("● Out · Northwind Media · back Oct 25", click it to open the rental) and its
+  company and group, instead of a colored box at the top.
 - The words follow Bodega's own: the inventory list and rate card say Gear where they said Item, the Import button
   counts rows ("Import 12 Rows"), and a few labels are shorter (Choose File…, From Link, Use Sheet Pricing, Gear
   Discount, Own Day Rate, a group of None). In AI Settings, what's sent and what it costs now sit under the form.

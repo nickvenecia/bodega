@@ -177,7 +177,8 @@ COL_W = {
 }  # fmt: skip
 ROW_R = RADIUS_SM  # a table row's rounded highlight
 TABLE_THUMB = 24  # a piece's photo before its name in the gear list
-PHOTO_H = 200  # the photo at the top of a piece's panel
+PHOTO_H = 200  # (kept for older callers)
+PHOTO_HEAD = 88  # a record's photo, beside its name in the head (the standard's 4.5)
 LOG_COST_W = 90  # the cost box in a maintenance line
 CHIP_H = 28  # a tinted capsule button
 SORT_ARROW = 10  # the sort arrow in a column title

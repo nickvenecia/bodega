@@ -365,9 +365,10 @@ QHeaderView::section {{ background: transparent; color: {tokens.MUTED}; border: 
 QHeaderView::section:hover {{ color: {tokens.TEXT}; }}
 QHeaderView::up-arrow {{ image: url(__CHEVRON_UP__); width: {SORT_ARROW}px; height: {SORT_ARROW}px; padding-right: {SPACE_1}px; }}
 QHeaderView::down-arrow {{ image: url(__CHEVRON__); width: {SORT_ARROW}px; height: {SORT_ARROW}px; padding-right: {SPACE_1}px; }}
-QPushButton#Where {{ background: {tokens.INFO_SOFT}; border: 1px solid {tokens.INFO_EDGE}; color: {tokens.INFO}; text-align: left; }}
-QPushButton#Where[tone="out"] {{ background: transparent; border-color: {tokens.WARN}; color: {tokens.WARN}; }}
-QPushButton#Where[tone="late"] {{ background: {tokens.BAD_TINT}; border-color: {tokens.BAD_EDGE}; color: {tokens.BAD}; }}
+/* a record's quiet status line under its name: a dot and words, never a pill (the standard's 4.5) */
+QPushButton#StatusLine {{ background: transparent; border: none; padding: 0; text-align: left; color: {tokens.TEXT};
+    min-height: {tokens.SMALL_H}px; max-height: {tokens.SMALL_H}px; }}
+QPushButton#StatusLine[link="true"]:hover {{ color: {tokens.ACCENT_TEXT}; }}
 
 /* ---------- the gear overview */
 
@@ -578,6 +579,21 @@ def icon(name: str, color: str = "", size: int = ICON) -> QIcon:
     """An icon that looks the same however the button is hovered, focused or pressed."""
     color = color or tokens.TEXT
     return QIcon(_Themed(name, _token_of(color), color, size, False))
+
+
+def dot(color: str) -> QIcon:
+    """A status's small round dot, in its color (the color is never the only sign: words go beside it)."""
+    d = tokens.STATUS_DOT
+    pix = QPixmap(d * 2, d * 2)
+    pix.setDevicePixelRatio(2)
+    pix.fill(Qt.GlobalColor.transparent)
+    p = QPainter(pix)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(qcolor(color))
+    p.drawEllipse(0, 0, d, d)
+    p.end()
+    return QIcon(pix)
 
 
 def menu_icon(name: str, color: str = "", size: int = ICON) -> QIcon:

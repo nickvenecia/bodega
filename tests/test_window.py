@@ -1116,7 +1116,7 @@ def test_measured_to_the_standard(win):
         for w in win.items.findChildren(QWidget)
         if isinstance(w, (QPushButton, QLineEdit, QComboBox))
         and w.isVisible()
-        and w.objectName() not in ("LinkBtn", "Disclosure", "Where", "AddChip")
+        and w.objectName() not in ("LinkBtn", "Disclosure", "StatusLine", "AddChip")
     ]
     assert controls and {w.height() for w in controls} == {tokens.CONTROL_H}
     for b in (win.btn_new, win.btn_ai, win.btn_export):
@@ -1788,3 +1788,17 @@ def test_typing_a_name_in_the_list_jumps_to_it(win):
 def test_a_sidebar_place_says_its_count(win):
     row = win.sidebar.rows["gear"]
     assert row.accessibleDescription().startswith(str(len(win.lib.items)))
+
+
+def test_a_pieces_head_has_its_photo_beside_a_quiet_status_line(win):
+    win.go("gear")
+    fx6 = next(i for i in win.lib.items.values() if i.name.startswith("Sony FX6"))
+    win.open("gear", fx6.id)
+    p = win.items
+    assert p.where.objectName() == "StatusLine" and p.where.text().startswith(("Booked · ", "Out · "))
+    assert p.detail.text() == " · ".join(x for x in (fx6.brand, fx6.group) if x)
+    from bodega.core import pricing
+
+    free = next(i for i in win.lib.items.values() if not list(pricing.rentals_with(win.lib, i)) and i.status == "ready")
+    win.open("gear", free.id)
+    assert p.where.text() == "In" and not p.where.property("link")  # nothing to open: just the word

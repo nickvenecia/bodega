@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QPointF, QRectF, QStringListModel, Qt, QThread, QUrl, Signal
+from PySide6.QtCore import QPoint, QPointF, QRectF, QSize, QStringListModel, Qt, QThread, QTimer, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QPainter, QPainterPath
 from PySide6.QtWidgets import (
     QApplication,
@@ -44,11 +44,11 @@ from bodega.ui.components.widgets import (
     ToggleRow,
     add_chip,
     by_keyboard,
-    circle_button,
     combo,
     date_field,
     from_qdate,
     hbox,
+    hint,
     icon_button,
     picker,
     qty_field,
@@ -101,26 +101,36 @@ class Block(Card):
 
 
 class PhotoBox(QFrame):
-    """The piece's photo at the top of its panel: the whole picture, rounded, on a soft tint, with a round ⋯
-    (Replace, From Link, Paste, Remove) in its corner."""
+    """The piece's photo in its head, beside its name (the standard's 4.5): the whole picture, rounded, on a soft
+    tint. It is itself the control that changes it: press it for Replace, From Link, Paste, Remove."""
+
+    pressed = Signal()
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setObjectName("PhotoBox")
-        self.setFixedHeight(tokens.PHOTO_H)
+        self.setFixedSize(tokens.PHOTO_HEAD, tokens.PHOTO_HEAD)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip("Change the Photo")
+        self.setAccessibleName("Photo")
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.name = ""
-        self.more = circle_button("more", "Photo")
-        self.more.setParent(self)
-        self.more.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.menu: QMenu | None = None
 
     def show_photo(self, name: str) -> None:
         self.name = name
         self.update()
 
-    def resizeEvent(self, e):
-        super().resizeEvent(e)
-        m = tokens.SPACE_2
-        self.more.move(self.width() - self.more.width() - m, m)
+    def mouseReleaseEvent(self, e):
+        if e.button() == Qt.MouseButton.LeftButton and self.rect().contains(e.position().toPoint()):
+            QTimer.singleShot(0, self, self.pressed.emit)  # once the click is over
+        super().mouseReleaseEvent(e)
+
+    def keyPressEvent(self, e):
+        if e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
+            self.pressed.emit()
+            return
+        super().keyPressEvent(e)
 
     def paintEvent(self, _e):
         p = QPainter(self)
@@ -170,25 +180,28 @@ class ItemPanel(DetailsBase):
         self.rent = self.footer_button("Rent This", "receipt")
         self.rent.clicked.connect(lambda: self.it and self.rent_wanted.emit(self.it.id))
 
-        self.where = QPushButton()
-        self.where.setObjectName("Where")
-        self.where.setCursor(Qt.CursorShape.PointingHandCursor)
+        # the head (the standard's 4.5): the photo beside the name, a quiet status line, a line of detail
+        self.where = QPushButton()  # "● Out · Northwind Media · back Oct 25": click it to open that rental
+        self.where.setObjectName("StatusLine")
+        self.where.setIconSize(QSize(tokens.STATUS_DOT, tokens.STATUS_DOT))  # the list's own dot
         self.where.clicked.connect(lambda: self._where_id and self.open_rental.emit(self._where_id))
         self._where_id = ""
-        lay.addWidget(self.where)
+        self.detail = hint("")  # "Sony · Body"
 
         # its photo (once it has one; until then "+ Photo" sits with the other parts you can add)
         self.photo = PhotoBox()
-        pm = QMenu(self.photo.more)
+        pm = QMenu(self.photo)
         pm.addAction(theme.menu_icon("image"), "Replace…", self.choose_photo)
         self.act_photo_link = pm.addAction(theme.menu_icon("link"), "From Link", self.photo_from_link)
         self.act_photo_paste = pm.addAction(theme.menu_icon("clipboard"), "Paste", self.paste_photo)
         pm.aboutToShow.connect(self._paste_state)
         pm.addSeparator()
         pm.addAction(theme.menu_icon("trash"), "Remove Photo", self.remove_photo)
-        self.photo.more.setMenu(pm)
+        self.photo.menu = pm
+        self.photo.pressed.connect(
+            lambda: pm.popup(self.photo.mapToGlobal(QPoint(0, self.photo.height() + tokens.MENU_GAP)))
+        )
         self.photo.hide()
-        lay.addWidget(self.photo)
         self._photo_job: Worker | None = None
         self.earned: dict | None = None  # what the gear list worked out on its last fill (None: work it out here)
         self.setAcceptDrops(True)  # drop a picture anywhere on the panel (a file, or one out of a browser)
@@ -196,7 +209,15 @@ class ItemPanel(DetailsBase):
         # what it is
         self.name = TitleEdit()
         self.name.setPlaceholderText("Name")
-        lay.addWidget(self.name)
+        head = QWidget()
+        hl = hbox(head, 0, tokens.SPACE_3)
+        hl.addWidget(self.photo, 0, Qt.AlignmentFlag.AlignTop)
+        col = vbox(spacing=tokens.SPACE_0_5)
+        for w in (self.name, self.where, self.detail):
+            col.addWidget(w)
+        col.addStretch(1)
+        hl.addLayout(col, 1)
+        lay.addWidget(head)
         b = self._block("details", "Details", removable=False)
         row = hbox(spacing=tokens.SPACE_2)
         sec = Section("Company")
@@ -903,29 +924,36 @@ class ItemPanel(DetailsBase):
             self._loading = False
 
     def _where(self) -> None:
-        """One line at the top when it's out or booked: where, and until when. Click to open that rental."""
+        """The head's quiet lines: the status as a dot and words (where it is, and until when, when it's out or
+        booked: click to open that rental), then its company and group."""
+        from bodega.ui.window.tables import status_of
+
         it = self.it
         found = None
         for r, _units, a, z in pricing.rentals_with(self.lib, it):
-            if r.status in ("out", "booked"):
+            if r.is_out() or r.status == "booked":
                 found = (r, a, z)
                 break
         if found is None:
-            self.where.hide()
-            self._where_id = ""
+            word, color = status_of(it, pricing.units_out(self.lib).get(it.id, 0))
+            text, tip, self._where_id = word, "", ""
         else:
             r, a, z = found
             who = r.client.company or r.client.name or r.number
-            if r.status == "out":
+            if r.is_out():
                 text = f"Out · {who}" + (f" · back {dates.fmt_short(z)}" if z else "")
+                color = tokens.BAD if pricing.late(r) else tokens.WARN
             else:
-                text = f"Booked · {who} · {dates.span(a, z)}"
-            self.where.setText(text)
-            self.where.setToolTip(theme.plain_tip(f"Open {r.number}"))
-            self.where.setProperty("tone", "late" if pricing.late(r) else r.status)
-            repolish(self.where)
-            self.where.show()
-            self._where_id = r.id
+                text, color = f"Booked · {who} · {dates.span(a, z)}", tokens.INFO
+            tip, self._where_id = f"Open {r.number}", r.id
+        self.where.setText(text)
+        self.where.setIcon(theme.dot(color))
+        self.where.setToolTip(theme.plain_tip(tip) if tip else "")
+        self.where.setProperty("link", bool(self._where_id))
+        self.where.setCursor(Qt.CursorShape.PointingHandCursor if self._where_id else Qt.CursorShape.ArrowCursor)
+        repolish(self.where)
+        self.detail.setText(" · ".join(x for x in (it.brand, it.group) if x))
+        self.detail.setVisible(bool(it.brand or it.group))
         self.rent.setEnabled(it.rentable and it.status != "retired")
         self.rent.setToolTip(  # off, it says why
             ""

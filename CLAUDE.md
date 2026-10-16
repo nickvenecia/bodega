@@ -128,8 +128,8 @@ bodega/
                    filters.py (FilterButton + GearFilter: divide by, show, company, missing, Clear Filters);
                    calendar_view.py (CalendarPage: Month, a wall calendar with bars, or Timeline;
                    settings "calendar_mode")
-    panels/        base.py (DetailsBase: header ⋯, footer_button(text, icon), Cards), item.py (gear: the Where
-                   line, TitleEdit name, Details / Value & Rate / added parts; Check Price; Update with AI),
+    panels/        base.py (DetailsBase: header ⋯, footer_button(text, icon), Cards), item.py (gear: the head
+                   (photo beside the TitleEdit name, the status line, company · group), Details / Value & Rate / added parts; Check Price; Update with AI),
                    kit.py (TitleEdit name, About, Gear, Price), rental.py (LineEditor per line…), assistant.py
                    (AssistantPanel: the AI chat and jobs, in the right-hand panel; toggled by its button or ⌘J)
     dialogs/       common.py (Alert: confirm and notice, Return says yes; ask_name, tidy_preview, about),
