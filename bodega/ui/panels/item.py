@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.core import dates, earnings, maintenance, money, prices, pricing, web
+from bodega.core import dates, earnings, errors, maintenance, money, prices, pricing, web
 from bodega.core.log import get_logger
 from bodega.core.model import ITEM_STATUSES, Item, LogEntry
 from bodega.core.store import Library
@@ -665,8 +665,10 @@ class ItemPanel(DetailsBase):
     def _photo_file(self, path: Path) -> None:
         try:
             self._use_photo(photos.keep_file(path))
-        except (OSError, ValueError) as e:
+        except ValueError as e:  # not a picture, too big: said plainly by photos
             self.toast_wanted.emit(str(e), "problem")
+        except OSError as e:
+            self.toast_wanted.emit(errors.plain(e, "use that photo"), "problem")
 
     def photo_from_link(self) -> None:
         if self.it is not None and web.web_link(self.it.link):
@@ -726,8 +728,10 @@ class ItemPanel(DetailsBase):
         if img is not None:
             try:
                 self._use_photo(photos.keep_image(img))
-            except (OSError, ValueError) as e:
+            except ValueError as e:
                 self.toast_wanted.emit(str(e), "problem")
+            except OSError as e:
+                self.toast_wanted.emit(errors.plain(e, "use that photo"), "problem")
             return True
         link = photos.picture_link(mime) if links else ""
         if link:
@@ -1016,7 +1020,7 @@ class PriceCheck(QThread):
             )
             return
         except OSError as e:
-            self.done.emit(self.item_id, "", "", str(e))
+            self.done.emit(self.item_id, "", "", errors.plain(e, "check the price"))
             return
         except Exception:  # never leave the button stuck on "Checking…"
             log.warning("price check failed", exc_info=True)

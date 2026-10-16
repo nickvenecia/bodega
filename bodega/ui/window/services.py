@@ -58,13 +58,7 @@ class ServicesMixin:
 
         self._check = CheckThread(self)
         self._check.found.connect(lambda rel: self._found_release(rel, quiet))
-        self._check.failed.connect(
-            lambda _m: (
-                None
-                if quiet
-                else self.toast("Couldn't reach GitHub. Check your internet and try again.", "problem")
-            )
-        )
+        self._check.failed.connect(lambda m: None if quiet else self.toast(m, "problem"))
         self._check.start()
 
     def _found_release(self, rel: update.Release, quiet: bool) -> None:

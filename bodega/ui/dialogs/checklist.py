@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.core import document
+from bodega.core import document, errors
 from bodega.core.checks import pieces, progress, rows
 from bodega.core.model import CheckRow, Rental
 from bodega.ui.components import photos
@@ -91,8 +91,11 @@ class _Row(QFrame):
             return
         try:
             self.c.photos.append(photos.keep_file(Path(path)))
-        except (OSError, ValueError) as e:
+        except ValueError as e:
             self.window().say(str(e))
+            return
+        except OSError as e:
+            self.window().say(errors.plain(e, "add that photo"))
             return
         self._show_photos()
 

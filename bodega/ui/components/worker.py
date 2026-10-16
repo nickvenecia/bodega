@@ -7,6 +7,7 @@ from collections.abc import Callable
 
 from PySide6.QtCore import QThread, Signal
 
+from bodega.core import errors
 from bodega.core.log import get_logger
 
 log = get_logger(__name__)
@@ -30,12 +31,11 @@ class Worker(QThread):
     def run(self) -> None:
         try:
             result = self.job(lambda n, total: self.progress.emit(n, total), self.cancel)
-        except OSError as e:  # the plain-words errors (AIError, web, keychain)
-            self.failed.emit(str(e))
+        except OSError as e:  # the plain-words errors (AIError, web, keychain), or the computer's, translated
+            self.failed.emit(errors.plain(e, "finish that"))
             return
-        except Exception:
-            log.warning("background job failed", exc_info=True)
-            self.failed.emit("Something went wrong. Try again.")
+        except Exception as e:
+            self.failed.emit(errors.plain(e, "finish that"))  # with a reference that matches the log
             return
         self.done.emit(result)
 

@@ -253,7 +253,11 @@ def _fetch(url: str, max_bytes: int, timeout: float) -> tuple[str, _Reply, bytes
                 raise Refused(f"{site} only lets web browsers read its pages.")
             if r.status in (429, 503):
                 raise Refused(f"{site} didn't let Bodega read the page.")
-            raise OSError(f"{site} said no (error {r.status}).")
+            if r.status in (404, 410):
+                raise OSError(f"That page isn't on {site} any more.")
+            if r.status >= 500:
+                raise OSError(f"{site} had a problem sending the page. Try again later.")
+            raise OSError(f"{site} didn't send the page.")
         body = _unpack(r.body, (r.headers.get("Content-Encoding") or "").lower(), max_bytes)
         return url, r, body
     raise OSError("That link redirects too many times.")

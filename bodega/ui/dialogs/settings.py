@@ -17,7 +17,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QStackedWidget, QWidget
 
 from bodega import __version__
-from bodega.core import backups, dates
+from bodega.core import backups, dates, errors
 from bodega.core.paths import data_dir
 from bodega.core.store import Library
 from bodega.services import account
@@ -308,7 +308,7 @@ class SettingsDialog(QDialog):
         try:
             account.sign_out()
         except OSError as e:
-            self.win.toast(str(e), "problem")
+            self.win.toast(errors.plain(e, "sign out"), "problem")
         self._build_account()
         self.win.sidebar.show_who()
 

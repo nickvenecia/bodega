@@ -10,7 +10,7 @@ from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QFileDialog
 
-from bodega.core import dates, importer
+from bodega.core import dates, errors, importer
 from bodega.core.history import History
 from bodega.core.log import get_logger
 from bodega.core.model import Item
@@ -56,7 +56,7 @@ class TransferMixin:
                 path = importer.download_google_sheet(link, Path(folder))
             except OSError as e:
                 QApplication.restoreOverrideCursor()
-                notice(self, "Couldn't Open the Sheet", str(e))
+                notice(self, "Couldn't Open the Sheet", errors.plain(e, "open the sheet"))
                 return
             QApplication.restoreOverrideCursor()
             self.lib.settings["google_sheet"] = link
@@ -68,8 +68,7 @@ class TransferMixin:
         try:
             rows = importer.load_rows(path)
         except OSError as e:
-            log.warning("import failed", exc_info=True)
-            self.toast(str(e) or "Couldn't read that file.", "problem")
+            self.toast(errors.plain(e, "read that file"), "problem")
             return 0
         have = {(i.name.casefold(), i.department.casefold()): i.id for i in self.lib.items.values()}
         if ask:
@@ -159,7 +158,7 @@ class TransferMixin:
         try:
             zip_folder(data_dir(), Path(path), skip=("ui",))
         except OSError as e:
-            notice(self, "Couldn't back up", str(e))
+            notice(self, "Couldn't Back Up", errors.plain(e, "save the backup"))
             return
         self.toast("Backed up. It holds your renters' details, so keep it somewhere private.", "done")
 
@@ -194,7 +193,7 @@ class TransferMixin:
             problem = ""
         except OSError as e:
             log.warning("restore failed", exc_info=True)
-            kept, problem = None, f"Bodega couldn't write to its folder ({e.strerror or e})."
+            kept, problem = None, errors.plain(e, "put all of it back")
             self.lib.load()  # whatever made it back, as it now is on disk
         self.deselect()
         self.history = History(self.lib)  # undo starts again from what was put back
@@ -321,7 +320,7 @@ class TransferMixin:
         try:
             write_text(Path(path), ics.calendar(self.lib))
         except OSError as e:
-            notice(self, "Couldn't save", str(e))
+            notice(self, "Couldn't Save the Calendar File", errors.plain(e, "save the calendar file"))
             return
         self.toast("Saved. In Google Calendar: Settings › Import & Export › Import.", "done")
 
@@ -417,7 +416,7 @@ class TransferMixin:
         try:
             number, updated = saldo.send(self.lib, r, b, profile)
         except OSError as e:
-            notice(self, "Couldn't Send It to Saldo", str(e))
+            notice(self, "Couldn't Send It to Saldo", errors.plain(e, "write the invoice into Saldo"))
             return
         self._dirty_rentals.add(r.id)
         self.flush()

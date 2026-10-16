@@ -33,6 +33,7 @@ from bodega.ui.components.widgets import (
     combo,
     hbox,
     hint,
+    percent_field,
     vbox,
 )
 from bodega.ui.style.tokens import (
@@ -175,14 +176,12 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         p = self.pricing.lay
         row = hbox(spacing=SPACE_2)
         sec = Section("Day Rate, % of Value")
-        self.rate_pct = QLineEdit(b.rate_pct)
-        self.rate_pct.setPlaceholderText("4")
+        self.rate_pct = percent_field(b.rate_pct, "4")
         self.rate_pct.setToolTip("A day's rent for any piece, as a percent of its replacement value")
         sec.add(self.rate_pct)
         row.addWidget(sec, 1)
         sec = Section("Sales Tax on Gear %")
-        self.value_tax = QLineEdit(b.value_tax)
-        self.value_tax.setPlaceholderText("None")
+        self.value_tax = percent_field(b.value_tax, "None")
         self.value_tax.setToolTip(
             "Added to what you paid, so replacement value is what it really costs to replace"
         )
@@ -200,8 +199,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         p.addWidget(self.weekend)
         row = hbox(spacing=SPACE_2)
         sec = Section("Rental Sales Tax %")
-        self.rental_tax = QLineEdit(b.rental_tax)
-        self.rental_tax.setPlaceholderText("None")
+        self.rental_tax = percent_field(b.rental_tax, "None")
         self.rental_tax.setToolTip("Sales tax on the rent itself. New rentals start with it.")
         sec.add(self.rental_tax)
         row.addWidget(sec, 1)

@@ -74,6 +74,12 @@
   what's in it first, and keeps what you have now as a safety copy, so a restore can be undone the same way.
 - Closing a renter, your profile, Send Feedback or Check Out with changes you haven't saved asks first (Discard
   Changes or Keep Editing), instead of dropping them. Save Changes stays off until you've changed something.
+- When something can't be saved, printed or downloaded, Bodega says why in plain words (there's no free space,
+  Bodega isn't allowed to write to that folder, another app has the file open, no internet) and what to do, instead
+  of the computer's own error text. Anything it can't explain comes with a short reference to send with feedback.
+- The banner for changes that aren't saved names the real reason too.
+- Amounts, percents and billed days take only numbers as you type. Before, a letter was accepted and quietly read
+  as nothing.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

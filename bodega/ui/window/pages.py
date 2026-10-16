@@ -11,13 +11,14 @@ from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QFileDialog
 
-from bodega.core import dates, document
+from bodega.core import dates, document, errors
 from bodega.core.fileutil import reveal
 from bodega.core.log import get_logger
 from bodega.core.looks import palette
 from bodega.core.model import Business, Rental
 from bodega.core.paths import documents_dir, logos_dir
 from bodega.doc import export, render
+from bodega.ui.dialogs.common import notice
 from bodega.ui.dialogs.preview import PageDialog
 from bodega.ui.window.common import PAGE_DOCS
 
@@ -154,8 +155,7 @@ class PagesMixin:
             v = self.view()
             export.to_pdf(pages, path, title=f"{v[0].title} {v[0].number}".strip() if v else "")
         except OSError as e:
-            log.warning("PDF not saved", exc_info=True)
-            self.toast(str(e) or "Couldn't save the PDF.", "problem")
+            notice(self, "Couldn't Save the PDF", errors.plain(e, "save the PDF"))
             return
         self._exported(path)
 
@@ -169,8 +169,7 @@ class PagesMixin:
         try:
             files = export.to_png(pages, path)
         except OSError as e:
-            log.warning("PNG not saved", exc_info=True)
-            self.toast(str(e) or "Couldn't save the picture.", "problem")
+            notice(self, "Couldn't Save the Picture", errors.plain(e, "save the picture"))
             return
         self._exported(files[0])
 
@@ -192,8 +191,7 @@ class PagesMixin:
         try:
             export.print_pages(printer, pages)
         except OSError as e:
-            log.warning("print failed", exc_info=True)
-            self.toast(str(e), "problem")
+            notice(self, "Couldn't Print", errors.plain(e, "print"))
 
     def _page_rental(self) -> Rental | None:
         kind, ref = self.page_ctx

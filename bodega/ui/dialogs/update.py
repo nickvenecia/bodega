@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from bodega import __version__
-from bodega.core import update
+from bodega.core import errors, update
 from bodega.core.log import get_logger
 from bodega.ui.components.widgets import hbox, hint, vbox
 from bodega.ui.style import theme, tokens
@@ -63,9 +63,9 @@ class CheckThread(QThread):
     def run(self) -> None:
         try:
             self.found.emit(update.check())
-        except Exception as e:  # no internet, GitHub busy, an odd answer
+        except Exception as e:  # no internet, GitHub busy, an odd answer: already in plain words
             log.info("update check failed: %s", e)
-            self.failed.emit(str(e))
+            self.failed.emit(errors.plain(e, "check for updates"))
 
 
 class DownloadThread(QThread):
@@ -90,9 +90,11 @@ class DownloadThread(QThread):
             self.ready.emit(update.prepare(self.kind, f))
         except update.Canceled:
             self.failed.emit("")
-        except Exception as e:
+        except ValueError as e:  # the release's own problem (cut short, wrong file), said plainly
             log.warning("update download failed", exc_info=True)
-            self.failed.emit(str(e) or "The update couldn't be downloaded.")
+            self.failed.emit(str(e) or "The update couldn't be downloaded. Try again.")
+        except Exception as e:
+            self.failed.emit(errors.plain(e, "download the update"))
 
 
 class UpdateDialog(QDialog):

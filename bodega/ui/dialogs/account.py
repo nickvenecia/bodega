@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
+from bodega.core import errors
 from bodega.services import account
 from bodega.ui.components.widgets import Embeddable, Section, button_row, hint, vbox
 from bodega.ui.style import theme, tokens
@@ -64,7 +65,7 @@ class SignInDialog(Embeddable, QDialog):
         try:
             account.sign_in(self.email.text(), self.password.text())
         except OSError as e:
-            self._say(str(e))
+            self._say(errors.plain(e, "sign in"))
             return
         finally:
             self.password.clear()  # never kept, even in this window
@@ -77,6 +78,6 @@ class SignInDialog(Embeddable, QDialog):
         try:
             account.service().reset_password(self.email.text().strip())
         except OSError as e:
-            self._say(str(e))
+            self._say(errors.plain(e, "send the link"))
             return
         self._say("Check your email for a link to set a new password.")

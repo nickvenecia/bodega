@@ -34,6 +34,7 @@ import sys
 import tarfile
 import tempfile
 import threading
+import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
@@ -159,9 +160,19 @@ def check(timeout: float = 15) -> Release:
             "Accept": "application/vnd.github+json",
         },
     )
-    with urllib.request.urlopen(req, timeout=timeout, context=ssl_context()) as r:
-        data = json.loads(r.read().decode("utf-8"))
-    rel = parse_release(data)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout, context=ssl_context()) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        rel = parse_release(data)
+    except urllib.error.HTTPError as e:  # GitHub answered, but not with a release
+        log.info("update check: GitHub answered %s", e.code)
+        if e.code in (403, 429):
+            raise OSError("GitHub is limiting how often it's asked just now. Try again in an hour.") from None
+        raise OSError("GitHub didn't answer properly just now. Try again later.") from None
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+        raise OSError("Couldn't reach GitHub. Check your internet and try again.") from e
+    except (ValueError, KeyError, TypeError, UnicodeDecodeError) as e:
+        raise OSError("GitHub's answer didn't look like a Bodega release. Try again later.") from e
     log.info("update check: latest %s, this is %s", rel.version, __version__)
     return rel
 
@@ -307,7 +318,7 @@ def download(
             if total:
                 on_progress(min(1.0, got / total))
     if asset.size and got != asset.size:
-        raise ValueError(f"The download was cut short ({got} of {asset.size} bytes). Try again.")
+        raise ValueError("The download was cut short. Try again.")
     if h.hexdigest() != asset.sha256:
         raise ValueError("The download doesn't match what GitHub published, so it wasn't used. Try again.")
     log.info("update: downloaded %s (%d bytes, sha256 %s)", asset.name, got, h.hexdigest())

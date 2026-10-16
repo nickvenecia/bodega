@@ -24,7 +24,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from bodega.core import dates
+from bodega.core import dates, errors
 from bodega.core.log import get_logger
 from bodega.core.model import Business, Client, Item, Package, Rental, RentalLine, new_id, now_iso
 from bodega.core.paths import data_dir
@@ -148,6 +148,9 @@ class Library:
         # id): still in memory, tried again by save_again(). on_unsaved is told the moment a write fails.
         self.unsaved: set[str] = set()
         self.on_unsaved: Callable[[], None] | None = None
+        self.why_unsaved: tuple[str, str] | None = (
+            None  # the computer's reason, in plain words (errors.reason)
+        )
         self.newer_format = False
         self._as_saved: dict[str, tuple[str, str]] = {}  # each rental's status and number when last saved
 
@@ -290,13 +293,16 @@ class Library:
         """Write one file; if it fails, remember it as unsaved (and say so) before the error goes on up."""
         try:
             write_json(path, data)
-        except OSError:
+        except OSError as e:
             log.warning("couldn't save %s", what, exc_info=True)
+            self.why_unsaved = errors.reason(e)
             self.unsaved.add(what)
             if self.on_unsaved is not None:
                 self.on_unsaved()
             raise
         self.unsaved.discard(what)
+        if not self.unsaved:
+            self.why_unsaved = None
 
     def save_again(self) -> bool:
         """Write again everything that couldn't be written. True once nothing is left unsaved."""

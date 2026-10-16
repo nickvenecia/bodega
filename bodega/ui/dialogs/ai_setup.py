@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
+from bodega.core import errors
 from bodega.core.store import Library
 from bodega.services import secrets
 from bodega.services.ai import providers
@@ -184,7 +185,7 @@ class AISetupDialog(Embeddable, QDialog):
             if key:
                 providers.save_key(self._p().key, key)
         except OSError as e:
-            self.status.setText(str(e))
+            self.status.setText(errors.plain(e, "save the key"))
             return
         self._setup().to_settings(self.lib.settings)
         self.lib.save_settings()

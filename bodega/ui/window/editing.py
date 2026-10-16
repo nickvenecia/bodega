@@ -448,10 +448,8 @@ class EditingMixin:
         card, and another try every little while. Saved again: all of that goes, with a word that it worked."""
         unsaved = bool(self.lib.unsaved)
         if unsaved:
-            self.banner.say(
-                "Your latest changes aren't saved: Bodega can't write to its folder. Check that there's free space "
-                "on this computer; Bodega keeps trying."
-            )
+            why = (self.lib.why_unsaved or ("Bodega can't write to its folder", ""))[0]
+            self.banner.say(f"Your latest changes aren't saved: {why}. Bodega keeps trying.")
             if not self._retry_timer.isActive():
                 self._retry_timer.start()
         else:

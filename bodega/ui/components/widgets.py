@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 
 from PySide6.QtCore import (
     QEasingCurve,
@@ -1086,14 +1087,36 @@ def set_tone(lbl: QLabel, tone: str, text: str) -> None:
     lbl.setVisible(bool(text))
 
 
+PERCENT_TYPED = r"\s*\d{0,3}(\.\d{0,3})?\s*%?\s*"  # "8.875", "15 %"
+WHOLE_TYPED = r"\s*\d{0,3}\s*"  # a count of days
+
+
+def only(field: QLineEdit, pattern: str) -> QLineEdit:
+    """Typing is kept to what the field can read: a letter is never quietly read as 0."""
+    from PySide6.QtCore import QRegularExpression
+    from PySide6.QtGui import QRegularExpressionValidator
+
+    field.setValidator(QRegularExpressionValidator(QRegularExpression(pattern), field))
+    return field
+
+
+def percent_field(text: str = "", placeholder: str = "") -> QLineEdit:
+    """A percent (discount, sales tax, a day's rate): digits and one point, the % sign optional."""
+    f = only(QLineEdit(text), PERCENT_TYPED)
+    f.setPlaceholderText(placeholder)
+    return f
+
+
 class MoneyField(QLineEdit):
     """A money amount: reads "$5,998.00" until you click in, then it's the plain number to type over.
-    `value()` is what you typed ("5998"); textEdited still fires with the typed text."""
+    `value()` is what you typed ("5998"); textEdited still fires with the typed text. Only an amount can be
+    typed (digits, commas, a point and cents, the currency sign)."""
 
     def __init__(self, currency: str = "$", parent: QWidget | None = None):
         super().__init__(parent)
         self.currency = currency
         self._raw = ""
+        only(self, rf"\s*{re.escape(currency)}?\s*[\d,]{{0,16}}(\.\d{{0,2}})?\s*")
 
     def value(self) -> str:
         return self.text() if self.hasFocus() else self._raw

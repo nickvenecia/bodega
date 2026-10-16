@@ -17,6 +17,7 @@ from bodega.core import dates, money, pricing
 from bodega.core.model import RENTAL_STATUSES, Client, Rental, RentalLine
 from bodega.core.store import Library, terms_for
 from bodega.ui.components.widgets import (
+    WHOLE_TYPED,
     ElidedLabel,
     IconLabel,
     MoneyField,
@@ -30,6 +31,8 @@ from bodega.ui.components.widgets import (
     hbox,
     hint,
     icon_button,
+    only,
+    percent_field,
     picker,
     qty_field,
     repolish,
@@ -409,7 +412,7 @@ class RentalPanel(DetailsBase):
         g["rental"].add(self.weekend)
         row = hbox(spacing=tokens.SPACE_2)
         sec = Section("Billed Days")
-        self.billed = QLineEdit()
+        self.billed = only(QLineEdit(), WHOLE_TYPED)
         self.billed.setFixedWidth(tokens.NUM_FIELD_W)
         self.billed.setToolTip(
             "Leave blank and Bodega works it out. Lines with their own dates count their own."
@@ -442,13 +445,11 @@ class RentalPanel(DetailsBase):
         # money
         row = hbox(spacing=tokens.SPACE_2)
         sec = Section("Discount %")
-        self.discount = QLineEdit()
-        self.discount.setPlaceholderText("None")
+        self.discount = percent_field(placeholder="None")
         sec.add(self.discount)
         row.addWidget(sec, 1)
         sec = Section("Sales Tax %")
-        self.tax = QLineEdit()
-        self.tax.setPlaceholderText("None")
+        self.tax = percent_field(placeholder="None")
         sec.add(self.tax)
         row.addWidget(sec, 1)
         g["money"].add(row)

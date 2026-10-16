@@ -7,7 +7,7 @@ start), set your own day rate, or charge what it adds up to. The numbers under i
 from __future__ import annotations
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QFrame, QLabel, QLineEdit, QMenu, QToolButton, QWidget
+from PySide6.QtWidgets import QFrame, QLabel, QMenu, QToolButton, QWidget
 
 from bodega.core import money, pricing
 from bodega.core.model import Package
@@ -23,6 +23,7 @@ from bodega.ui.components.widgets import (
     hbox,
     hint,
     icon_button,
+    percent_field,
     qty_field,
     set_combo,
     vbox,
@@ -83,8 +84,7 @@ class PackagePanel(DetailsBase):
         sec.add(self.pricing)
         g["price"].add(sec)
         self.disc_sec = Section("Discount %")
-        self.discount = QLineEdit()
-        self.discount.setPlaceholderText("15")
+        self.discount = percent_field(placeholder="15")
         self.disc_sec.add(self.discount)
         self.fixed_sec = Section("Day Rate")
         self.fixed = MoneyField()

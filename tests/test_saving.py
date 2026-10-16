@@ -82,6 +82,8 @@ def test_a_failed_save_stays_said_until_it_works(win, full_disk):
     win._item_edited(it)
     win.flush()
     assert win.banner.isVisibleTo(win) and "aren't saved" in win.banner.text.text()
+    assert "no free space" in win.banner.text.text()  # the computer's real reason, in plain words
+    assert "Errno" not in win.banner.text.text()
     assert win.sidebar.profile_card.sub.text() == "Not Saved"
     assert win._retry_timer.isActive()
     win.banner.close_btn.click()  # put away…
