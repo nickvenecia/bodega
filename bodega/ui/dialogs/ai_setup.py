@@ -13,6 +13,18 @@ from bodega.ui.components.worker import Worker
 from bodega.ui.dialogs.update import open_url
 from bodega.ui.style.tokens import DIALOG_W_WIDE, SPACE_2, SPACE_3, SPACE_5
 
+SENT = (
+    "Bodega uses your own AI account; its key is kept in this computer's keychain. When you use AI, it sends "
+    "the gear you ask about (up to 600 pieces at a time): each piece's name, company, series, group, quantity, "
+    "status, what you paid and what goes with what, and the words of any page it reads. Renters and rentals are "
+    "never sent."
+)
+BILLED = (
+    "Your provider bills you for every question and keeps what's sent under its own terms (some free plans use "
+    "it to train their AI). Set a spending limit in your account there. The AI only suggests: nothing changes "
+    "until you approve it, and it can be wrong."
+)
+
 
 class AISetupDialog(Embeddable, QDialog):
     def __init__(self, lib: Library, parent: QWidget | None = None):
@@ -26,9 +38,8 @@ class AISetupDialog(Embeddable, QDialog):
         self.title_label = QLabel("AI")
         self.title_label.setObjectName("DialogTitle")
         lay.addWidget(self.title_label)
-        lay.addWidget(
-            hint("Use your own key. It's kept in your keychain; only gear names and links are sent.")
-        )
+        lay.addWidget(hint(SENT))
+        lay.addWidget(hint(BILLED))
 
         sec = Section("Provider")
         row = hbox(spacing=SPACE_2)

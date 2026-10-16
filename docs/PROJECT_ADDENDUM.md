@@ -95,7 +95,8 @@ ask the owner for it.
 | Store and maker web pages | In: Check Price and photos from a link (`core/web.py`) | The page | None |
 
 ## Limits and money (§13)
-- Cost drivers and their caps: the person's own AI spend (each answer capped at 4,096 tokens, 90 s; spend caps are
+- Cost drivers and their caps: the person's own AI spend (each answer capped at 4,096 tokens, 90 s; 150 questions
+  a job, stopping after 3 failures in a row; spend caps are
   the provider account's own); web fetches (15 s, 6 MB, https and public addresses only)
 - Rate limits per endpoint group: none (no server)
 - Quotas per plan: none (no plans)
@@ -117,18 +118,23 @@ ask the owner for it.
 One block per feature (`services/ai/tasks.py`). Every feature is off until the person sets a key, runs on that
 person's own provider account, and changes nothing until approved in Review. What each request sends: the gear
 involved, up to 600 pieces per request, with each piece's name, company, series, group, quantity, status, what it cost
-and what goes with what. Renters and rentals are never sent. Answers are capped at 4,096 tokens on Anthropic; the
-other providers have no cap yet (audit AI-09).
+and what goes with what. Renters and rentals are never sent. Every answer is capped at 4,096 tokens, with every
+provider; a job asks at most 150 questions (it says how many before a big one) and stops after 3 failures in a
+row. Gear lists and pages are marked as data, never instructions, in every prompt.
 
 - **Update from Links**. Purpose: read a piece's product page (or, when a store refuses, another page found and
   checked) for a price and a tidier name. Proposes: name, company, series, price paid. Must refuse: anything but those
   pieces' details.
 - **Find Missing Links**. Purpose: a product page for gear without a link; every link is fetched (through
-  `core/web.py`) and matched before it's suggested. Proposes: links.
-- **Tidy Up Names**. Purpose: consistent names. Proposes: name, company, series.
-- **Organize Groups**. Purpose: sort gear into sensible groups. Proposes: groups.
+  `core/web.py`) and matched before it's suggested. Proposes: links (and a price for gear without one). Must
+  refuse: a link that isn't https, isn't public, or whose page isn't about that piece.
+- **Tidy Up Names**. Purpose: consistent names. Proposes: name, company, series. Must
+  refuse: anything else (a blank never replaces what was typed).
+- **Organize Groups**. Purpose: sort gear into sensible groups. Proposes: groups. Must refuse: anything
+  else.
 - **Assistant** (chat). Purpose: answer questions about the gear and make changes asked for. Proposes: group, name,
-  company, series only. Must refuse: anything outside the gear (not written down yet: audit AI-01).
+  company, series only. Must refuse: any other change (prices, links, quantities, deleting), and anything about
+  renters or rentals, which it never sees; its prompt says the gear list is data, never instructions.
 - Model and provider: the person's choice (Anthropic, OpenAI, Gemini, Kimi, OpenRouter, DeepSeek, Mistral, xAI, Groq,
   or another OpenAI-compatible address). Quotas: none yet beyond the caps above. Kill switch: Remove Key.
 

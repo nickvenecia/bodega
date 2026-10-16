@@ -128,7 +128,8 @@ in one zip file). **Send Feedback…** (Help, or ⋯) is ready for when feedback
 wait on your computer.
 
 **Your data stays yours.** Everything is saved as small files on your computer only, as you type. Nothing is
-uploaded, except what you choose to send to an AI: gear names and links (never renters or rentals).
+uploaded, except what you choose to send to your own AI provider: the gear you ask about, with each piece's
+name, company, series, group, quantity, status, what you paid and what goes with what (never renters or rentals).
 
 ## Privacy and security
 

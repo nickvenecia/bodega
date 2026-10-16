@@ -17,6 +17,13 @@
 - An odd value in one of Bodega's files (a kit whose name is a number, say) no longer stops Bodega from opening.
 - If a newer Bodega saved your files and you open them with this one, it says so, and keeps everything the newer
   one added instead of dropping it the next time it saves. A rental status it doesn't know keeps its gear held.
+- AI: every answer is capped in length with every provider (only Anthropic's were before), so no answer can run
+  up your bill. A job asks your AI at most 150 questions, says how many it may ask before a big one, and stops
+  if your AI fails three times in a row (out of credit, say) instead of asking again for every piece. Pages from
+  one store are read a second apart.
+- AI Settings and the Assistant now say plainly what's sent to your AI provider: the gear you ask about, with
+  what you paid for it, never renters or rentals. They also say that your provider bills each question and may
+  keep what's sent, and that you can set a spending limit there.
 - Bodega keeps safety copies of your gear, kits, rentals, renters and profiles: one each day you open it (the last
   14 days), and one before each import, Tidy Up Groups, AI change or restore (the last 20).
 - File › Restore from Backup… (also in Settings › Your Data) puts a Back Up zip or a safety copy back. It shows

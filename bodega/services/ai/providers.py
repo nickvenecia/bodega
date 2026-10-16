@@ -35,7 +35,11 @@ log = get_logger(__name__)
 TIMEOUT_S = 90  # thinking models can take a while
 MAX_ANSWER_BYTES = 2_000_000
 ANTHROPIC_VERSION = "2023-06-01"  # the Messages API version header (a fixed API contract, not a model)
-MAX_TOKENS = 4096  # Anthropic needs a cap on the answer's length
+MAX_TOKENS = 4096  # every answer's length is capped (each provider bills by it)
+# what the cap is called: OpenAI and Groq want max_completion_tokens (OpenAI's newer models refuse max_tokens),
+# the other OpenAI-style providers max_tokens. A provider that refuses the one sent is asked once with the other.
+CAP_NAMES = ("max_tokens", "max_completion_tokens")
+COMPLETION_CAP = ("openai", "groq")
 
 
 @dataclass(frozen=True)
@@ -87,7 +91,12 @@ NOT_CHAT = (
 
 
 class AIError(OSError):
-    """Something went wrong talking to the provider, in plain words (never containing the key)."""
+    """Something went wrong talking to the provider, in plain words (never containing the key).
+    `status`: the provider's HTTP status, when it answered with one."""
+
+    def __init__(self, text: str, status: int = 0):
+        super().__init__(text)
+        self.status = status
 
 
 @dataclass
@@ -185,7 +194,7 @@ def _call(setup: Setup, path: str, body: dict | None = None, key: str | None = N
             raw = r.read(MAX_ANSWER_BYTES + 1)
     except urllib.error.HTTPError as e:
         detail = _error_text(e).replace(key, "…") if key else _error_text(e)
-        raise AIError(_why(e.code, detail)) from None
+        raise AIError(_why(e.code, detail), e.code) from None
     except Exception as e:  # no internet, timeouts, TLS problems…
         log.info("AI request to %s failed: %s", urlparse(base).hostname, type(e).__name__)
         raise AIError(
@@ -271,12 +280,15 @@ def _ask(setup: Setup, system: str, user: str, key: str | None) -> str:
             p.get("text", "") for p in parts or [] if isinstance(p, dict) and p.get("type") == "text"
         )
     else:
-        d = _call(
-            setup,
-            "/chat/completions",
-            {"model": setup.model, "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]},
-            key=key,
-        )  # fmt: skip
+        body = {"model": setup.model, "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}  # fmt: skip
+        cap = CAP_NAMES[1] if setup.provider in COMPLETION_CAP else CAP_NAMES[0]
+        try:
+            d = _call(setup, "/chat/completions", {**body, cap: MAX_TOKENS}, key=key)
+        except AIError as e:
+            if e.status != 400 or cap not in str(e):
+                raise
+            other = CAP_NAMES[1] if cap == CAP_NAMES[0] else CAP_NAMES[0]  # it named the cap it won't take
+            d = _call(setup, "/chat/completions", {**body, other: MAX_TOKENS}, key=key)
         choices = d.get("choices") if isinstance(d, dict) else None
         msg = choices[0].get("message", {}) if choices and isinstance(choices[0], dict) else {}
         text = msg.get("content") or ""

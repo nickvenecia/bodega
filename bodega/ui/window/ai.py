@@ -14,6 +14,7 @@ from bodega.services.ai.providers import Setup
 from bodega.ui.components.worker import Worker
 from bodega.ui.dialogs.ai_review import ReviewDialog
 from bodega.ui.panels.assistant import JOBS, AssistantPanel
+from bodega.ui.style import tokens
 from bodega.ui.window.common import kind_of
 
 RUNS = {
@@ -97,6 +98,8 @@ class AIMixin:
             return
         self.flush()
         chosen = items if items is not None else self._ai_scope()[0]
+        if not self._may_ask(key, chosen, setup):
+            return
         copies = [replace(it) for it in chosen]  # the job reads its own copies while you keep working
         run = RUNS[key]
         title = dict((k, label) for k, label, _t in JOBS)[key]
@@ -109,6 +112,23 @@ class AIMixin:
         w.done.connect(lambda result: self._ai_review(title, result))
         w.failed.connect(lambda e: self.assistant.say("Bodega", e))
         self.assistant.start(w, f"{title}…")
+
+    def _may_ask(self, key: str, chosen: list[Item], setup) -> bool:
+        """A job that may ask your AI more than a few questions says how many first (each one is billed)."""
+        from bodega.ui.dialogs.common import confirm
+
+        n = tasks.calls_for(key, chosen, setup.ready())
+        if n < tokens.AI_ASK_ABOVE:
+            return True
+        who = setup.p.label if setup.p else "Your provider"
+        return confirm(
+            self,
+            f"Ask Your AI Up to {n:,} Times?",
+            f"{who} bills your account for each question. To cap what any job can cost, set a spending limit "
+            f"in your account there.",
+            "Ask",
+            danger=False,
+        )
 
     def ai_this_piece(self, item_id: str) -> None:
         """⋯ › Update with AI on a piece: its link if it has one, else find one."""
@@ -131,5 +151,5 @@ class AIMixin:
             self.items.load(self.items.it)
         self.refresh()
         self.toast(
-            f"Updated {n} thing{'s' if n != 1 else ''}. Your gear from before is kept in Backups.", "done"
+            f"Updated {n} thing{'s' if n != 1 else ''}. A safety copy of how things were is kept.", "done"
         )

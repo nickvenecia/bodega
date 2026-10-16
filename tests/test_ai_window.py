@@ -180,3 +180,20 @@ def test_every_right_panel_fits_a_small_window(win):
     win.open_ai_assistant()
     widths = {win.inspector.widget(i).width() for i in range(win.inspector.count())}
     assert widths == {win.dock.target}  # the assistant shrinks with the others: its ✕ stays inside the glass
+
+
+def test_a_big_job_says_how_many_questions_first(win, monkeypatch):
+    from bodega.ui.dialogs import common
+    from bodega.ui.style import tokens
+
+    providers.save_key("anthropic", "sk-test")
+    Setup("anthropic", "test-model").to_settings(win.lib.settings)
+    asked = []
+    monkeypatch.setattr(tokens, "AI_ASK_ABOVE", 1)
+    monkeypatch.setattr(common, "confirm", lambda _w, title, *a, **k: asked.append(title) or False)
+    sent = []
+    monkeypatch.setattr(web, "open_no_redirect", lambda req, timeout, **_k: sent.append(req))
+    win.open_ai_assistant()
+    win.ai_job("names", list(win.lib.items.values()))
+    assert len(asked) == 1 and asked[0].startswith("Ask Your AI Up to")
+    assert not sent and not win.assistant.running()  # Cancel: nothing asked, nothing billed

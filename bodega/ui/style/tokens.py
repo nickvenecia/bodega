@@ -103,6 +103,7 @@ GLASS_EDGE_FADE = 60  # the hairline is brightest along the top, settling over t
 QUIT_WAIT_MS = 1500  # how long quitting waits for a price or update check to finish
 SAVE_DELAY_MS = 400  # save this long after the last keystroke
 SAVE_RETRY_MS = 20000  # after a save failed: try again this often while it lasts
+AI_ASK_ABOVE = 5  # an AI job that may ask this many questions or more says so first
 TABLE_DELAY_MS = 350  # refresh the table this long after an edit
 UPDATE_CHECK_DELAY_MS = 1500  # the automatic update check, just after the window is up (every launch)
 UPDATE_WAIT_MS = 1500  # a found update waits this long between looks while another window is open
