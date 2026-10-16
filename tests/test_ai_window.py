@@ -210,3 +210,56 @@ def test_a_model_the_provider_dropped_is_kept_and_said(qapp, data_folder, monkey
     assert d.model.currentText() == "retired-model-1"  # never swapped for another without asking
     assert "isn't offered" in d.status.text()
     d.deleteLater()
+
+
+def _answers(monkeypatch, text: str) -> None:
+    monkeypatch.setattr(
+        web,
+        "open_no_redirect",
+        lambda req, timeout, **_k: FakeResponse(json.dumps(anthropic_reply(text)).encode()),
+    )
+
+
+def test_cancel_in_review_changes_nothing(win, monkeypatch):
+    from bodega.ui.dialogs import ai_review
+
+    providers.save_key("anthropic", "sk-test")
+    Setup("anthropic", "test-model").to_settings(win.lib.settings)
+    lens = next(i for i in win.lib.items.values() if i.group == "Lenses")
+    before = lens.name
+    _answers(
+        monkeypatch, json.dumps([{"n": 0, "name": before + " (Tidy)", "brand": lens.brand, "series": "Cine"}])
+    )
+    monkeypatch.setattr(
+        ai_review.ReviewDialog, "exec", lambda self: ai_review.ReviewDialog.DialogCode.Rejected
+    )
+    win.go("grp:Lenses")
+    win.open_ai_assistant()
+    win.ai_job("names", [lens])
+    _wait(win.assistant.worker)
+    assert win.lib.items[lens.id].name == before  # Cancel: nothing changed
+    assert not list((win.lib.root / "backups").glob("Bodega * before-ai.zip"))  # (and nothing to undo)
+
+
+def test_a_change_asked_for_in_the_chat_goes_through_review(win, monkeypatch):
+    from bodega.ui.dialogs import ai_review
+
+    providers.save_key("anthropic", "sk-test")
+    Setup("anthropic", "test-model").to_settings(win.lib.settings)
+    win.open_ai_assistant()
+    reviewed = []
+
+    def approve(self):
+        reviewed.append([c.new for c in self.chosen()])
+        return ai_review.ReviewDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(ai_review.ReviewDialog, "exec", approve)
+    _answers(
+        monkeypatch,
+        json.dumps({"reply": "Moved it.", "changes": [{"n": 0, "field": "group", "value": "Cases"}]}),
+    )
+    win.assistant.question.setText("put the first piece in a group called Cases")
+    win.assistant._ask()
+    _wait(win.assistant.worker)
+    assert reviewed == [["Cases"]]  # it came to Review before anything changed
+    assert any(i.group == "Cases" for i in win.lib.items.values())
