@@ -148,6 +148,23 @@ class _RoundPopups(QObject):
             win.setWindowFlag(Qt.WindowType.NoDropShadowWindowHint, True)
             win.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
 
+    def _menu_type_ahead(self, menu: QMenu, typed: str) -> bool:
+        from time import monotonic
+
+        from bodega.core import search
+
+        now = monotonic()
+        quick = now - getattr(self, "_menu_typed_at", 0.0) < QApplication.keyboardInputInterval() / 1000
+        self._menu_typed = (getattr(self, "_menu_typed", "") if quick else "") + typed
+        self._menu_typed_at = now
+        wanted = search.folded(self._menu_typed)
+        choices = [a for a in menu.actions() if a.isVisible() and a.isEnabled() and not a.isSeparator()]
+        for a in choices:
+            if search.folded(a.text().replace("&", "")).startswith(wanted):
+                menu.setActiveAction(a)
+                return True
+        return False  # nothing starts so: the menu does what it would
+
     def eventFilter(self, obj, ev):
         if (
             ev.type() == QEvent.Type.KeyPress
@@ -159,6 +176,14 @@ class _RoundPopups(QObject):
                 first = ev.key() in (Qt.Key.Key_Home, Qt.Key.Key_PageUp)
                 obj.setActiveAction(choices[0] if first else choices[-1])
             return True
+        if (
+            ev.type() == QEvent.Type.KeyPress
+            and isinstance(obj, QMenu)
+            and not ev.modifiers() & ~Qt.KeyboardModifier.ShiftModifier
+            and ev.text().strip()
+            and ev.text().isprintable()
+        ):  # typing a choice's first letters jumps to it, as the Mac's menus do
+            return self._menu_type_ahead(obj, ev.text())
         if (
             ev.type() == QEvent.Type.ShortcutOverride
             and isinstance(obj, (QLineEdit, QPlainTextEdit, QTextEdit, QAbstractSpinBox))

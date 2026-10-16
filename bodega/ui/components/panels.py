@@ -80,9 +80,17 @@ class NavRow(QFrame):
 
     def set_folded(self, on: bool) -> None:
         self.folded = on
+        self._folds = True
         self.recolor()
-        self.setAccessibleDescription("Collapsed" if on else "Expanded")
+        self._describe()
         self.arrow.setAccessibleName(f"{'Show' if on else 'Hide'} {self.label.text()}")
+
+    def _describe(self) -> None:
+        """What a screen reader says after the place's name: its count, then whether it's folded."""
+        parts = [self.count.text()] if self.count.text() else []
+        if getattr(self, "_folds", False):
+            parts.append("Collapsed" if self.folded else "Expanded")
+        self.setAccessibleDescription(", ".join(parts))
 
     def set_label(self, text: str) -> None:
         self.label.setText(text)
@@ -96,6 +104,7 @@ class NavRow(QFrame):
 
     def set_count(self, n: int | str, tone: str = "") -> None:
         self.count.setText(str(n) if n not in (0, "") else "")
+        self._describe()
         if self.count.property("tone") != tone:
             self.count.setProperty("tone", tone)
             repolish(self.count)

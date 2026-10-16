@@ -577,3 +577,18 @@ def test_a_pasted_key_that_cant_be_right_is_said_without_sending_it():
     assert "start with sk-ant-" in providers.key_problem("anthropic", "sk-abc")
     assert "no spaces" in providers.key_problem("openai", "sk-ab c")
     assert providers.key_problem("kimi", "anything-goes") == ""
+
+
+def test_with_no_internet_a_links_job_stops_after_a_few(monkeypatch):
+    from bodega.core.model import Item
+
+    tried = []
+
+    def down(url, **_k):
+        tried.append(url)
+        raise OSError("no route to host")
+
+    monkeypatch.setattr(tasks._Pace, "fetch", lambda self, url: down(url))
+    items = [Item(name=f"Piece {n}", link=f"https://shop.example/p/{n}") for n in range(10)]
+    got = tasks.update_from_links(None, items)
+    assert len(tried) == tasks.OFFLINE_AFTER and got.problems[-1] == tasks.OFFLINE

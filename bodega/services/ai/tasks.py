@@ -49,6 +49,8 @@ INVENTORY_LINES = 600  # pieces described when answering a question
 MATCH_SHARE = 0.6  # a found page must mention this share of the piece's model words
 MAX_CALLS = 150  # questions one job may ask the AI (the person's provider bills each one)
 MAX_FAILS = 3  # the AI failing this many times in a row stops the job
+OFFLINE_AFTER = 3  # pages failing this many times in a row (not a store saying no): the internet's down, stop
+OFFLINE = "Stopped: Bodega couldn't reach the internet. Check your connection and try again."
 STORE_PAUSE_S = 1.0  # between two pages from one store, so it never sees a flood from this computer
 
 
@@ -354,6 +356,7 @@ def update_from_links(
     budget, pace = Budget(), _Pace(cancel)
     stuck: list[tuple[Item, str]] = []  # (piece, why its own page couldn't be read)
     todo = [it for it in items if web.web_link(it.link)]
+    down = 0  # pages in a row that couldn't be reached at all
     for n, it in enumerate(todo):
         if (cancel is not None and cancel.is_set()) or budget.stopped:
             break
@@ -361,11 +364,17 @@ def update_from_links(
         try:
             page = pace.fetch(it.link)
         except web.Refused as e:
+            down = 0
             stuck.append((it, str(e)))
             continue
         except OSError as e:
+            down += 1
             problems.append(f"{it.name}: {e}")
+            if down >= OFFLINE_AFTER:  # never every piece in turn with no internet
+                problems.append(OFFLINE)
+                break
             continue
+        down = 0
         _from_page(setup, it, page, _host(page), out, problems, budget)
     if stuck and (cancel is None or not cancel.is_set()) and not budget.stopped:
         if setup is None or not setup.ready():

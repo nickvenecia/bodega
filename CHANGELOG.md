@@ -188,6 +188,10 @@
   edge, so it's easy to see where the keyboard is.
 - The Assistant's sign is now a sparkle, the usual sign for AI, and its button stays lit while the Assistant is
   open.
+- Typing a name in a list jumps to it, as in the Finder, and typing in an open menu jumps to the choice it starts.
+  A screen reader hears each place's count in the sidebar.
+- With no internet, Get Photos from Links and Update from Links stop after a few tries and say so, instead of
+  trying every piece in turn.
 - Search Everything (⌘K, Ctrl+K on Windows and Linux, or Search at the top of the sidebar): type a few letters to go
   to a place, open a piece, kit or rental, or run any command in the menus. ↓ ↑ to choose, Return to go. On Windows
   and Linux it's also the way to every command that lives in the menu bar.

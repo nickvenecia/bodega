@@ -283,15 +283,26 @@ class TransferMixin:
             return
 
         def job(progress, cancel):
+            from bodega.core import web
+            from bodega.services.ai.tasks import OFFLINE, OFFLINE_AFTER
+
             found: dict[str, str] = {}
+            down = 0  # pages in a row that couldn't be reached at all
             for i, (item_id, link) in enumerate(todo):
                 if cancel.is_set():
                     break
                 progress(i, n)
                 try:
                     found[item_id] = photos.from_link(link)
+                    down = 0
+                except web.Refused:
+                    down = 0  # a store that won't share its page: that piece just stays without
                 except OSError:
-                    continue  # a store that won't share its page: that piece just stays without
+                    down += 1
+                    if down >= OFFLINE_AFTER and not found:  # no internet: say so, never try every piece
+                        raise OSError(OFFLINE) from None
+                    if down >= OFFLINE_AFTER:
+                        break
             return found
 
         w = Worker(job, self)

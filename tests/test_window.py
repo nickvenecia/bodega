@@ -1774,3 +1774,17 @@ def test_the_sidebar_search_opens_search_everything(win, monkeypatch):
     win.sidebar.search_wanted.connect(win.search_everything)
     win.sidebar.search.click()
     wait_for(lambda: opened)
+
+
+def test_typing_a_name_in_the_list_jumps_to_it(win):
+    win.go("gear")
+    t = win.gear_table
+    target = next(r for r in t.showing_rows() if r.text(t.NAME_COL).startswith("Mini"))
+    t.setFocus()
+    QTest.keyClicks(t, "mini v")
+    assert t.currentItem() is target
+
+
+def test_a_sidebar_place_says_its_count(win):
+    row = win.sidebar.rows["gear"]
+    assert row.accessibleDescription().startswith(str(len(win.lib.items)))

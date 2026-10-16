@@ -82,6 +82,7 @@ class Table(QTreeWidget):
     cleared = Signal()  # a click on empty space: nothing picked
 
     COLUMNS: list[tuple[str, int, object]] = []  # (title, width or 0 = stretch, alignment)
+    NAME_COL = 0  # typing a name jumps to it: the column that holds the names
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -265,6 +266,22 @@ class Table(QTreeWidget):
             self.select_showing()
             return
         super().keyPressEvent(e)
+
+    def keyboardSearch(self, typed: str) -> None:
+        """Typing a name jumps to the first row you can see whose name starts with it (as the Finder does);
+        letters typed in quick succession make one word."""
+        from time import monotonic
+
+        now = monotonic()
+        quick = now - getattr(self, "_typed_at", 0.0) < QApplication.keyboardInputInterval() / 1000
+        self._typed = (getattr(self, "_typed", "") if quick else "") + typed
+        self._typed_at = now
+        wanted = search.folded(self._typed)
+        for r in self.showing_rows():
+            if search.folded(r.text(self.NAME_COL)).startswith(wanted):
+                self.setCurrentItem(r)
+                self.scrollToItem(r)
+                return
 
     def showing_rows(self):
         """Rows you can see: not hidden, not inside a folded divider."""
@@ -567,6 +584,7 @@ class GearTable(Table):
     folds_changed = Signal()  # a divider folded or opened, by a click or the keyboard (kept in settings)
 
     COLUMNS = [(title, w, align) for _k, title, w, align in GEAR_COLUMNS]
+    NAME_COL = GEAR_COL["name"]
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)

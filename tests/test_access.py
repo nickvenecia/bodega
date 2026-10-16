@@ -166,6 +166,20 @@ def test_home_and_end_go_to_a_menus_first_and_last_choice(qapp):
     m.deleteLater()
 
 
+def test_typing_in_a_menu_jumps_to_the_choice_it_starts(qapp):
+    from PySide6.QtCore import QEvent
+    from PySide6.QtGui import QKeyEvent
+    from PySide6.QtWidgets import QApplication, QMenu
+
+    m = QMenu()
+    for name in ("Apple", "Banana", "Blueberry", "Cherry"):
+        m.addAction(name)
+    for ch in "bl":  # quick succession: one word
+        QApplication.sendEvent(m, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_A, Qt.KeyboardModifier.NoModifier, ch))
+    assert m.activeAction().text() == "Blueberry"
+    m.deleteLater()
+
+
 def test_clickable_rows_work_from_the_keyboard(win):
     from PySide6.QtCore import Qt
     from PySide6.QtTest import QTest
