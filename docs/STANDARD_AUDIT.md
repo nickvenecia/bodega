@@ -95,7 +95,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 |---|---|---|
 | C-25 | S2 | Import and Review are wide windows; the standard wants them as pages. |
 | C-26 | S2 | Dialogs use the system's frame and a Cancel button: no ✕ circle, no scrim. |
-| C-44 | S2 | Ticks on every row and sortable headings are in; there's no figure row, and no + at the headings' end for columns (a right-click chooses them). |
+| C-44 | S2 | Ticks, sortable headings and the + that chooses columns are in; there's no figure row above the list yet. |
 | C-53 | S2 | The print window has no column ticks or order, no letterhead options, no presets. |
 | C-55 | S3 | The table is drawn straight on the page, not in a card. |
 | C-61 | S2 | The print window has no filter cards (column, from, to). |

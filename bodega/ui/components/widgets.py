@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLayout,
     QLineEdit,
+    QMenu,
     QPlainTextEdit,
     QPushButton,
     QScrollArea,
@@ -520,6 +521,27 @@ class Banner(QFrame):
     def say(self, text: str) -> None:
         self.text.setText(text)
         self.show()
+
+
+class TickMenu(QMenu):
+    """A menu of ticks that stays open while several change (the standard's 4.2, as the Finder's View Options):
+    a click or Return on a tickable choice ticks it and leaves the menu up; anything else closes it as usual."""
+
+    def _keeps_open(self, a) -> bool:
+        return a is not None and a.isCheckable() and a.isEnabled() and not a.menu()
+
+    def mouseReleaseEvent(self, e) -> None:
+        a = self.actionAt(e.position().toPoint())
+        if self._keeps_open(a):
+            a.trigger()
+            return
+        super().mouseReleaseEvent(e)
+
+    def keyPressEvent(self, e) -> None:
+        if e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space) and self._keeps_open(self.activeAction()):
+            self.activeAction().trigger()
+            return
+        super().keyPressEvent(e)
 
 
 class Toast(QWidget):

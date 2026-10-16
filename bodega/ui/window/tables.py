@@ -33,6 +33,7 @@ from bodega.core import dates, earnings, money, pricing, search
 from bodega.core.model import RENTAL_WORDS, Business, Item
 from bodega.core.store import Library
 from bodega.ui.components import photos
+from bodega.ui.components.widgets import TickMenu
 from bodega.ui.style import theme, tokens
 from bodega.ui.window.lift import Lift
 
@@ -106,23 +107,45 @@ class TickHeader(QHeaderView):
         super().__init__(Qt.Orientation.Horizontal, table)
         self.table = table
 
+    def _plus(self) -> int:
+        """The heading that holds the + for choosing columns (the last one showing), or -1 on a list without."""
+        if not getattr(self.table, "chooses_columns", False):
+            return -1
+        for v in range(self.count() - 1, -1, -1):
+            if not self.isSectionHidden(self.logicalIndex(v)):
+                return self.logicalIndex(v)
+        return -1
+
     def paintSection(self, painter, rect, logical) -> None:
         painter.save()
         super().paintSection(painter, rect, logical)
         painter.restore()
         if logical == TICK and self.table.has_rows():
             paint_tick(painter, rect, self.table.tick_state())
+        elif logical == self._plus():  # the standard's 4.3: + at the end of the headings chooses the columns
+            size = tokens.ICON_SM
+            pix = theme.icon("plus", theme.MUTED, size).pixmap(QSize(size, size), self.devicePixelRatioF())
+            painter.drawPixmap(QPointF(rect.center().x() - size / 2 + 0.5, rect.center().y() - size / 2), pix)
+
+    def _special(self, e) -> int:
+        at = self.logicalIndexAt(e.position().toPoint())
+        return at if at in (TICK, self._plus()) else -1
 
     def mousePressEvent(self, e) -> None:
-        if self.logicalIndexAt(e.position().toPoint()) == TICK:
-            if e.button() == Qt.MouseButton.LeftButton:
-                self.table.tick_every(self.table.tick_state() != "on")
-            e.accept()
+        at = self._special(e)
+        if at < 0:
+            super().mousePressEvent(e)
             return
-        super().mousePressEvent(e)
+        if e.button() == Qt.MouseButton.LeftButton:
+            if at == TICK:
+                self.table.tick_every(self.table.tick_state() != "on")
+            else:
+                pos = e.position().toPoint()
+                QTimer.singleShot(0, self.table, lambda: self.table._column_menu(pos))  # once the click is over
+        e.accept()
 
     def mouseReleaseEvent(self, e) -> None:
-        if self.logicalIndexAt(e.position().toPoint()) == TICK:
+        if self._special(e) >= 0:
             e.accept()
             return
         super().mouseReleaseEvent(e)
@@ -787,7 +810,7 @@ class GearTable(Table):
         self.setRootIsDecorated(False)
         self.setIndentation(0)
         h = self.headerItem()
-        h.setToolTip(GEAR_COL["grip"], "Your order")
+        h.setToolTip(GEAR_COL["grip"], "Choose Columns")
         h.setToolTip(GEAR_COL["kids"], "Gear that goes with it")
         h.setToolTip(GEAR_COL["with"], "The piece it's attached to")
         h.setToolTip(GEAR_COL["paid"], "What it cost, before tax (what goes with it included)")
@@ -877,12 +900,22 @@ class GearTable(Table):
         if len(self.FIXED) <= to < h.count():
             h.moveSection(v, to)
 
+    chooses_columns = True  # (its headings end in a +: TickHeader)
+
     def _column_menu(self, pos) -> None:
-        m = QMenu(self)
+        """The columns: each ticked or not (the menu stays open while several change), Reset Columns at the end;
+        on a column's own heading, Move Left and Move Right first. The same from the headings' + or a right-click."""
+        m = TickMenu(self)
         h = self.header()
         keys = [k for k, _t, _w, _a in GEAR_COLUMNS]
         logical = h.logicalIndexAt(pos)
         here = keys[logical] if 0 <= logical < len(keys) else ""
+        mine = m.addAction(
+            "Sort by Your Order", lambda: self.sortByColumn(GEAR_COL["grip"], Qt.SortOrder.AscendingOrder)
+        )
+        mine.setCheckable(True)
+        mine.setChecked(self.your_order())
+        m.addSeparator()
         if here and here not in self.FIXED and here != self.LAST:
             v = h.visualIndex(logical)
             shown = [x for x in range(len(self.FIXED), h.count()) if not h.isSectionHidden(h.logicalIndex(x))]
@@ -898,7 +931,17 @@ class GearTable(Table):
             a.setCheckable(True)
             a.setChecked(key not in self.hidden_cols)
             a.toggled.connect(lambda on, k=key: self._toggle_column(k, on))
+        m.addSeparator()
+        m.addAction("Reset Columns", self.reset_columns)
         m.exec(self.header().mapToGlobal(pos))
+
+    def reset_columns(self) -> None:
+        """The columns as they are at first: Bodega's own choice and order."""
+        self.hidden_cols = set(HIDDEN_AT_FIRST)
+        self.set_column_order([k for k, _t, _w, _a in GEAR_COLUMNS])
+        self._apply_columns()
+        self.columns_changed.emit(sorted(self.hidden_cols))
+        self.order_changed.emit(self.column_order())
 
     def _toggle_column(self, key: str, on: bool) -> None:
         (self.hidden_cols.discard if on else self.hidden_cols.add)(key)
