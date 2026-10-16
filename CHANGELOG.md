@@ -34,6 +34,8 @@
 - Only a quote can be deleted. A rental that's been booked is marked cancelled instead and kept, with its number,
   prices and history. Gear that's on a rental is retired instead of deleted (with what's attached to it): it can't
   be booked and is left off your inventory, rate card and labels, and you can bring it back.
+- Deleting gear keeps a safety copy of everything first, as an import or Tidy Up does (File › Restore… brings it
+  back).
 - Booking or marking out a rental whose gear is already promised (or in repair) asks first, and says what's short,
   instead of only showing a hint. Go ahead if you're renting more in to cover it.
 - Importing a sheet no longer replaces your profile's pricing unless you turn on Use the Sheet's Pricing (it starts

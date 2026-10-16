@@ -161,3 +161,10 @@ def test_the_main_button_comes_from_one_helper():
         if 'setObjectName("Primary")' in f.read_text(encoding="utf-8")
     ]
     assert by_hand == ["components/widgets.py"], by_hand  # widgets.primary_button() everywhere else
+
+
+def test_deleting_gear_keeps_a_safety_copy_first(data_folder):
+    lib = _lib(data_folder)
+    piece = next(i for i in lib.items.values() if not lib.rentals_with(i.id))
+    lib.delete_items([piece.id])
+    assert list((data_folder / "backups").glob("Bodega * before-delete.zip"))

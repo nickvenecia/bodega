@@ -595,10 +595,11 @@ class Library:
 
     def delete_items(self, ids: list[str]) -> int:
         """Gear attached to what's deleted becomes its own item; kits drop it; rentals keep its name.
-        Saved once at the end. Returns how many went."""
+        A safety copy first (it touches gear, kits and rentals), then saved once at the end. Returns how many went."""
         gone = {i: self.items[i] for i in ids if i in self.items}
         if not gone:
             return 0
+        self.snapshot("before-delete")
         held = self._hold_rental_prices()
         for item_id in gone:
             self.items.pop(item_id)
