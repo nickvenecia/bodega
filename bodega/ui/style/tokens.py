@@ -14,6 +14,7 @@ SPACE_4 = 16  # padding of panels, bars and the main areas
 SPACE_5 = 24  # padding of dialogs and the empty-state drop zone
 SPACE_1_5 = 6  # Apple's half-steps, for small insets only: a menu's inset…
 SPACE_2_5 = 10  # …a sidebar or menu row's padding
+SPACE_0_5 = 2  # the hairline gaps: a key cap's top and bottom, a number under a name
 
 # ---------------------------------------------------------------- control sizes (the standard's A.5, pointer)
 CONTROL_H = 28  # (control-h) EVERY button, dropdown, text field, segmented control and icon circle
@@ -199,7 +200,8 @@ CAL_WEEKS_AHEAD = 8
 CAL_NAME_W = 220  # the rental names beside the calendar
 CAL_HEAD_H = 44  # months and day numbers above it
 MONTH_HEAD_H = 28  # the weekday names above the month
-MONTH_DAY_H = 26  # a day's number, at the top of its square
+MONTH_DAY_H = 28  # a day's number, at the top of its square (today's circle: control height)
+MONTH_DAY_CIRCLE = MONTH_DAY_H - 2 * SPACE_0_5  # today's circle, inside that row
 MONTH_BAR_H = 20  # a rental across the days it's out
 MONTH_BAR_GAP = SPACE_1
 MONTH_CELL_MIN_H = 96
@@ -248,6 +250,10 @@ DARK = {
     "WARN": "#FFB340",  # warning as words
     "WARN_FILL": "#FF9230",
     "WARN_SOFT": "rgba(255, 146, 48, 0.18)",
+    "INFO": "#5AB0FF",  # info as words: Booked (never the accent, which is for what you can press)
+    "INFO_FILL": "#0091FF",
+    "INFO_SOFT": "rgba(0, 145, 255, 0.18)",
+    "INFO_EDGE": "rgba(90, 176, 255, 0.45)",
     "PAPER": "#FFFFFF",  # the paper (and logo thumbnails) in the preview
     "SHADOW": "rgba(0, 0, 0, 0.55)",  # the paper's shadow on the dark preview
     "DIVIDER": "#1C1C1E",  # a department or group divider in the gear table: a quiet band (it can't be pressed)
@@ -296,7 +302,7 @@ LIGHT = {
     "BORDER_HOVER": "rgba(60, 60, 67, 0.40)",
     "BORDER_CHECK": "#8A8A8E",
     "TEXT": "#1D1D1F",  # 15.7:1
-    "MUTED": "#6E6E73",  # 4.7:1
+    "MUTED": "#6A6A6F",  # 5.0:1 on the page, 4.6:1 on the glass (the standard's #6E6E73 is 4.3:1 there)
     "FAINT": "#8A8A8E",  # placeholders only
     "WELL": "#F2F2F4",
     "ACCENT": "#2F6FDB",
@@ -321,6 +327,10 @@ LIGHT = {
     "WARN": "#A05A00",
     "WARN_FILL": "#FF8D28",
     "WARN_SOFT": "rgba(255, 141, 40, 0.14)",
+    "INFO": "#0062CC",
+    "INFO_FILL": "#0088FF",
+    "INFO_SOFT": "rgba(0, 136, 255, 0.12)",
+    "INFO_EDGE": "rgba(0, 98, 204, 0.35)",
     "PAPER": "#FFFFFF",
     "SHADOW": "rgba(0, 0, 0, 0.16)",
     "DIVIDER": "#EDEDF0",
@@ -486,6 +496,10 @@ def use(scheme: str, accent: str | None = None, contrast: bool = False, opaque: 
         globals().update(
             MUTED=_toward(look["MUTED"], "#000000" if SCHEME == "light" else "#FFFFFF", look["BG"], 7),
             FAINT=look["MUTED"],
+            **{  # words that carry a meaning reach 7:1 too
+                k: _toward(look[k], "#000000" if SCHEME == "light" else "#FFFFFF", look["BG"], 7)
+                for k in ("GOOD", "BAD", "WARN", "INFO")
+            },
             BORDER=strong,
             FIELD_BORDER=strong,
             GLASS_STROKE=strong,

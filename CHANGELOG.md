@@ -93,6 +93,11 @@
 - The Assistant's button is now last in the bar, after +.
 - With a rental open beside the list, Production and then Total step aside so renters' names have room.
 - Dates are never cut off: a narrow date box shows "Oct 18, 2026" instead of "Sun, Oct 18, 202".
+- Booked rentals show in their own blue, in the tables, the calendar and a piece's panel; the app's accent color
+  is kept for things you can press. Out rentals show in amber on the calendar, as they do in the lists.
+- Secondary words (retired pieces, cancelled rentals, the calendar's days and numbers) are a little darker, so they
+  read clearly on every background.
+- Settings and About show which build of Bodega you have.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

@@ -170,7 +170,7 @@ QFrame#CheckRow {{ background: {tokens.FILL}; border-radius: {RADIUS_LG}px; }}
 QLabel#Due {{ color: {tokens.MUTED}; }}
 QLabel#Due[tone="out"] {{ color: {tokens.WARN}; font-weight: {WEIGHT_SEMIBOLD}; }}
 QLabel#Due[tone="late"] {{ color: {tokens.BAD}; font-weight: {WEIGHT_SEMIBOLD}; }}
-#KeyCap {{ background: {tokens.CHIP}; color: {tokens.MUTED}; border-radius: {RADIUS_SM}px; padding: 2px {SPACE_2}px;
+#KeyCap {{ background: {tokens.CHIP}; color: {tokens.MUTED}; border-radius: {RADIUS_SM}px; padding: {tokens.SPACE_0_5}px {SPACE_2}px;
     font-weight: {WEIGHT_MEDIUM}; }}
 #MenuHeading {{ color: {tokens.MUTED}; font-size: {TEXT_XS}px; font-weight: {WEIGHT_SEMIBOLD}; padding: {SPACE_1}px {SPACE_2}px 0 {SPACE_2}px; }}
 
@@ -316,7 +316,7 @@ QHeaderView::section {{ background: transparent; color: {tokens.MUTED}; border: 
 QHeaderView::section:hover {{ color: {tokens.TEXT}; }}
 QHeaderView::up-arrow {{ image: url(__CHEVRON_UP__); width: {SORT_ARROW}px; height: {SORT_ARROW}px; padding-right: {SPACE_1}px; }}
 QHeaderView::down-arrow {{ image: url(__CHEVRON__); width: {SORT_ARROW}px; height: {SORT_ARROW}px; padding-right: {SPACE_1}px; }}
-QPushButton#Where {{ background: {tokens.ACCENT_TINT}; border: 1px solid {tokens.ACCENT_EDGE}; color: {tokens.ACCENT_TEXT}; text-align: left; }}
+QPushButton#Where {{ background: {tokens.INFO_SOFT}; border: 1px solid {tokens.INFO_EDGE}; color: {tokens.INFO}; text-align: left; }}
 QPushButton#Where[tone="out"] {{ background: transparent; border-color: {tokens.WARN}; color: {tokens.WARN}; }}
 QPushButton#Where[tone="late"] {{ background: {tokens.BAD_TINT}; border-color: {tokens.BAD_EDGE}; color: {tokens.BAD}; }}
 

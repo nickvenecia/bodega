@@ -342,7 +342,7 @@ def _tone(it: Item, out: int) -> tuple[str, str]:
     if it.status == "repair":
         return "Repair", tokens.WARN  # amber, like the In Repair chip everywhere else
     if it.status == "retired":
-        return "Retired", tokens.FAINT
+        return "Retired", tokens.MUTED
     if out >= it.qty:
         return "Out", tokens.WARN
     if out:
@@ -984,7 +984,7 @@ class GearTable(Table):
             parent,
         )
         row.setForeground(GEAR_COL["status"], theme.qcolor(color))
-        row.setForeground(GEAR_COL["kids"], theme.qcolor(tokens.ACCENT))
+        row.setForeground(GEAR_COL["kids"], theme.qcolor(tokens.MUTED))  # a count, not a button
         for k in ("brand", "series"):
             row.setForeground(GEAR_COL[k], theme.qcolor(tokens.MUTED))
         if kids:
@@ -1077,11 +1077,11 @@ STATUS_WORDS = {
 }
 STATUS_COLORS = {  # token names, read when filling (light and dark differ)
     "quote": "MUTED",
-    "booked": "ACCENT",
+    "booked": "INFO",
     "out": "WARN",
     "late": "BAD",
     "returned": "GOOD",
-    "cancelled": "FAINT",
+    "cancelled": "MUTED",
 }
 
 

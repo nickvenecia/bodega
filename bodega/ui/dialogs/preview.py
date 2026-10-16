@@ -69,7 +69,7 @@ class PageView(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         if not self.pages:
             if self.message:
-                p.setPen(theme.qcolor(tokens.FAINT))
+                p.setPen(theme.qcolor(tokens.MUTED))
                 p.drawText(self.rect(), int(Qt.AlignmentFlag.AlignCenter), self.message)
             return
         y = float(tokens.PAGE_GAP)

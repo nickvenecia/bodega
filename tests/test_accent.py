@@ -31,8 +31,20 @@ def test_bodegas_own_blue_reads_too():
         assert tokens.contrast(look["ACCENT_TEXT"], look["BG"]) >= 4.5
         assert tokens.contrast(look["MUTED"], look["BG"]) >= 4.5  # secondary words are information
         assert tokens.contrast("#FFFFFF", look["BAD_BUTTON"]) >= 4.5
-        for meaning in ("GOOD", "BAD", "WARN"):
+        for meaning in ("GOOD", "BAD", "WARN", "INFO"):
             assert tokens.contrast(look[meaning], look["BG"]) >= 4.5, meaning
+        glass = tokens._solid(look["GLASS"], look["BG"])  # the sidebar's counts and labels sit on the glass
+        assert tokens.contrast(look["MUTED"], glass) >= 4.5
+
+
+def test_the_accent_is_kept_for_what_you_can_press():
+    """Statuses and counts take their meaning's color (Booked is info blue), never the accent."""
+    from bodega.ui.window.calendar_view import BAR_TONES
+    from bodega.ui.window.tables import STATUS_COLORS
+
+    assert "ACCENT" not in STATUS_COLORS.values()
+    assert not any(c.startswith("ACCENT") or c == "ON_ACCENT" for tone in BAR_TONES.values() for c in tone)
+    assert STATUS_COLORS["booked"] == "INFO" and "FAINT" not in STATUS_COLORS.values()
 
 
 def test_no_red_accent():

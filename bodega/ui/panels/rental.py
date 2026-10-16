@@ -114,7 +114,7 @@ class LineEditor(QFrame):
         self.amount.setObjectName("ItemAmount")
         self.flag = IconLabel("alert", "BAD")
         self.flag.hide()
-        self.cal = IconLabel("calendar", "ACCENT")
+        self.cal = IconLabel("calendar", "MUTED")
         self.cal.setToolTip("Has its own dates")
         self.cal.hide()
         self.more = icon_button("more", "Move or remove")

@@ -25,10 +25,10 @@ NAME_W = tokens.CAL_NAME_W
 HEAD_H = tokens.CAL_HEAD_H
 BAR_TONES = {  # fill, edge, text: token names, read when drawing (light and dark differ)
     "quote": ("CARD_HOVER", "BORDER_STRONG", "MUTED"),
-    "booked": ("ACCENT_TINT", "ACCENT_EDGE", "TEXT"),
-    "out": ("ACCENT", "ACCENT", "ON_ACCENT"),
+    "booked": ("INFO_SOFT", "INFO_EDGE", "TEXT"),
+    "out": ("WARN_SOFT", "WARN", "TEXT"),
     "late": ("BAD_TINT", "BAD", "BAD"),
-    "returned": ("CARD", "BORDER", "FAINT"),
+    "returned": ("CARD", "BORDER", "MUTED"),
 }
 
 
@@ -104,7 +104,7 @@ class RentalCalendar(QWidget):
             if d == today:
                 p.fillRect(QRectF(x, 0, dw, self.height()), theme.qcolor(tokens.ACCENT_TINT))
         # the header: months and day numbers
-        p.setPen(theme.qcolor(tokens.FAINT))
+        p.setPen(theme.qcolor(tokens.MUTED))
         for n in range(self.days):
             d = dates.plus(self.start, n)
             x = NAME_W + n * dw
@@ -115,7 +115,7 @@ class RentalCalendar(QWidget):
                     int(Qt.AlignmentFlag.AlignLeft),
                     dates.MONTHS[d.month - 1],
                 )
-            p.setPen(theme.qcolor(tokens.TEXT if d == today else tokens.FAINT))
+            p.setPen(theme.qcolor(tokens.TEXT if d == today else tokens.MUTED))
             p.drawText(
                 QRectF(x, HEAD_H / 2, dw, HEAD_H / 2 - tokens.SPACE_1),
                 int(Qt.AlignmentFlag.AlignCenter),
@@ -129,10 +129,10 @@ class RentalCalendar(QWidget):
             y = HEAD_H + i * tokens.CAL_ROW_H
             p.setPen(theme.qcolor(tokens.TEXT))
             who = r.client.company or r.client.name or r.project or "No renter yet"
-            p.drawText(QRectF(tokens.SPACE_3, y, NAME_W - tokens.SPACE_4, tokens.CAL_ROW_H / 2 + 4),
+            p.drawText(QRectF(tokens.SPACE_3, y, NAME_W - tokens.SPACE_4, tokens.CAL_ROW_H / 2 + tokens.SPACE_1),
                        int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom), who)  # fmt: skip
-            p.setPen(theme.qcolor(tokens.FAINT))
-            p.drawText(QRectF(tokens.SPACE_3, y + tokens.CAL_ROW_H / 2 + 2, NAME_W - tokens.SPACE_4, tokens.CAL_ROW_H / 2),
+            p.setPen(theme.qcolor(tokens.MUTED))
+            p.drawText(QRectF(tokens.SPACE_3, y + tokens.CAL_ROW_H / 2 + tokens.SPACE_0_5, NAME_W - tokens.SPACE_4, tokens.CAL_ROW_H / 2),
                        int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop), r.number)  # fmt: skip
             tone = "late" if pricing.late(r) else r.status
             fill, edge, ink = (getattr(tokens, k) for k in BAR_TONES.get(tone, BAR_TONES["quote"]))
@@ -154,7 +154,7 @@ class RentalCalendar(QWidget):
             p.setPen(QPen(theme.qcolor(tokens.BORDER), 1))
             p.drawLine(0, int(y + tokens.CAL_ROW_H), self.width(), int(y + tokens.CAL_ROW_H))
         if not self.rows:
-            p.setPen(theme.qcolor(tokens.FAINT))
+            p.setPen(theme.qcolor(tokens.MUTED))
             p.drawText(QRectF(0, HEAD_H, self.width(), tokens.CAL_ROW_H * 2), int(Qt.AlignmentFlag.AlignCenter),
                        "Nothing booked in these weeks.")  # fmt: skip
         p.end()
@@ -260,7 +260,7 @@ class MonthCalendar(QWidget):
         start, today = self.first_day(), dates.today()
         weeks = self.weeks()
         # weekday names
-        p.setPen(theme.qcolor(tokens.FAINT))
+        p.setPen(theme.qcolor(tokens.MUTED))
         for c, name in enumerate(dates.CAL_WEEKDAYS):
             p.drawText(QRectF(c * cw, 0, cw, head), int(Qt.AlignmentFlag.AlignCenter), name)
         # the squares
@@ -277,8 +277,8 @@ class MonthCalendar(QWidget):
                 num = QRectF(
                     cell.left() + tokens.SPACE_1,
                     cell.top() + tokens.SPACE_1,
-                    tokens.MONTH_DAY_H - 4,
-                    tokens.MONTH_DAY_H - 4,
+                    tokens.MONTH_DAY_CIRCLE,
+                    tokens.MONTH_DAY_CIRCLE,
                 )
                 if d == today:
                     p.setPen(Qt.PenStyle.NoPen)
@@ -286,7 +286,7 @@ class MonthCalendar(QWidget):
                     p.drawEllipse(num)
                     p.setPen(theme.qcolor(tokens.ON_ACCENT))
                 else:
-                    p.setPen(theme.qcolor(tokens.TEXT if d.month == self.month else tokens.FAINT))
+                    p.setPen(theme.qcolor(tokens.TEXT if d.month == self.month else tokens.MUTED))
                 p.drawText(num, int(Qt.AlignmentFlag.AlignCenter), str(d.day))
         # the rentals, week by week, each in the first lane free across its days
         self._bars = []

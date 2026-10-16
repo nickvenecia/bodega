@@ -88,7 +88,7 @@ def paint_glass(p: QPainter, r: QRectF) -> None:
 
 
 def shadow_margin() -> int:
-    return tokens.GLASS_SHADOW_SPREAD + tokens.GLASS_SHADOW_DROP + 2
+    return tokens.GLASS_SHADOW_SPREAD + tokens.GLASS_SHADOW_DROP + tokens.SPACE_0_5  # and a hairline's room
 
 
 class GlassRoot(QWidget):
