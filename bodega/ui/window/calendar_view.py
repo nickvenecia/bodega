@@ -5,7 +5,9 @@ Month     a month as a wall calendar: each rental a bar across the days it's out
 Timeline  weeks across, one row per rental: the way to see what overlaps
 
 ‹ Today › move through months (or a screenful of weeks on the timeline). A rental whose lines have their
-own dates shows one bar per stretch. Click a bar to open the rental.
+own dates shows one bar per stretch. Click a bar to open the rental. From the keyboard: Tab reaches the
+calendar, the arrow keys move through its bars (the one you're on ringed, and said to a screen reader), Return
+or Space opens it.
 """
 
 from __future__ import annotations
@@ -14,10 +16,10 @@ from datetime import date
 
 from PySide6.QtCore import QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QPainter, QPen
-from PySide6.QtWidgets import QLabel, QPushButton, QStackedWidget, QToolButton, QToolTip, QWidget
+from PySide6.QtWidgets import QAbstractScrollArea, QLabel, QPushButton, QStackedWidget, QToolButton, QToolTip, QWidget
 
 from bodega.core import dates, pricing
-from bodega.core.model import Rental
+from bodega.core.model import RENTAL_WORDS, Rental
 from bodega.core.store import Library
 from bodega.ui.style import theme, tokens
 
@@ -47,13 +49,113 @@ def merge(spans: list[tuple[date, date]]) -> list[tuple[date, date]]:
     return out
 
 
-class RentalCalendar(QWidget):
+class _Bars:
+    """What both calendars do with their bars (self._bars: (rect, rental, first day, last day), as painted):
+    Tab reaches the calendar, the arrow keys move through the bars in reading order (Home and End: the first
+    and last), Return or Space opens the one you're on, and a screen reader hears each one as you reach it."""
+
+    _bars: list[tuple[QRectF, Rental, date, date]]
+
+    def _bars_ready(self) -> None:
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setAccessibleName("Calendar")
+        self._on: tuple[str, date, int] | None = None  # the bar you're on: its rental, first day, and top
+
+    @staticmethod
+    def _key(bar) -> tuple[str, date, int]:
+        return bar[1].id, bar[2], round(bar[0].top())
+
+    def _ordered(self) -> list:
+        return sorted(self._bars, key=lambda b: (round(b[0].top()), b[0].left()))
+
+    def _current(self, order: list) -> int | None:
+        if self._on is None:
+            return None
+        keys = [self._key(b) for b in order]
+        if self._on in keys:
+            return keys.index(self._on)
+        return next((i for i, k in enumerate(keys) if k[:2] == self._on[:2]), None)  # moved (a resize)
+
+    def say_bar(self, bar) -> str:
+        """A bar as a screen reader hears it: "JLF-2026-001, Northwind Media, Oct 3 – 5, Booked"."""
+        _rect, r, a, z = bar
+        who = r.client.company or r.client.name or r.project or "No renter yet"
+        where = "Late" if pricing.late(r) else RENTAL_WORDS.get(r.status, r.status)
+        return f"{r.number}, {who}, {dates.span(a, z)}, {where}"
+
+    def _go_to(self, bar) -> None:
+        from bodega.ui.components.widgets import announce
+
+        self._on = self._key(bar)
+        text = self.say_bar(bar)
+        self.setAccessibleDescription(text)
+        announce(self, text)
+        scroll = self.parentWidget()
+        while scroll is not None and not isinstance(scroll, QAbstractScrollArea):
+            scroll = scroll.parentWidget()
+        if scroll is not None and hasattr(scroll, "ensureVisible"):
+            c = bar[0].center()
+            scroll.ensureVisible(round(c.x()), round(c.y()), round(bar[0].width() / 2), tokens.CAL_ROW_H)
+        self.update()
+
+    def keyPressEvent(self, e) -> None:
+        order, k = self._ordered(), e.key()
+        i = self._current(order) if order else None
+        if not order or e.modifiers() & ~Qt.KeyboardModifier.KeypadModifier:
+            QWidget.keyPressEvent(self, e)
+            return
+        if k in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
+            if i is not None:
+                self.picked.emit(order[i][1].id)
+            return
+        nxt = {
+            Qt.Key.Key_Right: 0 if i is None else min(len(order) - 1, i + 1),
+            Qt.Key.Key_Down: 0 if i is None else min(len(order) - 1, i + 1),
+            Qt.Key.Key_Left: len(order) - 1 if i is None else max(0, i - 1),
+            Qt.Key.Key_Up: len(order) - 1 if i is None else max(0, i - 1),
+            Qt.Key.Key_Home: 0,
+            Qt.Key.Key_End: len(order) - 1,
+        }.get(k)
+        if nxt is None:
+            QWidget.keyPressEvent(self, e)
+            return
+        self._go_to(order[nxt])
+
+    def focusInEvent(self, e) -> None:
+        QWidget.focusInEvent(self, e)
+        order = self._ordered()
+        i = self._current(order) if order else None
+        if order:
+            self._go_to(order[i if i is not None else 0])
+
+    def focusOutEvent(self, e) -> None:
+        QWidget.focusOutEvent(self, e)
+        self.update()
+
+    def _paint_focus(self, p: QPainter) -> None:
+        """The bar you're on, ringed while the calendar has the keyboard."""
+        if not self.hasFocus():
+            return
+        order = self._ordered()
+        i = self._current(order) if order else None
+        if i is None:
+            return
+        ring = tokens.FOCUS_RING
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.setPen(QPen(theme.qcolor(tokens.ACCENT), ring))
+        p.drawRoundedRect(
+            order[i][0].adjusted(-ring, -ring, ring, ring), tokens.RADIUS_SM + ring, tokens.RADIUS_SM + ring
+        )
+
+
+class RentalCalendar(_Bars, QWidget):
     picked = Signal(str)
     span_changed = Signal()  # it shows more or fewer weeks (the window was resized)
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setMouseTracking(True)
+        self._bars_ready()
         self.start = week_start(dates.today())
         self.days = tokens.CAL_WEEKS_AHEAD * 7
         self.rows: list[tuple[Rental, list[tuple[date, date]]]] = []
@@ -155,6 +257,7 @@ class RentalCalendar(QWidget):
             p.setPen(theme.qcolor(tokens.MUTED))
             p.drawText(QRectF(0, HEAD_H, self.width(), tokens.CAL_ROW_H * 2), int(Qt.AlignmentFlag.AlignCenter),
                        "Nothing booked in these weeks.")  # fmt: skip
+        self._paint_focus(p)
         p.end()
 
     def _bar_at(self, pos):
@@ -202,7 +305,7 @@ def tone_of(r: Rental) -> str:
     return "late" if pricing.late(r) else r.status
 
 
-class MonthCalendar(QWidget):
+class MonthCalendar(_Bars, QWidget):
     """A month as a wall calendar, rentals as bars across their days."""
 
     picked = Signal(str)
@@ -210,6 +313,7 @@ class MonthCalendar(QWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setMouseTracking(True)
+        self._bars_ready()
         t = dates.today()
         self.year, self.month = t.year, t.month
         self.rows: list[tuple[Rental, list[tuple[date, date]]]] = []
@@ -343,6 +447,7 @@ class MonthCalendar(QWidget):
                         int(Qt.AlignmentFlag.AlignVCenter),
                         f"+{n} more",
                     )
+        self._paint_focus(p)
         p.end()
 
     def _bar_at(self, pos):

@@ -1851,3 +1851,44 @@ def test_an_error_that_needs_you_stays_until_you_close_it(win):
     wait_for(lambda: not t.isVisible())
     win.toast("Couldn't save.", "problem")  # a warning still goes by itself, and never takes a click
     assert t._t.isActive() and t.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+
+
+def test_the_calendars_bars_are_reached_from_the_keyboard_and_heard(win):
+    """The standard's I-01 and A-06: Tab reaches the calendar, the arrows move through its bars (ringed), each
+    is said to a screen reader, and Return opens it, in Month and in Timeline."""
+    from bodega.core import pricing
+    from bodega.core.model import Rental, RentalLine
+
+    lib = win.lib
+    first = next(iter(lib.rentals.values()))
+    a = next(a for a, _z in pricing.periods(first) if a is not None)
+    second = Rental(number="JLF-2026-099", pickup=first.pickup, return_date=first.return_date, status="booked")
+    second.lines = [RentalLine("item", next(iter(lib.items)), 1)]
+    lib.save_rental(second)
+    win.go("calendar")
+    cal = win.calendar
+    cal.resize(1200, 800)
+    got = []
+    cal.picked.connect(got.append)
+    for view, mode in ((cal.month, "month"), (cal.timeline, "timeline")):
+        cal.set_mode(mode)
+        if mode == "month":
+            view.year, view.month = a.year, a.month
+        else:
+            view.start = a
+        view.fill(lib)
+        view.grab()  # paints: lays out the bars
+        assert view.focusPolicy() == Qt.FocusPolicy.StrongFocus and view.accessibleName() == "Calendar"
+        view.setFocus()
+        QApplication.processEvents()
+        order = view._ordered()
+        assert len(order) >= 2 and view._current(order) == 0
+        assert view.accessibleDescription() == view.say_bar(order[0])
+        assert order[0][1].number in view.accessibleDescription()
+        QTest.keyClick(view, Qt.Key.Key_Right)
+        assert view._current(view._ordered()) == 1
+        QTest.keyClick(view, Qt.Key.Key_End)
+        QTest.keyClick(view, Qt.Key.Key_Home)
+        assert view._current(view._ordered()) == 0
+        QTest.keyClick(view, Qt.Key.Key_Return)
+        assert got[-1] == order[0][1].id
