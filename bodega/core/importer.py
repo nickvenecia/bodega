@@ -708,6 +708,70 @@ def _identity(name: str) -> str:
     return re.split(r"\bfor\b", name, maxsplit=1, flags=re.IGNORECASE)[0]
 
 
+SERIAL_MIN = 4  # a serial number this long or longer knows a piece by itself ("1" or "A" could be anything)
+
+
+def _link_key(link: str) -> str:
+    """A link as it's compared: no scheme, no www., no #part, no trailing /, any case."""
+    s = link.strip().split("#", 1)[0].casefold()
+    for start in ("https://", "http://"):
+        s = s.removeprefix(start)
+    return s.removeprefix("www.").rstrip("/")
+
+
+class Known:
+    """What's in Bodega already, to know a sheet's rows by, so none comes in twice: by its name in its department
+    (or the name a sheet gave it there, if it was renamed since); failing that, by its link or one of its serial
+    numbers, so a piece renamed in the sheet or moved to another department in Bodega is still the same piece.
+    A link counts only when one piece has it, on each side (two rows for one product page are two pieces)."""
+
+    def __init__(self, items=()):
+        self.by_name: dict[tuple[str, str], str] = {}
+        links: dict[str, list[str]] = {}
+        self.by_serial: dict[str, str] = {}
+        items = list(items)
+        for i in items:
+            self.by_name[(i.name.casefold(), i.department.casefold())] = i.id
+        for i in items:
+            if i.imported_as:
+                self.by_name.setdefault((i.imported_as.casefold(), i.department.casefold()), i.id)
+            if i.link.strip():
+                links.setdefault(_link_key(i.link), []).append(i.id)
+            for s in i.serial_list():
+                if len(s) >= SERIAL_MIN:
+                    self.by_serial.setdefault(s.casefold(), i.id)
+        self.by_link = {k: ids[0] for k, ids in links.items() if len(ids) == 1}
+
+    def __bool__(self) -> bool:
+        return bool(self.by_name)
+
+    @classmethod
+    def of_names(cls, pairs) -> Known:
+        """Known only by (name, department) pairs, already casefolded (tests, scripts)."""
+        k = cls()
+        k.by_name = {pair: f"known-{n}" for n, pair in enumerate(pairs)}
+        return k
+
+    def match(self, sheet: list[Item]) -> dict[str, str]:
+        """Each of the sheet's pieces that's already in Bodega: its id -> the id of the piece it is."""
+        counts: dict[str, int] = {}
+        for it in sheet:
+            if it.link.strip():
+                counts[_link_key(it.link)] = counts.get(_link_key(it.link), 0) + 1
+        out = {}
+        for it in sheet:
+            found = self.by_name.get((it.name.casefold(), it.department.casefold()))
+            if found is None and it.link.strip() and counts.get(_link_key(it.link)) == 1:
+                found = self.by_link.get(_link_key(it.link))
+            if found is None:
+                found = next(
+                    (self.by_serial[s.casefold()] for s in it.serial_list() if s.casefold() in self.by_serial), None
+                )
+            if found is not None:
+                out[it.id] = found
+        return out
+
+
 def attach_guesses(items: list[Item]) -> int:
     """Attach gear that says what it's for ("… for Sony FX6") to the best match. Returns how many.
 

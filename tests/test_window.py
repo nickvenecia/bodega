@@ -1466,6 +1466,42 @@ def test_a_piece_renamed_after_an_import_isnt_imported_twice(win, tmp_path):
     assert win.import_file(sheet, ask=False) == 0  # the same sheet again: it's known by the sheet's name
 
 
+def test_a_piece_renamed_in_the_sheet_or_moved_in_bodega_is_known_by_its_link_or_serial(win, tmp_path):
+    """K-10: a row is the piece it was, by its link or serial number, when its name or department no longer
+    match; two rows for one product page are still two pieces."""
+    from bodega.core import importer
+    from bodega.core.model import Item
+
+    sheet = tmp_path / "gear.csv"
+    sheet.write_text(
+        "Item,Qty,Price,Link,Serial\n"
+        "Aputure 600d Pro,1,1700,https://www.example.com/600d,AP600D-1234\n"
+        "Sony FX3,1,3900,,FX3-55501\n",
+        encoding="utf-8",
+    )
+    assert win.import_file(sheet, ask=False) == 2
+    light = next(i for i in win.lib.items.values() if i.name == "Aputure 600d Pro")
+    cam = next(i for i in win.lib.items.values() if i.name == "Sony FX3")
+    cam.department = "Camera B"  # moved in Bodega
+    win._item_edited(cam)
+    win.flush()
+    sheet.write_text(  # renamed in the sheet; the other moved: both still known
+        "Item,Qty,Price,Link,Serial\n"
+        "Aputure LS 600d Pro,1,1700,http://example.com/600d/,\n"
+        "Sony FX3 Body,1,3900,,FX3-55501\n",
+        encoding="utf-8",
+    )
+    assert win.import_file(sheet, ask=False) == 0
+    known = importer.Known(win.lib.items.values())
+    twins = [
+        Item(name="Battery A", link="https://example.com/600d"),
+        Item(name="Battery B", link="https://example.com/600d"),
+    ]
+    assert known.match(twins) == {}  # one page, two rows: two pieces, neither is the light
+    assert known.match([Item(name="Anything", serials=["AP600D-1234"])]).popitem()[1] == light.id
+    assert known.match([Item(name="Short serial", serials=["12"])]) == {}  # too short to know a piece by
+
+
 def test_the_menu_bar_has_the_open_rentals_commands(win):
     tops = {a.text(): a.menu() for a in win.menuBar().actions() if a.menu()}
     assert {"Gear", "Rental"} <= set(tops)

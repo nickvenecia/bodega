@@ -123,17 +123,12 @@ class TransferMixin:
         except OSError as e:
             self.toast(errors.plain(e, "read that file"), "error")
             return 0
-        have = {(i.name.casefold(), i.department.casefold()): i.id for i in self.lib.items.values()}
-        for (
-            i
-        ) in self.lib.items.values():  # a piece renamed since it came from a sheet is still known by the sheet's name
-            if i.imported_as:
-                have.setdefault((i.imported_as.casefold(), i.department.casefold()), i.id)
+        known = importer.Known(self.lib.items.values())  # by name, the sheet's old name, link or serial number
         if ask:
             from bodega.ui.dialogs.import_sheet import ImportDialog
 
             saved = settings.value(self.lib.settings, "import_columns")
-            d = ImportDialog(path, rows, set(have), self, has_profile=bool(self.lib.businesses), saved_columns=saved)
+            d = ImportDialog(path, rows, known, self, has_profile=bool(self.lib.businesses), saved_columns=saved)
             if d.exec() != ImportDialog.DialogCode.Accepted:
                 return 0
             chosen, everything, pricing_found = d.items, d.got.items, d.pricing
@@ -145,10 +140,11 @@ class TransferMixin:
             got = importer.parse_rows(rows)
             importer.attach_guesses(got.items)
             everything = got.items
-            chosen = [i for i in everything if (i.name.casefold(), i.department.casefold()) not in have]
+            chosen = [i for i in everything if i.id not in known.match(everything)]
             pricing_found = (got.rate_pct, got.value_tax) if (got.rate_pct or got.value_tax) else None
             fill_links = True
-        linked = self._fill_links(everything, have) if fill_links else 0
+        matched = known.match(everything)
+        linked = self._fill_links(everything, matched) if fill_links else 0
         if not chosen:
             if linked:
                 self.lib.save_items()
@@ -158,11 +154,7 @@ class TransferMixin:
                 self.toast(f"Nothing new in {path.name}." if everything else f"No gear found in {path.name}.")
             return 0
         ids = {i.id for i in chosen}
-        same = {
-            i.id: have[(i.name.casefold(), i.department.casefold())]
-            for i in everything
-            if i.id not in ids and (i.name.casefold(), i.department.casefold()) in have
-        }
+        same = {i.id: matched[i.id] for i in everything if i.id not in ids and i.id in matched}
         for i in chosen:
             if i.parent and i.parent not in ids:
                 i.parent = same.get(i.parent, "")
@@ -176,11 +168,11 @@ class TransferMixin:
         )
         return len(chosen)
 
-    def _fill_links(self, sheet: list[Item], have: dict) -> int:
+    def _fill_links(self, sheet: list[Item], matched: dict[str, str]) -> int:
         """Gear you already have that has no link gets the sheet's. Returns how many."""
         n = 0
         for i in sheet:
-            mine = self.lib.items.get(have.get((i.name.casefold(), i.department.casefold()), ""))
+            mine = self.lib.items.get(matched.get(i.id, ""))
             if mine is not None and not mine.link.strip() and i.link.strip():
                 mine.link = i.link
                 n += 1

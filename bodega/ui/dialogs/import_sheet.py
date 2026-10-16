@@ -50,7 +50,7 @@ class ImportDialog(QDialog):
         self,
         path: Path,
         rows: list[list],
-        have: set[tuple[str, str]],
+        have: importer.Known | set[tuple[str, str]],
         parent: QWidget | None = None,
         has_profile: bool = False,
         saved_columns: dict | None = None,
@@ -59,7 +59,9 @@ class ImportDialog(QDialog):
         self.fill_links = False
         self.path = path
         self.rows = rows
-        self.have = have  # (name, department) already in Bodega, casefolded
+        # what's in Bodega already (importer.Known: by name, the sheet's old name, link or serial number)
+        self.have = have if isinstance(have, importer.Known) else importer.Known.of_names(have)
+        self._matched: dict[str, str] = {}  # this read's pieces that are in Bodega already
         self.layout_guess = importer.detect(rows)
         self.layout_key = importer.layout_key(rows, self.layout_guess)
         self._detected = dict(self.layout_guess.cols)  # what Bodega read from the headings, before your changes
@@ -131,11 +133,9 @@ class ImportDialog(QDialog):
         self.guess.setToolTip('"Aputure STORM 80c" gets Aputure')
         self.guess.toggled.connect(lambda _on: self.reread())
         self.options.add(self.guess)
-        known_links = {
-            (i.name.casefold(), i.department.casefold())
-            for i in importer.parse_rows(rows, self.layout_guess, guess_brands=False).items
-            if i.link
-        } & have
+        parsed = importer.parse_rows(rows, self.layout_guess, guess_brands=False).items
+        mine = self.have.match(parsed)
+        known_links = [i for i in parsed if i.link and i.id in mine]
         self.links = ToggleRow(
             f"Add Links to {words.count(len(known_links), 'Piece')} You Have",
             True,
@@ -163,7 +163,7 @@ class ImportDialog(QDialog):
         self.skip_have = ToggleRow("Skip What's Already in Bodega", True)
         self.skip_have.setToolTip("Same name in the same department")
         self.skip_have.toggled.connect(lambda _on: self.fill())
-        self.skip_have.setVisible(bool(have))
+        self.skip_have.setVisible(bool(self.have))
         self.options.add(self.skip_have)
         lay.addWidget(self.options)
 
@@ -277,6 +277,7 @@ class ImportDialog(QDialog):
         self.columns.set_summary(
             " · ".join(names[:5]) + (" …" if len(names) > 5 else "") if names else "Pick the Name column"
         )
+        self._matched = self.have.match(self.got.items)
         self._fill_departments()
         self.fill()
 
@@ -306,7 +307,7 @@ class ImportDialog(QDialog):
             t = self.dep_toggles.get(it.department or "No Department")
             if t is not None and not t.isChecked():
                 continue
-            if self.skip_have.isChecked() and (it.name.casefold(), it.department.casefold()) in self.have:
+            if self.skip_have.isChecked() and it.id in self._matched:
                 continue
             out.append(it)
         return out

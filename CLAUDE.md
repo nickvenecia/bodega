@@ -38,6 +38,7 @@ bodega/
                    rate % and tax from formulas; attach_guesses() ("… for Sony FX6" -> the FX6, by model-name tokens,
                    compared with what each item IS = its name before "for"); write_csv() out (round-trips);
                    cell hyperlinks and =HYPERLINK() become Item.link; download_google_sheet() (export as .xlsx)
+                   Known: what's in Bodega already, by name, the sheet's old name, link or serial (match())
     document.py    build_rental / build_inventory / build_ratecard / build_package / build_labels -> DocView
                    (labels: a sticker per unit, QR "bodega:<item id>", item_from_code() reads a scan) (every string on the
                    page); agreements group lines by date range when they differ; summary_text() for email

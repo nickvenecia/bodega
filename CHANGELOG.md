@@ -208,6 +208,8 @@
   one width, and dropdowns are as wide as their choice.
 - A kit with more than 12 pieces, or a rental with more than 12 lines, has its own search above its gear.
 - Esc in any search, including the gear picker's, clears what you typed first, before it closes anything.
+- Importing a sheet again knows a piece by its link or serial number too, so one renamed in the sheet, or moved to
+  another department in Bodega, doesn't come in a second time.
 - Import remembers which column is which: once you've set the columns for a sheet, the next sheet with the same
   headings comes in the same way.
 - The filter button beside the search is the same size as the other round buttons in the bar.
