@@ -98,6 +98,8 @@ class MainWindow(
         for w in (self.items, self.packages, self.rentals, self.assistant):
             self.inspector.addWidget(w)
         self.dock = Dock(self.inspector, root, self.sidebar, body)  # …which slides in when something's picked
+        self.dock.toggled.connect(lambda _on: self._mark_assistant())
+        self.inspector.currentChanged.connect(lambda _i: self._mark_assistant())
         self.dock.follower = lambda: self.pages.currentWidget()
         outer.addLayout(body, 1)
         esc = QShortcut(QKeySequence(Qt.Key.Key_Escape), self)
@@ -231,6 +233,7 @@ class MainWindow(
         self.btn_ai.setToolTip("AI Assistant (⌘J)")
         self.btn_ai.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_ai.setProperty("bar", True)
+        self.btn_ai.setCheckable(True)  # on while the assistant is open
         self.btn_ai.clicked.connect(self.toggle_assistant)
         self.btn_new = QToolButton()
         self.btn_new.setObjectName("CirclePrimary")
@@ -549,6 +552,11 @@ class MainWindow(
             self.no_results.show_over(t, text)
         else:
             self.no_results.hide()
+
+    def _mark_assistant(self) -> None:
+        """The assistant's button is on while the assistant is open."""
+        if hasattr(self, "btn_ai"):
+            self.btn_ai.setChecked(self.assistant_showing())
 
     def _columns_changed(self, hidden: list[str]) -> None:
         """A column shown or hidden (kept for next time); Earned, shown again, is worked out again."""

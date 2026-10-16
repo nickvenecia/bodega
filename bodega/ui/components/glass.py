@@ -12,7 +12,7 @@ makes room once, not on every frame of the slide).
 
 from __future__ import annotations
 
-from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QRect, QRectF, Qt, QVariantAnimation
+from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QRect, QRectF, Qt, QVariantAnimation, Signal
 from PySide6.QtGui import QColor, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap
 from PySide6.QtWidgets import QWidget
 
@@ -163,6 +163,8 @@ class Dock(QWidget):
     While it slides, a table beside it (`follower`) is shown as two still pictures that move apart or
     together (a live table is too slow to redraw on every step)."""
 
+    toggled = Signal(bool)  # opened or closed
+
     def __init__(self, content: QWidget, root: GlassRoot, top_of: QWidget, body):
         super().__init__(root)
         self.root = root
@@ -245,6 +247,7 @@ class Dock(QWidget):
         if on == self.opened:
             return
         self.opened = on
+        self.toggled.emit(on)
         self._anim.stop()
         self._thaw()
         if on:
