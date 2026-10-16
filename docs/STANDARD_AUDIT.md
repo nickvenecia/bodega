@@ -31,6 +31,9 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **183 fixed, 21 partly, 23 not
+started (larger redesigns) and 26 waiting on the owner**.
+
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
 |---|---|---|---|---|---|---|---|
 | 19.1 Foundations and look (V) | 43 | 14 | 25 | 0 | 10 | 15 | 4 |
@@ -50,6 +53,120 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 | 19.12 Testing (T) | 18 | 4 | 13 | 0 | 11 | 2 | 1 |
 | 19.12 Process (G) | 5 | 1 | 4 | 0 | 2 | 2 | 0 |
 | **All** | **521** | **111** | **253** | **39** | **135** | **79** | **157** |
+
+## After the fixes
+
+Checked again on 2026-10-16 at version 1.3.0 (before it's merged), with every one of the 253
+failures above looked at in the code and its tests by five read-only reviews, and the ones fixed since then checked
+the same way. "Fixed" means the code does what the check asks and a test holds it there; "Partly" says what's left;
+"Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
+[PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
+
+**Of the 253 failures: Fixed 183 · Partly 21 · Open 23 · Waiting on the owner 26.**
+
+### Partly: what's left
+
+| Check | Sev | What's left |
+|---|---|---|
+| A-01 | S2 | Contrast is tested on the tokens (placeholders are the standard's own text-faint, 3.2:1), not on drawn pages. |
+| A-07 | S2 | Text sizes are fixed, so the system's text size and Bold Text aren't followed (with V-16). |
+| AI-11 | S2 | A chat answer doesn't name the pieces it drew on, and no single suggestion is marked as uncertain. |
+| AI-13 | S1 | Tested with a fake provider only: no set of real naming and grouping tasks run against real models. |
+| AI-18 | S3 | The message box has no attach button, and files can't be dropped on the assistant. |
+| AI-30 | S2 | No test tries each real provider once with a bad key to check its refusal reads in plain words. |
+| C-01 | S2 | The start tiles on an empty library are cards that act as buttons. |
+| C-17 | S3 | A piece's head has its photo, name, Where line and company · group, but no strip of figures. |
+| C-49 | S2 | A panel's header has ⋯ and ✕ only: no capsule of its main tools (print, edit). |
+| C-65 | S2 | The right-click menu and the panel's ⋯ offer the same commands, but from two lists (see D-04). |
+| C-70 | S3 | No account card at the top of Settings: there's no account service to show yet (accounts.REQUIRED is off). |
+| C-90 | S3 | The profile form is sized by kind; the side panels' fields still stretch to the panel's width. |
+| G-01 | S2 | No overview of what's built that names its commit, and no map of what's in scope. |
+| I-15 | S2 | Many keys are pressed end to end in tests, but not every key in the shortcuts list in its own context. |
+| K-09 | S2 | Each tick is saved as it's made, with its time; who ticked it waits on accounts (D-41). |
+| S-21 | S1 | No lockfile with hashes for every dependency, the Windows installer tool is unpinned, no SBOM. |
+| T-04 | S2 | Tests still reach some controls through private names (about 48 in test_window.py). |
+| T-15 | S2 | Packaged builds check for their own update file, but none downloads and swaps in an update. |
+| T-16 | S2 | No written rule that a pull request carries its real test results; merging before CI is the owner's (26). |
+| T-18 | S2 | Pointer-size measurements exist; the full G.28 check list isn't run in both light and dark. |
+| V-35 | S3 | Inter has no optical sizes, and no style sets Apple's tracking per size. |
+
+### Not started: the larger redesigns
+
+| Check | Sev | What it needs |
+|---|---|---|
+| C-25 | S2 | Import and Review are wide windows; the standard wants them as pages. |
+| C-26 | S2 | Dialogs use the system's frame and a Cancel button: no ✕ circle, no scrim. |
+| C-37 | S3 | No selection bar for acting on several pieces at once (only the count). |
+| C-44 | S2 | Columns reorder and hide from the heading's menu, but rows have no ticks, no figure row, no + for columns. |
+| C-53 | S2 | The print window has no column ticks or order, no letterhead options, no presets. |
+| C-55 | S3 | The table is drawn straight on the page, not in a card. |
+| C-61 | S2 | The print window has no filter cards (column, from, to). |
+| C-73 | S2 | No ticks on table rows. |
+| C-76 | S2 | No batch Check Out / Check In for several rentals. |
+| C-88 | S3 | Tidy Up covers gear names and groups, not renters' names or addresses. |
+| C-108 | S2 | Attached gear sits indented under its piece; the piece doesn't fold them away or sum them up (a table rewrite). |
+| C-120 | S3 | Settings › General is sections, not grouped rows in cards; Profiles is one long form. |
+| D-04 | S3 | Commands are listed by hand in each menu (menu bar, + menus, ⋯, right-click), not from one table. |
+| D-41 | S3 | No booked by / checked out by / checked in by on a rental: waits on accounts. |
+| I-09 | S3 | Scroll bars are drawn by Bodega's stylesheet, not the system's own. |
+| I-18 | S3 | Hover changes a fill only, with no lift. |
+| N-18 | S2 | A renter is edited in a pop-up window, not a sheet or the panel. |
+| T-09 | S2 | Tests end with os._exit because Qt can crash as Python shuts down on Windows; needs a Windows run to pin. |
+| T-13 | S3 | Tests find controls by their code names, not by role and visible words. |
+| V-16 | S2 | Text sizes are fixed points: nothing follows the system's text size, no 200% check (a layout pass). |
+| V-26 | S3 | The light look's greys are fixed values, not tinted from the accent. |
+| V-41 | S3 | The app icon is drawn by code with fixed numbers; there's no single vector source. |
+| V-42 | S3 | No style sets its own line height (plain-text labels in Qt take the font's). |
+
+### Waiting on the owner
+
+| Check | Sev | Decided by |
+|---|---|---|
+| A-02 | S2 | question 25 |
+| A-11 | S2 | question 23 |
+| AI-14 | S3 | question 15 |
+| AI-28 | S2 | question 15 |
+| C-27 | S2 | question 22 |
+| C-28 | S2 | question 22 |
+| C-82 | S2 | question 10 |
+| C-129 | S2 | question 8 |
+| D-08 | S1 | the whole-dollar lists in PROJECT_ADDENDUM.md |
+| D-20 | S3 | question 13 |
+| D-22 | S2 | question 7 |
+| D-37 | S1 | question 9 |
+| G-03 | S3 | the session log (docs/SESSION_LOG.md), a proposed departure |
+| G-05 | S3 | question 30 |
+| I-12 | S3 | question 19 |
+| I-13 | S2 | question 19 |
+| N-15 | S2 | question 21 |
+| O-01 | S1 | question 26: branch protection (the type check of core/ and services/ now runs in CI) |
+| R-03 | S1 | question 14 |
+| S-16 | S1 | the updater's helper script in PROJECT_ADDENDUM.md |
+| S-23 | S1 | question 27 |
+| V-22 | S3 | the accent in PROJECT_ADDENDUM.md |
+| V-28 | S3 | the accent in PROJECT_ADDENDUM.md |
+| W-05 | S3 | question 20 |
+| W-06 | S2 | question 23 |
+| W-08 | S3 | question 20 |
+
+### Fixed
+
+- **A**: A-03, A-05, A-06, A-10, A-12, A-13
+- **AI**: AI-01, AI-03, AI-07, AI-08, AI-09, AI-15, AI-16, AI-17, AI-19, AI-20, AI-23, AI-24, AI-29, AI-31
+- **C**: C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-19, C-21, C-23, C-24, C-29, C-31, C-32, C-34, C-38, C-39, C-42, C-45, C-47, C-50, C-51, C-54, C-58, C-59, C-66, C-67, C-69, C-72, C-100, C-105, C-106, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
+- **D**: D-01, D-02, D-03, D-05, D-06, D-07, D-10, D-11, D-12, D-15, D-16, D-18, D-21, D-23, D-24, D-25, D-26, D-31, D-32, D-34, D-42, D-49, D-51
+- **G**: G-02
+- **I**: I-01, I-02, I-03, I-04, I-06, I-07, I-08, I-10, I-11, I-14, I-19, I-20, I-21, I-23, I-24, I-25, I-26, I-29, I-30, I-31
+- **K**: K-02, K-03, K-04, K-06, K-07, K-10, K-12
+- **N**: N-01, N-02, N-03, N-04, N-05, N-06, N-17
+- **O**: O-04, O-05, O-07, O-09, O-11
+- **P**: P-01, P-02, P-03, P-04, P-09, P-13, P-15, P-16
+- **R**: R-01, R-05
+- **S**: S-17, S-25
+- **T**: T-01, T-03, T-05, T-06, T-11, T-12, T-14
+- **V**: V-04, V-08, V-09, V-11, V-13, V-14, V-15, V-17, V-18, V-19, V-23, V-24, V-25, V-32, V-33, V-36, V-37, V-40
+- **W**: W-02, W-03, W-04, W-09, W-10, W-11, W-12, W-14, W-15, W-16, W-17, W-18, W-19, W-20, W-21, W-22
+- **X**: X-01, X-06, X-08
 
 ## The top ten fixes
 
@@ -673,7 +790,10 @@ there as proposed):
 
 ## Questions for the owner
 
-**Answer these first** (they decide how the business works, so the S1 fixes wait on them):
+Questions 1 to 7 are answered (in [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md), "Decided", with who and when) and
+done; 8 to 30 are still open.
+
+**Answered first** (they decided how the business works, so the S1 fixes waited on them):
 
 1. **When does a rental's price lock**: when it's booked, or when it goes out? After that, should it change only
    through a recorded Reopen? (K-12)

@@ -6,6 +6,8 @@ Shipped as a PyInstaller app; GitHub Actions builds the downloads.
 The owner is a filmmaker (director/DP/editor/colorist), not a full-time developer. Explain changes in plain words.
 
 ## Read these first
+- **[docs/SESSION_LOG.md](docs/SESSION_LOG.md)**: where things stand ("Start here"), what each session changed and
+  left open.
 - **The owner's Universal App Standard** is the destination for how Bodega looks, behaves and is built: Apple first,
   every value from its Appendix A and G. It is the owner's own document, kept out of the repository: a working copy
   sits at `docs/UNIVERSAL_APP_STANDARD.md`, excluded through `.git/info/exclude` (never commit or push it). A fresh
