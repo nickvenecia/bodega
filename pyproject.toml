@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Keep track of your gear, put it in packages, rent it out."
 readme = "README.md"
 license = { text = "GPL-3.0-or-later" }
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 authors = [{ name = "Nick Venecia" }]
 dependencies = ["PySide6-Essentials>=6.7", "certifi>=2024.2", "openpyxl>=3.1"]
 
@@ -33,7 +33,7 @@ bodega = ["assets/*", "assets/fonts/*"]
 # ---------------------------------------------------------------- code style
 [tool.ruff]
 line-length = 110
-target-version = "py311"
+target-version = "py312"
 extend-exclude = ["build", "dist", "vendor"]
 
 [tool.ruff.lint]

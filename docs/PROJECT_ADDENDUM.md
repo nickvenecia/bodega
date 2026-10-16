@@ -112,7 +112,7 @@ ask the owner for it.
 - Data inventory location: the data folder (gear, kits, rentals, renters, profiles, settings, photos, logos, logs);
   AI keys in the keychain
 - Regulations that apply: none known (renters' names, emails, phones and addresses are kept only on this computer)
-- Retention periods: kept until the person deletes them
+- Retention periods: records until the person deletes them; safety copies the newest 14 daily and 20 others; unreadable files set aside until deleted; the log 4 × 1 MB (SECURITY.md, "Where your data is")
 
 ## AI (§14)
 One block per feature (`services/ai/tasks.py`). Every feature is off until the person sets a key, runs on that

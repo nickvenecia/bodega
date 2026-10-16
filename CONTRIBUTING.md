@@ -11,11 +11,12 @@ own rulebook: **[DESIGN.md](DESIGN.md)**. Read both before changing anything.
 bodega/
   core/        Gear, packages, rentals: data, money, dates, pricing, importing, saving. No Qt imports — ever.
   doc/         Drawing the pages (QtGui only, no widgets): fonts, layout, PDF/PNG/print.
-  ui/          Everything you see. Qt Widgets. Talks to core/ and doc/, never the other way round.
+  services/    Outside Bodega (the keychain, AI providers, Saldo, accounts, feedback). No Qt.
+  ui/          Everything you see. Qt Widgets. Talks to core/, doc/ and services/, never the other way round.
   app.py       Starts the window (fonts, stylesheet, one window at a time, --smoke-test)
   cli.py       Same drawing without a window: `python -m bodega cli ...`
-tests/         One test file per area (test_money.py, test_store.py, test_render.py, test_window.py…)
-scripts/       make_icon.py, make_fonts.py, release_notes.py (a Release's text, from CHANGELOG.md)
+tests/         One test file per area (test_pricing.py, test_store.py, test_documents.py, test_window.py…)
+scripts/       make_icon.py, release_notes.py (a Release's text, from CHANGELOG.md)
 packaging/     Installer files per OS
 ```
 
@@ -63,8 +64,10 @@ packaging/     Installer files per OS
 
 **Network**
 8. HTTPS only, with certificate checks on (`net.ssl_context()`; never `verify=False` or `CERT_NONE`).
-9. The only network use is the update check and download (GitHub). Updates are checked against the
-   **SHA-256 GitHub publishes** before they're used. Gear lists and rentals are never sent anywhere.
+9. Bodega goes online only for what the person asks for: the update check and download (GitHub), a Google
+   Sheet they import, a link they ask about (Check Price, Update from Links, a photo from a link) and their own AI
+   provider. Every link goes through `core/web.py`; SECURITY.md lists what each one receives. Updates are checked
+   against the **SHA-256 GitHub publishes** before they're used. Rentals and renters are never sent anywhere.
 10. Pin build-time downloads to official sources with checksums (appimagetool in build_appimage.sh).
 
 **Input from outside**
@@ -93,8 +96,10 @@ packaging/     Installer files per OS
 
 ## 4. Threads
 
-- Everything runs on the main thread except the update check and download (`ui/update_dialog.py`),
-  which talk to the window with **signals**. Drawing a page takes milliseconds; keep it that way.
+- Anything that waits on the internet or may take more than a moment runs off the main thread and talks to the
+  window with **signals**: `ui/components/worker.py` (`Worker`: AI jobs, photos from links, with progress and
+  Stop), the update check and download (`ui/dialogs/update.py`), Check Price (`ui/panels/item.py`). Drawing a page
+  takes milliseconds; keep it that way.
 
 ---
 
@@ -107,8 +112,10 @@ packaging/     Installer files per OS
 
 ## 6. Tests
 
-- Every change to `core/` or `doc/` comes with a test. Name it after the behavior:
+- Every change to `core/` or `doc/` comes with a test. Name it after the behavior, as a sentence:
   `test_a_broken_file_is_set_aside_not_lost`.
+- A fix comes with a test that fails on the code before the fix: run it once without the fix and see it fail.
+- Never skip, disable or loosen a test to get green.
 - Tests never touch real data: `tests/conftest.py` gives every test its own empty data folder.
 - UI changes: check screenshots (`QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR`).
 - Before a release, the packaged app must pass `--smoke-test` (CI does this on every platform).

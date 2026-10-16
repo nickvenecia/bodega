@@ -15,8 +15,9 @@ How it works
 - prepare(): unpacks what needs unpacking and writes a small helper script that waits for Bodega to
   quit, puts the new version where the old one was, and opens it again. MainWindow runs it and quits.
 
-Nothing is sent except the request for the release list (no IDs, no usage data). The check runs at
-most once a day, and can be turned off.
+Nothing is sent except the request for the release list (no IDs, no usage data: GitHub sees the internet
+address and Bodega's version). The check runs once each time Bodega opens (never from source), and can be
+turned off in Settings.
 """
 
 from __future__ import annotations

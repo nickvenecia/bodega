@@ -1,6 +1,7 @@
 """Screenshots of the window without a display, for checking UI changes.
 
     QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR [SHEET.xlsx]
+    BODEGA_LOOK=dark QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR    (the dark look)
 
 Uses a throwaway data folder with the made-up sample rental house (or a spreadsheet you point it at),
 never your real gear.
@@ -24,6 +25,7 @@ from bodega.core.paths import use_data_dir
 from bodega.core.store import Library
 
 SIZE = (1600, 1000)
+LOOK = os.environ.get("BODEGA_LOOK", "light")  # "light" or "dark"
 
 
 def wait(ms: int = 400) -> None:
@@ -83,6 +85,7 @@ def main(out: Path, sheet: Path | None = None) -> int:
         w = MainWindow(lib)
         w._restored = True  # a fixed size, not the screen's
         w.resize(*SIZE)
+        w.set_look(LOOK)
         w.show()
         return w
 

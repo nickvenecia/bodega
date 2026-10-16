@@ -818,8 +818,7 @@ def test_dragging_a_row_shifts_the_others_live_and_moves_it(win):
     win.go("gear")
     rows = [r for r in t.item_rows() if not r.isHidden()]
     first, third = rows[0], rows[2]
-    if first.parent() is not third.parent():
-        pytest.skip("sample's first group is too small")
+    assert first.parent() is third.parent()  # the sample's first group has room to drag in
     first_id, third_id = first.data(0, ID), third.data(0, ID)  # the rows are rebuilt after the drop
     y0 = t.visualItemRect(first).center().y()
     t.start_lift(first, y0)

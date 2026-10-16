@@ -293,3 +293,11 @@ def test_a_new_version_found_on_opening_shows_right_away(qapp, data_folder, monk
     win._found_release(update.Release("0.0.1"), quiet=True)  # nothing newer: nothing shows
     assert shown == ["99.0.0"]
     win.close()
+
+
+def test_a_build_shows_the_commit_it_was_made_from(monkeypatch):
+    from bodega import __version__, _build, version_label
+
+    assert version_label() == __version__  # from source: no commit to show
+    monkeypatch.setattr(_build, "COMMIT", "a1b2c3d")
+    assert version_label() == f"{__version__} (a1b2c3d)"

@@ -10,7 +10,7 @@ from PySide6.QtCore import QPoint
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QApplication, QLineEdit, QMenu, QPlainTextEdit, QTextEdit, QToolButton
 
-from bodega import __version__
+from bodega import version_label
 from bodega.core.fileutil import reveal
 from bodega.core.paths import data_dir, log_dir
 from bodega.ui.dialogs.common import about
@@ -121,7 +121,7 @@ class MenusMixin:
         )  # on the Mac: in the Bodega menu, like Mac apps
         act(h, "Open Data Folder", self.open_data_folder)
         act(h, "Open Log File", lambda: reveal(log_dir() / "bodega.log"))
-        act(h, "About Bodega", lambda: about(self, __version__, str(data_dir())))
+        act(h, "About Bodega", lambda: about(self, version_label(), str(data_dir())))
         bar.setVisible(sys.platform == "darwin")
 
         e = QMenu(self.btn_export)  # Import & Export

@@ -16,7 +16,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QStackedWidget, QWidget
 
-from bodega import __version__
+from bodega import version_label
 from bodega.core import backups, dates, errors
 from bodega.core.paths import data_dir
 from bodega.core.store import Library
@@ -177,7 +177,7 @@ class SettingsDialog(QDialog):
         )
         self.auto.toggled.connect(self._auto)
         upd.add(self.auto)
-        version = ElidedLabel(f"Version {__version__}")
+        version = ElidedLabel(f"Version {version_label()}")
         version.setObjectName("Muted")
         upd.add(version)  # checking now is a command: the profile menu and Bodega › Check for Updates…
         lay.addWidget(upd)
