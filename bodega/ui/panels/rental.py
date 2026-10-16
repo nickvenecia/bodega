@@ -361,7 +361,7 @@ class RentalPanel(DetailsBase):
         # who
         sec = Section("From")
         row = hbox(spacing=tokens.SPACE_2)
-        self.business = picker()
+        self.business = picker(title="Profile")
         self.edit_business = QPushButton("Edit…")
         self.edit_business.setToolTip("Your name, logo, pricing and standard terms")
         row.addWidget(self.business, 1)
@@ -370,7 +370,7 @@ class RentalPanel(DetailsBase):
         g["who"].add(sec)
         sec = Section("Renter")
         row = hbox(spacing=tokens.SPACE_2)
-        self.client = picker("Choose a Renter")
+        self.client = picker("Choose a Renter", "Renter")
         self.edit_client = QPushButton("Edit…")
         row.addWidget(self.client, 1)
         row.addWidget(self.edit_client)

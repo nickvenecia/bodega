@@ -188,6 +188,7 @@ LIST_INSET = SPACE_1_5  # its inset
 LIST_ROW_R = RADIUS_SM  # a row's corners: 14 − 6, concentric
 LIST_ROW_H = CHOICE_ROW_H
 LIST_GAP = 0
+LIST_SEARCH_ABOVE = 12  # a list longer than this always has search
 AVATAR = 32  # your profile's initials, bottom of the sidebar
 ASSISTANT_ICON = 28  # the assistant's face next to its title
 ASSISTANT_ICON_BIG = 64  # and saying hi in an empty chat

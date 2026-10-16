@@ -189,6 +189,8 @@
 - The Assistant's header has Clear Chat, to start over, and a ⋯ with AI Settings…. Before the first question it
   offers a few to try: click one and it's in the box, ready to send.
 - Anything that's off (a button, a field, a switch, a menu item) is dimmed the same way everywhere, as on a Mac.
+- With more than 12 renters, groups or profiles to choose from, their dropdown opens as a list you can search:
+  type a few letters, then Return.
 - A page's title, the list under it and the calendar now start at one left edge and end at one right edge, lined
   up with the buttons in the top bar.
 - A deposit of 0% in your profile now means no deposit (it used to suggest 10%), and a sheet's 0% day rate is kept

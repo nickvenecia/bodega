@@ -1107,9 +1107,38 @@ def icon_button(name: str, tip: str, color: str = "", size: int = tokens.ICON_SM
     return b
 
 
-def picker(placeholder: str = "") -> QComboBox:
+class Picker(QComboBox):
+    """A dropdown of your own things (profiles, renters, groups). Past LIST_SEARCH_ABOVE choices, opening it
+    opens a list you can search instead (dialogs.common.pick_from), once the click is over."""
+
+    def __init__(self, title: str, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.title = title
+
+    def _rows(self) -> list[int]:
+        return [
+            i for i in range(self.count()) if self.itemData(i, Qt.ItemDataRole.AccessibleDescriptionRole) != "separator"
+        ]
+
+    def showPopup(self) -> None:
+        if len(self._rows()) <= tokens.LIST_SEARCH_ABOVE:
+            super().showPopup()
+            return
+        QTimer.singleShot(0, self, self._search)
+
+    def _search(self) -> None:
+        from bodega.ui.dialogs.common import pick_from
+
+        rows = [(str(i), self.itemText(i)) for i in self._rows()]
+        picked = pick_from(self.window(), self.title, rows, "Choose", current=str(self.currentIndex()))
+        if picked is not None:
+            self.setCurrentIndex(int(picked))
+            self.activated.emit(int(picked))
+
+
+def picker(placeholder: str = "", title: str = "Choose") -> Picker:
     """A dropdown of your own things (profiles, renters) that never widens the panel for a long name."""
-    c = QComboBox()
+    c = Picker(title)
     c.setCursor(Qt.CursorShape.PointingHandCursor)
     c.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
     c.setMinimumContentsLength(1)

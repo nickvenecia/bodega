@@ -212,7 +212,7 @@ class ItemPanel(DetailsBase):
         row.addWidget(sec, 1)
         b.add(row)
         sec = Section("Group")
-        self.group = picker("None")
+        self.group = picker("None", "Group")
         sec.add(self.group)
         b.add(sec)
         row = hbox(spacing=tokens.SPACE_2)

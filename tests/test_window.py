@@ -1554,3 +1554,29 @@ def test_every_page_shares_one_left_edge_and_one_right_edge(win):
     win.go("calendar")
     QApplication.processEvents()
     assert x(win.calendar.title) == x(win.title)
+
+
+def test_a_long_list_of_renters_opens_as_a_list_you_can_search(win, monkeypatch):
+    from bodega.core.model import Client
+    from bodega.ui.dialogs import common
+    from bodega.ui.style import tokens
+
+    for n in range(tokens.LIST_SEARCH_ABOVE + 3):
+        win.lib.save_client(Client(name=f"Renter {n:02d}", company=f"Company {n:02d}"))
+    r = next(iter(win.lib.rentals.values()))
+    win.go("rentals")
+    win.open("rentals", r.id)
+    box = win.rentals.client
+    win.rentals.refresh_clients()
+    asked = []
+
+    def pick(_parent, title, choices, _action, current=None):
+        asked.append((title, len(choices)))
+        return next(key for key, words in choices if words.startswith("Renter 07"))
+
+    monkeypatch.setattr(common, "pick_from", pick)
+    box.showPopup()
+    wait_for(lambda: asked)
+    QApplication.processEvents()
+    assert asked[0][0] == "Renter" and asked[0][1] > tokens.LIST_SEARCH_ABOVE
+    assert win.lib.rentals[r.id].client.name == "Renter 07"  # picked, as if from the dropdown

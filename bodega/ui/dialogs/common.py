@@ -207,9 +207,11 @@ def ask_choice(parent: QWidget, title: str, text: str, choices: list[tuple[str, 
     return pick.currentData()
 
 
-def pick_from(parent: QWidget, title: str, choices: list[tuple[str, str]], action: str) -> str | None:
+def pick_from(
+    parent: QWidget, title: str, choices: list[tuple[str, str]], action: str, current: str | None = None
+) -> str | None:
     """One of many choices ((key, words) each) from a list you can search: type to narrow it, ↓ into the list,
-    Return or a double-click picks. The key, or None if cancelled."""
+    Return or a double-click picks (`current` starts picked). The key, or None if cancelled."""
     from PySide6.QtWidgets import QListWidget, QListWidgetItem
 
     from bodega.core import search
@@ -233,7 +235,8 @@ def pick_from(parent: QWidget, title: str, choices: list[tuple[str, str]], actio
         item = QListWidgetItem(label)
         item.setData(Qt.ItemDataRole.UserRole, key)
         box.addItem(item)
-    box.setCurrentRow(0)
+    keys = [key for key, _label in choices]
+    box.setCurrentRow(keys.index(current) if current in keys else 0)
     lay.addWidget(box)
 
     def narrow(text: str) -> None:
