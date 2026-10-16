@@ -223,4 +223,9 @@ def send(lib, r: Rental, b: Business | None, profile: dict) -> tuple[str, bool]:
         inv, updated = fresh, False
     write_json(folder / f"{inv['id']}.json", inv)
     r.saldo_invoice, r.saldo_number = inv["id"], str(inv.get("number", ""))
+    r.happened(
+        f"Draft invoice {r.saldo_number} updated in Saldo"
+        if updated
+        else f"Sent to Saldo as {r.saldo_number}"
+    )
     return r.saldo_number, updated

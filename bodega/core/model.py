@@ -340,6 +340,28 @@ class CheckRow(Record):
 
 
 @dataclass
+class RentalEvent(Record):
+    """One line of a rental's history: when, and what happened ("Booked", "Number changed to …")."""
+
+    at: str = ""  # ISO time
+    what: str = ""
+    newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
+
+    @classmethod
+    def from_dict(cls, d: dict) -> RentalEvent:
+        return _read(cls, d)
+
+
+STATUS_EVENTS = {  # a rental's status, as its history says it
+    "quote": "Made a quote again",
+    "booked": "Booked",
+    "out": "Marked out",
+    "returned": "Marked returned",
+    "cancelled": "Cancelled",
+}
+
+
+@dataclass
 class Rental(Record):
     id: str = field(default_factory=new_id)
     number: str = ""
@@ -370,6 +392,9 @@ class Rental(Record):
     checked_in: str = ""  # when it was checked back in
     saldo_invoice: str = ""  # Send to Saldo: the invoice (its id in Saldo) this rental became
     saldo_number: str = ""  # …and its number
+    history: list[RentalEvent] = field(
+        default_factory=list
+    )  # what happened to it, oldest first; only added to
     created: str = field(default_factory=now_iso)
     updated: str = field(default_factory=now_iso)
     newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
@@ -381,7 +406,16 @@ class Rental(Record):
         r.lines = [RentalLine.from_dict(x) for x in r.lines if isinstance(x, dict)]
         r.week_days = r.week_days if r.week_days in WEEK_DAYS else 0
         r.checks = [CheckRow.from_dict(x) for x in r.checks if isinstance(x, dict)]
+        r.history = [RentalEvent.from_dict(x) for x in r.history if isinstance(x, dict)]
         return r
+
+    def happened(self, what: str) -> None:
+        """Add a line to its history (it's only ever added to)."""
+        self.history.append(RentalEvent(now_iso(), what))
+
+    def deletable(self) -> bool:
+        """Only a quote can be deleted; a rental that's been booked is cancelled instead, and kept."""
+        return self.status == "quote"
 
     def own_dates(self, line: RentalLine) -> bool:
         return (

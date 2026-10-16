@@ -55,6 +55,18 @@ def fmt(d: date | None) -> str:
     return f"{MONTHS[d.month - 1]} {d.day}, {d.year}"
 
 
+def fmt_moment(stamp: str) -> str:
+    """ "2026-10-16T09:41:00" -> "Oct 16, 2026, 9:41 AM" ("" if it isn't a time)."""
+    from datetime import datetime
+
+    try:
+        when = datetime.fromisoformat(str(stamp))
+    except ValueError:
+        return ""
+    hour = when.hour % 12 or 12
+    return f"{fmt(when.date())}, {hour}:{when.minute:02d} {'AM' if when.hour < 12 else 'PM'}"
+
+
 def fmt_short(d: date | None) -> str:
     """date(2026, 10, 10) -> "Oct 10"."""
     if d is None:

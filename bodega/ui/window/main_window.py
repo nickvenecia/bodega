@@ -90,6 +90,7 @@ class MainWindow(
         self.items = ItemPanel(self.lib)
         self.packages = PackagePanel(self.lib)
         self.rentals = RentalPanel(self.lib)
+        self.rentals.may_hold = self.may_hold
         self.assistant = self._build_assistant()
         self.inspector = glass(QStackedWidget())  # the glass panel on the right…
         for w in (self.items, self.packages, self.rentals, self.assistant):
@@ -651,6 +652,12 @@ class MainWindow(
         items = [("copy", "Duplicate", lambda: self.duplicate(kind, obj_id))]
         if kind == "rentals":
             items.append(("file", "Agreement…", lambda: self.show_pages(("rental", obj_id))))
+            r = self.lib.rentals.get(obj_id)
+            if r is not None and not r.deletable():  # a booked rental is cancelled, never deleted
+                if r.status != "cancelled":
+                    items += [("", "-", None), ("x", "Mark as Cancelled…", lambda: self.cancel_rental(r))]
+                menu(self, items).exec(pos)
+                return
         items += [("", "-", None), ("trash", "Delete…", lambda: self.delete(kind, obj_id))]
         menu(self, items).exec(pos)
 

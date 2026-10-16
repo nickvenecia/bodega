@@ -240,6 +240,8 @@ class PagesMixin:
     def _mark_booked(self) -> None:
         r = self._page_rental()
         if r is not None and r.status == "quote":
+            if not self.may_hold(r, "booked"):
+                return
             r.status = "booked"
             r.auto_number = False
             self.lib.save_rental(r)

@@ -149,6 +149,7 @@ class Library:
         self.unsaved: set[str] = set()
         self.on_unsaved: Callable[[], None] | None = None
         self.newer_format = False
+        self._as_saved: dict[str, tuple[str, str]] = {}  # each rental's status and number when last saved
 
     # ------------------------------------------------------------------ files
     @property
@@ -209,6 +210,7 @@ class Library:
             b.logo = Path(b.logo).name if b.logo else ""
         self.untangle()
         self._settle_rentals()
+        self._as_saved = {r.id: (r.status, r.number) for r in self.rentals.values()}
         log.info(
             "loaded %d items, %d packages, %d rentals, %d renters from %s",
             len(self.items), len(self.packages), len(self.rentals), len(self.clients), self.root,
@@ -336,9 +338,26 @@ class Library:
         from bodega.core import pricing
 
         pricing.settle(self, r, self.businesses.get(r.business_id) or self.pricing())  # booked: prices hold
+        self._note_history(r)
         r.updated = now_iso()
         self.rentals[r.id] = r
         self._write(r.id, self._rental_dir / f"{r.id}.json", r.to_dict())
+
+    def _note_history(self, r: Rental) -> None:
+        """A rental's history gets what changed since it was last saved: made, its status, its number."""
+        from bodega.core.model import STATUS_EVENTS
+
+        was = self._as_saved.get(r.id)
+        if was is None:
+            if not r.history:
+                r.happened(f"Made as {'a quote' if r.status == 'quote' else STATUS_EVENTS[r.status].lower()}")
+        else:
+            status, number = was
+            if r.status != status:
+                r.happened(STATUS_EVENTS[r.status])
+            if r.number != number and number:
+                r.happened(f"Number changed from {number} to {r.number or '(none)'}")
+        self._as_saved[r.id] = (r.status, r.number)
 
     def save_settings(self) -> None:
         fmt = self.settings.get("format")
@@ -503,6 +522,16 @@ class Library:
         if it.group:
             self._save_groups(self.groups())
         return it
+
+    def rentals_with(self, item_id: str) -> list[Rental]:
+        """Rentals that have this piece on them, itself or in a kit."""
+        kits = {p.id for p in self.packages.values() if any(ln.item_id == item_id for ln in p.lines)}
+        return [
+            r
+            for r in self.rentals.values()
+            if any((ln.kind == "item" and ln.ref == item_id) or (ln.kind == "package" and ln.ref in kits)
+                   for ln in r.lines)
+        ]  # fmt: skip
 
     def delete_item(self, item_id: str) -> None:
         self.delete_items([item_id])
@@ -729,6 +758,10 @@ class Library:
         r.number = self._issue(b, dates.today().year)
         r.lines = [RentalLine.from_dict(ln.to_dict()) for ln in src.lines]
         r.created = now_iso()
+        r.checks, r.checked_out, r.checked_in = [], "", ""  # a new quote: nothing has gone out yet
+        r.saldo_invoice = r.saldo_number = ""
+        r.history = []
+        r.happened(f"Made as a quote, from {src.number}")
         self.save_rental(r)
         return r
 
@@ -736,6 +769,7 @@ class Library:
         if (r := self.rentals.pop(r_id, None)) is not None:
             self._spend_number(r.number)
         self.unsaved.discard(r_id)
+        self._as_saved.pop(r_id, None)
         f = self._rental_dir / f"{r_id}.json"
         try:
             f.unlink(missing_ok=True)

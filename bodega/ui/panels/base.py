@@ -82,12 +82,12 @@ class DetailsBase(SidePanel):
             b.show()
         self.footer.setVisible(self.footer_lay.count() > 0)
 
-    def menu_action(self, icon: str, text: str, slot) -> None:
-        """A command under the header's ⋯ (Duplicate, Delete…)."""
+    def menu_action(self, icon: str, text: str, slot):
+        """A command under the header's ⋯ (Duplicate, Delete…). Returns its QAction (None for "-")."""
         if text == "-":
             self.more_menu.addSeparator()
-        else:
-            self.more_menu.addAction(theme.menu_icon(icon), text, lambda: self.later(slot))
+            return None
+        return self.more_menu.addAction(theme.menu_icon(icon), text, lambda: self.later(slot))
 
     def header_button(self, text: str, primary: bool = False) -> QPushButton:
         """A button in the panel's header (Agreement…, Rent This…), shown only while something is open."""

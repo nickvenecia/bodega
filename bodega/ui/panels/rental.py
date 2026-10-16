@@ -7,6 +7,7 @@ already promised for those dates, in repair, or more than you own is flagged und
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 
 from PySide6.QtCore import QTimer, Signal
@@ -67,6 +68,9 @@ def _billed(d: pricing.Days) -> str:
 def _index(lines: list[RentalLine], line: RentalLine) -> int:
     """Where this very line is (two lines can be equal, so never compare them)."""
     return next((i for i, x in enumerate(lines) if x is line), -1)
+
+
+HOLDS = ("booked", "out")  # statuses that hold their gear: picking one over a shortage asks first
 
 
 class _Head(QFrame):
@@ -305,6 +309,7 @@ class RentalPanel(DetailsBase):
         "gear": ("Gear", True),
         "money": ("Money", True),
         "agreement": ("Agreement", False),
+        "history": ("History", False),
     }
 
     changed = Signal(object)  # Rental
@@ -325,6 +330,8 @@ class RentalPanel(DetailsBase):
         super().__init__(parent)
         self.lib = lib
         self.r: Rental | None = None
+        # (rental, "booked" or "out") -> may it hold gear that's short? (the window asks; None: never asked)
+        self.may_hold: Callable[[Rental, str], bool] | None = None
         self.editors: list[LineEditor] = []
         self.totals: pricing.Totals | None = None
         self.shorts: list[pricing.Short] = []
@@ -342,7 +349,9 @@ class RentalPanel(DetailsBase):
         self.menu_action("check", "Check In…", lambda: self.r and self.check_wanted.emit(self.r.id, True))
         self.menu_action("receipt", "Send to Saldo…", lambda: self.r and self.saldo_wanted.emit(self.r.id))
         self.menu_action("", "-", None)
-        self.menu_action("trash", "Delete Rental…", lambda: self.r and self.delete_wanted.emit(self.r.id))
+        self.delete_act = self.menu_action(
+            "trash", "Delete Rental…", lambda: self.r and self.delete_wanted.emit(self.r.id)
+        )  # a booked one: Mark as Cancelled… (it's never deleted)
         self.sheet.clicked.connect(lambda: self.r and self.sheet_wanted.emit(self.r.id))
 
         # who
@@ -496,6 +505,10 @@ class RentalPanel(DetailsBase):
         row.addWidget(self.save_terms)
         row.addStretch(1)
         g["agreement"].add(row)
+        self.history = QLabel()  # what happened to it, newest first
+        self.history.setObjectName("Muted")
+        self.history.setWordWrap(True)
+        g["history"].add(self.history)
 
         self._connect()
         self.form.hide()
@@ -551,6 +564,23 @@ class RentalPanel(DetailsBase):
         self._edit("number", t)
         self._show_clash()
 
+    def _show_delete(self) -> None:
+        r = self.r
+        if r is None:
+            return
+        self.delete_act.setText("Delete Rental…" if r.deletable() else "Mark as Cancelled…")
+        self.delete_act.setVisible(r.deletable() or r.status != "cancelled")
+
+    def show_history(self) -> None:
+        """Its history, newest first (it's written as it's saved)."""
+        r = self.r
+        if r is None:
+            return
+        lines = [f"{dates.fmt_moment(e.at)} · {e.what}" for e in reversed(r.history) if e.what]
+        self.history.setText("\n".join(lines) or "Nothing yet.")
+        last = r.history[-1] if r.history else None
+        self.groups["history"].set_summary(last.what if last else "")
+
     def _show_clash(self) -> None:
         """A number another rental already has is said under the field (it's still yours to keep)."""
         other = self.lib.number_taken(self.r.number, skip=self.r.id) if self.r is not None else None
@@ -590,8 +620,23 @@ class RentalPanel(DetailsBase):
     def _status_picked(self, _i: int) -> None:
         if self._loading or self.r is None:
             return
-        self.r.status = self.status.currentData()
+        new = self.status.currentData()
+        if new in HOLDS and new != self.r.status and pricing.shortages(self.lib, self.r) and self.may_hold:
+            set_combo(self.status, self.r.status)  # asked once the pick is over (it may be said no to)
+            r = self.r
+            QTimer.singleShot(0, self, lambda: self._ask_to_hold(r, new))
+            return
+        self._apply_status(new)
+
+    def _ask_to_hold(self, r: Rental, status: str) -> None:
+        if self.r is r and self.may_hold(r, status):
+            set_combo(self.status, status)
+            self._apply_status(status)
+
+    def _apply_status(self, status: str) -> None:
+        self.r.status = status
         self._show_check()
+        self._show_delete()
         if self.r.status != "quote":
             self.r.auto_number = False
         self.recalc()
@@ -599,8 +644,10 @@ class RentalPanel(DetailsBase):
         self.status_changed.emit(self.r)
 
     def set_status(self, status: str) -> None:
+        """Set its status as given (already asked about, if it needed asking)."""
         set_combo(self.status, status)
-        self._status_picked(0)
+        if self.r is not None and not self._loading:
+            self._apply_status(status)
 
     def _business_picked(self, _i: int) -> None:
         if self.r is None:
@@ -688,6 +735,7 @@ class RentalPanel(DetailsBase):
         self._show_check()
         self.number.setText(r.number)
         self._show_clash()
+        self._show_delete()
         self.project.setText(r.project)
         self.pickup.setDate(to_qdate(r.pickup))
         self.ret.setDate(to_qdate(r.return_date or r.pickup))
@@ -854,4 +902,5 @@ class RentalPanel(DetailsBase):
         g["agreement"].set_summary(
             "Custom terms" if b and r.terms.strip() != terms_for(b).strip() else "Profile terms"
         )
+        self.show_history()
         self.reset_terms.setVisible(bool(b) and r.terms.strip() != terms_for(b).strip())

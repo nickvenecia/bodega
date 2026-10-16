@@ -145,14 +145,64 @@ class EditingMixin:
             self.packages.pkg = None
         else:
             r = self.lib.rentals.get(obj_id)
-            if r is None or not confirm(
-                self, f"Delete {r.number}?", "PDFs you saved stay where they are.", "Delete"
-            ):
+            if r is None:
+                return
+            if not r.deletable():
+                self.cancel_rental(r)
+                return
+            if not confirm(self, f"Delete {r.number}?", "PDFs you saved stay where they are.", "Delete"):
                 return
             self._dirty_rentals.discard(obj_id)
             self.lib.delete_rental(obj_id)
             self.rentals.r = None
         self.go(self.view_key)
+
+    def may_hold(self, r, status: str) -> bool:
+        """Booking or marking out gear that's already promised (or in repair) asks first: a sub-rental can
+        make it deliberate. True to go ahead."""
+        shorts = pricing.shortages(self.lib, r)
+        if not shorts:
+            return True
+        lines = [
+            f"{s.item.name}: needs {s.needed}, {s.free} free ({s.why})" if s.free or s.needed > 1
+            else f"{s.item.name} ({s.why})"
+            for s in shorts[:3]
+        ]  # fmt: skip
+        more = f" And {len(shorts) - 3} more." if len(shorts) > 3 else ""
+        verb = "Book" if status == "booked" else "Mark Out"
+        return confirm(
+            self,
+            f"{verb} {r.number} Anyway?",
+            "Some of its gear isn't free on its dates. "
+            + "; ".join(lines)
+            + "."
+            + more
+            + " Go ahead if you're renting more in to cover it.",
+            f"{verb} Anyway",
+            danger=False,
+        )
+
+    def cancel_rental(self, r) -> None:
+        """A rental that's been booked is cancelled, never deleted: its number, prices and history stay."""
+        if r.status == "cancelled":
+            self.toast(f"{r.number} is cancelled and kept, with its number and history.")
+            return
+        if not confirm(
+            self,
+            f"Mark {r.number} as Cancelled?",
+            "Only a quote can be deleted. A rental that's been booked stays on record: cancelled, its gear is "
+            "free again, and its number, prices and history are kept.",
+            "Mark as Cancelled",
+            danger=False,
+        ):
+            return
+        r.status = "cancelled"
+        self._dirty_rentals.add(r.id)
+        self.flush()
+        if self.rentals.r is r:
+            self.rentals.load(r)
+        self.refresh()
+        self.toast(f"Cancelled {r.number}.", "done")
 
     def delete_gear(self, ids: list[str]) -> None:
         """Delete one piece or many (Cmd+A, Shift or Cmd-click, then Delete), after a warning.
@@ -166,6 +216,21 @@ class EditingMixin:
             for x, _u, _d in pricing.with_attached(self.lib, self.lib.items[i], 1):
                 if x.id not in everything:
                     everything.append(x.id)
+        on_rentals: list[str] = []  # retired instead: a piece rentals point to, with what's attached to it
+        for i in everything:
+            if self.lib.rentals_with(i):
+                for x, _u, _d in pricing.with_attached(self.lib, self.lib.items[i], 1):
+                    if x.id not in on_rentals:
+                        on_rentals.append(x.id)
+        asked = False
+        if on_rentals:
+            if not self._retire_instead(on_rentals, everything):
+                return
+            asked = True  # its alert asked about deleting the rest too
+        everything = [i for i in everything if i not in on_rentals]
+        picked = [i for i in picked if i in everything]
+        if not picked:
+            return
         extra = len(everything) - len(picked)
         names = [self.lib.items[i].name or "New item" for i in picked]
         if len(picked) == 1:
@@ -181,13 +246,46 @@ class EditingMixin:
                 f"The {extra} piece{'s' if extra != 1 else ''} attached go{'' if extra != 1 else 'es'} too. "
             )
         text += "Rentals that had them keep their names."
-        if not confirm(self, title, text, "Delete" if len(everything) == 1 else f"Delete {len(everything)}"):
+        if not asked and not confirm(
+            self, title, text, "Delete" if len(everything) == 1 else f"Delete {len(everything)}"
+        ):
             return
         n = self.lib.delete_items(everything)
         log.info("deleted %d items", n)
         self.items.it = None
         self.go(self.view_key)
         self.toast(f"Deleted {n} pieces." if n != 1 else "Deleted it.", "done")
+
+    def _retire_instead(self, ids: list[str], everything: list[str]) -> bool:
+        """Gear that rentals point to is retired, not deleted (asked first). True to go on with the rest."""
+        main = [i for i in ids if self.lib.items[i].parent not in ids] or ids  # attached ones go with these
+        names = [self.lib.items[i].name or "New item" for i in main]
+        listed = ", ".join(names[:3]) + (f" and {len(names) - 3} more" if len(names) > 3 else "")
+        rest = len([i for i in everything if i not in ids])
+        n = len({r.id for i in ids for r in self.lib.rentals_with(i)})
+        title = f"Retire {names[0]} Instead?" if len(main) == 1 else f"Retire {len(main)} Pieces Instead?"
+        if rest:
+            title = f"Retire {len(ids)} and Delete {rest}?"
+        attached = len(ids) - len(main)
+        text = (
+            f"{listed} {'is' if len(main) == 1 else 'are'} on {n} rental{'s' if n != 1 else ''}, so "
+            f"{'it stays' if len(main) == 1 else 'they stay'} on record"
+            + (f", with the {attached} attached" if attached else "")
+            + ": retired gear can't be booked and is left off your inventory, rate card and labels. You can "
+            "bring it back by changing its status."
+            + (f" The other {rest} {'is' if rest == 1 else 'are'} deleted." if rest else "")
+        )
+        if not confirm(self, title, text, "Retire" if not rest else "Retire and Delete", danger=bool(rest)):
+            return False
+        for i in ids:
+            self.lib.items[i].status = "retired"
+        self.lib.save_items()
+        if not rest:
+            if self.items.it is not None and self.items.it.id in ids:
+                self.items.load(self.items.it)
+            self.refresh()
+            self.toast(f"Retired {listed}.", "done")
+        return True
 
     def _selection_count(self) -> None:
         t = self._table()
@@ -336,6 +434,8 @@ class EditingMixin:
                 r = self.lib.rentals.get(rid)
                 if r is not None:
                     self.lib.save_rental(r)
+                    if r is self.rentals.r:
+                        self.rentals.show_history()  # saving is what writes its history
                 self._dirty_rentals.discard(rid)
         except OSError:
             pass  # the store kept what failed (lib.unsaved), and the banner says so
@@ -489,7 +589,7 @@ class EditingMixin:
         if d.mark:
             if back:
                 r.status, r.checked_in = "returned", now_iso()
-            else:
+            elif r.status == "out" or self.may_hold(r, "out"):
                 r.status, r.checked_out = "out", now_iso()
         self._dirty_rentals.add(r.id)
         self.flush()

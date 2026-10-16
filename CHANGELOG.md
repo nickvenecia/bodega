@@ -29,6 +29,13 @@
   making a second invoice; once Saldo has sent it, a new draft goes beside it. With more than one profile in
   Saldo, Bodega asks once which one each of your profiles sends as. If Saldo is open, it asks you to quit it
   first, so Saldo never gives two invoices the same number.
+- Each rental keeps its history (open History on the rental): when it was made, booked, marked out, returned or
+  cancelled, when its number changed, and when it went to Saldo.
+- Only a quote can be deleted. A rental that's been booked is marked cancelled instead and kept, with its number,
+  prices and history. Gear that's on a rental is retired instead of deleted (with what's attached to it): it can't
+  be booked and is left off your inventory, rate card and labels, and you can bring it back.
+- Booking or marking out a rental whose gear is already promised (or in repair) asks first, and says what's short,
+  instead of only showing a hint. Go ahead if you're renting more in to cover it.
 - Bodega keeps safety copies of your gear, kits, rentals, renters and profiles: one each day you open it (the last
   14 days), and one before each import, Tidy Up Groups, AI change or restore (the last 20).
 - File › Restore from Backup… (also in Settings › Your Data) puts a Back Up zip or a safety copy back. It shows

@@ -552,14 +552,25 @@ def test_attach_and_add_through_the_picker(win, monkeypatch):
 def test_delete_with_confirm(win, monkeypatch):
     from bodega.ui.window import editing
 
-    monkeypatch.setattr(editing, "confirm", lambda *a, **k: True)
+    asked = []
+    monkeypatch.setattr(editing, "confirm", lambda _w, title, *a, **k: asked.append(title) or True)
     fx6 = next(i for i in win.lib.items.values() if i.name.startswith("Sony FX6"))
-    win.delete("gear", fx6.id)
-    assert fx6.id not in win.lib.items
+    assert win.lib.rentals_with(fx6.id)
+    win.delete("gear", fx6.id)  # on a rental: retired, never deleted
+    assert asked[-1] == f"Retire {fx6.name} Instead?" and win.lib.items[fx6.id].status == "retired"
+    free = next(i for i in win.lib.items.values() if not win.lib.rentals_with(i.id) and not i.parent)
+    win.delete("gear", free.id)
+    assert free.id not in win.lib.items
     win.go("rentals")
     win.open("rentals", next(iter(win.lib.rentals)))
     r = win.rentals.r
-    win.delete("rentals", r.id)
+    assert r.status == "booked"
+    win.delete("rentals", r.id)  # booked: cancelled and kept
+    assert asked[-1] == f"Mark {r.number} as Cancelled?" and win.lib.rentals[r.id].status == "cancelled"
+    assert [e.what for e in Library(win.lib.root).load().rentals[r.id].history][-1] == "Cancelled"
+    r.status = "quote"
+    win.rentals.load(r)
+    win.delete("rentals", r.id)  # a quote can go
     assert not win.lib.rentals
     assert win.pages.currentWidget() is win.empty
 
@@ -662,8 +673,12 @@ def test_select_all_and_delete(win, monkeypatch):
     win.go("gear")
     t.select_showing()
     win.delete_gear(t.chosen_ids())
-    assert asked[-1].startswith("Delete all")
-    assert not win.lib.items  # attached gear went with its pieces
+    assert (
+        asked[-1].startswith("Retire ") and " and Delete " in asked[-1]
+    )  # one alert: retire some, delete the rest
+    left = list(win.lib.items.values())
+    assert left and all(i.status == "retired" for i in left)  # with what's attached to them
+    assert all(win.lib.rentals_with(i.id) or i.parent in win.lib.items for i in left)
     assert QKeySequence.StandardKey.SelectAll
 
 
@@ -872,7 +887,7 @@ def test_undo_and_redo(win, monkeypatch):
     monkeypatch.setattr(editing, "confirm", lambda *a, **k: True)
     lib = win.lib
     n = len(lib.items)
-    victim = next(iter(lib.items))
+    victim = next(i for i in lib.items if not lib.rentals_with(i))  # (gear on a rental is retired instead)
     name = lib.items[victim].name
     win.gear_table.setFocus()
     win.delete_gear([victim])
