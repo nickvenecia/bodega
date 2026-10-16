@@ -481,8 +481,10 @@ class Library:
         fallback = Business()
         sheet = self.settings.get("sheet_pricing")
         if isinstance(sheet, dict):
-            fallback.rate_pct = str(sheet.get("rate_pct") or fallback.rate_pct)
-            fallback.value_tax = str(sheet.get("value_tax") or fallback.value_tax)
+            for key in ("rate_pct", "value_tax"):  # a 0 the sheet says is kept: only blank means "not set"
+                said = sheet.get(key)
+                if said is not None and str(said).strip():
+                    setattr(fallback, key, str(said).strip())
         return fallback
 
     def brands(self) -> list[str]:

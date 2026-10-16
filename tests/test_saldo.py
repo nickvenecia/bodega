@@ -187,3 +187,11 @@ def test_a_rental_says_where_its_invoice_stands_in_saldo(tmp_path, saldo_home):
     assert saldo.where(r) == f"Invoice {number} sent from Saldo."
     path.unlink()  # deleted in Saldo
     assert "isn't in Saldo any more" in saldo.where(r)
+
+
+def test_zero_days_to_pay_stays_zero(tmp_path):
+    lib = sample.fill(Library(tmp_path).load())
+    r = next(iter(lib.rentals.values()))
+    inv = saldo.invoice_for(lib, r, None, {"id": "p", "terms_days": 0}, [])
+    assert inv["terms_days"] == 0  # due on receipt, not Saldo's 15
+    assert saldo.invoice_for(lib, r, None, {"id": "p"}, [])["terms_days"] == saldo.TERMS_DAYS

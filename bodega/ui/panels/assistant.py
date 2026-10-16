@@ -1,6 +1,7 @@
-"""The AI assistant, as the panel on the right (the same glass as a piece's details): the toolbar's speech bubble
-or ⌘J slides it in, and it stays while you work. Click a piece and the panel shows the piece; the bubble brings
-the chat back where you left it, still running whatever job it was doing.
+"""The AI assistant, as the panel on the right (the same glass as a piece's details): the toolbar's Assistant
+button or ⌘J slides it in, and it stays while you work. Click a piece and the panel shows the piece; the button
+brings the chat back where you left it, still running whatever job it was doing. Its header has Clear Chat, and
+the ⋯ has AI Settings.
 
 Ask a question or for a change, or start a job (Update from Links, Find Missing Links, Tidy Up Names, Organize
 Groups). Jobs run in the background; what they find opens in the Review window, and nothing changes until you
@@ -28,6 +29,11 @@ from bodega.ui.components.widgets import add_chip, hbox, hint, primary_button, v
 from bodega.ui.components.worker import Worker
 from bodega.ui.style import theme, tokens
 
+EXAMPLES = (
+    "What's all my gear worth?",
+    "Which pieces have no link?",
+    "Put the Aputure lights in a group called Aputure",
+)
 JOBS = [
     (
         "links",
@@ -46,14 +52,14 @@ class AssistantPanel(SidePanel):
     changes_found = Signal(object)  # a request in the chat came back with changes: review them
 
     def __init__(self, parent: QWidget | None = None):
-        super().__init__("Assistant", scroll=False, parent=parent)
+        super().__init__("Assistant", more=True, scroll=False, parent=parent)
         self.worker: Worker | None = None
         self.ask_job = None  # set by the window: () -> (question -> answer)
-        self.header_icon("cog", "AI Settings").clicked.connect(self.setup_wanted.emit)
+        self.clear_btn = self.header_icon("edit", "Clear Chat")
+        self.clear_btn.clicked.connect(self.clear_chat)
+        self.more_menu.addAction(theme.menu_icon("cog"), "AI Settings…", self.setup_wanted.emit)
         lay = self.lay
-        # which AI it is (or, before there is one, the button to connect one)
-        self.who = hint("")
-        lay.addWidget(self.who)
+        # before there's an AI to ask: the way to add one
         self.connect_btn = add_chip("Add an API Key")
         self.connect_btn.clicked.connect(self.setup_wanted.emit)
         row = hbox()
@@ -78,6 +84,14 @@ class AssistantPanel(SidePanel):
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         for w in (self.face, hi, sub):
             hl.addWidget(w)
+        hl.addSpacing(tokens.SPACE_2)
+        self.examples: list[QPushButton] = []
+        for example in EXAMPLES:  # a few things to ask: a click puts it in the question box
+            b = QPushButton(example)
+            b.setObjectName("Ghost")
+            b.clicked.connect(lambda _c=False, q=example: self._suggest(q))
+            self.examples.append(b)
+            hl.addWidget(b, 0, Qt.AlignmentFlag.AlignHCenter)
         hl.addStretch(1)
         lay.addWidget(self.hello, 1)
         self.log = QTextBrowser()
@@ -134,9 +148,6 @@ class AssistantPanel(SidePanel):
     # ------------------------------------------------------------------ state
     def show_setup(self, setup: Setup, scope: str) -> None:
         ready = setup.ready()
-        p = setup.p
-        self.who.setText(f"{p.label} · {setup.model}" if ready and p else "")
-        self.who.setVisible(ready)
         self.connect_btn.setVisible(not ready)
         self.scope.setText(scope)
         busy = self.running()
@@ -151,6 +162,8 @@ class AssistantPanel(SidePanel):
             )
         self.ask_btn.setEnabled(ready and not self.running())
         self.question.setEnabled(ready)
+        for b in self.examples:
+            b.setEnabled(ready)
 
     def running(self) -> bool:
         return self.worker is not None and self.worker.isRunning()
@@ -187,6 +200,16 @@ class AssistantPanel(SidePanel):
             self.worker.wait(tokens.QUIT_WAIT_MS)
 
     # ------------------------------------------------------------------ questions
+    def _suggest(self, question: str) -> None:
+        self.question.setText(question)
+        self.question.setFocus()
+
+    def clear_chat(self) -> None:
+        """Clear Chat: the conversation goes, the hello comes back (a running job carries on)."""
+        self.log.clear()
+        self.log.hide()
+        self.hello.show()
+
     def say(self, who: str, text: str) -> None:
         """Add a line to the conversation (always as plain text: nothing in an answer is formatting)."""
         if self.log.isHidden():

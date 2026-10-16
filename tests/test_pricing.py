@@ -211,6 +211,8 @@ def test_a_suggested_deposit_is_the_profiles_percent_or_ten(lib):
     plain.deposit_pct = "20"
     assert pricing.suggested_deposit(lib, r, plain) == money.whole(value * Decimal("0.20"))
     assert pricing.deposit_pct(None) == pricing.DEFAULT_DEPOSIT_PCT
+    plain.deposit_pct = "0"  # zero is a choice, not "not set"
+    assert pricing.suggested_deposit(lib, r, plain) == 0
 
 
 def test_coming_up_goes_by_every_lines_dates(lib):

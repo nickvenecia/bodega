@@ -6,7 +6,7 @@ from __future__ import annotations
 from PySide6.QtTest import QTest
 
 from bodega.core import sample
-from bodega.core.model import RentalLine
+from bodega.core.model import Business, RentalLine
 from bodega.core.store import Library
 
 
@@ -129,6 +129,13 @@ def test_an_import_keeps_a_copy_first_and_takes_the_sheets_pricing_only_when_ask
     assert b.rate_pct == rate and list((data_folder / "backups").glob("Bodega * before-import.zip"))
     lib.import_items([Item(name="Astera Helios Tube")], ("5", "9"), b)
     assert (b.rate_pct, b.value_tax) == ("5", "9")
+
+
+def test_a_sheets_zero_percent_is_kept_before_there_is_a_profile(data_folder):
+    lib = Library(data_folder).load()
+    lib.settings["sheet_pricing"] = {"rate_pct": "0", "value_tax": ""}
+    assert lib.pricing().rate_pct == "0"  # zero is what the sheet says; only blank falls back
+    assert lib.pricing().value_tax == Business().value_tax
 
 
 def test_a_rentals_status_is_worded_in_one_place():

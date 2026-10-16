@@ -186,6 +186,10 @@
   edge, so it's easy to see where the keyboard is.
 - The Assistant's sign is now a sparkle, the usual sign for AI, and its button stays lit while the Assistant is
   open.
+- The Assistant's header has Clear Chat, to start over, and a ⋯ with AI Settings…. Before the first question it
+  offers a few to try: click one and it's in the box, ready to send.
+- A deposit of 0% in your profile now means no deposit (it used to suggest 10%), and a sheet's 0% day rate is kept
+  as 0%.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

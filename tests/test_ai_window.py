@@ -263,3 +263,24 @@ def test_a_change_asked_for_in_the_chat_goes_through_review(win, monkeypatch):
     _wait(win.assistant.worker)
     assert reviewed == [["Cases"]]  # it came to Review before anything changed
     assert any(i.group == "Cases" for i in win.lib.items.values())
+
+
+def test_the_assistant_header_clears_the_chat_and_offers_settings(win, monkeypatch):
+    providers.save_key("anthropic", "sk-test")
+    Setup("anthropic", "test-model").to_settings(win.lib.settings)
+    _answers(monkeypatch, "Plenty.")
+    win.open_ai_assistant()
+    a = win.assistant
+    a.examples[0].click()  # an example question fills the box, ready to send
+    assert a.question.text() == a.examples[0].text() and win.focusWidget() is a.question
+    a._ask()
+    _wait(a.worker)
+    assert not a.log.isHidden() and "Plenty." in a.log.toPlainText()
+    a.clear_btn.click()
+    assert a.log.isHidden() and not a.hello.isHidden() and a.log.toPlainText() == ""
+    opened = []
+    a.setup_wanted.disconnect()  # (the window's own opens Settings, which would wait for a click)
+    a.setup_wanted.connect(lambda: opened.append(True))
+    settings = next(x for x in a.more_menu.actions() if x.text() == "AI Settings…")
+    settings.trigger()
+    assert opened == [True]
