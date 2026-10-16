@@ -78,12 +78,13 @@ def test_first_launch_is_empty(qapp, data_folder):
 
     w = MainWindow(Library(data_folder).load())
     w.show()
-    titles = [t.findChild(QLabel, "StartTitle").text() for t in w.empty.tiles]
-    assert w.pages.currentWidget() is w.empty and titles[0] == "Add Manually" and len(titles) == 3
+    # a title, one line and the one button that starts it (the standard's 4.11)
+    assert w.pages.currentWidget() is w.empty and w.empty.title.text() == "No Gear Yet"
+    assert w.empty.button.text() == "Import Spreadsheet…" and w.empty.button.objectName() == "Primary"
     assert not w.search.isVisible()  # nothing to search yet
     w.go("rentals")
     assert "profile" in w.rentals.empty_title.text().lower()
-    assert [t.findChild(QLabel, "StartTitle").text() for t in w.empty.tiles] == ["New Rental"]
+    assert (w.empty.title.text(), w.empty.button.text()) == ("No Rentals Yet", "New Rental")
     w.close()
 
 
@@ -96,7 +97,7 @@ def test_empty_gear_page_starts_and_takes_a_dropped_sheet(qapp, data_folder, tmp
 
     w = MainWindow(Library(data_folder).load())
     w.show()
-    w.empty.tiles[0].clicked.emit()  # Add Manually: a new piece, open on the right
+    w.new("gear")  # the + button: a new piece, open on the right
     assert len(w.lib.items) == 1 and w.pages.currentWidget() is w.gear_table and w.search.isVisible()
     w.deselect()  # left blank, so it goes
     assert not w.lib.items and w.pages.currentWidget() is w.empty
@@ -175,7 +176,7 @@ def test_a_new_rental_from_its_tile_before_there_is_a_profile(qapp, data_folder)
     w = MainWindow(Library(data_folder).load())
     w.show()
     w.go("upcoming")
-    tile = w.empty.tiles[0]
+    tile = w.empty.button
 
     def add(settings) -> None:
         settings.profile_editor.name.setText("Juniper Lane Films")
@@ -415,7 +416,8 @@ def test_the_look_switches_between_light_and_dark_and_is_kept(win):
     from bodega.ui.style import tokens
 
     win.set_look("light")
-    assert tokens.SCHEME == "light" and tokens.LIGHT["BG"] == tokens.BG
+    canvas = tokens.tint(tokens.LIGHT["BG"], tokens.accent_of(tokens.ACCENT_KEY, "light"), tokens.TINT["BG"])
+    assert tokens.SCHEME == "light" and canvas == tokens.BG  # (its whites lean toward the accent)
     assert win.lib.settings["appearance"] == "light"
     win.set_look("dark")
     assert tokens.DARK["BG"] == tokens.BG
@@ -1577,7 +1579,6 @@ def test_the_menu_bar_has_the_open_rentals_commands(win):
 def test_menus_and_words_are_measured_to_the_standard(win):
     """Menu rows are LIST_ROW_H tall (every list of choices is); no words are smaller than the type ramp's
     smallest."""
-    from PySide6.QtWidgets import QLabel
 
     from bodega.ui.style import tokens
 
@@ -1602,19 +1603,19 @@ def test_a_name_with_its_own_full_stop_gets_one_and_problems_stay_longer(win):
     assert win.toaster._ms >= tokens.TOAST_WARN_MS
 
 
-def test_every_start_tile_says_its_whole_name(qapp, data_folder):
-    from PySide6.QtWidgets import QLabel
-
+def test_every_empty_page_says_its_words_whole(qapp, data_folder):
     from bodega.ui.window.main_window import MainWindow
 
-    w = MainWindow(Library(data_folder).load())  # nothing yet: the start tiles
+    w = MainWindow(Library(data_folder).load())  # nothing yet: every list is empty
     w.show()
-    QApplication.processEvents()
-    tiles = w.empty.tiles
-    assert tiles
-    for tile in tiles:
-        name = next(lbl for lbl in tile.findChildren(QLabel) if lbl.objectName() == "StartTitle")
-        assert name.fontMetrics().horizontalAdvance(name.text()) <= name.width(), name.text()
+    for place in ("gear", "kits", "rentals", "out", "upcoming"):
+        w.go(place)
+        QApplication.processEvents()
+        e = w.empty
+        assert w.pages.currentWidget() is e and e.title.text() and e.button.text()
+        for label in (e.title, e.line):
+            assert label.fontMetrics().horizontalAdvance(label.text()) <= label.width(), label.text()
+        assert e.button.fontMetrics().horizontalAdvance(e.button.text()) < e.button.width(), e.button.text()
     w.close()
 
 

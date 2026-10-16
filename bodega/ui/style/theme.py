@@ -417,13 +417,6 @@ QPushButton#RecordStatus[tone="GOOD"] {{ color: {tokens.GOOD}; }}
 /* ---------- empty states */
 #EmptyTitle {{ font-size: {TEXT_XL}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #EmptyText {{ color: {tokens.MUTED}; }}
-#StartBadge {{ background: transparent; border: none; }}
-#StartTile {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER}; border-radius: {RADIUS_LG}px; }}
-#StartTile:hover {{ background: {tokens.RAISED_HOVER}; border-color: {tokens.BORDER_HOVER}; }}
-#StartTile:focus, #StartTile[hot="true"] {{ border-color: {tokens.ACCENT}; }}
-#StartTile[hot="true"] {{ background: {tokens.ACCENT_TINT}; }}
-#StartTitle {{ font-size: {TEXT_LG}px; font-weight: {WEIGHT_SEMIBOLD}; }}
-#StartDetail {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}
 
 /* ---------- details panel */
 #Details {{ background: transparent; border: none; }}

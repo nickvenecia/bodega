@@ -120,3 +120,38 @@ def test_the_accent_you_picked_comes_back_next_time(qapp, data_folder):
     assert saved_look() == ("light", "purple")  # what Bodega opens with
     write_json(data_folder / "settings.json", {"appearance": 3, "accent": None})
     assert saved_look() == ("system", "")  # an odd file: the defaults
+
+
+def test_the_light_looks_whites_and_greys_lean_toward_the_accent():
+    """(The standard's 2.3, V-26) Each neutral keeps its lightness and takes a little of the accent's hue: pink gives
+    warm whites, blue cool ones, graphite plain greys. Words that mean something never lean, nor does the dark look,
+    and every pairing still reads."""
+    import math
+
+    try:
+        for key, (name, _dark, light) in tokens.ACCENTS.items():
+            tokens.use("light", key)
+            for k in tokens.TINT:
+                was, now = tokens.LIGHT[k], getattr(tokens, k)
+                solid = lambda c: tokens._hex(float(x) for x in c[5:-1].split(",")[:3]) if c.startswith("rgba") else c
+                L0, a0, b0 = tokens.oklab(solid(was))
+                L1, a1, b1 = tokens.oklab(solid(now))
+                assert L1 <= L0 + 0.002 and L0 - L1 < 0.02, (name, k)  # its lightness, near enough (white gives a hair)
+                _l, aa, ab = tokens.oklab(light)
+                if math.hypot(aa, ab) > 0.05:  # a colorful accent: it leans its way
+                    assert math.hypot(a1 - aa, b1 - ab) < math.hypot(a0 - aa, b0 - ab), (name, k)
+            if key == "graphite":  # (as numbers: "0.90" and "0.9" are one see-through)
+                same = lambda a, b: tokens._solid(a, "#FFFFFF") == tokens._solid(b, "#FFFFFF")
+                assert all(same(getattr(tokens, k), tokens.LIGHT[k]) for k in ("BG", "PANEL", "GLASS", "MUTED")), name
+            for meaning in ("GOOD", "BAD", "WARN", "INFO", "PAPER"):
+                assert getattr(tokens, meaning) == tokens.LIGHT[meaning], (name, meaning)
+            assert tokens.contrast(tokens.MUTED, tokens.BG) >= 4.5, name
+            assert tokens.contrast(tokens.MUTED, tokens._solid(tokens.GLASS, tokens.BG)) >= 4.5, name
+            assert tokens.contrast(tokens.TEXT, tokens.PANEL) >= 4.5, name
+            assert tokens.contrast(tokens.ACCENT_TEXT, tokens.BG) >= 4.5, name
+            for meaning in ("GOOD", "BAD", "WARN", "INFO"):
+                assert tokens.contrast(getattr(tokens, meaning), tokens.BG) >= 4.5, (name, meaning)
+            tokens.use("dark", key)
+            assert all(getattr(tokens, k) == tokens.DARK[k] for k in ("BG", "PANEL", "GLASS", "MUTED")), name
+    finally:
+        tokens.use("dark", tokens.APP_ACCENT)

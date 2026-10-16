@@ -673,26 +673,28 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.total_values["day"].setText(money.fmt(total.day, cur))
 
     def _empty_page(self, which: str) -> QWidget:
+        """Where the list would be, with nothing in it yet: a title, a line, the one button that starts it."""
+        rental = lambda: self.new("rentals")  # noqa: E731
         if which == "gear":
             self.empty.show_for(
-                (
-                    ("edit", "Add Manually", "One piece at a time", "", lambda: self.new("gear")),
-                    (
-                        "table",
-                        "Import Spreadsheet…",
-                        "Excel or CSV",
-                        "Or drop a spreadsheet on this page",
-                        self.import_sheet,
-                    ),
-                    ("link", "Google Sheets…", "From a share link", "", self.import_google),
-                ),
-                sheet_tile=1,
+                "No Gear Yet",
+                "Drop your gear spreadsheet here, or add pieces one at a time with +.",
+                "Import Spreadsheet…",
+                self.import_sheet,
+                sheets=True,
             )
         elif which == "packages":
-            self.empty.show_for((("case", "New Kit", "Gear that rents together", "", lambda: self.new("packages")),))
+            self.empty.show_for(
+                "No Kits Yet", "Gear that rents together, at one price.", "New Kit", lambda: self.new("packages")
+            )
+        elif which == "out":
+            self.empty.show_for("Nothing Out Now", "A rental shows here while its gear is out.", "New Rental", rental)
+        elif which == "upcoming":
+            self.empty.show_for(
+                "Nothing Coming Up", "A booked rental shows here before it goes out.", "New Rental", rental
+            )
         else:
-            icon = {"out": "camera", "upcoming": "clock", "rentals": "receipt"}[which]
-            self.empty.show_for(((icon, "New Rental", "A quote or a booking", "", lambda: self.new("rentals")),))
+            self.empty.show_for("No Rentals Yet", "A quote or a booking, with its paperwork.", "New Rental", rental)
         return self.empty
 
     def _inspector_empty(self, kind: str) -> None:

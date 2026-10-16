@@ -248,8 +248,7 @@ COMPOSER_TEXT_MIN = 28  # …its words 28…
 COMPOSER_TEXT_MAX = 140  # …to 140 tall, growing with what's typed
 SEND_D = 28  # Send (and Stop) inside it
 SEND_ICON = 16
-START_TILE_W = 184  # one way to start on an empty page (three fit beside the inspector on the smallest window)
-START_BADGE = 40  # the circle behind a start tile's icon
+EMPTY_PAD = (56, 16, 60)  # (G.10.9) an empty list's block: top, sides, foot
 PROFILE_CARD_H = 48
 TOOLBAR_H = 64  # the bar above a table: title, search, New
 PAGER_LIFT = 22  # the record pager floats this far above the panel's foot
@@ -606,6 +605,11 @@ def use(scheme: str, accent: str | None = None, contrast: bool = False, opaque: 
     if ACCENT_KEY != APP_ACCENT:
         _name, dark, light = ACCENTS[ACCENT_KEY]
         globals().update(accent_set(light if SCHEME == "light" else dark, SCHEME))
+    if SCHEME == "light":  # its neutrals lean toward the accent (the dark look stays near neutral)
+        accent = accent_of(ACCENT_KEY, "light")
+        globals().update({k: tint(look[k], accent, share) for k, share in TINT.items()})
+        # the accent as words still reads on the canvas it leaned (4.5:1, the standard's A.1)
+        globals()["ACCENT_TEXT"] = _toward(globals()["ACCENT_TEXT"], "#000000", globals()["BG"])
     if contrast:
         strong = look["BORDER_STRONG"]
         globals().update(
@@ -622,6 +626,91 @@ def use(scheme: str, accent: str | None = None, contrast: bool = False, opaque: 
     if opaque:
         globals().update(GLASS=_solid(look["GLASS"], look["BG"]), TOAST=_solid(look["TOAST"], look["BG"]))
     _off()
+
+
+# (V-26, the standard's 2.3) The light look's neutrals lean toward the accent you pick: each keeps its lightness and
+# takes this share of the accent's hue and colorfulness (in OKLab), so a pink accent gives warm whites, purple a lilac,
+# blue cool blue-whites. Quiet for cards and menus, more for the canvas, more again for the side panels, most for the
+# greys that are mostly see-through (lines and fills). Words that mean something (good, late) and the paper never lean.
+TINT = {
+    **dict.fromkeys(("PANEL", "CARD", "RAISED", "FIELD", "BLOCK"), 0.025),  # cards, menus, sheets, fields
+    **dict.fromkeys(("CARD_HOVER", "RAISED_HOVER", "RAISED_PRESS", "WELL", "DIVIDER", "DIVIDER_HOVER"), 0.04),
+    **dict.fromkeys(("BG", "WINDOW_TOP", "WINDOW_BOTTOM"), 0.05),  # the canvas
+    "GLASS": 0.08,  # the side panels
+    **dict.fromkeys(("TEXT", "DIVIDER_TEXT"), 0.03),
+    **dict.fromkeys(("MUTED", "FAINT", "BORDER_CHECK"), 0.06),  # the greys of words
+    **dict.fromkeys(
+        (
+            "BORDER",
+            "BORDER_STRONG",
+            "BORDER_HOVER",
+            "FIELD_BORDER",
+            "GLASS_STROKE",
+            "FILL",
+            "FILL_2",
+            "FILL_3",
+            "ROW_HOVER",
+        ),
+        0.2,
+    ),
+}
+
+
+def _lin(u: float) -> float:
+    u /= 255
+    return u / 12.92 if u <= 0.04045 else ((u + 0.055) / 1.055) ** 2.4
+
+
+def oklab(c: str) -> tuple[float, float, float]:
+    """A #RRGGBB color as OKLab: (lightness, green–red, blue–yellow)."""
+    r, g, b = (_lin(v) for v in _rgb(c))
+    lms = (
+        0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b,
+        0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b,
+        0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b,
+    )
+    l_, m_, s_ = (max(0.0, v) ** (1 / 3) for v in lms)
+    return (
+        0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,
+        1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
+        0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_,
+    )
+
+
+def _from_oklab(lab: tuple[float, float, float]) -> tuple[float, float, float]:
+    """OKLab back to sRGB, 0 to 255 (outside that range when the color can't be shown)."""
+    L, a, b = lab
+    long_, mid, short = (
+        (L + 0.3963377774 * a + 0.2158037573 * b) ** 3,
+        (L - 0.1055613458 * a - 0.0638541728 * b) ** 3,
+        (L - 0.0894841775 * a - 1.2914855480 * b) ** 3,
+    )
+    linear = (
+        4.0767416621 * long_ - 3.3077115913 * mid + 0.2309699292 * short,
+        -1.2684380046 * long_ + 2.6097574011 * mid - 0.3413193965 * short,
+        -0.0041960863 * long_ - 0.7034186147 * mid + 1.7076147010 * short,
+    )
+    return tuple(
+        255 * (12.92 * x if abs(x) <= 0.0031308 else (1.055 * abs(x) ** (1 / 2.4) - 0.055) * (1 if x > 0 else -1))
+        for x in linear
+    )  # type: ignore[return-value]
+
+
+def tint(c: str, accent: str, share: float) -> str:
+    """`c` leaning `share` of the way toward `accent`'s hue and colorfulness, its lightness (and any see-through)
+    kept. A color too light to take the tint (white) gives up the least lightness that lets it show true."""
+    alpha = None
+    if c.startswith("rgba("):
+        *rgb, alpha = (float(x) for x in c[5:-1].split(","))
+        c = _hex(rgb)
+    L, a, b = oklab(c)
+    _l, aa, ab = oklab(accent)
+    a, b = a + (aa - a) * share, b + (ab - b) * share
+    out = _from_oklab((L, a, b))
+    while L > 0 and not all(-0.5 <= v <= 255.5 for v in out):
+        L -= 0.001
+        out = _from_oklab((L, a, b))
+    return _hex(out) if alpha is None else _rgba(_hex(out), alpha)
 
 
 def _solid(c: str, under: str) -> str:

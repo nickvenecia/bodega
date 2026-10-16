@@ -1,16 +1,17 @@
-"""What shows where a table would be when there's nothing in it yet: the ways to start, as tiles. Gear starts
-three ways (manually, a spreadsheet, a Google Sheet), and a spreadsheet dropped anywhere on the page comes in too;
-kits and rentals start one way, with the place's own icon."""
+"""What shows where a table would be when there's nothing in it yet (the standard's 4.11 and G.10.9): a title of a
+few words, one short line and the one button that starts it ("No Gear Yet" · Import Spreadsheet…). A spreadsheet
+dropped anywhere on the gear page comes in too; the page lights up while one is dragged over it."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, Qt, QTimer, Signal
-from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QWidget
+from PySide6.QtCore import QEvent, QRectF, Qt, QTimer, Signal
+from PySide6.QtGui import QPainter, QPainterPath, QPen
+from PySide6.QtWidgets import QLabel, QPushButton, QWidget
 
-from bodega.ui.components.widgets import IconLabel, hbox, hint, repolish, vbox
+from bodega.ui.components.widgets import hint, primary_button, vbox
 from bodega.ui.style import theme, tokens
 
 SHEETS = (".xlsx", ".xlsm", ".csv")  # what the Import window reads
@@ -25,116 +26,71 @@ def sheet_in(mime) -> Path | None:
     return path if path.suffix.lower() in SHEETS else None
 
 
-class StartTile(QFrame):
-    """One way to start: an icon, what it is, a few words. A click, Space or Return picks it.
-
-    What a tile starts runs just after the click is over: New Rental with no profile yet opens Settings, and the
-    page may swap its tiles before that window closes. A tile still busy with its click when it's thrown away
-    would crash."""
-
-    clicked = Signal()
-
-    def __init__(self, icon: str, title: str, detail: str, tip: str = "", parent: QWidget | None = None):
-        super().__init__(parent)
-        self.setObjectName("StartTile")
-        self.setAttribute(Qt.WidgetAttribute.WA_Hover)
-        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setFixedWidth(tokens.START_TILE_W)
-        if tip:
-            self.setToolTip(theme.plain_tip(tip))
-        lay = vbox(self, (tokens.SPACE_3, tokens.SPACE_5, tokens.SPACE_3, tokens.SPACE_5), tokens.SPACE_1)
-        badge = QFrame()  # the icon, in a circle of the accent's tint
-        badge.setObjectName("StartBadge")
-        badge.setFixedSize(tokens.START_BADGE, tokens.START_BADGE)
-        bl = vbox(badge)
-        bl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        bl.addWidget(IconLabel(icon, "ACCENT", tokens.ICON_LG))
-        lay.addWidget(badge, 0, Qt.AlignmentFlag.AlignHCenter)
-        lay.addSpacing(tokens.SPACE_2)
-        name = QLabel(title)
-        name.setObjectName("StartTitle")
-        sub = QLabel(detail)
-        sub.setObjectName("StartDetail")
-        for w in (name, sub):
-            w.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lay.addWidget(w)
-
-    def set_hot(self, on: bool) -> None:
-        """Lit while a spreadsheet is dragged over the page."""
-        if self.property("hot") is not on:
-            self.setProperty("hot", on)
-            repolish(self)
-
-    def mousePressEvent(self, e):
-        if e.button() == Qt.MouseButton.LeftButton:
-            e.accept()  # the release comes back here
-        else:
-            super().mousePressEvent(e)
-
-    def mouseReleaseEvent(self, e):
-        if e.button() == Qt.MouseButton.LeftButton and self.rect().contains(e.position().toPoint()):
-            self._pick()
-        super().mouseReleaseEvent(e)
-
-    def keyPressEvent(self, e):
-        if e.key() in (Qt.Key.Key_Space, Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            self._pick()
-            return
-        super().keyPressEvent(e)
-
-    def _pick(self) -> None:
-        QTimer.singleShot(0, self, self.clicked.emit)  # once this click is over (see above)
-
-
 class EmptyPage(QWidget):
-    """The empty page. `show_for()` sets its tiles; `dropped` is a spreadsheet let go on it (only while the
-    page takes them)."""
+    """The empty page. `show_for()` sets its words and its button; `dropped` is a spreadsheet let go on it (only
+    while the page takes them).
+
+    What the button starts runs just after its click is over: New Rental with no profile yet opens Settings, and the
+    page may change before that window closes."""
 
     dropped = Signal(Path)
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setAcceptDrops(True)
-        self._key: tuple = ()
-        self._slots: list[Callable] = []
-        self._sheet_tile: int | None = None  # the tile that lights up while a spreadsheet is dragged in
-        self.tiles: list[StartTile] = []
-        lay = vbox(self, tokens.SPACE_5, 0)
+        self._action: Callable | None = None
+        self._sheets = False  # a spreadsheet dropped here is imported
+        self._hot = False  # one is being dragged over it
+        pad_top, pad_x, pad_bottom = tokens.EMPTY_PAD
+        lay = vbox(self, (pad_x, pad_top, pad_x, pad_bottom), 0)
         lay.addStretch(2)
-        self.tile_row = hbox(spacing=tokens.SPACE_3)
-        lay.addLayout(self.tile_row)
+        self.title = QLabel()
+        self.title.setObjectName("EmptyTitle")
+        self.line = hint("")
+        for w in (self.title, self.line):
+            w.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            lay.addWidget(w)
+            if w is self.title:
+                lay.addSpacing(tokens.SPACE_1)
+        lay.addSpacing(tokens.SPACE_4)
+        self.button = primary_button()
+        self.button.clicked.connect(lambda: QTimer.singleShot(0, self, self._go))  # once the click is over
+        lay.addWidget(self.button, 0, Qt.AlignmentFlag.AlignHCenter)
         lay.addStretch(3)
 
-    def show_for(self, tiles: tuple[tuple[str, str, str, str, Callable], ...], sheet_tile: int | None = None) -> None:
-        """The tiles: (icon, title, detail, tooltip, what it does). `sheet_tile`: a spreadsheet dropped here is
-        imported, and that tile lights up while it's dragged in."""
-        self._sheet_tile = sheet_tile
-        self._slots = [t[4] for t in tiles]
-        key = tuple(t[:4] for t in tiles)
-        if key == self._key:
-            return
-        self._key = key
-        while self.tile_row.count():
-            w = self.tile_row.takeAt(0).widget()
-            if w is not None:
-                w.deleteLater()
-        self.tiles = []
-        self.tile_row.addStretch(1)
-        for n, (name, label, detail, tip, _slot) in enumerate(tiles):
-            tile = StartTile(name, label, detail, tip)
-            tile.clicked.connect(lambda n=n: self._slots[n]())
-            self.tile_row.addWidget(tile)
-            self.tiles.append(tile)
-        self.tile_row.addStretch(1)
+    def show_for(self, title: str, line: str, button: str, action: Callable, sheets: bool = False) -> None:
+        """Its title, its line, its one button and what that does; `sheets`: a spreadsheet dropped here comes in."""
+        self.title.setText(title)
+        self.line.setText(line)
+        self.button.setText(button)
+        self._action = action
+        self._sheets = sheets
 
-    # A spreadsheet dragged in from the Finder or Explorer lights its tile and is imported
+    def _go(self) -> None:
+        if self._action is not None:
+            self._action()
+
+    # A spreadsheet dragged in from the Finder or Explorer lights the page and is imported
     def _light(self, on: bool) -> None:
-        if self._sheet_tile is not None and self._sheet_tile < len(self.tiles):
-            self.tiles[self._sheet_tile].set_hot(on)
+        if self._hot != on:
+            self._hot = on
+            self.update()
+
+    def paintEvent(self, _e):
+        if not self._hot:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        r = QRectF(self.rect()).adjusted(tokens.SPACE_3, tokens.SPACE_3, -tokens.SPACE_3, -tokens.SPACE_3)
+        path = QPainterPath()
+        path.addRoundedRect(r, tokens.RADIUS_LG, tokens.RADIUS_LG)
+        p.fillPath(path, theme.qcolor(tokens.ACCENT_TINT))
+        p.setPen(QPen(theme.qcolor(tokens.ACCENT_EDGE), 1.5))
+        p.drawPath(path)
+        p.end()
 
     def dragEnterEvent(self, e):
-        if self._sheet_tile is not None and sheet_in(e.mimeData()) is not None:
+        if self._sheets and sheet_in(e.mimeData()) is not None:
             e.acceptProposedAction()
             self._light(True)
         else:
@@ -145,7 +101,7 @@ class EmptyPage(QWidget):
 
     def dropEvent(self, e):
         self._light(False)
-        path = sheet_in(e.mimeData()) if self._sheet_tile is not None else None
+        path = sheet_in(e.mimeData()) if self._sheets else None
         if path is None:
             e.ignore()
             return

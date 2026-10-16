@@ -19,8 +19,8 @@ ask the owner for it.
   Graphite). Never red: red means late, failed or delete
 - Organization color: each profile's **Paper Color** (Sky Blue, Chile Red, Dusk Violet, Turquoise, Marigold, Sage,
   Ink), used on everything printed
-- Light theme neutrals (§2.3): plain neutral whites and greys today; tinted from the accent is a standard default not
-  built yet (audit V-26)
+- Light theme neutrals (§2.3): tinted from the accent, as the standard says (tokens.TINT, in OKLab, lightness kept):
+  Bodega's blue gives cool blue-whites, Graphite plain greys; the dark look stays neutral
 - Display font for large titles: Inter Display (bundled with Inter); monospace: IBM Plex Mono, for serial numbers on
   paper only
 - Family of apps: Bodega stands alone (standard, "Each app stands alone"); it names another app only for its one real

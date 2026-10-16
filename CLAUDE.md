@@ -130,7 +130,7 @@ bodega/
                    Motion, Increase Contrast, Reduce Transparency: every
                    animation asks duration()/reduce_motion(); tokens.use(contrast=, opaque=)),
                    datefield.py (DateField: typed or picked from its month popover, the standard's G.22),
-                   empty.py (EmptyPage: where a table would be with nothing in it: tiles, the ways to start;
+                   empty.py (EmptyPage: where a table would be with nothing in it: a title, a line, one button;
                    empty gear takes a dropped spreadsheet),
                    figures.py (FigureRow: core/figures' tiles above a list, G.10.5; FigureStrip: a record's
                    figures under its head, divided by hairlines, G.17),

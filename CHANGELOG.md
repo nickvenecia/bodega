@@ -329,6 +329,12 @@
   Bodega's own window instead of beside it: the window behind is blurred and dimmed, a ✕ in the corner closes them
   (so does Esc), and a click on the dimmed area closes them too, unless that would lose what you typed or an import
   you're setting up. They fade in, unless Reduce Motion is on. Search Everything blurs the window behind it as well.
+- In the light look, Bodega's whites and greys take a hint of your accent color: cool blue-whites with Blue, warm ones
+  with Orange or Pink, plain greys with Graphite. Words keep their contrast; the dark look and your printed pages
+  don't change.
+- An empty list says so in a few words, with the one button that starts it ("No Gear Yet" · Import Spreadsheet…),
+  instead of a row of tiles. A spreadsheet dropped anywhere on the empty gear page still comes in (the page lights up
+  under it), and adding a piece by hand or from a Google Sheet is in the + button.
 - Gear that goes with a piece (the FX6's cage, the 80c's fresnel) is listed under it, one step in, and folds away:
   click the arrow before the piece's name, or press → and ←, and Bodega remembers what you opened. The piece's row
   adds up everything with it (a day of renting it, what it's all worth), and closed, it shows the most pressing
