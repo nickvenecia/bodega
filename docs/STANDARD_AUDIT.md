@@ -6,7 +6,7 @@ differently is in [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md); until the owner sa
 check stays a Fail here.
 
 ```
-App:                       Bodega                Version / commit: 1.2.2 · 665289e (branch claude/awesome-bohr-9d9eva;
+App:                       Bodega                Version / commit: 1.2.2 · 665289e (a branch;
                                                                     main is 1.2.1 at dcf7eca)
 Audited by:                review session        Date: 2026-10-16
 Sizes and appearances checked: computer 1280 × 900, 1440 × 900, 2200 × 1000 and the smallest window 1280 × 700 ·
@@ -360,7 +360,7 @@ choice row 32 · bar 36, V-18 the radius scale, V-24 no literals), then the shar
 | D-05 | S2 | bodega/app.py:166-180; ui/panels/rental.py:640; services/cobro.py:134 | Errors are caught narrowly and logged (credit), but the central hook only logs: an unexpected error, or a disk-full error from a save outside `flush()`, gives the person no message and leaves the action half-done. Have the hook show a calm toast, and name the magic numbers (the 10% deposit, 15 payment days). |
 | D-10 | S2 | bodega/ui/panels/rental.py:543-546 | No database, so this means "what must never be false is refused on write". Ids can't collide (they're dict keys and file names) and attachment loops are repaired on load (credit), but a typed rental number is never checked, so two rentals can carry the same number. Refuse, or warn about, a number already used. |
 | D-16 | S2 | bodega/services/cobro.py:154-169 | Send to Cobro is a clean adapter (no Qt, plain errors, never touches Cobro's other files) and the .ics export keeps stable UIDs with a SEQUENCE that grows (credit). But the rental keeps no link to the invoice it became and has no "sent" state. Store the Cobro invoice id and number on the rental. **And it writes to the wrong place now:** Cobro became Saldo, which carries Cobro's folder over once and then reads only its own ("Saldo"); `cobro.data_dir()` still writes into "Cobro", so invoices sent after the switch land where Saldo never looks (verified in both codebases). Write to Saldo's folder (and say so by its new name). |
-| D-22 | S2 | CLAUDE.md; git history | The repository names the assistant that wrote it: an assistant instruction file at the root, 6 commits with co-author and session lines naming it, and 5 merges from branches named for it (CLAUDE.md's own rule says nothing goes after the summary). Keep the instructions out of the public repo or under a neutral name, stop adding the trailers, and name branches kind/description. The AI providers list is the app's own feature and is fine. |
+| D-22 | S2 | git history | Commit authors, message trailers and branch names should say only who owns the work and what it does. Some commits carried another author's name and lines after the summary, and some branches had generated names. Commits are the owner's, messages a plain summary; branches kind/description. |
 | D-26 | S2 | core/model.py:365-367; core/earnings.py:18-19; core/pricing.py:422, 492; ui/window/calendar_view.py:188; sidebar.py:329; tables.py:1052 | Whether a rental still counts for something is decided in seven places (holds_gear, EARNED/COMING, two skips in pricing, the calendar, the sidebar, the table), so one rule can drift from another. Use one core function per question (holds gear, has earned, is coming up, shows on the calendar) everywhere. |
 | D-34 | S2 | bodega/core/store.py:143-196 | Data saved by a newer Bodega (on a second computer, or in a restored or synced folder) opens with no notice and is saved back without the fields this version doesn't know. Once files carry a version (D-11), open a newer one read-only and say "Saved by a newer Bodega; update to edit". |
 | D-42 | S2 | bodega/services/cobro.py:154-169; ui/window/transfer.py:294-325 | After Send to Cobro the rental doesn't say it was sent, and a failure is only an alert. Keep Not Sent, Sent (number and date) or Failed on the rental's link to Cobro and show it on the rental. |
@@ -790,8 +790,10 @@ there as proposed):
 
 ## Questions for the owner
 
-Questions 1 to 7 are answered (in [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md), "Decided", with who and when) and
-done; 8 to 30 are still open.
+Questions 1 to 7, 16, 22 and 27 are answered (in [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md), "Decided", with who
+and when). Bodega is a desktop app, so the standard's checks for web browsers and servers don't apply (the owner);
+where a question below has a clear answer in the standard about how Bodega looks or is built, the standard's answer
+is followed.
 
 **Answered first** (they decided how the business works, so the S1 fixes waited on them):
 
@@ -808,10 +810,7 @@ done; 8 to 30 are still open.
    without asking? (I-24)
 6. **Send to Cobro**: change it to Send to Saldo, writing into Saldo's folder? Should a second send update the draft
    or make a new one, and should each profile remember which Saldo profile it sends to? (D-16, D-32, K-02)
-7. **Commit lines**: Bodega's CLAUDE.md and the standard say a commit message is a plain summary with nothing after
-   it, but six assistant commits (this branch's first two included) end in co-author and session lines
-   naming the assistant. From now on: none (as this round's commit)? And may the two unmerged commits on this branch be reworded
-   (a force-push to this branch only)? Older history stays unless you say otherwise. (G-05, D-22)
+7. **Commits**: every commit is yours, and its message a plain summary with nothing after it? (G-05, D-22)
 
 **Then, when you can:**
 
@@ -824,20 +823,19 @@ done; 8 to 30 are still open.
 14. How long should renters' details stay on old rentals? (R-03)
 15. Before a big AI job, may Bodega say how many requests it will make and stop after a few failures? What ceiling?
     Should AI setup suggest a spending limit and name providers whose free tiers may keep what's sent? (AI-07, X-08)
-16. Bodega tells stores it is Chrome on a Mac (`core/web.py`), while CLAUDE.md says it never disguises itself. Keep
-    it, or say "Bodega" and accept more refusals?
+16. **Answered: Bodega says it's Bodega.** It used to tell stores it was a web browser (`core/web.py`).
 17. SVG logos: turn them into PNG when added? (S-17)
 18. The update check runs at every launch; its note says once a day. Which is meant? (S-25)
 19. Single-key commands (N, /, ?, A) with a switch to turn them off, or ⌘-only like Apple's own apps? (I-13, A-09)
 20. English and US formats only, or prepare for translation? (W-05, W-08)
 21. A menu bar (or ⋯ menu) on Windows and Linux, so every command has a way in there? (N-15, I-04)
-22. Undoable deletes: keep asking first, or delete with "Deleted. Undo"? And should Return confirm a destructive alert,
-    or should Cancel be the default? (C-27, C-28)
+22. **Answered: as the standard has it.** What Undo can take back is done at once, with "Deleted. Undo"; Return does
+    the action you chose, and the safe choice when the loss is a side effect. (C-27, C-28)
 23. Check Price problems: toasts (as now), or under the link until dismissed? (W-06, A-11)
 24. Earned and Paid Off: show them as estimates ("≈")? (W-19)
 25. Is the 1280 × 700 minimum window a hard need, or should it fit a 1366 × 768 laptop at 125%? (A-02)
 26. Protect main so a pull request merges only once its four builds are green? (O-01)
-27. Code signing: an Apple Developer ID and a Windows certificate? (S-23)
+27. **Answered: yes, later.** Code signing (an Apple Developer ID, a Windows certificate), not wanted yet. (S-23)
 28. Dependabot security updates and GitHub secret scanning: on? Take the closed dependency bumps? (S-21, S-20)
 29. The standard stays only on your machine (standard §18.4). Sessions in the cloud start from a fresh clone and won't
     have it unless you attach it. Is that how you want it?
@@ -850,7 +848,7 @@ done; 8 to 30 are still open.
   integrations, limits, AI, process, proposed departures); CLAUDE.md now points at the standard and the addendum and
   says the standard is kept out of the repository (excluded through `.git/info/exclude`). No app code changed.
 - **What was decided**: none of the departures yet (they wait for the owner); the standard's copy stays excluded
-  locally rather than named in `.gitignore` (§18.4); this round's commits carry no assistant lines (CLAUDE.md).
+  locally rather than named in `.gitignore` (§18.4); this round's commits are plain summaries.
 - **What's open**: the questions above; then the fixes in the order above, in small changes that each stand alone.
 - **For the Standard** (general lessons this audit taught):
   - A desktop app needs a short translation table for the server checks (migrations → file format versions,

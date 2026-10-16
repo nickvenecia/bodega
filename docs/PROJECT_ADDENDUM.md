@@ -82,8 +82,17 @@ ask the owner for it.
 - **Booking or checking out gear that's already promised asks first** ("Book Anyway?"), rather than blocking:
   sub-renting can make it deliberate.
 - **Send to Cobro is Send to Saldo** (Cobro's new name), writing into Saldo's data folder.
-- **Nothing mentions AI or the tools used to build Bodega** in commits, pull requests, release notes or documents;
-  the app's own AI features (the Assistant, AI Settings) are the exception.
+- **Every commit and pull request is the owner's own**: the author is Nick Venecia, the message a plain summary
+  with nothing after it, and nothing in commits, pull requests, release notes or documents says how Bodega was
+  made.
+- **Bodega is a desktop app** ("a physical app"): the standard's checks for web browsers and servers don't apply;
+  everything about how it looks and how it's built does.
+- **Bodega says it's Bodega to every site** (its own User-Agent), never a web browser. A store that lets only
+  browsers in says so, and Bodega offers another way in (paste the photo).
+- **What Undo can take back is done at once**, said with "Deleted. Undo" (deleting gear, a kit, a quote, a renter, a
+  profile, removing a group). Only what can't be taken back asks first; Return does the action you chose, and the
+  safe choice when the loss is a side effect (the standard's 4.9 and 4.19).
+- **Code signing** (an Apple Developer ID, a Windows certificate): yes, but later; not wanted yet.
 
 ## Integrations (§8.11)
 | System | Direction | What it owns | Credentials |
@@ -142,11 +151,11 @@ row. Gear lists and pages are marked as data, never instructions, in every promp
   been asked today and this month in Settings › AI), at most 20 a minute, and the caps above. Kill switch: Remove Key.
 
 ## Process (§18)
-- Commit attribution rule: **no tool, assistant, co-author or session lines**, in commits and pull requests alike. A
-  commit message is a short plain summary, nothing added after it (CLAUDE.md). Decided by the owner, 2026-10-16.
+- Commits: the owner's name as author; a short plain summary, nothing added after it, in commits and pull requests
+  alike. Decided by the owner, 2026-10-16.
 - Where the standard lives: excluded locally (above).
-- Test commands and their expected results: `ruff format . && ruff check . && python -m pytest -q`: no changes,
-  "All checks passed!", every test passing.
+- Test commands and their expected results: `ruff format . && ruff check . && mypy && python -m pytest -q`: no
+  changes, "All checks passed!", "Success: no issues found", every test passing.
 
 ## Departures from the standard
 Each needs the owner's yes before it counts; until then the standard's rule stands and the audit row stays a Fail.
