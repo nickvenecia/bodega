@@ -800,7 +800,7 @@ class GearTable(Table):
         lift.stop()
         later, self._fill_later = self._fill_later, None
         if later is not None:  # the list changed while it was lifted
-            QTimer.singleShot(0, lambda: self.fill(*later))
+            QTimer.singleShot(0, self, lambda: self.fill(*later))
         self.viewport().setCursor(Qt.CursorShape.ArrowCursor)
         self.viewport().update()
         got = lift.result() if drop else None
@@ -808,11 +808,11 @@ class GearTable(Table):
             return
         ids = lift.ids
         if got[0] in ("before", "after"):
-            QTimer.singleShot(0, lambda: self.reordered.emit(ids, got[1], got[0] == "after"))
+            QTimer.singleShot(0, self, lambda: self.reordered.emit(ids, got[1], got[0] == "after"))
         elif got[2] == "brand":
-            QTimer.singleShot(0, lambda: self.branded.emit(ids, got[1]))
+            QTimer.singleShot(0, self, lambda: self.branded.emit(ids, got[1]))
         else:
-            QTimer.singleShot(0, lambda: self.dropped.emit(ids, got[1]))
+            QTimer.singleShot(0, self, lambda: self.dropped.emit(ids, got[1]))
 
     def mouseReleaseEvent(self, e):
         if self._lift is not None:

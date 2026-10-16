@@ -101,7 +101,10 @@ def test_a_save_outside_the_autosave_is_said_too(win, full_disk, qapp):
 
     with pytest.raises(OSError):
         win.lib.save_client(Client(name="Lisa Kim"))
-    QTest.qWait(20)
+    for _ in range(100):  # said once the window's next moment comes (however slow the computer)
+        if win.banner.isVisibleTo(win):
+            break
+        QTest.qWait(20)
     assert win.banner.isVisibleTo(win) and "renters" in win.lib.unsaved
 
 

@@ -248,7 +248,7 @@ class Sidebar(LeftPanel):
 
     def eventFilter(self, obj, e):
         if e.type() in (QEvent.Type.Enter, QEvent.Type.Leave, QEvent.Type.HoverMove):
-            QTimer.singleShot(0, self._hover_check)
+            QTimer.singleShot(0, self, self._hover_check)
         return super().eventFilter(obj, e)
 
     def leaveEvent(self, e):

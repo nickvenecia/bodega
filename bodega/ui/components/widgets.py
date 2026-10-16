@@ -1539,7 +1539,7 @@ class MoneyField(QLineEdit):
     def focusInEvent(self, e):
         self.setText(self._raw)
         super().focusInEvent(e)
-        QTimer.singleShot(0, self.selectAll)
+        QTimer.singleShot(0, self, self.selectAll)
 
     def focusOutEvent(self, e):
         self._raw = self.text().strip().replace(self.currency, "").replace(",", "")

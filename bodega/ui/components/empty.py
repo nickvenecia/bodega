@@ -150,7 +150,7 @@ class EmptyPage(QWidget):
             e.ignore()
             return
         e.acceptProposedAction()
-        QTimer.singleShot(0, lambda: self.dropped.emit(path))  # after the drag ends: the Import window waits
+        QTimer.singleShot(0, self, lambda: self.dropped.emit(path))  # after the drag ends: the Import window waits
 
 
 class NoResults(QWidget):

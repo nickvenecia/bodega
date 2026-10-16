@@ -88,7 +88,7 @@ class ServicesMixin:
 
         busy = QApplication.activeModalWidget() is not None or QApplication.activePopupWidget() is not None
         if busy or not self.isVisible():
-            QTimer.singleShot(tokens.UPDATE_WAIT_MS, self._offer_update)
+            QTimer.singleShot(tokens.UPDATE_WAIT_MS, self, self._offer_update)
             return
         self.show_update()
 

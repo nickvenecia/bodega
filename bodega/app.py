@@ -388,7 +388,7 @@ def _smoke(app: QApplication) -> int:
         f"smoke: Bodega {__version__}, PDF {'ok' if ok else 'MISSING'} ({out.stat().st_size if out.exists() else 0} bytes)",
         flush=True,
     )
-    QTimer.singleShot(1200, app.quit)
+    QTimer.singleShot(1200, app, app.quit)
     code = app.exec()
     return code if ok else 3
 
@@ -400,7 +400,7 @@ def _ask_to_sign_in(window) -> None:
     if account.REQUIRED and account.service().connected and account.current() is None:
         from bodega.ui.dialogs.account import SignInDialog
 
-        QTimer.singleShot(0, lambda: SignInDialog(window).exec())
+        QTimer.singleShot(0, window, lambda: SignInDialog(window).exec())
 
 
 def main() -> int:

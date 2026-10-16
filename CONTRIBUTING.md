@@ -94,6 +94,9 @@ packaging/     Installer files per OS
 18. A dialog Bodega opens on top is let go once it closes (app.py `_RoundPopups._lets_go`), so read what you
     need from it as soon as `exec()` returns and never keep one to show again: make a new one.
     `tests/test_memory.py` opens and closes every screen and fails if anything stays behind.
+19. A delayed call names what it belongs to: `QTimer.singleShot(ms, owner, fn)`, never `(ms, fn)`. If the owner is
+    gone first (a window closed and deleted), Qt drops the call instead of running it on something that's no longer
+    there; on a Mac that once crashed the next window. `tests/test_code_rules.py` checks every call.
 
 ---
 

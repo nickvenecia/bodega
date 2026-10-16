@@ -155,7 +155,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         backups.daily_copy(self.lib.root)  # the first time Bodega opens today: a safety copy
         if self.lib.newer_format:
             QTimer.singleShot(0, self, self._say_newer_format)
-        QTimer.singleShot(tokens.UPDATE_CHECK_DELAY_MS, self._auto_check_updates)
+        QTimer.singleShot(tokens.UPDATE_CHECK_DELAY_MS, self, self._auto_check_updates)
         self._day = dates.today()  # a new day refreshes what "today" decides: late, out now, coming up
         self._midnight = QTimer(self, singleShot=True, timeout=self._new_day)
         self._arm_midnight()
@@ -937,7 +937,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
     def showEvent(self, e):
         super().showEvent(e)
         if self.titlebar is not None:
-            QTimer.singleShot(0, self.titlebar.fit)
+            QTimer.singleShot(0, self.titlebar, self.titlebar.fit)  # (dropped if the window's gone first)
 
     def _say_newer_format(self) -> None:
         from bodega.ui.dialogs.common import notice

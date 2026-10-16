@@ -394,7 +394,7 @@ QPushButton#StatusLine[link="true"]:hover {{ color: {tokens.ACCENT_TEXT}; }}
 #ItemTitle[blank="true"] {{ color: {tokens.FAINT}; }}
 #ItemAmount {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}
 QPlainTextEdit#Field {{ background: {tokens.FILL}; border: 1px solid transparent; border-radius: {RADIUS}px;
-    font-family: inherit; font-size: {TEXT_MD}px; color: {tokens.TEXT}; padding: {SPACE_1}px {SPACE_2}px;
+    font-size: {TEXT_MD}px; color: {tokens.TEXT}; padding: {SPACE_1}px {SPACE_2}px;
     selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
 QPlainTextEdit#Field:focus {{ background: {tokens.FIELD}; border: {tokens.FOCUS_RING}px solid {tokens.ACCENT};
     padding: {SPACE_1 - tokens.FOCUS_RING + 1}px {SPACE_2 - tokens.FOCUS_RING + 1}px; }}

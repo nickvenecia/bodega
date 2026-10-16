@@ -283,7 +283,7 @@ def test_a_new_version_found_on_opening_shows_right_away(qapp, data_folder, monk
     win.show()
     shown, later = [], []
     monkeypatch.setattr(win, "show_update", lambda: shown.append(win._release.version))
-    monkeypatch.setattr("PySide6.QtCore.QTimer.singleShot", lambda ms, fn: later.append(fn))
+    monkeypatch.setattr("PySide6.QtCore.QTimer.singleShot", lambda ms, *a: later.append(a[-1]))  # (ms, owner, fn)
     monkeypatch.setattr(QApplication, "activeModalWidget", staticmethod(lambda: object()))
     win._found_release(update.Release("99.0.0"), quiet=True)
     assert not shown and later  # another window is open: it waits
