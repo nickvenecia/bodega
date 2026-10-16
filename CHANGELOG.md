@@ -182,6 +182,8 @@
   Assistant's jobs).
 - Settings › Your Data has Import & Export: Import Spreadsheet…, Import from Google Sheets… and Export Gear as
   CSV…. These, Back Up… and Restore… close Settings first, so one window never opens on top of another.
+- The keyboard's ring around a button is thicker and clearer, and a field you're typing in has a clear accent
+  edge, so it's easy to see where the keyboard is.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

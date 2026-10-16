@@ -110,8 +110,8 @@ QToolTip {{ background: {tokens.RAISED}; color: {tokens.TEXT}; border: 1px solid
 
 /* ---------- buttons: all CONTROL_H tall */
 QPushButton {{  /* a word capsule (G.2): fill, text; hover fill-3 */
-    background: {tokens.FILL}; border: 1px solid transparent; border-radius: {_INNER // 2}px;
-    padding: 0 {SPACE_4}px; min-height: {_INNER}px; max-height: {_INNER}px; font-weight: {WEIGHT_MEDIUM};
+    background: {tokens.FILL}; border: {tokens.FOCUS_RING}px solid transparent; border-radius: {_INNER // 2}px;
+    padding: 0 {SPACE_4 - 1}px; min-height: {_INNER}px; max-height: {_INNER}px; font-weight: {WEIGHT_MEDIUM};
 }}
 QPushButton:hover {{ background: {tokens.FILL_3}; }}
 QPushButton:pressed {{ background: {tokens.FILL_3}; }}
@@ -161,8 +161,8 @@ QToolButton#Circle[bar="true"], QToolButton#CirclePrimary[bar="true"] {{ border-
     min-width: {_BAR_INNER}px; max-width: {_BAR_INNER}px; min-height: {_BAR_INNER}px; max-height: {_BAR_INNER}px; }}
 QLineEdit[bar="true"] {{ min-height: {_BAR_INNER}px; max-height: {_BAR_INNER}px; border-radius: {_BAR_INNER // 2}px; }}
 /* keyboard focus: buttons take it from Tab only (never a click), so a ring means the keyboard is there */
-QPushButton:focus, QToolButton:focus, #SegBtn:focus {{ border: 1px solid {tokens.ACCENT}; }}
-QPushButton#Primary:focus, QToolButton#CirclePrimary:focus {{ border: 1px solid {tokens.ON_ACCENT}; }}
+QPushButton:focus, QToolButton:focus, #SegBtn:focus {{ border: {tokens.FOCUS_RING}px solid {tokens.ACCENT}; }}
+QPushButton#Primary:focus, QToolButton#CirclePrimary:focus {{ border: {tokens.FOCUS_RING}px solid {tokens.ON_ACCENT}; }}
 #Alert {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {RADIUS_LG}px; }}
 #AlertTitle {{ font-size: {TEXT_LG}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 QPushButton#DangerFill {{ background: {tokens.BAD_BUTTON}; border: 1px solid {tokens.BAD_BUTTON}; color: #FFFFFF; font-weight: {WEIGHT_SEMIBOLD}; }}
@@ -183,9 +183,9 @@ QComboBox, QLineEdit {{  /* G.3, G.5: fill at rest (its edge kept, transparent),
     selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT};
 }}
 QComboBox:hover {{ background: {tokens.FILL_3}; }}
-QLineEdit:focus, QComboBox:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT_EDGE}; }}
+QLineEdit:focus, QComboBox:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT}; }}
 QLineEdit[bar="true"] {{ background: {tokens.RAISED}; border-color: {tokens.GLASS_STROKE}; }}
-QLineEdit[bar="true"]:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT_EDGE}; }}
+QLineEdit[bar="true"]:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT}; }}
 QComboBox {{ padding-right: {SPACE_5 + SPACE_1_5}px; }}
 QComboBox::drop-down {{ border: none; width: {SPACE_5 + SPACE_1_5}px; }}
 QComboBox::down-arrow {{ image: url(__UPDOWN__); width: {ICON_SM + 2}px; height: {ICON_SM + 2}px; }}
