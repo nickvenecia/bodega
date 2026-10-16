@@ -39,7 +39,7 @@ Bodega will notice (it becomes the release notes and the update window), so this
 
 ## 2026-10-16: the standard, applied
 
-**Changed** (119 small commits, each with its tests; what people will notice is in CHANGELOG 1.3.0, and
+**Changed** (about 120 small commits, each with its tests; what people will notice is in CHANGELOG 1.3.0, and
 `git log main..` on the branch lists them all):
 
 - **Money, numbers and records (S1)**: a rental's prices hold once it's booked; a rental number is never given
