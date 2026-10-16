@@ -245,7 +245,12 @@ jobs:
           mkdir -p out dmg
           cp -R dist/Bodega.app dmg/
           ln -s /Applications dmg/Applications
-          hdiutil create -volname "Bodega" -srcfolder dmg -ov -format UDZO "out/Bodega-${{ matrix.name }}.dmg"
+          # macOS's disk image helper is sometimes still busy from the last image ("Resource busy"): try again
+          for n in 1 2 3 4 5; do
+            hdiutil create -volname "Bodega" -srcfolder dmg -ov -format UDZO "out/Bodega-${{ matrix.name }}.dmg" && break
+            [ "$n" -lt 5 ] || exit 1
+            sleep $((n * 3))
+          done
 
       - name: Package (Windows .zip)
         if: runner.os == 'Windows'

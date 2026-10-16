@@ -357,7 +357,12 @@ def prepare(kind: str, file: Path, pid: int | None = None) -> Plan:
             pid,
             [
                 'MNT="$(mktemp -d)"',
-                f'hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$MNT" {_q(file)} || exit 1',
+                # (the Mac's disk image helper can be busy for a moment: tried again before giving up)
+                "for n in 1 2 3 4 5; do",
+                f'  hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$MNT" {_q(file)} && break',
+                '  [ "$n" -lt 5 ] || exit 1',
+                "  sleep $((n * 2))",
+                "done",
                 f'NEW={_q(t)}".new.$$"',
                 'ditto "$MNT/Bodega.app" "$NEW"; OK=$?',
                 'hdiutil detach "$MNT" -quiet',
