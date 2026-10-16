@@ -7,7 +7,7 @@ Each row shows a count. Import and the tools menu (⋯) sit at the bottom.
 from __future__ import annotations
 
 from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, Qt, QTimer, Signal
-from PySide6.QtGui import QCursor, QKeySequence
+from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QFrame, QGraphicsOpacityEffect, QLabel, QPushButton, QToolButton, QWidget
 
 from bodega.core import pricing, settings
@@ -155,11 +155,10 @@ class Sidebar(LeftPanel):
         self.top_lay.addWidget(word)
 
         # at the top, as a Mac's sidebar has it: Search, for the whole of Bodega (⌘K)
-        keys = QKeySequence("Ctrl+K").toString(QKeySequence.SequenceFormat.NativeText)
         self.search = QPushButton("Search")
         self.search.setObjectName("SideSearch")
         self.search.setIcon(theme.icon("search", theme.MUTED, tokens.ICON))
-        self.search.setToolTip(f"Search Everything ({keys})")
+        self.search.setToolTip("Search Everything")  # its key joins it from the menu command (the window's)
         self.search.setAccessibleName("Search Everything")
         self.search.setCursor(Qt.CursorShape.PointingHandCursor)
         self.search.clicked.connect(

@@ -126,6 +126,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
 
         self._wire()
         self._menus()
+        self._tips_from_menus()
         self.look_changed()
         groups = settings.value(self.lib.settings, "groups")
         for panel in (self.items, self.packages, self.rentals):
@@ -238,8 +239,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.btn_ai.setObjectName("Circle")
         self.btn_ai.setIcon(theme.icon("assistant", theme.ACCENT, tokens.ICON_LG))
         self.btn_ai.setIconSize(QSize(tokens.ICON_LG, tokens.ICON_LG))
-        keys = QKeySequence("Ctrl+J").toString(QKeySequence.SequenceFormat.NativeText)  # ⌘J on a Mac, Ctrl+J elsewhere
-        self.btn_ai.setToolTip(f"Assistant ({keys})")
+        self.btn_ai.setToolTip("Assistant")  # its key joins it from the menu command (menus._tips_from_menus)
         self.btn_ai.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_ai.setProperty("bar", True)
         self.btn_ai.setCheckable(True)  # on while the assistant is open

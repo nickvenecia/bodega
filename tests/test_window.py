@@ -2065,3 +2065,12 @@ def test_a_long_kit_or_rental_has_its_own_search(win):
     assert rs.box.isVisibleTo(win.rentals)
     rs.setText(lib.items[ids[1]].name)
     assert any(not w.isHidden() for w, _h in rs._rows) and any(w.isHidden() for w, _h in rs._rows)
+
+
+def test_a_buttons_key_in_its_tooltip_is_its_menu_commands(win):
+    """I-04: one place says a command's key (the menu); the bar's buttons read it from there."""
+    from PySide6.QtGui import QKeySequence
+
+    for button, action in ((win.btn_ai, win.act_assistant), (win.sidebar.search, win.act_search)):
+        keys = action.shortcut().toString(QKeySequence.SequenceFormat.NativeText)
+        assert keys and button.toolTip().endswith(f"({keys})")

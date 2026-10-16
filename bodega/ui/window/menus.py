@@ -90,7 +90,7 @@ class MenusMixin:
         e.addSeparator()
         find = act(e, "Find", self._focus_search, QKeySequence.StandardKey.Find)
         find.setShortcuts([*find.shortcuts(), QKeySequence("Ctrl+Alt+F")])  # ⌥⌘F, the Mac's other Find
-        act(e, "Search Everything…", self.search_everything, "Ctrl+K")  # places, records and commands
+        self.act_search = act(e, "Search Everything…", self.search_everything, "Ctrl+K")  # places, records, commands
         v = bar.addMenu("View")
         for p in PLACES:  # the same places as the sidebar (window/common.py)
             if p.keys:
@@ -186,6 +186,15 @@ class MenusMixin:
         self.new_menu.addSeparator()
         self.new_menu.addAction(theme.menu_icon("table"), "Import Spreadsheet…", self.import_sheet)
         self.new_menu.addAction(theme.menu_icon("link"), "Import from Google Sheets…", self.import_google)
+
+    def _tips_from_menus(self) -> None:
+        """A button that has a menu command names its key as the command has it (never typed twice): ⌘J, ⌘K."""
+        for button, words, action in (
+            (self.btn_ai, "Assistant", self.act_assistant),
+            (self.sidebar.search, "Search Everything", self.act_search),
+        ):
+            keys = action.shortcut().toString(QKeySequence.SequenceFormat.NativeText)
+            button.setToolTip(f"{words} ({keys})" if keys else words)
 
     def _app_menu(self) -> None:
         """The profile card's menu: your profiles (pick one to work as), feedback, updates, and Settings."""
