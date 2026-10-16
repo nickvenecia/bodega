@@ -17,7 +17,8 @@ from PySide6.QtWidgets import QStyle, QStyleOptionViewItem, QTreeWidget, QTreeWi
 from bodega.ui.components import access
 from bodega.ui.style import theme, tokens
 
-# what a row is, for working out where a drop lands: ("item", id) or ("divider", group, "group"/"brand")
+# what a row is, for working out where a drop lands: ("item", id), ("divider", group, "group"/"brand"), or
+# ("child", the piece's id): gear under a piece, which moves with it and stands for it
 Describe = Callable[[QTreeWidgetItem], tuple]
 
 
@@ -37,7 +38,7 @@ class Lift(QObject):
         off = table.verticalOffset()
         moving = set(moving_ids)
         self.ids = [d[1] for r in rows if (d := describe(r))[0] == "item" and d[1] in moving]
-        self.moving = [r for r in rows if describe(r)[0] == "item" and describe(r)[1] in moving]
+        self.moving = [r for r in rows if (d := describe(r))[0] in ("item", "child") and d[1] in moving]
         self.rest = [r for r in rows if r not in self.moving]
         rects = {id(r): table.visualItemRect(r) for r in rows}
         self.h = {id(r): rects[id(r)].height() or tokens.TABLE_ROW_H for r in rows}
@@ -83,7 +84,7 @@ class Lift(QObject):
         nxt = self.describe(self.rest[k]) if k < len(self.rest) else None
         if nxt is not None and nxt[0] == "item":
             return ("before", nxt[1])
-        if prev is not None and prev[0] == "item":
+        if prev is not None and prev[0] in ("item", "child"):  # (after gear under a piece: after the piece)
             return ("after", prev[1])
         if prev is not None and prev[0] == "divider":
             return ("into", prev[1], prev[2])
@@ -189,8 +190,8 @@ class Lift(QObject):
             p.drawPixmap(QPointF(0, top), self._picture(r))
             top += self.h[id(r)]
         p.restore()
-        if len(self.moving) > 1:  # how many are moving, in an accent badge at the top right
-            label = str(len(self.moving))
+        if len(self.ids) > 1:  # how many are moving, in an accent badge at the top right
+            label = str(len(self.ids))
             fm = p.fontMetrics()
             bw = max(tokens.SMALL_H, fm.horizontalAdvance(label) + 2 * tokens.SPACE_2)
             badge = QRectF(card.right() - bw / 2 - tokens.SPACE_2, card.top() - tokens.SMALL_H / 2, bw, tokens.SMALL_H)

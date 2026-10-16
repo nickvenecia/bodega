@@ -184,8 +184,7 @@ class TransferMixin:
             return None
         if not (self.view_key.startswith("grp:") or self.search.text().strip() or self.view_menu.filter.active()):
             return None
-        ids = [r.data(0, ID) for r in self.gear_table.item_rows() if not r.isHidden()]
-        return [self.lib.items[i] for i in ids if i in self.lib.items]
+        return [self.lib.items[i] for i in self.gear_table.shown if i in self.lib.items]
 
     def export_csv(self) -> None:
         """Export Gear as CSV: what the list shows (a group, a search, a filter), or all of it."""

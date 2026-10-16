@@ -7,14 +7,28 @@ or none. What's ticked is what Delete, a drag or the selection bar acts on (chos
 Every column sorts; the grip column, at a gear row's trailing edge, is your own order (drag a row by its grip to
 change it). Gear is divided
 by department, group or company (or not at all), each divider with its totals; click one to fold it. Gear
-that goes with a piece isn't listed under it: the piece shows "+3" and the inspector lists them. Searching
-finds them too. Right-click the column titles to choose the columns.
+that goes with a piece is listed under it, one step in (the standard's G.11): the piece's chevron opens and
+closes it (remembered), its figures are it with all of that, and its tick ticks it all. A search opens the
+piece whose gear it finds. Right-click the column titles to choose the columns.
 """
 
 from __future__ import annotations
 
-from PySide6.QtCore import QEvent, QItemSelectionModel, QPoint, QPointF, QRect, QRectF, QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QKeySequence, QPainter, QPen, QPixmap, QRegion
+from PySide6.QtCore import (
+    QEasingCurve,
+    QEvent,
+    QItemSelectionModel,
+    QPoint,
+    QPointF,
+    QRect,
+    QRectF,
+    QSize,
+    Qt,
+    QTimer,
+    QVariantAnimation,
+    Signal,
+)
+from PySide6.QtGui import QColor, QFontMetricsF, QKeySequence, QPainter, QPen, QPixmap, QRegion
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -32,7 +46,7 @@ from PySide6.QtWidgets import (
 from bodega.core import dates, earnings, money, pricing, search
 from bodega.core.model import RENTAL_WORDS, Business, Item
 from bodega.core.store import Library
-from bodega.ui.components import photos
+from bodega.ui.components import access, photos
 from bodega.ui.components.widgets import TickMenu
 from bodega.ui.style import theme, tokens
 from bodega.ui.window.lift import Lift
@@ -353,16 +367,38 @@ class Table(QTreeWidget):
     ticks_changed = Signal()
 
     def has_rows(self) -> bool:
-        return next(iter(self.showing_rows()), None) is not None
+        return next(iter(self.listed_rows()), None) is not None
 
     def ticked_ids(self) -> list[str]:
-        return [r.data(0, ID) for r in self.showing_rows() if r.isSelected()]
+        return [r.data(0, ID) for r in self.listed_rows() if r.isSelected()]
 
     def tick_state(self) -> str:
-        """The heading's box: "on" (every row showing is ticked), "some" or "off"."""
-        rows = list(self.showing_rows())
+        """The heading's box: "on" (every row listed is ticked), "some" or "off"."""
+        rows = list(self.listed_rows())
         n = sum(1 for r in rows if r.isSelected())
         return "on" if rows and n == len(rows) else "some" if n else "off"
+
+    @staticmethod
+    def family(row) -> list:
+        """A record row and the rows under it (the gear that goes with a piece), not hidden by a search."""
+        return [row] + [row.child(i) for i in range(row.childCount()) if not row.child(i).isHidden()]
+
+    def family_state(self, row) -> str:
+        """A row's tick: "on" or "off"; a row with rows under it is "on" when they're all ticked, "some" (a
+        dash) when some are."""
+        rows = self.family(row)
+        n = sum(1 for r in rows if r.isSelected())
+        return "on" if n == len(rows) else "some" if n else "off"
+
+    def tick_family(self, row) -> None:
+        """A row's tick: ticks it and every row under it, or (when they all are) none of them."""
+        on = self.family_state(row) != "on"
+        self.blockSignals(True)  # (one change, said once)
+        for r in self.family(row):
+            r.setSelected(on)
+        self.blockSignals(False)
+        self.ticks_changed.emit()
+        self.viewport().update()
 
     def tick_every(self, on: bool) -> None:
         if on:
@@ -405,7 +441,7 @@ class Table(QTreeWidget):
             e.accept()
             return
         if left and row.data(0, ID) and self.columnAt(pos.x()) == TICK:
-            row.setSelected(not row.isSelected())  # its tick: ticked or not, the row that's open stays open
+            self.tick_family(row)  # its tick: ticked or not (and what's under it), the row that's open stays open
             self._anchor = row.data(0, ID)
             e.accept()
             return
@@ -414,7 +450,7 @@ class Table(QTreeWidget):
         super().mousePressEvent(e)
 
     def _tick_run(self, row) -> None:
-        showing = list(self.showing_rows())
+        showing = list(self.listed_rows())
         start = next((r for r in showing if r.data(0, ID) == self._anchor), None) or self.currentItem()
         if start not in showing or row not in showing:
             row.setSelected(True)
@@ -484,17 +520,37 @@ class Table(QTreeWidget):
 
         yield from walk(self.invisibleRootItem())
 
+    def listed_rows(self):
+        """The rows ticks count over: those showing, and the gear under a piece that's closed (ticking the piece
+        ticked them). Not hidden ones, nor those inside a folded divider."""
+
+        def walk(row, under_record: bool):
+            for i in range(row.childCount()):
+                r = row.child(i)
+                if r.isHidden():
+                    continue
+                if r.data(0, ID):
+                    yield r
+                if r.isExpanded() or (r.data(0, ID) and not under_record):
+                    yield from walk(r, bool(r.data(0, ID)))
+
+        yield from walk(self.invisibleRootItem(), False)
+
     def select_showing(self) -> None:
-        """Cmd+A: everything you can see (never the dividers, never hidden rows)."""
+        """Cmd+A: everything listed (never the dividers, never hidden rows)."""
         if self.selectionMode() != QAbstractItemView.SelectionMode.ExtendedSelection:
             return
+        self.blockSignals(True)
         self.clearSelection()
-        for r in self.showing_rows():
+        for r in self.listed_rows():
             r.setSelected(True)
+        self.blockSignals(False)
+        self.ticks_changed.emit()
+        self.viewport().update()
 
     def chosen_ids(self) -> list[str]:
-        """The ticked rows you can see, top to bottom (or, with none ticked, the row that's open)."""
-        ids = [r.data(0, ID) for r in self.showing_rows() if r.isSelected()]
+        """The ticked rows listed, top to bottom (or, with none ticked, the row that's open)."""
+        ids = [r.data(0, ID) for r in self.listed_rows() if r.isSelected()]
         if not ids and self.current_id():
             ids = [self.current_id()]
         return ids
@@ -560,6 +616,23 @@ def status_of(it: Item, out: int) -> tuple[str, str]:
     return "In", tokens.MUTED
 
 
+def family_status(it: Item, kids: list[Item], out: dict) -> tuple[str, str, str]:
+    """A closed piece's status (G.11): the most pressing among it and the gear that goes with it, with how many
+    when it isn't the piece's own ("1 in Repair", "2 Out"), and who (for its tooltip)."""
+
+    def rank(x: Item) -> int:
+        return 2 if x.in_repair() else 1 if not x.is_retired() and out.get(x.id, 0) else 0
+
+    everyone = [it, *kids]
+    worst = max(rank(x) for x in everyone)
+    them = [x for x in everyone if rank(x) == worst]
+    if worst == 0 or them == [it]:
+        return (*status_of(it, out.get(it.id, 0)), "")
+    word = "in Repair" if worst == 2 else "Out"
+    who = "\n".join(f"{x.name}: {status_of(x, out.get(x.id, 0))[0]}" for x in them)
+    return f"{len(them)} {word}", tokens.WARN, who
+
+
 class RowPainter(QStyledItemDelegate):
     """Every table row's highlight, drawn once across the whole row as one rounded shape (hover, selected,
     and the dividers' accent band, a step brighter under the mouse), the way iOS lists do it.
@@ -606,12 +679,19 @@ class RowPainter(QStyledItemDelegate):
             self.row_shape(painter, option, index, theme.qcolor(tokens.ROW_HOVER))
         return divider
 
-    @staticmethod
-    def tick(painter, option, index) -> None:
-        """A record row's tick box (a divider has none)."""
-        if index.siblingAtColumn(0).data(ID):
-            ticked = bool(option.state & QStyle.StateFlag.State_Selected)
-            paint_tick(painter, option.rect, "on" if ticked else "off")
+    def tick(self, painter, option, index) -> None:
+        """A record row's tick box (a divider has none); a piece with gear under it shows a dash while only some
+        of them are ticked."""
+        row0 = index.siblingAtColumn(0)
+        if not row0.data(ID):
+            return
+        view = self.parent()
+        item = view.itemFromIndex(row0) if isinstance(view, Table) else None
+        if item is not None and item.childCount():
+            state = view.family_state(item)
+        else:
+            state = "on" if option.state & QStyle.StateFlag.State_Selected else "off"
+        paint_tick(painter, option.rect, state)
 
     @staticmethod
     def plain(option) -> QStyleOptionViewItem:
@@ -673,13 +753,23 @@ class RowPainter(QStyledItemDelegate):
         """The cell's whole text if it doesn't fit (so it's shown cut short), else ''."""
         text = str(index.data(Qt.ItemDataRole.DisplayRole) or "")
         room = view.visualRect(index).width() - 2 * tokens.SPACE_2  # the cell's padding
-        if index.column() == GEAR_COL["name"] and getattr(view, "thumbs", False):
-            room -= tokens.TABLE_THUMB + tokens.SPACE_2
+        if index.column() == GEAR_COL["name"] and isinstance(view, GearTable):
+            row0 = index.siblingAtColumn(0)
+            room -= view.name_shift(row0)
+            if view.thumbs:
+                room -= tokens.TABLE_THUMB + tokens.SPACE_2
+            if row0.data(SUMMARY):
+                small = QFontMetricsF(theme.font(tokens.TEXT_SM))
+                room -= tokens.SPACE_2 + small.horizontalAdvance(row0.data(SUMMARY))
         return text if text and option.fontMetrics.horizontalAdvance(text) > room else ""
 
 
 class _GearPainter(RowPainter):
-    """…plus the divider's chevron, the grip you drag a row by, and a piece's photo before its name."""
+    """…plus the divider's chevron, the grip you drag a row by, a piece's photo before its name, and (G.11) the
+    chevron of a piece with gear under it, which turns as it opens, its name in Semibold with how many go with it
+    after it, and that gear under it, one step in."""
+
+    _inset = -1  # where a cell's words start inside it (the style's, worked out once)
 
     def paint(self, painter, option, index):
         row0 = index.siblingAtColumn(0)
@@ -692,13 +782,75 @@ class _GearPainter(RowPainter):
             return
         option = self.plain(option)
         if index.column() == GEAR_COL["grip"]:
-            if row0.data(ID) and not divider:
+            if row0.data(ID) and not divider and row0.data(CHILD) is None:  # (gear never leaves its piece)
                 self._grip(painter, option.rect)
             return
-        if index.column() == GEAR_COL["name"] and not divider and getattr(self.parent(), "thumbs", False):
-            option = self._thumb(painter, option, row0.data(PHOTO) or "")
+        view = self.parent()
+        if index.column() == GEAR_COL["name"] and not divider and isinstance(view, GearTable):
+            option = QStyleOptionViewItem(option)
+            option.rect = option.rect.adjusted(view.name_shift(row0), 0, 0, 0)
+            item = view.itemFromIndex(row0)
+            if item is not None and view.opens(item):
+                self._disclosure(painter, self.disclosure_box(view, option.rect), view.angle(item))
+            if view.thumbs:
+                option = self._thumb(painter, option, row0.data(PHOTO) or "")
+            if row0.data(SUMMARY) and self._named(painter, option, index, row0.data(SUMMARY)):
+                return
         if not self.dotted(painter, option, index):
             QStyledItemDelegate.paint(self, painter, option, index)
+
+    def disclosure_box(self, view, cell) -> QRectF:
+        """Where a piece's chevron goes: DISCLOSURE_GAP before what follows it (its photo, or its words)."""
+        if self._inset < 0:
+            type(self)._inset = words_inset(view)
+        start = cell.left() + (tokens.SPACE_1 if view.thumbs else self._inset)
+        size = tokens.DISCLOSURE
+        right = start - tokens.DISCLOSURE_GAP
+        return QRectF(right - size, cell.center().y() - size / 2 + 0.5, size, size)
+
+    @staticmethod
+    def _disclosure(painter, box: QRectF, angle: float) -> None:
+        """chevron-right, turned `angle` degrees (0: closed, pointing to the trailing side; 90: open, down)."""
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        pen = QPen(theme.qcolor(tokens.MUTED), tokens.LINE_STROKE)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(pen)
+        painter.translate(box.center())
+        painter.rotate(angle)
+        r = box.width() / 2
+        painter.drawPolyline([QPointF(-r / 4, -r / 2), QPointF(r / 4, 0), QPointF(-r / 4, r / 2)])
+        painter.restore()
+
+    def _named(self, painter, option, index, summary: str) -> bool:
+        """A piece with gear under it: its name (Semibold), then SPACE_2 on, how many go with it, muted. The name
+        gives way first. False if there's no room for the summary at all (the plain cell is drawn instead)."""
+        opt = QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+        name, opt.text = opt.text, ""
+        w = opt.widget
+        style = w.style() if w else QApplication.style()
+        margin = style.pixelMetric(QStyle.PixelMetric.PM_FocusFrameHMargin, None, w) + 1  # (as the style's words)
+        rect = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, opt, w).adjusted(margin, 0, -margin, 0)
+        small = theme.font(tokens.TEXT_SM)
+        sw = QFontMetricsF(small).horizontalAdvance(summary)
+        room = rect.width() - tokens.SPACE_2 - sw
+        if room < opt.fontMetrics.horizontalAdvance("…") * 4:
+            return False
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, opt, painter, w)  # the cell, without its words
+        shown = opt.fontMetrics.elidedText(name, Qt.TextElideMode.ElideRight, int(room))
+        nw = opt.fontMetrics.horizontalAdvance(shown)
+        middle = int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+        painter.save()
+        painter.setFont(opt.font)
+        painter.setPen(theme.qcolor(tokens.TEXT))
+        painter.drawText(QRectF(rect.left(), rect.top(), nw + 1, rect.height()), middle, shown)
+        painter.setFont(small)
+        painter.setPen(theme.qcolor(tokens.MUTED))
+        painter.drawText(QRectF(rect.left() + nw + tokens.SPACE_2, rect.top(), sw + 1, rect.height()), middle, summary)
+        painter.restore()
+        return True
 
     @staticmethod
     def _thumb(painter, option, name: str) -> QStyleOptionViewItem:
@@ -764,7 +916,6 @@ class _GearPainter(RowPainter):
 GEAR_COLUMNS = [
     ("tick", "", tokens.TICK_W, None),
     ("name", "Name", 0, None),
-    ("kids", "", tokens.COL_W["kids"], None),
     ("with", "Goes With", tokens.COL_W["with"], None),  # the piece it's attached to
     ("brand", "Company", tokens.COL_W["company"], None),
     ("series", "Series", tokens.COL_W["series"], None),
@@ -780,7 +931,7 @@ GEAR_COLUMNS = [
 GEAR_COL = {key: n for n, (key, *_rest) in enumerate(GEAR_COLUMNS)}
 HIDDEN_AT_FIRST = ["series", "paid", "earned"]
 # on a narrow window these columns step aside first (Name always keeps NAME_MIN)
-GIVE_WAY = ["earned", "series", "paid", "with", "status", "brand", "group", "kids", "qty", "day"]
+GIVE_WAY = ["earned", "series", "paid", "with", "status", "brand", "group", "qty", "day"]
 DIVIDES = [  # how the gear table is divided
     ("group", "By Group", ""),
     ("brand", "By Company", ""),
@@ -791,6 +942,9 @@ KIND = Qt.ItemDataRole.UserRole + 8  # what a divider divides by
 WHERE = Qt.ItemDataRole.UserRole + 9  # a gear row's (group, company)
 WITH = Qt.ItemDataRole.UserRole + 10  # the name of the piece this one goes with
 PHOTO = Qt.ItemDataRole.UserRole + 11  # a gear row's photo (its file name)
+CHILD = Qt.ItemDataRole.UserRole + 13  # gear under a piece (it goes with it): that piece's id
+SUMMARY = Qt.ItemDataRole.UserRole + 14  # a piece with gear under it: the words after its name ("2 Attached")
+STATUSES = Qt.ItemDataRole.UserRole + 15  # …and its status open (its own) and closed (the most pressing of all)
 
 
 class GearTable(Table):
@@ -804,6 +958,8 @@ class GearTable(Table):
 
     COLUMNS = [(title, w, align) for _k, title, w, align in GEAR_COLUMNS]
     NAME_COL = GEAR_COL["name"]
+    thumbs = False  # some piece has a photo: every name makes room for one
+    earned: dict | None = None
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -811,11 +967,15 @@ class GearTable(Table):
         self.setIndentation(0)
         h = self.headerItem()
         h.setToolTip(GEAR_COL["grip"], "Choose Columns")
-        h.setToolTip(GEAR_COL["kids"], "Gear that goes with it")
         h.setToolTip(GEAR_COL["with"], "The piece it's attached to")
-        h.setToolTip(GEAR_COL["paid"], "What it cost, before tax (what goes with it included)")
-        h.setToolTip(GEAR_COL["value"], "Replacement value: paid plus sales tax")
-        h.setToolTip(GEAR_COL["earned"], "An estimate: each rental's gear total, shared out by each piece's day rate")
+        with_it = "a piece with gear under it counts that gear too"
+        h.setToolTip(GEAR_COL["paid"], f"What it cost, before tax ({with_it})")
+        h.setToolTip(GEAR_COL["value"], f"Replacement value: paid plus sales tax ({with_it})")
+        h.setToolTip(GEAR_COL["day"], f"A day of all of them ({with_it})")
+        h.setToolTip(
+            GEAR_COL["earned"],
+            f"An estimate: each rental's gear total, shared out by each piece's day rate ({with_it})",
+        )
         self.header().setSectionResizeMode(GEAR_COL["grip"], QHeaderView.ResizeMode.Fixed)
         self.header().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.header().customContextMenuRequested.connect(self._column_menu)
@@ -824,7 +984,13 @@ class GearTable(Table):
         self.header().sectionMoved.connect(self._column_moved)
         self._moving = False
         self.folded: set[str] = set()  # dividers you folded
-        self.opened: set[str] = set()  # kept for older settings files
+        self.open_pieces: set[str] = set()  # pieces you opened to show the gear under them (settings "gear_open")
+        self.families = False  # some piece in the list has gear under it (every name then makes room for a chevron)
+        self.shown: list[str] = []  # the pieces the search and filters left, top to bottom (show_only)
+        self._turns: dict[str, QVariantAnimation] = {}  # chevrons turning
+        self.setExpandsOnDoubleClick(False)  # (a piece opens by its chevron or the keyboard; a click opens it)
+        self.itemExpanded.connect(self._show_status)
+        self.itemCollapsed.connect(self._show_status)
         self.hidden_cols: set[str] = set(HIDDEN_AT_FIRST)
         self._squeezed: set[str] = set()  # stepped aside because the window is narrow
         self.any_with = False  # some piece is attached to another (else Goes With stays away)
@@ -927,7 +1093,7 @@ class GearTable(Table):
         for key, title, _w, _a in GEAR_COLUMNS:
             if key in (*self.FIXED, self.LAST):
                 continue
-            a = m.addAction(title or "Gear With It (+3)")
+            a = m.addAction(title)
             a.setCheckable(True)
             a.setChecked(key not in self.hidden_cols)
             a.toggled.connect(lambda on, k=key: self._toggle_column(k, on))
@@ -979,6 +1145,80 @@ class GearTable(Table):
     def slide_done(self) -> None:
         self._apply_columns()
 
+    # A piece and the gear that goes with it (the standard's G.11): one row that opens in place
+    def name_shift(self, row) -> int:
+        """How far a row's name moves in (`row` is the row, or one of its cells): room for a chevron once any piece
+        has gear under it, and a step more for that gear."""
+        lead = tokens.DISCLOSURE + tokens.DISCLOSURE_GAP if self.families else 0
+        under = row.data(0, CHILD) if isinstance(row, QTreeWidgetItem) else row.siblingAtColumn(0).data(CHILD)
+        return lead + (tokens.ROW_INDENT if under is not None else 0)
+
+    @staticmethod
+    def opens(row) -> bool:
+        """A piece with gear under it showing (a search can hide all of it)."""
+        return bool(row.data(0, ID)) and any(not row.child(i).isHidden() for i in range(row.childCount()))
+
+    def angle(self, row) -> float:
+        """Its chevron: 0 closed, 90 open, or on its way."""
+        turning = self._turns.get(row.data(0, ID))
+        if turning is not None:
+            return float(turning.currentValue())
+        return 90.0 if row.isExpanded() else 0.0
+
+    def _turn(self, row, opening: bool) -> None:
+        piece = row.data(0, ID)
+        start = self.angle(row)
+        old = self._turns.pop(piece, None)
+        if old is not None:
+            old.stop()
+        ms = access.duration(tokens.TURN_MS)  # Reduce Motion: it just points the other way
+        if not ms:
+            return
+        a = QVariantAnimation(self, startValue=start, endValue=90.0 if opening else 0.0, duration=ms)
+        a.setEasingCurve(QEasingCurve.Type.OutCubic)
+        a.valueChanged.connect(self.viewport().update)
+        a.finished.connect(lambda: self._turns.pop(piece, None) if self._turns.get(piece) is a else None)
+        self._turns[piece] = a
+        a.start()
+
+    def open_piece(self, row, opening: bool, every: bool = False) -> None:
+        """Open or close a piece to show the gear under it (remembered, as a divider's fold is); ⌥ does it to every
+        piece. Closing it over the row that's open opens the piece instead (the Finder does the same)."""
+        rows = [r for r in self.record_rows() if self.opens(r)] if every else [row]
+        for r in rows:
+            if r.isExpanded() == opening:
+                continue
+            (self.open_pieces.add if opening else self.open_pieces.discard)(r.data(0, ID))
+            self._turn(r, opening)
+            cur = self.currentItem()
+            if not opening and cur is not None and cur.parent() is r:
+                self.setCurrentItem(r, 0, QItemSelectionModel.SelectionFlag.NoUpdate)
+            r.setExpanded(opening)
+        self.folds_changed.emit()
+
+    def _show_status(self, row) -> None:
+        """A piece open shows its own status; closed, the most pressing of it and what's under it. A screen reader
+        hears which it is, and how many go with it."""
+        both = row.data(0, STATUSES)
+        if not both:
+            return
+        state = "open" if row.isExpanded() else "closed"
+        row.setData(GEAR_COL["name"], Qt.ItemDataRole.AccessibleDescriptionRole, f"{row.data(0, SUMMARY)}, {state}")
+        text, color, tip = both[0] if row.isExpanded() else both[1]
+        col = GEAR_COL["status"]
+        if row.text(col) != text:
+            row.setText(col, text)
+        row.setData(col, DOT, color)
+        row.setToolTip(col, theme.plain_tip(tip) if tip else "")
+
+    def _on_chevron(self, row, pos) -> bool:
+        """The press is on a piece's chevron (or the room before its name that holds it)."""
+        if row is None or not self.opens(row) or self.columnAt(pos.x()) != GEAR_COL["name"]:
+            return False
+        h = self.header()
+        left = h.sectionViewportPosition(GEAR_COL["name"])
+        return pos.x() < left + self.name_shift(row) + (tokens.SPACE_1 if self.thumbs else tokens.SPACE_2)
+
     # Dragging
     def selected_ids(self) -> list[str]:
         return self.chosen_ids()
@@ -987,6 +1227,8 @@ class GearTable(Table):
         """For the Lift: what a row is."""
         if row.data(0, HEAD) is not None:
             return ("divider", row.data(0, GRP) or "", row.data(0, KIND) or "group")
+        if row.data(0, CHILD) is not None:
+            return ("child", row.data(0, CHILD))  # (it stands for its piece: it moves with it)
         return ("item", row.data(0, ID))
 
     def _visible_rows(self) -> list:
@@ -1007,12 +1249,24 @@ class GearTable(Table):
 
     def _on_grip(self, pos) -> object:
         row = self.itemAt(pos)
-        if row is not None and row.data(0, ID) and self.columnAt(pos.x()) == GEAR_COL["grip"]:
+        if (
+            row is not None
+            and row.data(0, ID)
+            and row.data(0, CHILD) is None  # (gear under a piece moves with it, never on its own)
+            and self.columnAt(pos.x()) == GEAR_COL["grip"]
+        ):
             return row
         return None
 
     def mousePressEvent(self, e):
-        row = self._on_grip(e.position().toPoint())
+        pos = e.position().toPoint()
+        piece = self.itemAt(pos)
+        if e.button() == Qt.MouseButton.LeftButton and self._on_chevron(piece, pos):
+            every = bool(e.modifiers() & Qt.KeyboardModifier.AltModifier)  # ⌥: every piece, as the Finder does
+            self.open_piece(piece, not piece.isExpanded(), every)
+            e.accept()
+            return
+        row = self._on_grip(pos)
         if e.button() == Qt.MouseButton.LeftButton and row is not None and not e.modifiers():
             self._press = (e.position().toPoint(), row)  # (the ticked rows go with it if it's one of them)
             e.accept()
@@ -1088,8 +1342,7 @@ class GearTable(Table):
                 self._lift.move_to(pos.y())
             return
         if not e.buttons():
-            row = self.itemAt(e.position().toPoint())
-            on_grip = row is not None and row.data(0, ID) and self.columnAt(int(e.position().x())) == GEAR_COL["grip"]
+            on_grip = self._on_grip(e.position().toPoint()) is not None
             shape = Qt.CursorShape.OpenHandCursor if on_grip else Qt.CursorShape.ArrowCursor
             if self.viewport().cursor().shape() != shape:
                 self.viewport().setCursor(shape)
@@ -1115,6 +1368,8 @@ class GearTable(Table):
             return None
         if row.data(0, HEAD) is not None:
             return "divider", row
+        if row.data(0, CHILD) is not None and row.parent() is not None:
+            return "row", row.parent()  # next to gear under a piece: next to the piece
         if row.data(0, ID):
             return "row", row
         return None
@@ -1201,14 +1456,30 @@ class GearTable(Table):
         (self.folded.discard if opening else self.folded.add)(row.data(0, HEAD + 10))
 
     def keyPressEvent(self, e):
-        """On a divider, → opens it and ← folds it (remembered, as a click is); Space or Return does either."""
+        """On a divider, → opens it and ← folds it (remembered, as a click is); Space or Return does either. On a
+        piece with gear under it, → opens it, ← closes it and Return does either; Space ticks it and what's under
+        it. On gear under a piece, ← goes up to the piece (G.11)."""
         row = self.currentItem()
         k = e.key()
-        if (
-            row is not None
-            and row.data(0, HEAD + 10) is not None
-            and not e.modifiers() & ~Qt.KeyboardModifier.KeypadModifier
-        ):
+        plain = not e.modifiers() & ~Qt.KeyboardModifier.KeypadModifier
+        if row is not None and plain and row.data(0, ID):
+            if self.opens(row):
+                if k in (Qt.Key.Key_Right, Qt.Key.Key_Left) and row.isExpanded() != (k == Qt.Key.Key_Right):
+                    self.open_piece(row, k == Qt.Key.Key_Right)
+                    return
+                if k in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+                    self.open_piece(row, not row.isExpanded())
+                    return
+                if k == Qt.Key.Key_Space:
+                    self.tick_family(row)
+                    return
+            if k == Qt.Key.Key_Left and row.data(0, CHILD) is not None and row.parent() is not None:
+                self.setCurrentItem(row.parent(), 0, QItemSelectionModel.SelectionFlag.NoUpdate)
+                self.scrollToItem(row.parent())
+                return
+            if k in (Qt.Key.Key_Right, Qt.Key.Key_Left):
+                return  # (nothing to open or close: the list never scrolls sideways)
+        if row is not None and row.data(0, HEAD + 10) is not None and plain:
             if k in (Qt.Key.Key_Right, Qt.Key.Key_Left) and row.isExpanded() != (k == Qt.Key.Key_Right):
                 self._fold(row, k == Qt.Key.Key_Right)
                 self.folds_changed.emit()
@@ -1228,7 +1499,6 @@ class GearTable(Table):
             self._fill_later = (lib, b, group, divide)
             return
         self.thumbs = any(it.photo for it in lib.items.values())  # once one has a photo, every row has room
-        self.any_with = any(it.parent in lib.items for it in lib.items.values())
         # worked out only while the Earned column shows (the piece's panel works out its own otherwise)
         self.earned = earnings.earnings(lib) if "earned" not in self.hidden_cols else None
         self.group = group
@@ -1241,8 +1511,21 @@ class GearTable(Table):
         position = {it.id: n for n, it in enumerate(ordered)}
         items = [i for i in ordered if not group or i.group == group]
         kind = self.divide
+        # gear that goes with a piece goes under it, one level (G.11): under the piece it ultimately lives with
+        listed = {i.id for i in items}
+        under: dict[str, list[Item]] = {}
+        for i in items:
+            root = pricing.root_of(lib, i)
+            if root.id != i.id and root.id in listed:
+                under.setdefault(root.id, []).append(i)
+        top_of = {kid.id: piece for piece, kids in under.items() for kid in kids}
+        self.families = bool(under)
+        # Goes With, only where being under its piece doesn't say it: gear on gear that goes with a piece, or a piece
+        # listed without the one it goes with
+        self.any_with = any(i.parent in lib.items and top_of.get(i.id) != i.parent for i in items)
 
         def key_of(i: Item):
+            i = lib.items.get(top_of.get(i.id, ""), i)  # (gear under a piece is under its divider)
             return i.group if kind == "group" else (i.brand if kind == "brand" else None)
 
         keys: list = []
@@ -1275,12 +1558,18 @@ class GearTable(Table):
                     d.setTextAlignment(c, align)
             dividers[key] = d
         totals = {key: pricing.Stock() for key in dividers}
-        for it in items:
-            st = pricing.stock(lib, it, b, attached=False)  # each row is that piece alone
+        rows: dict[str, Row] = {}
+        for it in sorted(items, key=lambda i: i.id in top_of):  # (each piece before the gear under it)
+            st = pricing.stock(lib, it, b, attached=False)  # each row is that piece alone (the totals add them)
             self.stocks[it.id] = st
-            kids = len(pricing.children(lib, it.id))
             on = lib.items.get(it.parent) if it.parent else None
-            self._row(it, st, kids, cur, out, dividers.get(key_of(it), self), on.name if on else "", position[it.id])
+            home = rows[top_of[it.id]] if it.id in top_of else dividers.get(key_of(it), self)
+            row = self._row(it, st, cur, out, home, on.name if on else "", position[it.id])
+            rows[it.id] = row
+            if it.id in top_of:
+                row.setData(0, CHILD, top_of[it.id])
+            elif it.id in under:
+                self._family(row, it, under[it.id], lib, b, cur, out)
             if key_of(it) in totals:
                 totals[key_of(it)].add(st)
         for key, d in dividers.items():
@@ -1295,7 +1584,7 @@ class GearTable(Table):
         self._fill_end(keep, col, order)
         self.filter("")
 
-    def _row(self, it: Item, st, kids: int, cur: str, out: dict, parent, on: str, pos: int) -> Row:
+    def _row(self, it: Item, st, cur: str, out: dict, parent, on: str, pos: int) -> Row:
         status, color = status_of(it, out.get(it.id, 0))
         e = self.earned.get(it.id) if self.earned is not None else None
         made = e.amount if e is not None else money.ZERO
@@ -1305,7 +1594,6 @@ class GearTable(Table):
             [
                 ("", pos),  # its tick
                 (it.name or "Untitled Piece", it.name.casefold()),
-                (f"+{kids}" if kids else "", kids),
                 (on, (on or "~").casefold()),
                 (it.brand, (it.brand or "~").casefold()),
                 (it.series, (it.series or "~").casefold()),
@@ -1324,11 +1612,8 @@ class GearTable(Table):
             parent,
         )
         row.setData(GEAR_COL["status"], DOT, color)
-        row.setForeground(GEAR_COL["kids"], theme.qcolor(tokens.MUTED))  # a count, not a button
         for k in ("with", "brand", "series"):
             row.setForeground(GEAR_COL[k], theme.qcolor(tokens.MUTED))
-        if kids:
-            row.setToolTip(GEAR_COL["kids"], f"{kids} go with it")
         if on:
             row.setData(0, WITH, on)
             row.setToolTip(GEAR_COL["name"], theme.plain_tip(f"{it.name}\nGoes with {on}"))
@@ -1337,29 +1622,81 @@ class GearTable(Table):
         row.setData(0, HAY, search.gear_hay(it, on))
         return row
 
+    def _family(self, row: Row, it: Item, kids: list[Item], lib: Library, b: Business | None, cur: str, out) -> None:
+        """A piece with gear under it (G.11): its name in Semibold and how many go with it; its figures are it with
+        all of them (what a rental line of it costs); closed, its status is the most pressing among them."""
+        n = len(kids)
+        words = f"{n} Attached"
+        row.setData(0, SUMMARY, words)
+        row.setFont(GEAR_COL["name"], theme.font(tokens.TEXT_MD, tokens.WEIGHT_SEMIBOLD))
+        alone = self.stocks[it.id]
+        everything = pricing.stock(lib, it, b)  # the piece and all that goes with it
+        made = alone_made = money.ZERO
+        if self.earned is not None:
+            alone_made = self.earned[it.id].amount if it.id in self.earned else money.ZERO
+            made = sum((self.earned[x.id].amount for x in (it, *kids) if x.id in self.earned), money.ZERO)
+        day, own_day = (everything.day, alone.day) if it.rentable else (None, None)
+        figures = (
+            ("paid", money.whole(everything.paid), money.whole(alone.paid)),
+            ("value", money.whole(everything.value), money.whole(alone.value)),
+            ("day", day, own_day),
+            ("earned", made, alone_made),
+        )
+        for key, total, own in figures:
+            if total is None:
+                continue
+            col = GEAR_COL[key]
+            row.setText(col, money.fmt_short(total, cur) if total else "")
+            row.setData(col, SORT, money.in_cents(total))
+            if total != own:
+                row.setToolTip(col, f"With what goes with it ({money.fmt_short(own or money.ZERO, cur)} on its own)")
+        own_status = (*status_of(it, out.get(it.id, 0)), "")
+        row.setData(0, STATUSES, (own_status, family_status(it, kids, out)))
+        self._show_status(row)
+
     def item_rows(self):
-        """Every gear row (not the dividers)."""
-        root = self.invisibleRootItem()
-        for i in range(root.childCount()):
-            top = root.child(i)
-            if top.data(0, HEAD) is None:
-                yield top
-            else:
-                for k in range(top.childCount()):
-                    yield top.child(k)
+        """Every gear row (not the dividers), and the gear under each piece after it."""
+
+        def walk(row):
+            for i in range(row.childCount()):
+                r = row.child(i)
+                if r.data(0, HEAD) is None:
+                    yield r
+                yield from walk(r)
+
+        yield from walk(self.invisibleRootItem())
 
     def show_only(self, text: str, keep=None) -> list[str]:
-        """Hide rows that don't match every word of `text` (and `keep(item_id)`, when given).
-        Gear that goes with a piece shows only when searching. Returns the ids of the rows left showing."""
+        """Hide rows that don't match every word of `text` (and `keep(item_id)`, when given). A piece whose gear
+        matches shows too, opened to show it (G.11); clearing the search closes what you hadn't opened. Returns the
+        ids of the rows that match, top to bottom (those under a closed piece too)."""
         words = search.words(text)
+        narrowed = bool(words) or keep is not None
+
+        def matches(row) -> bool:
+            ok = all(w in (row.data(0, HAY) or "") for w in words)
+            return ok and (keep is None or keep(row.data(0, ID)))
+
+        cur = self.currentItem()
         shown: list[str] = []
         for row in self.item_rows():
-            ok = all(w in (row.data(0, HAY) or "") for w in words)
-            if ok and keep is not None:
-                ok = keep(row.data(0, ID))
-            row.setHidden(not ok)
-            if ok:
+            if row.data(0, CHILD) is not None:
+                continue  # (with its piece)
+            me = matches(row)
+            kids = [row.child(i) for i in range(row.childCount())]
+            found = [k for k in kids if matches(k)]
+            for k in kids:
+                k.setHidden(k not in found)
+            row.setHidden(not (me or found))
+            if me:
                 shown.append(row.data(0, ID))
+            shown.extend(k.data(0, ID) for k in found)
+            if kids:
+                want = row.data(0, ID) in self.open_pieces or (narrowed and bool(found))
+                want = want or (cur is not None and cur.parent() is row and not cur.isHidden())
+                if row.isExpanded() != want:
+                    row.setExpanded(want)
+        self.shown = shown
         root = self.invisibleRootItem()
         for i in range(root.childCount()):
             d = root.child(i)

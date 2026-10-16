@@ -8,6 +8,7 @@ from __future__ import annotations
 import pytest
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QAbstractItemView
 
 from bodega.core import sample
 from bodega.core.store import Library
@@ -36,6 +37,17 @@ def rows(t):
     return [r for r in t.showing_rows() if r.data(0, ID)]
 
 
+def one_group(t, n: int) -> list:
+    """The pieces of the first group listing at least `n` (most of the sample's gear is under its piece)."""
+    for i in range(t.topLevelItemCount()):
+        d = t.topLevelItem(i)
+        pieces = [d.child(k) for k in range(d.childCount()) if not d.child(k).isHidden()]
+        if len(pieces) >= n:
+            t.scrollToItem(d, QAbstractItemView.ScrollHint.PositionAtTop)
+            return pieces
+    raise AssertionError(f"no group lists {n} pieces")
+
+
 def test_a_click_opens_a_row_and_its_tick_ticks_it(win):
     win.go("gear")
     t = win.gear_table
@@ -58,6 +70,7 @@ def test_cmd_click_space_and_shift_click_tick(win):
     assert set(t.ticked_ids()) >= {r[0].data(0, ID), r[1].data(0, ID), r[2].data(0, ID)}  # a run
     t.clearSelection()
     t.setFocus()
+    r = one_group(t, 3)
     t.setCurrentItem(r[1])
     QTest.keyClick(t, Qt.Key.Key_Down)  # an arrow moves to the next row (it opens), ticking nothing
     assert t.currentItem() is r[2] and not t.ticked_ids() and win.items.it.id == r[2].data(0, ID)
@@ -72,7 +85,8 @@ def test_the_headings_tick_ticks_every_row_showing(win):
     head = t.header()
     x = head.sectionViewportPosition(TICK) + t.columnWidth(TICK) // 2
     QTest.mouseClick(head.viewport(), Qt.MouseButton.LeftButton, pos=QPoint(x, head.height() // 2))
-    assert t.tick_state() == "on" and len(t.ticked_ids()) == len(rows(t))
+    # every row listed: those showing, and the gear folded under each piece
+    assert t.tick_state() == "on" and len(t.ticked_ids()) == len(list(t.listed_rows())) > len(rows(t))
     rows(t)[0].setSelected(False)
     assert t.tick_state() == "some"  # a dash: some are
     QTest.mouseClick(head.viewport(), Qt.MouseButton.LeftButton, pos=QPoint(x, head.height() // 2))

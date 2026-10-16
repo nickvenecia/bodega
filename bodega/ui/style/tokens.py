@@ -88,7 +88,9 @@ INSPECTOR_SHARE = 0.27  # of the window's width, between those two
 HEADER_H = 52  # the numbered step header on top of every panel
 TITLEBAR_H = 32  # Bodega's own Mac title bar (fitted to the real one once the window shows)
 SEG_INSET = 2  # gap between a segmented control's frame and its buttons
-ROW_INDENT = 18  # attached gear in the list, per level
+ROW_INDENT = 18  # (G.11) gear that goes with a piece, under it: its name this much further in
+DISCLOSURE = 12  # (G.11) a piece's chevron, before its name, when gear goes with it…
+DISCLOSURE_GAP = 6  # …this far before what follows it
 TEXT_BOX_H = 2 * CONTROL_H - SPACE_2  # a two-line text box (addresses, notes)
 SCROLL_INSET = 2  # a scrollbar's handle sits this far inside its track
 TEXT_BOX_TALL = 4 * CONTROL_H - SPACE_3  # notes
@@ -130,6 +132,7 @@ GLASS_SHADOW_DROP = 3  # how far below the panel it sits: barely
 DOCK_MS = 240  # the inspector sliding in or out
 FADE_MS = 150  # small things appearing or going (a sidebar section's +): a quick fade, never a pop
 SEG_SLIDE_MS = 200  # a segmented control's highlight sliding to the new choice
+TURN_MS = 180  # (G.11) a chevron turning as what it holds opens or closes
 LIFT_STEP_MS = 16  # dragging a row: how often the other rows move (about 60 a second)
 LIFT_EASE = 0.3  # …and how far towards their new place each step (smaller is slower)
 LIFT_ROWS_SHOWN = 3  # rows drawn on the lifted card when several move
@@ -181,7 +184,7 @@ REVIEW_COL_W = (180, 64, 150, 0, 130)  # the AI Review window's columns (0: take
 REVIEW_W = 900
 # the tables' fixed column widths
 COL_W = {
-    "kids": 40, "company": 130, "series": 110, "group": 140, "qty": 48, "status": 88, "paid": 100,
+    "company": 130, "series": 110, "group": 140, "qty": 48, "status": 88, "paid": 100,
     "with_tax": 104, "day": 88, "pieces": 90, "rate": 110, "value": 120, "rental": 140, "production": 200,
     "dates": 190, "rental_status": 100, "total": 120, "earned": 96, "with": 170,
 }  # fmt: skip

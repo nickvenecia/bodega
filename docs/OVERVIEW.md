@@ -66,10 +66,19 @@ package, and attaches a software bill of materials. Merging to main is releasing
 ## Known gaps, and drift in the other documents
 
 - **CI on Windows** doesn't finish yet: the test machine stops answering partway (being tracked down file by file).
-  Linux and the Apple silicon Mac pass; the Intel Mac crashed in the tests until today's fix.
+  Linux and the Apple silicon Mac pass; the Intel Mac crashed in the tests until today's fix. (Fixed since: see the
+  end.)
 - The standard's larger redesigns not made yet are listed in STANDARD_AUDIT.md ("After the fixes"): among them text
   that follows the system's text size, attached gear folding under its piece, print options, one table for every
   menu's commands, and dialogs as sheets.
 - The downloads aren't signed (an Apple Developer ID and a Windows certificate are the owner's to get, later).
 - **Drift**: DESIGN.md describes the look as of 1.2 in places; where it differs, the standard and
   PROJECT_ADDENDUM.md win. README's screenshots are today's.
+
+## Since then
+
+- **2026-10-16, later**: CI passes on all four builds (both Macs, Windows and Linux), tests and downloads; the
+  Windows test machine's stall was a test named by 2 MB of its own bytes, and the Mac crashes were Qt objects kept
+  past their life. The Windows installer is built with a pinned Inno Setup (6.7.1). A row's right-click menu and its
+  panel's ⋯ come from one list of what the record can do. Gear that goes with a piece is folded under it in the gear
+  list (it opens in place, sums up what's with it, and its tick ticks all of it).

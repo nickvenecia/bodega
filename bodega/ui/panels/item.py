@@ -5,8 +5,8 @@ tax math a gear sheet does). Added only when a piece needs them (+ Add): Link (w
 Numbers, Works With and Notes; a stand doesn't need serial numbers. Duplicate and Delete live under ⋯, and
 Rent This is the button along the bottom.
 
-Works With: gear that goes with a piece (the FX6's cage, the 80c's fresnel) isn't listed in the table; it's
-here, each one click away, and goes wherever its piece goes, onto kits, rentals and agreements.
+Works With: gear that goes with a piece (the FX6's cage, the 80c's fresnel) is folded under the piece in the
+list, and listed here, each one click away; it goes wherever its piece goes, onto kits, rentals and agreements.
 """
 
 from __future__ import annotations

@@ -70,14 +70,17 @@ class GroupsMixin:
         if kind_of(self.view_key) != "gear":
             return
         ids = ids or t.chosen_ids()
-        rows = [r for r in t.showing_rows() if r.data(0, ID)]
-        mine = [r for r in rows if r.data(0, ID) in ids]
-        if not mine:
+        showing = [r for r in t.showing_rows() if r.data(0, ID)]
+        first = next((r for r in showing if r.data(0, ID) in ids), None)
+        if first is None:
             return
+        rows = [r for r in showing if r.parent() is first.parent()]  # its own level: a group, or a piece's gear
+        mine = [r for r in rows if r.data(0, ID) in ids]
         edge = mine[0] if step < 0 else mine[-1]
         at = rows.index(edge) + step
-        if not 0 <= at < len(rows) or rows[at].parent() is not edge.parent():
-            self.toast(f"It's already {'first' if step < 0 else 'last'} in its group.")
+        if not 0 <= at < len(rows):
+            where = "with its piece" if edge.parent() is not None and edge.parent().data(0, ID) else "in its group"
+            self.toast(f"It's already {'first' if step < 0 else 'last'} {where}.")
             return
         self._reordered([r.data(0, ID) for r in mine], rows[at].data(0, ID), after=step > 0)
 

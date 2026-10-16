@@ -142,7 +142,9 @@ bodega/
                    fold, kept in settings "sidebar_folded"; a folded All Rentals still shows out/late; at the bottom:
                    your profile card (its menu: your profiles, Send Feedback, Check for Updates, Settings)); tables.py
                    (GearTable, KitTable, RentalTable; a tick column first (TICK: the ticks are the selection, a click
-                   opens, chosen_ids() what's ticked), the gear grip last; COL_W widths; never per-row widgets); lift.py
+                   opens, chosen_ids() what's ticked), the gear grip last; COL_W widths; never per-row widgets; gear
+                   that goes with a piece is one level under it (G.11): open_pieces, kept in settings "gear_open",
+                   family ticks, listed_rows() for ticks and showing_rows() for what you see); lift.py
                    (Lift: drag by the grip, drawn live: rows slide apart to show where it lands; off to the left it
                    becomes a normal drag for the sidebar's groups); filters.py (FilterButton + GearFilter: divide by,
                    show, company, missing, Clear Filters); calendar_view.py (CalendarPage: Month, a wall calendar with

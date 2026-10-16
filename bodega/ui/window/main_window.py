@@ -157,6 +157,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             self.lib.settings["companies_guessed"] = True
         folded = settings.value(self.lib.settings, "folded")
         self.gear_table.folded = {x for x in folded if isinstance(x, str)} if isinstance(folded, list) else set()
+        self.gear_table.open_pieces = {x for x in settings.value(self.lib.settings, "gear_open") if isinstance(x, str)}
         self._restored = False  # True: open at the size already set (screenshots), not the saved one
         view = settings.value(self.lib.settings, "view")
         self.go(view if isinstance(view, str) else "gear")
@@ -744,6 +745,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
 
     def _remember_folds(self) -> None:
         self.lib.settings["folded"] = sorted(self.gear_table.folded)
+        self.lib.settings["gear_open"] = sorted(i for i in self.gear_table.open_pieces if i in self.lib.items)
         self._pager_update()  # (what the pager walks folds too)
 
     # Opening

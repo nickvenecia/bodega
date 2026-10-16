@@ -342,17 +342,27 @@ def test_dividers_totals_and_attached(win):
     t = win.gear_table
     names = [t.topLevelItem(i).text(1) for i in range(t.topLevelItemCount())]
     assert names == win.lib.groups()  # a divider per group
-    shown = [r.data(0, 256) for r in t.item_rows() if not r.isHidden()]
+    from bodega.core import money
+    from bodega.ui.window.tables import CHILD, GEAR_COL, SUMMARY, WITH
+
+    shown = [r.data(0, 256) for r in t.item_rows()]
     assert fx6.id in shown and cage.id in shown  # every piece has its own row
     fx6_row = next(r for r in t.item_rows() if r.data(0, 256) == fx6.id)
-    assert fx6_row.text(2) == f"+{len(pricing.children(win.lib, fx6.id))}"
-    from bodega.ui.window.tables import GEAR_COL, WITH
+    # what goes with the FX6 (and with that) is one level under it (G.11), closed at first
+    under = [fx6_row.child(i).data(0, 256) for i in range(fx6_row.childCount())]
+    assert set(under) == {x.id for x, _u, depth in pricing.with_attached(win.lib, fx6) if depth}
+    assert all(fx6_row.child(i).data(0, CHILD) == fx6.id for i in range(fx6_row.childCount()))
+    assert not fx6_row.isExpanded() and fx6_row.data(0, SUMMARY) == f"{len(under)} Attached"
+    b, cur = win.lib.pricing(), "$"
+    # its figures are it with all of that: what a rental line of it costs a day
+    assert fx6_row.text(GEAR_COL["day"]) == money.fmt_short(pricing.item_rate(win.lib, fx6, b, fx6.qty), cur)
+    assert "on its own" in fx6_row.toolTip(GEAR_COL["day"])
 
     cage_row = next(r for r in t.item_rows() if r.data(0, 256) == cage.id)
-    assert cage_row.data(0, WITH) == fx6.name  # says what it goes with, in its own column
-    assert cage_row.text(GEAR_COL["with"]) == fx6.name and t.any_with and "with" not in t.hidden_cols
-    # shown, unless the window is too narrow for it (the test screen is 800 wide): then it steps aside for Name
-    assert not t.isColumnHidden(GEAR_COL["with"]) or "with" in t._squeezed
+    assert cage_row.parent() is fx6_row
+    assert cage_row.data(0, WITH) == fx6.name  # says what it goes with, in its own column…
+    assert cage_row.text(GEAR_COL["with"]) == fx6.name and "with" not in t.hidden_cols
+    assert not t.any_with and t.isColumnHidden(GEAR_COL["with"])  # …shown only when being under it doesn't say it
     b = win.lib.pricing()
     everything = pricing.Stock()
     for it in win.lib.items.values():
@@ -361,11 +371,13 @@ def test_dividers_totals_and_attached(win):
     assert everything.pieces == sum(i.qty for i in win.lib.items.values() if i.status != "retired")
     win.search.setText("cage")
     assert win.count.full_text() == "1"
-    row = next(r for r in t.item_rows() if not r.isHidden())
-    assert row.data(0, 256) == cage.id
-    win.open("gear", cage.id)
-    assert win.items.it is cage
+    assert t.shown == [cage.id] and not cage_row.isHidden()
+    assert fx6_row.isExpanded() and not fx6_row.isHidden()  # its piece opens to show it (G.11)
+    assert all(fx6_row.child(i).isHidden() for i in range(fx6_row.childCount()) if fx6_row.child(i) is not cage_row)
     win.search.clear()
+    assert not fx6_row.isExpanded()  # what you hadn't opened closes again
+    win.open("gear", cage.id)
+    assert win.items.it is cage and fx6_row.isExpanded()  # opening it from elsewhere shows it
     win.set_gear_filter("repair")
     assert win.count.full_text() == ""
     win.set_gear_filter("all")
@@ -728,21 +740,24 @@ def test_order_columns_and_divide(win):
     from bodega.ui.window.tables import GEAR_COL
 
     lib = win.lib
-    win.go("grp:Body")
+    win.go("grp:Lenses")
     win.view_menu.divide = "none"
     win._view_picked()
     t = win.gear_table
     shown = [r.data(0, 256) for r in t.showing_rows()]
     first, last = shown[0], shown[-1]
+    assert first != last
     win._reordered([last], first, False)  # dragged by its grip to the top
     assert next(r.data(0, 256) for r in t.showing_rows()) == last
-    assert Library(lib.root).load().ordered_items()[0].id == last
+    order = [i.id for i in Library(lib.root).load().ordered_items()]
+    assert order.index(last) < order.index(first)
     # divide by company
+    win.go("gear")
     win.view_menu.divide = "brand"
     win._view_picked()
     names = [t.topLevelItem(i).text(1) for i in range(t.topLevelItemCount())]
     assert "Sony" in names and t.isColumnHidden(GEAR_COL["brand"])
-    assert win._divide_for("grp:Body") == "brand" and win._divide_for("gear") == "group"
+    assert win._divide_for("gear") == "brand" and win._divide_for("grp:Body") == "none"
     # columns you choose
     t._toggle_column("series", True)
     assert not t.isColumnHidden(GEAR_COL["series"]) and "series" not in lib.settings["hidden_columns"]
@@ -810,6 +825,20 @@ def test_back_up_zips_the_data(tmp_path):
     assert sorted(zipfile.ZipFile(dest).namelist()) == ["Bodega/gear.json", "Bodega/rentals/a.json"]
 
 
+def pieces_of_a_group(t, n: int) -> list:
+    """The pieces of the first group listing at least `n` (most of the sample's gear is under its piece),
+    scrolled to the top."""
+    from PySide6.QtWidgets import QAbstractItemView
+
+    for i in range(t.topLevelItemCount()):
+        d = t.topLevelItem(i)
+        pieces = [d.child(k) for k in range(d.childCount()) if not d.child(k).isHidden()]
+        if len(pieces) >= n:
+            t.scrollToItem(d, QAbstractItemView.ScrollHint.PositionAtTop)
+            return pieces
+    raise AssertionError(f"no group lists {n} pieces")
+
+
 def test_dragging_a_row_shifts_the_others_live_and_moves_it(win):
     from PySide6.QtWidgets import QApplication
 
@@ -817,9 +846,8 @@ def test_dragging_a_row_shifts_the_others_live_and_moves_it(win):
 
     t = win.gear_table
     win.go("gear")
-    rows = [r for r in t.item_rows() if not r.isHidden()]
+    rows = pieces_of_a_group(t, 3)
     first, third = rows[0], rows[2]
-    assert first.parent() is third.parent()  # the sample's first group has room to drag in
     first_id, third_id = first.data(0, ID), third.data(0, ID)  # the rows are rebuilt after the drop
     y0 = t.visualItemRect(first).center().y()
     t.start_lift(first, y0)
@@ -1004,7 +1032,7 @@ def test_drifting_left_or_up_keeps_the_row_lifted(win):
 
     t = win.gear_table
     win.go("gear")
-    row = [r for r in t.item_rows() if not r.isHidden()][1]
+    row = pieces_of_a_group(t, 2)[1]
     y = t.visualItemRect(row).center().y()
     t.start_lift(row, y)
     vp = t.viewport()
@@ -1318,9 +1346,7 @@ def test_the_places_come_from_one_list(win):
 def test_gear_moves_up_and_down_from_the_keyboard(win):
     win.go("gear")
     t = win.gear_table
-    rows = [r for r in t.showing_rows()]
-    first, second = rows[0], rows[1]
-    assert first.parent() is second.parent()
+    first, second = pieces_of_a_group(t, 2)[:2]
     a, b = first.data(0, 256), second.data(0, 256)
     win.step_gear(1, [a])
     order = [i.id for i in win.lib.ordered_items()]

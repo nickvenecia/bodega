@@ -325,8 +325,12 @@
   With Reduce Motion on, it moves at once.
 - The page window says which page you're looking at ("Page 2 of 5") as you scroll a long list, and its scroll bar
   is always there, so the pages never shift sideways.
-- Gear that's attached to another piece says which in its own Goes With column, instead of grey words squeezed in
-  after its name, so whole names fit. The column stays away until something is attached.
+- Gear that goes with a piece (the FX6's cage, the 80c's fresnel) is listed under it, one step in, and folds away:
+  click the arrow before the piece's name, or press → and ←, and Bodega remembers what you opened. The piece's row
+  adds up everything with it (a day of renting it, what it's all worth), and closed, it shows the most pressing
+  status among them ("1 in Repair"). Its tick ticks all of it, and a search or filter that finds the cage opens the
+  FX6 to show it. This takes the place of the "+3" beside the piece; a Goes With column appears only where being
+  under the piece doesn't already say it (gear on gear that goes with a piece).
 - Saving a calendar file offers Open Google Calendar, which goes straight to where Google takes the file in, instead
   of a list of menus to find. When the Import window finds no gear, it opens Columns, where you pick the names.
 - In the renter and profile forms, Return moves to the next field, and on the last one saves; ⌘Return (Ctrl+Enter
