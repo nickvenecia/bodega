@@ -7,18 +7,23 @@ Bodega will notice (it becomes the release notes and the update window), so this
 ## Start here
 
 - **State**: version 1.3.0, on this work's branch, not merged yet (main is 1.2.1). Merging it releases 1.3.0: CI
-  tags it and publishes the six downloads. CI hasn't run on this branch yet (it runs on main, on pull requests, or
-  by hand): open the pull request, or run "Build Bodega" by hand on the branch, before merging.
+  tags it and publishes the six downloads (and the software bill of materials, `Bodega-sbom.cdx.json`). CI runs on
+  the branch by hand ("Build Bodega", Run workflow) or on its pull request: Linux and the Apple silicon Mac are
+  green; the Intel Mac crashed at random in the tests (see Quirks) and the Windows tests ran past every limit, so
+  read the latest run before merging.
 - **Checks, with what they should say**:
   - `ruff format . && ruff check . && mypy && python -m pytest -q`: no changes, no problems, "Success: no issues
-    found", every test passes (421 test functions, some run in several cases; the run ends without pytest's summary
-    line by design, so read its exit code).
+    found", every test passes (about 570; the run ends without pytest's summary line by design, so read its exit
+    code).
+  - `python scripts/lock.py --check`: "The locks match requirements*.txt." (needs uv; after changing a
+    requirements file, `python scripts/lock.py` writes the locks again).
   - `QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR`: 22 pictures of every screen (add `BODEGA_LOOK=dark`,
     `BODEGA_ACCENT=yellow`, `BODEGA_SIZE=1280x700`; for 1280 or wider, give Qt a big test screen:
     `QT_QPA_PLATFORM="offscreen:configfile=screen.json"`, as `tests/test_sizes.py` does).
   - `python -m bodega cli update-check`: says which release this copy would update to, offline.
-- **Next**: the owner's answers (questions 8 to 30 in [STANDARD_AUDIT.md](STANDARD_AUDIT.md)), then what's left in
-  its "After the fixes": 21 partly done, 23 larger redesigns.
+- **Next**: the owner's answers (the questions still open in [STANDARD_AUDIT.md](STANDARD_AUDIT.md)), then what's
+  left in its "After the fixes": 20 partly done, 23 larger redesigns (ticks and a selection bar on every list, C-73
+  and C-37, come first).
 - **Quirks**:
   - Qt's offscreen test screen is only 800 points wide, under Bodega's 1280 minimum: anything measured wider runs in
     its own process with a configured screen (`tests/test_sizes.py`). A screenshot narrower than 1280 cuts the
@@ -28,14 +33,24 @@ Bodega will notice (it becomes the release notes and the update window), so this
   - Tests leave with `os._exit` once pytest has its result, because Qt objects can crash while Python shuts down on
     Windows (T-09, still open).
   - Every test starts with a fresh AI meter with no per-minute wait (`tests/conftest.py`, `fresh_ai_meter`).
+  - Python's cycle collector is off; the app collects on the window's thread every 2 seconds and the tests between
+    tests (`app._MainThreadGC`, CONTRIBUTING rule 20). Left on, it can free Qt objects mid-restyle or on a job's
+    thread: the likeliest cause of the Intel Mac's random crashes in the tests (watch the next runs).
+  - Undo notes where things stand once the moment is over (`MainWindow.mark_soon`): a test that counts undo steps
+    lets the event loop run first (`QApplication.processEvents()`).
+  - The speed limits in `tests/test_scale.py` stretch by how much slower the computer is than a laptop
+    (`speed_check()`); a CI Mac on Intel is about four times slower.
+  - CI writes the test output as it runs, stops a test step after 25 minutes, and a test still going after 5 writes
+    out where every thread is (`faulthandler_timeout`).
   - A dialog is deleted once it closes (`app.py`, `_lets_go`): read what you need from it as soon as `exec()`
     returns. `tests/test_memory.py` opens and closes every screen and fails if anything stays behind.
   - The standard itself is kept out of the repository (`.git/info/exclude`): a fresh clone needs the owner's copy at
     `docs/UNIVERSAL_APP_STANDARD.md`.
 - **How it ships**: bump `__version__` in `bodega/__init__.py` with the CHANGELOG entries; merging to main is the
   release (CI builds, tags `vX.Y.Z`, publishes). The download names are a contract (README, update.asset_name).
-- **What only the owner can supply**: an Apple Developer ID and a Windows code-signing certificate (S-23); branch
-  protection on main (O-01); the answers to the questions in the audit.
+- **What only the owner can supply**: an Apple Developer ID and a Windows code-signing certificate (S-23, wanted
+  later); branch protection on main (O-01: GitHub › Settings › Branches, require the four builds to pass); the
+  answers to the questions left in the audit; a yes or no on each proposed departure in PROJECT_ADDENDUM.md.
 
 ## 2026-10-16: the standard, applied
 
