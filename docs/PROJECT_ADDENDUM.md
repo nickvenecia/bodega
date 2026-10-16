@@ -66,8 +66,24 @@ ask the owner for it.
 - **Business rules and where each lives** (§8.2): every price, day count, total and availability rule in
   `core/pricing.py`; rental numbering (PREFIX-YEAR-001) in `core/store.py`; earnings in `core/earnings.py`; service
   reminders in `core/maintenance.py`; check-out rows in `core/checks.py`.
-- **Open decisions** (§18.2): see the list at the end of [STANDARD_AUDIT.md](STANDARD_AUDIT.md) ("Questions for the
-  owner"). Answers are recorded here, with who decided and when.
+- **Open decisions** (§18.2): the rest of the list at the end of [STANDARD_AUDIT.md](STANDARD_AUDIT.md) ("Questions
+  for the owner"). Answers are recorded below, with who decided and when.
+
+### Decided (the owner, 2026-10-16: "whatever is industry standard" where marked)
+- **A rental's prices lock when it's booked** (industry standard). A quote follows the current day rates, kit prices
+  and the profile's pricing; once a rental is Booked (and while Out, Returned or Cancelled), every line keeps the rate
+  and name it had then. Changing a rate afterwards never rewrites it.
+- **A rental number is never issued twice** (industry standard). A deleted rental's number stays spent; a rental
+  keeps its number once it has one (a new date in another year doesn't change it); a typed number that another
+  rental already has is said in the field; each profile has a Next Number so a series from an older system carries
+  on.
+- **Rentals that are booked, out or returned aren't deleted**: they're cancelled, and kept. Only a quote can be
+  deleted. **Gear that rentals point to is retired**, not deleted (delete stays for gear nothing points to).
+- **Booking or checking out gear that's already promised asks first** ("Book Anyway?"), rather than blocking:
+  sub-renting can make it deliberate.
+- **Send to Cobro is Send to Saldo** (Cobro's new name), writing into Saldo's data folder.
+- **Nothing mentions AI or the tools used to build Bodega** in commits, pull requests, release notes or documents;
+  the app's own AI features (the Assistant, AI Settings) are the exception.
 
 ## Integrations (§8.11)
 | System | Direction | What it owns | Credentials |
@@ -117,8 +133,8 @@ other providers have no cap yet (audit AI-09).
   or another OpenAI-compatible address). Quotas: none yet beyond the caps above. Kill switch: Remove Key.
 
 ## Process (§18)
-- Commit attribution rule: **no tool, assistant, co-author or session lines**. A commit message is a short plain
-  summary, nothing added after it (CLAUDE.md).
+- Commit attribution rule: **no tool, assistant, co-author or session lines**, in commits and pull requests alike. A
+  commit message is a short plain summary, nothing added after it (CLAUDE.md). Decided by the owner, 2026-10-16.
 - Where the standard lives: excluded locally (above).
 - Test commands and their expected results: `ruff format . && ruff check . && python -m pytest -q`: no changes,
   "All checks passed!", every test passing.
