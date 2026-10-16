@@ -374,6 +374,9 @@ QMenu {{ min-width: {tokens.MENU_MIN_W}px; }}
 QMenu::item {{ padding: 0 {SPACE_4}px 0 {SPACE_2_5}px; min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px;
     margin: {tokens.LIST_GAP // 2}px 0; }}
 QMenu::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_TEXT}; }}
+/* a destructive choice (Delete…, Remove…) is red, highlighted or not: app.py makes it the menu's "default" item */
+QMenu::item:default {{ color: {tokens.BAD}; font-weight: {WEIGHT_REGULAR}; }}
+QMenu::item:default:selected {{ background: {tokens.BAD_TINT}; color: {tokens.BAD}; }}
 QMenu::item:disabled {{ color: {tokens.TEXT_OFF}; }}
 QMenu::icon {{ padding-left: {SPACE_2}px; }}
 QMenu::separator {{ height: 1px; background: {tokens.BORDER}; margin: {SPACE_1}px {SPACE_2_5}px; }}
@@ -490,12 +493,24 @@ def _token_of(color: str) -> str:
     return ""
 
 
+DANGER = "bodega-destructive"  # the name a destructive menu row's icon goes by (is_danger)
+
+
+def is_danger(i: QIcon) -> bool:
+    """A destructive menu row's icon (menu_icon("trash")): its row's words are red too."""
+    return i.name() == DANGER
+
+
 class _Themed(QIconEngine):
     """Draws the icon in the current colors every time, so it follows light and dark."""
 
-    def __init__(self, name: str, key: str, color: str, size: int, menu: bool):
+    def __init__(self, name: str, key: str, color: str, size: int, menu: bool, danger: bool = False):
         super().__init__()
         self.name, self.key, self.color, self.size, self.menu = name, key, color, size, menu
+        self.danger = danger
+
+    def iconName(self) -> str:
+        return DANGER if self.danger else self.name
 
     def _color(self, mode) -> str:
         if self.menu and mode in (QIcon.Mode.Active, QIcon.Mode.Selected):
@@ -509,7 +524,7 @@ class _Themed(QIconEngine):
         painter.drawPixmap(rect, pixmap(self.name, self.size, self._color(mode)))
 
     def clone(self):
-        return _Themed(self.name, self.key, self.color, self.size, self.menu)
+        return _Themed(self.name, self.key, self.color, self.size, self.menu, self.danger)
 
 
 def icon(name: str, color: str = "", size: int = ICON) -> QIcon:
@@ -522,7 +537,7 @@ def menu_icon(name: str, color: str = "", size: int = ICON) -> QIcon:
     """For menu rows: on the highlighted row (the accent's tint) the icon takes the accent, like its words. A
     destructive row's icon (trash) is red, highlighted or not."""
     if name == "trash" and not color:
-        return QIcon(_Themed(name, "BAD", tokens.BAD, size, False))
+        return QIcon(_Themed(name, "BAD", tokens.BAD, size, False, danger=True))
     color = color or tokens.MUTED
     return QIcon(_Themed(name, _token_of(color), color, size, True))
 

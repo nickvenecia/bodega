@@ -1652,3 +1652,27 @@ def test_gear_columns_go_in_your_order_and_stay_there(win, data_folder):
     again = MainWindow(Library(data_folder).load())
     assert again.gear_table.column_order() == t.column_order()  # the same order next time
     again.close()
+
+
+def test_a_destructive_menu_choice_is_red(win):
+    from PySide6.QtWidgets import QMenu
+
+    from bodega.ui.style import theme, tokens
+
+    m = QMenu(win)
+    m.addAction(theme.menu_icon("edit"), "Open")
+    gone = m.addAction(theme.menu_icon("trash"), "Delete…")
+    m.popup(win.mapToGlobal(win.rect().center()))
+    wait_for(m.isVisible)
+    assert m.defaultAction() is gone  # drawn by theme.py's QMenu::item:default: red words
+    img = m.grab().toImage()
+    red = theme.qcolor(tokens.BAD)
+    near = [
+        (x, y)
+        for x in range(img.width())
+        for y in range(img.height())
+        if abs(img.pixelColor(x, y).red() - red.red()) < 30 and abs(img.pixelColor(x, y).green() - red.green()) < 30
+    ]
+    assert near and min(y for _x, y in near) > img.height() // 2  # in the lower row only…
+    assert max(x for x, _y in near) > 3 * tokens.ICON  # …its words too, not only its icon
+    m.close()

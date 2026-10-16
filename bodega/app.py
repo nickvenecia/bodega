@@ -177,6 +177,10 @@ class _RoundPopups(QObject):
             if area is not None:
                 QApplication.sendEvent(area.verticalScrollBar(), ev)
             return True
+        if ev.type() == QEvent.Type.Show and isinstance(obj, QMenu) and obj.defaultAction() is None:
+            danger = next((a for a in obj.actions() if theme.is_danger(a.icon())), None)
+            if danger is not None:  # its words red, like its icon (theme.py: QMenu::item:default)
+                obj.setDefaultAction(danger)
         if ev.type() == QEvent.Type.Show and isinstance(obj, QWidget) and obj.isWindow():
             owner = obj.parentWidget()
             if (

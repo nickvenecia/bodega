@@ -191,6 +191,7 @@
   said in the conversation.
 - The Assistant's header has Clear Chat, to start over, and a ⋯ with AI Settings…. Before the first question it
   offers a few to try: click one and it's in the box, ready to send.
+- Delete… and Remove… in menus are red, words and icon, so they're easy to tell from the rest.
 - Anything that's off (a button, a field, a switch, a menu item) is dimmed the same way everywhere, as on a Mac.
 - Copying from a saved PDF now gives the right characters: a rental number like JLF-2026-001 and a phone number in
   brackets came out of agreements as odd symbols (and screen readers read them that way).
