@@ -347,10 +347,10 @@
   (Show Folder, Back Up…, Restore…, the imports and exports) are rows you click.
 - Settings › AI keeps each change as you make it, with no Save: a key you paste goes straight into your keychain and
   is tried at once, and Remove Key is a red row under it.
-- Updating on Windows is steadier: Bodega's updater waits for Bodega to close using Windows' own tools even where
-  other programs with the same names come first (Git's, for one), and if copying the new version fails, it stops and
-  leaves the version you had, instead of opening a half-copied one. On a Mac, it tries again for a few seconds if the
-  Mac is still busy with another disk image.
+- Updating on Windows works again from the portable copy and the installed one: the step that waited for Bodega to
+  close could wait for ever. It now waits for Bodega itself, puts the new version in place, and opens it; if a step
+  fails, it stops and leaves the version you had, and says what happened in a log beside the download. On a Mac, it
+  tries again for a few seconds if the Mac is still busy with another disk image.
 - Scroll bars behave as your computer's do: they lie over a list, show while you scroll (or point at one, or for a
   moment when a list first shows), and fade a second later. If your Mac, Windows or Linux is set to always show
   scroll bars, Bodega's stay too, with their room kept.

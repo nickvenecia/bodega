@@ -271,6 +271,7 @@ def _overlaps(a: Path, b: Path) -> bool:
 
 # Download + install
 ROBOCOPY_FAILED = 8  # robocopy's exit codes: under 8, copied (the installer's: anything but 0 is a failure)
+POWERSHELL = ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File"]
 DOWNLOAD_FROM = f"https://github.com/{REPO}/releases/download/"
 DOWNLOAD_HOSTS = ("github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com")
 
@@ -342,16 +343,20 @@ def prepare(kind: str, file: Path, pid: int | None = None) -> Plan:
     if t is None:
         raise ValueError("Couldn't find where Bodega is installed.")
     if kind == "windows-installed":
-        return _windows_script(
-            work,
-            pid,
-            [f'"{file}" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART'],
-            t / "Bodega.exe",
-        )
+        install = [  # (a window-less program: started and waited for, its exit code checked)
+            f"$p = Start-Process -FilePath {_ps(file)} -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART'"
+            " -Wait -PassThru",
+            'if ($p.ExitCode -ne 0) { "the installer stopped: $($p.ExitCode)" | Out-File $log -Append; exit 1 }',
+        ]
+        return _windows_script(work, pid, install, t / "Bodega.exe")
     if kind == "windows-portable":
         new = _unpack_zip(file, work)
-        swap = [f'robocopy "{new}" "{t}" /MIR /R:3 /W:1 /NFL /NDL /NJH /NJS']
-        return _windows_script(work, pid, swap, t / "Bodega.exe", ROBOCOPY_FAILED)
+        swap = [
+            f"robocopy {_ps(new)} {_ps(t)} /MIR /R:3 /W:1 /NFL /NDL /NJH /NJS | Out-File $log -Append",
+            f'if ($LASTEXITCODE -ge {ROBOCOPY_FAILED}) {{ "robocopy stopped: $LASTEXITCODE" | Out-File $log -Append;'
+            " exit 1 }",
+        ]
+        return _windows_script(work, pid, swap, t / "Bodega.exe")
     if kind == "mac-app":
         return _posix_script(
             work,
@@ -394,8 +399,8 @@ def run(plan: Plan) -> None:
     left to Python, a helper started from it gets pipes whose other ends are already closed."""
     log.info("update: starting %s", shlex.join(plan.command))
     nowhere = subprocess.DEVNULL
-    if sys.platform == "win32":
-        flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW
+    if sys.platform == "win32":  # (a console of its own that's never shown: robocopy shares it, nothing flashes)
+        flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
         subprocess.Popen(
             plan.command, creationflags=flags, close_fds=True, stdin=nowhere, stdout=nowhere, stderr=nowhere
         )
@@ -453,28 +458,30 @@ def _posix_script(
     return Plan(["/bin/bash", str(script)], script)
 
 
-def _windows_script(work: Path, pid: int, lines: list[str], exe: Path, fails_at: int = 1) -> Plan:
-    """The Windows helper. Windows' own find.exe is named in full (where Git's tools come first on the PATH, a bare
-    `find` is another program and the wait would end at once), and it waits with ping, which needs no console (a
-    helper started on its own has none, and timeout won't run without one). Each step's output goes to
-    finish-update.log beside it; a step that ends at `fails_at` or above stops it there, with the old version left
-    as it was."""
-    script = work / "finish-update.cmd"
-    log_ = f'"{work / "finish-update.log"}"'
+def _windows_script(work: Path, pid: int, lines: list[str], exe: Path) -> Plan:
+    """The Windows helper, in PowerShell (every Windows has it): it waits for Bodega's own process to end, runs
+    `lines`, and opens the new Bodega. No pipes into console tools (a batch file's `tasklist | find` waited for ever
+    when started on its own, CI found), and each step says what it did in finish-update.log beside it. A step that
+    fails stops it there, with the old version left as it was. The file is UTF-8 with its mark, so Windows'
+    PowerShell reads a path with é in it as written."""
+    script = work / "finish-update.ps1"
     body = [
-        "@echo off",
-        "rem Written by Bodega: waits for Bodega to quit, installs the new version, opens it.",
-        "chcp 65001 >NUL",  # (its lines are UTF-8: a path with é in it reads as written)
-        ":wait",
-        f'tasklist /FI "PID eq {pid}" 2>NUL | "%SystemRoot%\\System32\\find.exe" "{pid}" >NUL'
-        f" && (ping -n 2 127.0.0.1 >NUL & goto wait)",
-        *(f"{line} >>{log_} 2>&1" for line in lines),
-        f"if errorlevel {fails_at} exit /b 1",
-        f'start "" "{exe}"',
-        f'rmdir /s /q "{work}"',
+        "# Written by Bodega: waits for Bodega to quit, installs the new version, opens it.",
+        f"$log = {_ps(work / 'finish-update.log')}",
+        "try {",
+        f"  Wait-Process -Id {pid} -ErrorAction SilentlyContinue",
+        *(f"  {line}" for line in lines),
+        f"  Start-Process -FilePath {_ps(exe)}",
+        "} catch { $_ | Out-File $log -Append; exit 1 }",
+        f"Remove-Item -LiteralPath {_ps(work)} -Recurse -Force -ErrorAction SilentlyContinue",
     ]
-    script.write_text("\r\n".join(body) + "\r\n", encoding="utf-8", newline="")  # (as written: no \r\r\n)
-    return Plan(["cmd.exe", "/c", str(script)], script)
+    script.write_text("\r\n".join(body) + "\r\n", encoding="utf-8-sig", newline="")
+    return Plan([*POWERSHELL, str(script)], script)
+
+
+def _ps(p) -> str:
+    """A path as a PowerShell string, quoted as written (nothing in it is read as a variable)."""
+    return "'" + str(p).replace("'", "''") + "'"
 
 
 def _unpack_zip(file: Path, work: Path) -> Path:

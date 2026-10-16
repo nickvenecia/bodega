@@ -192,19 +192,25 @@ def test_mac_and_windows_helpers(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(update, "target", lambda _kind: folder)
     setup = tmp_path / "Bodega-windows-setup.exe"
     setup.write_bytes(b"exe")
-    win = update.prepare("windows-installed", setup, pid=4242).script.read_text(encoding="utf-8")
-    assert "/VERYSILENT" in win and "PID eq 4242" in win and "Bodega.exe" in win
-    # (a bare `find` or `timeout` is Git's own where its tools come first on the PATH, and timeout needs a console)
-    assert "System32\\find.exe" in win and "ping -n" in win and "timeout" not in win
-    assert win.index("if errorlevel 1 exit") < win.index('start ""')  # a failed install doesn't open anything
+    plan = update.prepare("windows-installed", setup, pid=4242)
+    win = plan.script.read_text(encoding="utf-8-sig")
+    assert plan.command[0] == "powershell.exe" and plan.script.suffix == ".ps1"
+    assert "/VERYSILENT" in win and "Wait-Process -Id 4242" in win and "Bodega.exe" in win
+    # (no pipes into console tools: a batch file's `tasklist | find` waited for ever when started on its own)
+    assert "tasklist" not in win and "find.exe" not in win
+    assert win.index("$p.ExitCode -ne 0") < win.rindex("Start-Process -FilePath '")  # a failed install opens nothing
     zipped = tmp_path / "Bodega-windows-portable.zip"
     with zipfile.ZipFile(zipped, "w") as z:
         z.writestr("Bodega/Bodega.exe", b"exe")
-    portable = update.prepare("windows-portable", zipped, pid=4242).script.read_text(encoding="utf-8")
-    assert "robocopy" in portable and "if errorlevel 8 exit" in portable and "finish-update.log" in portable
-    written = zipped.parent.joinpath("finish-update.cmd").read_bytes()  # (the script sits beside the download)
+    portable = update.prepare("windows-portable", zipped, pid=4242).script.read_text(encoding="utf-8-sig")
+    assert "robocopy" in portable and "$LASTEXITCODE -ge 8" in portable and "finish-update.log" in portable
+    written = zipped.parent.joinpath("finish-update.ps1").read_bytes()  # (the script sits beside the download)
+    assert written.startswith(b"\xef\xbb\xbf")  # UTF-8 with its mark: Windows' PowerShell reads é as written
     assert b"\r\r\n" not in written and written.count(b"\r\n") == written.count(b"\n")  # each line ends once
-    assert "chcp 65001" in portable  # its UTF-8 lines read as written (a path with é in it)
+    odd = tmp_path / "it's here"
+    monkeypatch.setattr(update, "target", lambda _kind: odd)
+    quoted = "'" + str(odd / "Bodega.exe").replace("'", "''") + "'"
+    assert quoted in update.prepare("windows-installed", setup, 1).script.read_text(encoding="utf-8-sig")  # one string
 
 
 def test_the_update_window_shows_the_release_and_how_to_get_it(monkeypatch):
