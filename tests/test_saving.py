@@ -7,7 +7,7 @@ import pytest
 from PySide6.QtWidgets import QDialog
 
 from bodega.core import sample, store
-from bodega.core.model import Client
+from bodega.core.model import Client, Rental
 from bodega.core.store import Library
 from bodega.ui.dialogs.common import Alert
 
@@ -286,3 +286,30 @@ def test_quitting_while_a_job_runs_asks_first(win, answers, monkeypatch):
     assert not win.may_quit() and asked == ["Stop and Quit?"]  # Cancel: Bodega stays open
     said.append(QDialog.DialogCode.Accepted)
     assert win.may_quit()
+
+
+def test_many_rentals_written_side_by_side_keep_each_failure(data_folder, monkeypatch):
+    """A delete, a renter edit or an undo saves many rentals at once, their files written side by side (a slow disk
+    took seconds one after another): one that fails is kept unsaved and said, every other is still written."""
+    lib = sample.fill(Library(data_folder).load())
+    rentals = [Rental() for _ in range(5)]
+    stuck = rentals[1].id
+    real = store.write_json
+
+    def write(path, data):
+        if path.stem == stuck:
+            raise OSError(28, "No space left on device")
+        real(path, data)
+
+    monkeypatch.setattr(store, "write_json", write)
+    told = []
+    lib.on_unsaved = lambda: told.append(1)
+    for r in rentals:
+        r.note = "Written side by side"
+    with pytest.raises(OSError):
+        lib.save_rentals(rentals)
+    assert lib.unsaved == {stuck} and told and lib.why_unsaved
+    again = Library(data_folder).load()
+    assert all(again.rentals[r.id].note == "Written side by side" for r in rentals if r.id != stuck)
+    monkeypatch.setattr(store, "write_json", real)
+    assert lib.save_again() and Library(data_folder).load().rentals[stuck].note == "Written side by side"

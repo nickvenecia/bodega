@@ -178,9 +178,7 @@ class History:
         for rid in list(lib.rentals):
             if rid not in s["rentals"]:
                 lib.delete_rental(rid)
-        for rid, d in s["rentals"].items():
-            if old.get(rid) != d:
-                lib.save_rental(Rental.from_dict(d))
+        lib.save_rentals(Rental.from_dict(d) for rid, d in s["rentals"].items() if old.get(rid) != d)
         if s["groups"] != now["groups"]:
             if s["groups"] is None:
                 lib.settings.pop("group_list", None)

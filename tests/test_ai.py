@@ -134,6 +134,24 @@ def test_models_come_from_the_provider(provider):
     assert providers.list_models(Setup("kimi")) == ["gemini-a", "b"]
 
 
+def test_a_list_of_models_anyone_may_read_checks_the_key_first(monkeypatch, keychain):
+    """OpenRouter lists its models for anyone (CI's online test found it): its key page is asked first, so a key
+    that isn't one is refused, never "Key works"."""
+    asked = []
+
+    def answer(req, timeout, **_k):
+        asked.append(req.full_url)
+        if req.full_url.endswith("/key"):
+            body = io.BytesIO(json.dumps({"error": {"message": "No auth credentials found"}}).encode())
+            raise urllib.error.HTTPError(req.full_url, 401, "no", {}, body)
+        raise AssertionError("the models were asked before the key was checked")
+
+    monkeypatch.setattr(web, "open_no_redirect", answer)
+    with pytest.raises(AIError, match="key wasn't accepted"):
+        providers.list_models(Setup("openrouter"), key="sk-or-not-real")
+    assert asked == ["https://openrouter.ai/api/v1/key"]
+
+
 def test_errors_are_plain_and_never_show_the_key(monkeypatch, keychain):
     providers.save_key("openai", "sk-very-secret")
 

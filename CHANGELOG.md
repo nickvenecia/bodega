@@ -332,6 +332,11 @@
 - Profile › Tidy Up Renters… puts your renters' names, companies and addresses in proper case ("ALEX RIVERA" becomes
   "Alex Rivera"), keeping a business's own words (LLC, P.O. Box, NE, 1st), and shows every change first. Bookings
   and quotes follow, as they do when you edit a renter; a safety copy is kept first.
+- Deleting a lot of gear at once, undoing it, or editing a renter with many bookings is quicker, most of all on
+  Windows: Bodega now saves the rentals it changes side by side instead of one after another. If one can't be saved,
+  it still says so and tries again, and every other one is saved.
+- AI Settings no longer says "Key works" for an OpenRouter key that isn't one. OpenRouter shows its list of models
+  to anyone, so Bodega now checks the key with OpenRouter first and says plainly when it isn't accepted.
 - The Assistant's answers say which of your gear they drew on ("From your gear: …"). A change your AI is only
   guessing at is marked Not Sure: Review leaves it unticked, and the chat takes you to Review instead of making it.
 - Letters are spaced the way Apple spaces them at each size: a touch tighter in everyday words, a little looser in

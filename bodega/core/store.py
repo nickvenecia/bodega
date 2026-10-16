@@ -19,7 +19,8 @@ import os
 import re
 import tempfile
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -63,6 +64,9 @@ FORMAT = 1
 UPGRADES: dict[int, Callable[[Library], None]] = {}  # from this version to the next
 
 ID_OK = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+# Files written side by side when many rentals change at once (a delete, a renter edit, an upgrade): each write
+# waits on the disk to keep it (fsync), so on a slow disk one after another takes seconds for hundreds
+WRITERS = 8
 
 
 def safe_id(text: str) -> bool:
@@ -212,8 +216,7 @@ class Library:
             self.save_packages()
             self.save_clients()
             self.save_businesses()
-            for r in self.rentals.values():
-                self.save_rental(r)
+            self.save_rentals(self.rentals.values())
             self.save_settings()
         except OSError:
             pass  # kept as unsaved, and tried again with the next save
@@ -267,15 +270,21 @@ class Library:
         try:
             write_json(path, data)
         except OSError as e:
-            log.warning("couldn't save %s", what, exc_info=True)
-            self.why_unsaved = errors.reason(e)
-            self.unsaved.add(what)
-            if self.on_unsaved is not None:
-                self.on_unsaved()
+            self._failed(what, e)
             raise
+        self._wrote(what)
+
+    def _wrote(self, what: str) -> None:
         self.unsaved.discard(what)
         if not self.unsaved:
             self.why_unsaved = None
+
+    def _failed(self, what: str, e: OSError) -> None:
+        log.warning("couldn't save %s", what, exc_info=e)
+        self.why_unsaved = errors.reason(e)
+        self.unsaved.add(what)
+        if self.on_unsaved is not None:
+            self.on_unsaved()
 
     def save_again(self) -> bool:
         """Write again everything that couldn't be written. True once nothing is left unsaved."""
@@ -312,11 +321,43 @@ class Library:
         self._write("profiles", self.root / "businesses.json", [b.to_dict() for b in self.businesses.values()])
 
     def save_rental(self, r: Rental) -> None:
-        pricing.settle(self, r, self.businesses.get(r.business_id) or self.pricing())  # booked: prices hold
+        self._write(r.id, self._rental_dir / f"{r.id}.json", self._ready(r))
+
+    def _ready(self, r: Rental) -> dict:
+        """A rental made ready to save: settled (booked: prices hold), its history noted, stamped; as it's written."""
+        pricing.settle(self, r, self.businesses.get(r.business_id) or self.pricing())
         self._note_history(r)
         r.updated = now_iso()
         self.rentals[r.id] = r
-        self._write(r.id, self._rental_dir / f"{r.id}.json", r.to_dict())
+        return r.to_dict()
+
+    def save_rentals(self, rentals: Iterable[Rental]) -> None:
+        """Save many rentals as save_rental saves one, their files written side by side (see WRITERS). One that
+        fails is kept unsaved as it would be alone, the rest still written; then the first failure goes on up."""
+        todo = [(r.id, self._rental_dir / f"{r.id}.json", self._ready(r)) for r in rentals]
+        if len(todo) < 2:
+            for what, path, data in todo:
+                self._write(what, path, data)
+            return
+
+        def write(job: tuple[str, Path, dict]) -> OSError | None:
+            try:
+                write_json(job[1], job[2])
+            except OSError as e:
+                return e
+            return None
+
+        with ThreadPoolExecutor(max_workers=WRITERS) as pool:
+            results = list(pool.map(write, todo))
+        first = None
+        for (what, _path, _data), e in zip(todo, results, strict=True):
+            if e is None:
+                self._wrote(what)
+            else:
+                self._failed(what, e)
+                first = first or e
+        if first is not None:
+            raise first
 
     def _note_history(self, r: Rental) -> None:
         """A rental's history gets what changed since it was last saved: made, its status, its number."""
@@ -622,8 +663,7 @@ class Library:
                     if ln.kind == "item" and ln.ref in gone and not ln.name:
                         ln.name = gone[ln.ref].name
                         changed.add(r.id)
-            for rid in changed:
-                self.save_rental(self.rentals[rid])
+            self.save_rentals(self.rentals[rid] for rid in changed)
         self.save_items()
         self.save_packages()
         return len(gone)
@@ -653,8 +693,7 @@ class Library:
                     if ln.kind == "package" and ln.ref == pkg_id and not ln.name:
                         ln.name = gone.name
                         changed.add(r.id)
-            for rid in changed:
-                self.save_rental(self.rentals[rid])
+            self.save_rentals(self.rentals[rid] for rid in changed)
         self.save_packages()
 
     # a rental's prices must not change because gear or a kit it used was deleted
@@ -700,10 +739,10 @@ class Library:
         c = replace(c)
         self.clients[c.id] = c
         self.save_clients()
-        for r in self.rentals.values():
-            if r.client.id == c.id and r.ahead():
-                r.client = replace(c)
-                self.save_rental(r)
+        following = [r for r in self.rentals.values() if r.client.id == c.id and r.ahead()]
+        for r in following:
+            r.client = replace(c)
+        self.save_rentals(following)
         return c
 
     def tidy_clients(self, changes: list) -> int:

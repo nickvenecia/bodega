@@ -53,6 +53,7 @@ class Provider:
     kind: str  # "anthropic" or "openai"
     keys_page: str = ""  # where to make a key
     needs_key: bool = True
+    key_check: str = ""  # a path that needs the key, asked first when the list of models answers anyone (OpenRouter)
 
 
 MAX_MODEL_NAME = 60  # a model's display name, as a provider gives it, is cut to this
@@ -70,7 +71,8 @@ PROVIDERS: dict[str, Provider] = {
                  "https://platform.moonshot.ai/console/api-keys"),
         Provider("kimi-cn", "Kimi (Moonshot AI, China)", "https://api.moonshot.cn/v1", "openai",
                  "https://platform.moonshot.cn/console/api-keys"),
-        Provider("openrouter", "OpenRouter", "https://openrouter.ai/api/v1", "openai", "https://openrouter.ai/keys"),
+        Provider("openrouter", "OpenRouter", "https://openrouter.ai/api/v1", "openai", "https://openrouter.ai/keys",
+                 key_check="/key"),
         Provider("deepseek", "DeepSeek", "https://api.deepseek.com/v1", "openai",
                  "https://platform.deepseek.com/api_keys"),
         Provider("mistral", "Mistral", "https://api.mistral.ai/v1", "openai", "https://console.mistral.ai/api-keys"),
@@ -260,7 +262,11 @@ def list_models(setup: Setup, key: str | None = None) -> list[str]:
 
 def named_models(setup: Setup, key: str | None = None) -> list[tuple[str, str]]:
     """(id, the name to show) for each model this key can use: the provider's own display name where it gives
-    one (Anthropic, Gemini, OpenRouter), else the id. The names are a provider's words: cleaned, plain text."""
+    one (Anthropic, Gemini, OpenRouter), else the id. The names are a provider's words: cleaned, plain text.
+    Where anyone may read the list (OpenRouter), the key is checked first, so a key that isn't one never reads as
+    working."""
+    if setup.p and setup.p.key_check:
+        _call(setup, setup.p.key_check, key=key)
     try:
         return _models(_call(setup, "/models", key=key))
     except (KeyError, AttributeError, TypeError, IndexError):
