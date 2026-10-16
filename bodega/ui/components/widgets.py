@@ -364,6 +364,9 @@ class Segmented(QFrame):
             self.group.addButton(b)
             lay.addWidget(b)
             self.buttons[key] = b
+        widest = max((b.sizeHint().width() for b in self.buttons.values()), default=0)
+        for b in self.buttons.values():  # every segment as wide as the widest (Apple's segmented controls)
+            b.setMinimumWidth(widest)
 
     def set_value(self, key: str) -> None:
         if key in self.buttons:
@@ -769,10 +772,7 @@ class ToggleRow(QAbstractButton):
         # switch
         tw, th = tokens.TOGGLE_W, tokens.TOGGLE_H
         track = QRectF(r.right() - tw + 1, r.center().y() - th / 2 + 1, tw - 1, th - 1)
-        if on:  # an on switch is green, as Apple's are
-            fill = tokens.GOOD_FILL
-        else:
-            fill = tokens.BORDER_HOVER if self._hover and enabled else tokens.BORDER_STRONG
+        fill = tokens.GOOD_FILL if on else tokens.FILL_3  # an on switch is green, as Apple's are
         if not enabled:
             fill = tokens.GOOD_SOFT if on else tokens.BORDER
         p.setPen(Qt.PenStyle.NoPen)

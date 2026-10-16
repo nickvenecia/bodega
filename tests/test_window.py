@@ -1089,4 +1089,8 @@ def test_measured_to_the_standard(win):
     row = win.gear_table.visualItemRect(win.gear_table.topLevelItem(0))
     assert row.height() == tokens.ROW_H
     assert {r.height() for r in win.sidebar.findChildren(NavRow) if r.isVisible()} == {tokens.CHOICE_ROW_H}
-    assert win.gear_table.font().isFeatureSet(QFont.Tag("tnum"))
+    from bodega.ui.window.tables import GEAR_COL, ID
+
+    piece = next(r for r in win.gear_table.item_rows() if r.data(0, ID))
+    assert piece.font(GEAR_COL["qty"]).isFeatureSet(QFont.Tag("tnum"))  # figures line up…
+    assert not piece.font(GEAR_COL["name"]).isFeatureSet(QFont.Tag("tnum"))  # …words keep their spacing

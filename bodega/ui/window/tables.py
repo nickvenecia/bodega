@@ -73,7 +73,6 @@ class Table(QTreeWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setObjectName("Table")
-        theme.use_tabular(self)  # money and quantities line up digit for digit
         self.setColumnCount(len(self.COLUMNS))
         self.setHeaderLabels([c[0] for c in self.COLUMNS])
         self.setRootIsDecorated(False)
@@ -179,12 +178,15 @@ class Table(QTreeWidget):
     def make(self, obj_id: str, cells: list[tuple[str, object]], parent=None) -> Row:
         row = Row(parent or self)
         row.setData(0, ID, obj_id)
+        figures = theme.font(tokens.TEXT_MD, tabular=True)  # money and quantities line up digit for digit
         for i, (text, key) in enumerate(cells):
             row.setText(i, text)
             row.setData(i, SORT, key)
             align = self.COLUMNS[i][2]
             if align is not None:
                 row.setTextAlignment(i, align)
+            if isinstance(key, (int, float)) and not isinstance(key, bool):
+                row.setFont(i, figures)
         row.setSizeHint(0, QSize(0, tokens.TABLE_ROW_H))
         return row
 
@@ -875,11 +877,14 @@ class GearTable(Table):
             d.setText(GEAR_COL["name"], name)
             d.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsDropEnabled)
             d.setSizeHint(0, QSize(0, tokens.TABLE_ROW_H))
-            f = theme.font(tokens.TEXT_MD, tokens.WEIGHT_SEMIBOLD)
-            big = theme.font(tokens.TEXT_LG, tokens.WEIGHT_SEMIBOLD)
+            # a group row: its name in Callout Semibold, muted; its subtotals as a body row's figures (G.10.8)
+            f = theme.font(tokens.TEXT_MD, tokens.WEIGHT_SEMIBOLD, tabular=True)
+            big = theme.font(tokens.TEXT_SM, tokens.WEIGHT_SEMIBOLD)
             for c, (_k, _t, _w, align) in enumerate(GEAR_COLUMNS):
                 d.setFont(c, big if c == GEAR_COL["name"] else f)
-                d.setForeground(c, theme.qcolor(tokens.DIVIDER_TEXT))
+                d.setForeground(
+                    c, theme.qcolor(tokens.MUTED if c == GEAR_COL["name"] else tokens.DIVIDER_TEXT)
+                )
                 if align is not None:
                     d.setTextAlignment(c, align)
             dividers[key] = d

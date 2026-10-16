@@ -12,6 +12,8 @@ SPACE_2 = 8  # related items: buttons in a row, cards in the list, options in a 
 SPACE_3 = 12  # between groups (sections) inside a panel
 SPACE_4 = 16  # padding of panels, bars and the main areas
 SPACE_5 = 24  # padding of dialogs and the empty-state drop zone
+SPACE_1_5 = 6  # Apple's half-steps, for small insets only: a menu's inset…
+SPACE_2_5 = 10  # …a sidebar or menu row's padding
 
 # ---------------------------------------------------------------- control sizes (the standard's A.5, pointer)
 CONTROL_H = 28  # (control-h) EVERY button, dropdown, text field, segmented control and icon circle
@@ -34,6 +36,10 @@ HANDLE = 14  # slider handle
 SCROLL_W = 10  # scrollbar width
 SCROLL_GUTTER = SCROLL_W  # space always kept for it (see widgets.FitScroll)
 SCROLL_MIN = 30  # shortest scrollbar handle
+
+MENU_MIN_W = 210  # (menu-min-w) a menu's narrowest; it grows to its longest row
+MENU_ROWS = 8  # (menu-rows) rows a dropdown list shows before it scrolls
+MONOGRAM = 38  # the profile card's initials circle
 
 # ---------------------------------------------------------------- corner radius (the standard's scale)
 RADIUS_XS = 4  # (radius-xs) a checkbox's box, a key cap
@@ -69,7 +75,7 @@ WEIGHT_SEMIBOLD = 600  # titles, labels, primary button
 WEIGHT_BOLD = 700  # wordmark, dialog titles
 
 # ---------------------------------------------------------------- layout
-SIDEBAR_W = 232  # the sidebar: Inventory and Rentals
+SIDEBAR_W = 244  # (sidebar-w) the sidebar: Inventory and Rentals
 INSPECTOR_W = 420  # the panel on the right where the selected thing is edited
 INSPECTOR_MIN = 360  # …on a smaller window
 INSPECTOR_SHARE = 0.27  # of the window's width, between those two
@@ -166,13 +172,14 @@ NAV_H = CHOICE_ROW_H  # one row in the sidebar
 NAV_INSET = SCROLL_GUTTER  # a sidebar row's gap from the glass edge (the scroll bar's room on the right)
 NAV_R = GLASS_R - NAV_INSET  # its corners: concentric with the glass (the curves run parallel)
 MENU_GAP = 6  # between a button and the menu it opens
-# ---- every list of choices looks like the sidebar and Settings: menus, dropdown lists, pickers, suggestions.
+# ---- every list of choices looks the same (the standard's G.7): menus, dropdown lists, pickers, suggestions.
 # Rows sit LIST_INSET inside a list whose corners are LIST_R, so their corners (LIST_ROW_R) run parallel to it.
-LIST_R = GLASS_R
-LIST_INSET = NAV_INSET
-LIST_ROW_R = NAV_R
-LIST_ROW_H = NAV_H
-LIST_GAP = NAV_GAP
+# (The sidebar and Settings' sections are the same choice rows inside the glass: NAV_*.)
+LIST_R = RADIUS_LG  # (radius-lg) a menu's corners
+LIST_INSET = SPACE_1_5  # its inset
+LIST_ROW_R = RADIUS_SM  # a row's corners: 14 − 6, concentric
+LIST_ROW_H = CHOICE_ROW_H
+LIST_GAP = 0
 AVATAR = 32  # your profile's initials, bottom of the sidebar
 ASSISTANT_ICON = 28  # the assistant's face next to its title
 ASSISTANT_ICON_BIG = 64  # and saying hi in an empty chat
@@ -267,7 +274,12 @@ DARK = {
     "FIELD": "rgba(255, 255, 255, 0.05)",  # (field) a text field or dropdown
     "FIELD_BORDER": "rgba(255, 255, 255, 0.12)",  # (field-border)
     "BLOCK": "rgba(255, 255, 255, 0.045)",  # a card inside a glass panel: a soft tint, no outline
-    "FILL": "rgba(120, 120, 128, 0.24)",  # (fill) a soft fill: weekends, a placeholder
+    "FILL": "rgba(120, 120, 128, 0.24)",  # (fill) controls: a button, a field, a segmented track
+    "FILL_2": "rgba(120, 120, 128, 0.16)",  # (fill-2) soft hovers and wells
+    "FILL_3": "rgba(120, 120, 128, 0.34)",  # (fill-3) a filled control's hover; a switch that's off
+    "BAD_HOVER": "rgba(255, 66, 69, 0.20)",  # a destructive button's hover
+    "MONOGRAM_TOP": "#8E8E93",  # the profile card's grey gradient
+    "MONOGRAM_BOTTOM": "#636366",
 }
 LIGHT = {
     "BG": "#F7F7F8",  # (canvas)
@@ -336,6 +348,11 @@ LIGHT = {
     "FIELD_BORDER": "rgba(60, 60, 67, 0.22)",
     "BLOCK": "rgba(255, 255, 255, 0.85)",  # white cards on the grey glass
     "FILL": "rgba(120, 120, 128, 0.12)",
+    "FILL_2": "rgba(120, 120, 128, 0.08)",
+    "FILL_3": "rgba(120, 120, 128, 0.20)",
+    "BAD_HOVER": "rgba(255, 56, 60, 0.20)",
+    "MONOGRAM_TOP": "#A1A1A6",
+    "MONOGRAM_BOTTOM": "#7C7C80",
 }
 # ---------------------------------------------------------------- the accent you pick (Settings › General)
 # Bodega's own is blue, hand-set in DARK / LIGHT above. The others are built from one color by accent_set().
@@ -351,7 +368,7 @@ ACCENTS = {  # key -> (name, on dark, on light)
     "turquoise": ("Turquoise", "#2EBFB0", "#0D8178"),
     "graphite": ("Graphite", "#9B999F", "#68666D"),
 }
-SWATCH = 22  # a color circle in Settings
+SWATCH = 28  # a color circle in Settings
 SWATCH_RING = 2  # the ring around the chosen one (and the gap inside it)
 DARK_ON_ACCENT = "#141314"  # words on a light accent (yellow, green…), where white wouldn't read
 

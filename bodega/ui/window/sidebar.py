@@ -78,7 +78,7 @@ class ProfileCard(QFrame):
         lay = hbox(self, (tokens.SPACE_2, 0, tokens.SPACE_2, 0), tokens.SPACE_2)
         self.avatar = QLabel()
         self.avatar.setObjectName("Avatar")
-        self.avatar.setFixedSize(tokens.AVATAR, tokens.AVATAR)
+        self.avatar.setFixedSize(tokens.MONOGRAM, tokens.MONOGRAM)
         self.avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(self.avatar)
         texts = vbox(

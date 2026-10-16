@@ -57,6 +57,10 @@
   now reads clearly: hints and counts are darker in light and brighter in dark, and the words on blue buttons
   are easier to read. Group bands in the gear list are a quiet grey, so blue means something you can press.
   Money in the lists lines up digit for digit. A switch that's on is green, as on a Mac.
+- Buttons, fields, dropdowns and menus follow Apple's own look more closely: fields are soft grey until you
+  type in them, dropdowns show the up-down arrows a Mac uses, the next step at the foot of a panel (Rent This…,
+  Agreement…) is a plain button so only + stands out, menu rows are a touch more compact, and a delete in a
+  menu has a red trash icon. The sidebar is slightly wider, so your profile's name fits.
 - Bodega keeps safety copies of your gear, kits, rentals, renters and profiles: one each day you open it (the last
   14 days), and one before each import, Tidy Up Groups, AI change or restore (the last 20).
 - File › Restore from Backup… (also in Settings › Your Data) puts a Back Up zip or a safety copy back. It shows

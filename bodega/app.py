@@ -182,6 +182,8 @@ class _RoundPopups(QObject):
         if ev.type() == QEvent.Type.Polish and isinstance(obj, QWidget):
             if obj.focusPolicy() == Qt.FocusPolicy.WheelFocus:
                 obj.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+            if isinstance(obj, QComboBox):
+                obj.setMaxVisibleItems(tokens.MENU_ROWS)  # a list of data shows 8 rows, then scrolls
             if isinstance(obj, QAbstractButton) and obj.focusPolicy() == Qt.FocusPolicy.StrongFocus:
                 obj.setFocusPolicy(
                     Qt.FocusPolicy.TabFocus
