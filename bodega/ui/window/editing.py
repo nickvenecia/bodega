@@ -9,6 +9,7 @@ from dataclasses import replace
 from bodega.core import pricing
 from bodega.core.log import get_logger
 from bodega.core.model import Business, Item, Package, PackageLine, Rental, RentalLine, new_id, now_iso
+from bodega.ui.components.widgets import one_stop
 from bodega.ui.dialogs.client import ClientDialog
 from bodega.ui.dialogs.common import confirm
 from bodega.ui.dialogs.gear_picker import GearPicker
@@ -239,7 +240,7 @@ class EditingMixin:
         else:
             title = f"Delete {len(picked)} pieces of gear?"
         listed = ", ".join(names[:3]) + (f" and {len(names) - 3} more" if len(names) > 3 else "")
-        text = (listed + ". ") if len(picked) > 1 else ""
+        text = one_stop(listed + ".") + " " if len(picked) > 1 else ""  # ("…Inc." keeps one full stop)
         if extra:
             text += f"The {extra} piece{'s' if extra != 1 else ''} attached go{'' if extra != 1 else 'es'} too. "
         text += "Rentals that had them keep their names."

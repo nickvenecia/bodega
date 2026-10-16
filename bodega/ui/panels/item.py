@@ -102,7 +102,7 @@ class Block(Card):
 
 class PhotoBox(QFrame):
     """The piece's photo at the top of its panel: the whole picture, rounded, on a soft tint, with a round ⋯
-    (Replace, From the Link, Paste, Remove) in its corner."""
+    (Replace, From Link, Paste, Remove) in its corner."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -181,7 +181,7 @@ class ItemPanel(DetailsBase):
         self.photo = PhotoBox()
         pm = QMenu(self.photo.more)
         pm.addAction(theme.menu_icon("image"), "Replace…", self.choose_photo)
-        self.act_photo_link = pm.addAction(theme.menu_icon("link"), "From the Link", self.photo_from_link)
+        self.act_photo_link = pm.addAction(theme.menu_icon("link"), "From Link", self.photo_from_link)
         self.act_photo_paste = pm.addAction(theme.menu_icon("clipboard"), "Paste", self.paste_photo)
         pm.aboutToShow.connect(self._paste_state)
         pm.addSeparator()
@@ -239,7 +239,7 @@ class ItemPanel(DetailsBase):
         row.addWidget(sec, 1)
         sec = Section("Day Rate Each")
         self.rate = MoneyField()
-        self.rate.setToolTip("Leave blank and Bodega works it out from the value, at your profile's day rate percent")
+        self.rate.setToolTip("Blank: worked out from the value, at your profile's rate")
         sec.add(self.rate)
         row.addWidget(sec, 1)
         b.add(row)
@@ -350,8 +350,8 @@ class ItemPanel(DetailsBase):
         self.add_buttons: dict[str, QPushButton] = {}
         self.add_photo = add_chip("Photo")
         am = QMenu(self.add_photo)
-        am.addAction(theme.menu_icon("image"), "Choose a File…", self.choose_photo)
-        self.act_add_photo_link = am.addAction(theme.menu_icon("link"), "From the Link", self.photo_from_link)
+        am.addAction(theme.menu_icon("image"), "Choose File…", self.choose_photo)
+        self.act_add_photo_link = am.addAction(theme.menu_icon("link"), "From Link", self.photo_from_link)
         self.act_add_photo_paste = am.addAction(theme.menu_icon("clipboard"), "Paste", self.paste_photo)
         am.aboutToShow.connect(self._paste_state)
         self.add_photo.setMenu(am)
@@ -645,7 +645,7 @@ class ItemPanel(DetailsBase):
         has_link = it is not None and bool(web.web_link(it.link))
         for a in (self.act_photo_link, self.act_add_photo_link):
             a.setEnabled(has_link)
-            a.setText("From the Link" if has_link else "From the Link (add a link first)")
+            a.setText("From Link" if has_link else "From Link (add a link first)")
 
     def _use_photo(self, name: str) -> None:
         if self.it is None:
@@ -793,7 +793,7 @@ class ItemPanel(DetailsBase):
         for g in self.lib.groups():
             c.addItem(g, g)
         c.insertSeparator(c.count())
-        c.addItem("No Group", "")
+        c.addItem("None", "")
         c.insertSeparator(c.count())
         c.addItem("New Group…", NEW)
         c.setCurrentIndex(max(0, c.findData(it.group)))

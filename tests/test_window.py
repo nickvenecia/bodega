@@ -1398,7 +1398,7 @@ def test_move_to_picks_a_group_from_a_list_you_can_search(win, monkeypatch):
     monkeypatch.setattr(common, "pick_from", pick)
     it = next(i for i in win.lib.items.values() if not i.parent and i.group != win.lib.groups()[-1])
     win.move_to([it.id])
-    assert asked[0][0] == "Move To" and asked[0][1][-2:] == ["No Group", "New Group…"]
+    assert asked[0][0] == "Move To" and asked[0][1][-2:] == ["None", "New Group…"]
     assert win.lib.items[it.id].group == win.lib.groups()[-1]
 
 

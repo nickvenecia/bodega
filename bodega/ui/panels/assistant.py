@@ -9,7 +9,7 @@ notes; under each message (on hover) Copy, and on yours Edit and Ask Again. Whil
 and the message field's rim turns in the accent (both still under Reduce Motion). Return sends, Shift-Return starts
 a new line; Send sits inside the field and becomes Stop while it works.
 
-A change asked for in the chat waits in a card in the conversation: Decline, or Change N Items (Review… to pick
+A change asked for in the chat waits in a card in the conversation: Decline, or Change N Pieces (Review… to pick
 some); while it waits the field reads "Accept or Decline Above", and after the choice the card says what happened.
 The jobs (Update from Links, Find Missing Links, Tidy Up Names, Organize Groups) are buttons; they run in the
 background and what they find opens in the Review window. Nothing changes until you say so.
@@ -219,7 +219,7 @@ class Thinking(QLabel):
 
 class ChangeCard(QFrame):
     """A change asked for in the chat, in the conversation: its title, a line saying how many, what would change
-    (old → new, the first few), then Decline and Change N Items sharing its foot. Review… opens them in the
+    (old → new, the first few), then Decline and Change N Pieces sharing its foot. Review… opens them in the
     Review window to pick some. After the choice it says what happened, in its color."""
 
     SHOWN = 5
@@ -257,7 +257,7 @@ class ChangeCard(QFrame):
         self.foot = QWidget()
         fl = hbox(self.foot, 0, tokens.SPACE_2)
         self.decline = QPushButton("Decline")
-        self.go = primary_button(f"Change {words.count(pieces, 'Item')}")
+        self.go = primary_button(f"Change {words.count(pieces, 'Piece')}")
         fl.addWidget(self.decline, 1)  # two equal columns
         fl.addWidget(self.go, 1)
         lay.addWidget(self.foot)

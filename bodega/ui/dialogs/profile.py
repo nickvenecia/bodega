@@ -479,7 +479,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         if confirm(
             self,
             f"Delete {self.business.name or 'This Profile'}?",
-            "It goes from your profiles. Edit › Undo brings it back.",
+            "It goes from your profiles. Undo brings it back.",
             "Delete Profile",
         ):
             self.deleted = True

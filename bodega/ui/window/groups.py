@@ -21,7 +21,7 @@ class GroupsMixin:
 
         n = len(ids)
         choices = [(f"grp:{g}", g) for g in self.lib.groups()]
-        choices += [("none", "No Group"), ("new", "New Group…")]
+        choices += [("none", "None"), ("new", "New Group…")]
         picked = pick_from(self, "Move To" if n == 1 else f"Move {n} To", choices, "Move")
         if picked == "new":
             self._move_to_new_group(ids)

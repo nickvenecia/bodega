@@ -59,8 +59,6 @@ class AISetupDialog(Embeddable, QDialog):
         self.title_label = QLabel("AI")
         self.title_label.setObjectName("DialogTitle")
         lay.addWidget(self.title_label)
-        lay.addWidget(hint(SENT))
-        lay.addWidget(hint(BILLED))
 
         sec = Section("Provider")
         row = hbox(spacing=SPACE_2)
@@ -114,6 +112,10 @@ class AISetupDialog(Embeddable, QDialog):
 
         self.status = status_line()
         lay.addWidget(self.status)
+        for words_ in (SENT, BILLED):  # what goes out and what it costs: footnotes, under the form
+            note = hint(words_)
+            note.setWordWrap(True)
+            lay.addWidget(note)
 
         buttons = button_row()
         self.cancel_btn = cancel = QPushButton("Cancel")

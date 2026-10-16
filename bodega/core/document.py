@@ -301,17 +301,17 @@ def build_inventory(lib, items: list[Item], b: Business | None, title: str = "Eq
     v.number = dates.fmt(dates.today())
     v.big_label = "Replacement Value"
     v.big_value = money.fmt(total, cur)
-    v.big_sub = f"{words.count(len(items), 'item')}  ·  {words.count(pieces, 'piece')}"
+    v.big_sub = f"{words.count(len(items), 'kind')} of gear  ·  {words.count(pieces, 'piece')}"
     groups = []
     for i in items:
         if (i.group or "Other") not in groups:
             groups.append(i.group or "Other")
-    v.strip = [("As Of", dates.fmt(dates.today())), ("Items", f"{len(items):,}"), ("Pieces", f"{pieces:,}")]
+    v.strip = [("As Of", dates.fmt(dates.today())), ("Gear", f"{len(items):,}"), ("Pieces", f"{pieces:,}")]
     v.strip.append(("Groups", f"{len(groups):,}"))
     table = Table(
         [
             Col("Qty", 0.07, "center"),
-            Col("Item", 0.47),
+            Col("Gear", 0.47),
             Col("Serial Numbers", 0.18, mono=True),
             Col("Unit Value", 0.13, "right"),
             Col("Total", 0.15, "right"),
@@ -342,7 +342,7 @@ def build_inventory(lib, items: list[Item], b: Business | None, title: str = "Eq
             )
     table.photos = any(r.photo for r in table.rows)
     v.table = table
-    v.totals = [("Items", f"{len(items):,}", False), ("Pieces", f"{pieces:,}", False)]
+    v.totals = [("Gear", f"{len(items):,}", False), ("Pieces", f"{pieces:,}", False)]
     v.totals.append(("Replacement Value", money.fmt(total, cur), True))
     if b is not None and money.parse(b.value_tax):
         v.note = f"Replacement value is what each piece cost plus {money.fmt_rate(b.value_tax)} sales tax."
@@ -362,7 +362,7 @@ def build_ratecard(lib, items: list[Item], packages: list[Package], b: Business 
     v.big_label = "A Week Bills As"
     v.big_value = f"{wd} Days"
     v.big_sub = "Friday to Monday bills as 1 day" if (b and b.weekend_deal) else ""
-    table = Table([Col("Item", 0.68), Col("Day", 0.16, "right"), Col("Week", 0.16, "right")], name_col=0)
+    table = Table([Col("Gear", 0.68), Col("Day", 0.16, "right"), Col("Week", 0.16, "right")], name_col=0)
     pk = [p for p in packages if p.lines]
     if pk:
         table.rows.append(Row(["Kits", "", ""], "heading"))

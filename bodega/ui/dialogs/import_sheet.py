@@ -99,7 +99,7 @@ class ImportDialog(QDialog):
 
         # options
         self.options = Disclosure("Options", is_open=True)
-        self.attach = ToggleRow("Attach Gear to What It's For", True)
+        self.attach = ToggleRow("Attach Parts to Their Gear", True)
         self.attach.setToolTip('"Tilta Cage for Sony FX6" goes with the FX6')
         self.attach.toggled.connect(lambda _on: self.reread())
         self.options.add(self.attach)
@@ -107,7 +107,7 @@ class ImportDialog(QDialog):
         self.tidy.setToolTip("SD Cards becomes Media, 1000c becomes Lights")
         self.tidy.toggled.connect(lambda _on: self.reread())
         self.options.add(self.tidy)
-        self.use_pricing = ToggleRow("Use the Sheet's Pricing", not has_profile)  # never replaces yours unasked
+        self.use_pricing = ToggleRow("Use Sheet Pricing", not has_profile)  # never replaces yours unasked
         self.use_pricing.setToolTip(
             "Your profile's day-rate percent and tax become the sheet's"
             if has_profile
@@ -125,7 +125,7 @@ class ImportDialog(QDialog):
             if i.link
         } & have
         self.links = ToggleRow(
-            f"Add the Sheet's Links to {len(known_links)} Piece{'s' if len(known_links) != 1 else ''} You Have",
+            f"Add Links to {words.count(len(known_links), 'Piece')} You Have",
             True,
         )
         self.links.setToolTip("Only where a piece has no link yet")
@@ -234,7 +234,7 @@ class ImportDialog(QDialog):
         bits = [f"{money.fmt_rate(self.got.rate_pct)} of value a day"] if self.got.rate_pct else []
         if self.got.value_tax:
             bits.append(f"{money.fmt_rate(self.got.value_tax)} tax")
-        self.use_pricing.setText("Use the Sheet's Pricing: " + ", ".join(bits) if bits else "Use the Sheet's Pricing")
+        self.use_pricing.setText("Use Sheet Pricing: " + ", ".join(bits) if bits else "Use Sheet Pricing")
         self.use_pricing.setVisible(bool(bits))
         self._has_pricing = bool(bits)
         g = self.got
@@ -345,10 +345,10 @@ class ImportDialog(QDialog):
             self.columns.set_open(True)  # the place to fix it, open
         else:
             self.count.setText(
-                f"{len(keep):,} of {words.count(found, 'item')}, {words.count(pieces, 'piece')}"
+                f"{len(keep):,} of {words.count(found, 'row')}, {words.count(pieces, 'piece')}"
                 + (f", {attached} attached to other gear" if attached else "")
             )
-        self.go.setText(f"Import {len(keep)} Item{'s' if len(keep) != 1 else ''}" if keep else "Import")
+        self.go.setText(f"Import {words.count(len(keep), 'Row')}" if keep else "Import")
         self.go.setEnabled(bool(keep))
 
     def _done(self) -> None:

@@ -276,7 +276,7 @@ def _asked_for_a_change(win, monkeypatch):
 
 def test_a_change_asked_for_in_the_chat_waits_in_a_card(win, monkeypatch):
     a = _asked_for_a_change(win, monkeypatch)
-    assert a.card.isVisibleTo(a) and a.card.go.text() == "Change 1 Item"
+    assert a.card.isVisibleTo(a) and a.card.go.text() == "Change 1 Piece"
     piece, what = a.card.rows.itemAt(0).widget().findChildren(QLabel)
     assert what.text() == "Group: Body → Cases" and piece.text()
     assert not a.question.isEnabled() and not a.ask_btn.isEnabled()  # one thing at a time

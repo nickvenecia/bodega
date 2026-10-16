@@ -33,9 +33,9 @@ from bodega.ui.panels.base import DetailsBase
 from bodega.ui.style import theme, tokens
 
 PRICINGS = [
-    ("discount", "Discount the Gear", "A percent off what the gear costs piece by piece"),
-    ("fixed", "Set a Day Rate", "Your own price for the whole kit"),
-    ("sum", "What the Gear Adds Up To", "No discount"),
+    ("discount", "Gear Discount", "A percent off what the gear costs piece by piece"),
+    ("fixed", "Own Day Rate", "Your own price for the whole kit"),
+    ("sum", "Gear Total", "What the gear adds up to, no discount"),
 ]
 
 
