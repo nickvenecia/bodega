@@ -14,7 +14,7 @@ settings (Send Feedback, About) have their own windows.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QStackedWidget, QWidget
+from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QStackedWidget, QWidget
 
 from bodega import version_label
 from bodega.core import backups, dates, errors
@@ -27,6 +27,7 @@ from bodega.ui.components.widgets import (
     AccentPicker,
     ElidedLabel,
     FitScroll,
+    SearchField,
     Section,
     Segmented,
     ToggleRow,
@@ -36,9 +37,18 @@ from bodega.ui.components.widgets import (
     set_combo,
     vbox,
 )
-from bodega.ui.style import tokens
+from bodega.ui.style import theme, tokens
 
 LOOKS = [("system", "Match System"), ("light", "Light"), ("dark", "Dark")]
+FINDS = {  # what each section holds, for Settings' search (with its name)
+    "general": "look appearance light dark accent color updates check automatically",
+    "profiles": "profile business name logo email phone address pricing day rate percent tax week weekend deposit "
+    "numbers prefix next number paper terms agreement note currency",
+    "ai": "ai assistant provider key model anthropic openai gemini claude",
+    "account": "account sign in sign out email password",
+    "shortcuts": "keyboard shortcuts keys",
+    "data": "data folder backup back up restore safety copies renters details log",
+}
 PANES = [
     ("general", "General", "cog"),
     ("profiles", "Profiles", "user"),
@@ -77,6 +87,13 @@ class SettingsDialog(QDialog):
         body = hbox(root, gap, gap)
         self.side = side = LeftPanel(tokens.SETTINGS_SIDE_W)
         root.float(side)
+        self.find = SearchField()  # narrows the sections: "logo" leaves Profiles
+        self.find.setPlaceholderText("Search")
+        self.find.setAccessibleName("Search Settings")
+        self.find.addAction(theme.icon("search", theme.FAINT), QLineEdit.ActionPosition.LeadingPosition)
+        self.find.textChanged.connect(self._find)
+        self.find.returnPressed.connect(self._found)
+        side.lay.addWidget(self.find)
         for key, label, icon in PANES:
             side.add_row(key, label, icon, foldable=False).clicked.connect(self.show_pane)
         side.lay.addStretch(1)
@@ -104,11 +121,30 @@ class SettingsDialog(QDialog):
         self._build_shortcuts()
         self._build_data()
         # Account shows once there's an account service to sign in to (until then nothing could sign in)
-        self.rows["account"].setVisible(account.service().connected or account.current() is not None)
+        self._account_shown = account.service().connected or account.current() is not None
+        self.rows["account"].setVisible(self._account_shown)
         shown = pane in self.panes and not self.rows[pane].isHidden()
         self.show_pane(pane if shown else "general")
 
     # ------------------------------------------------------------------ moving around
+    def _find(self, text: str) -> None:
+        """Only the sections that hold what's typed (by their names and what's in them)."""
+        from bodega.core import search
+
+        wanted = search.words(text)
+        for key, label, _icon in PANES:
+            if key == "account" and not self._account_shown:
+                continue
+            hay = search.folded(f"{label} {FINDS.get(key, '')}")
+            self.rows[key].setVisible(search.matches(hay, wanted))
+
+    def _found(self) -> None:
+        """Return in the search: the first section left."""
+        first = next((k for k, _l, _i in PANES if not self.rows[k].isHidden()), None)
+        if first is not None:
+            self.show_pane(first)
+            self.rows[first].setFocus()
+
     def showEvent(self, e):
         super().showEvent(e)
         row = self.rows.get(self.current_pane())

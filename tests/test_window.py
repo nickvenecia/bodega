@@ -1432,3 +1432,17 @@ def test_the_picker_narrows_as_you_type(qapp, monkeypatch):
     monkeypatch.setattr(QDialog, "exec", run)
     got = common.pick_from(None, "Move To", [("a", "Lights"), ("b", "Lenses"), ("c", "Grip")], "Move")
     assert got == "b"
+
+
+def test_settings_search_narrows_its_sections(win):
+    from bodega.ui.dialogs.settings import SettingsDialog
+
+    d = SettingsDialog(win.lib, win)
+    d.find.setText("logo")
+    shown = [k for k, r in d.rows.items() if not r.isHidden()]
+    assert shown == ["profiles"]
+    d._found()
+    assert d.current_pane() == "profiles"
+    d.find.setText("")
+    assert not d.rows["data"].isHidden() and d.rows["account"].isHidden()  # (no account service yet)
+    d.close()

@@ -153,6 +153,8 @@
   that filter off.
 - Move To… on a piece's right-click menu opens a list of your groups you can search, instead of a menu on top of
   the menu: type a few letters, press Return.
+- Settings has a search box: type "logo", "tax" or "backup" and only the section that holds it stays; Return opens
+  it.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.
