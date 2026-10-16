@@ -99,9 +99,20 @@ def main(out: Path, sheet: Path | None = None) -> int:
 
     lib = sample.fill(Library(tmp).load())
     _give_photos(lib)
+    from datetime import timedelta
+
+    from bodega.core import dates
     from bodega.core.model import LogEntry
 
-    for r in lib.rentals.values():  # gone out, so the gear has earned something
+    for r in lib.rentals.values():  # gone out two days ago, so the gear is out and has earned something
+        start = dates.parse(r.pickup)
+        step = (dates.today() - timedelta(days=2) - start) if start else timedelta(0)
+        for owner, key in [(r, "pickup"), (r, "return_date")] + [
+            (ln, k) for ln in r.lines for k in ("pickup", "return_date")
+        ]:
+            d = dates.parse(getattr(owner, key))
+            if d is not None:
+                setattr(owner, key, dates.iso(d + step))
         r.status = "out"
         lib.save_rental(r)
     first = lib.ordered_items()[0]

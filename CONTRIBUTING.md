@@ -97,9 +97,13 @@ packaging/     Installer files per OS
 19. A delayed call names what it belongs to: `QTimer.singleShot(ms, owner, fn)`, never `(ms, fn)`. If the owner is
     gone first (a window closed and deleted), Qt drops the call instead of running it on something that's no longer
     there; on a Mac that once crashed the next window. `tests/test_code_rules.py` checks every call.
-20. Python's cycle collector is off and runs on the window's thread between events (app.py `_MainThreadGC`):
-    never turn it back on, and never call `gc.collect()` from a background job. Left to itself it runs on any
-    thread, in the middle of Qt's own work, and freeing a Qt object there crashes Bodega at random.
+20. Python's cycle collector is off and runs on the window's thread between events, checked every GC_MS (app.py
+    `_MainThreadGC`): never turn it back on, and never call `gc.collect()` from a background job. Left to itself it
+    runs on any thread, in the middle of Qt's own work, and freeing a Qt object there crashes Bodega at random.
+21. A menu action that's kept (`self.act_up = …`, in a dict) is made with `widgets.menu_item`, never kept from
+    `menu.addAction(text, …)`. Python hears when Qt deletes an action Python made, never one Qt made: kept, that
+    one outlives its action when a rebuilt row is thrown away, and the next object Qt makes at the same address
+    meets it and crashes (`tests/test_code_rules.py` checks).
 
 ---
 
@@ -107,6 +111,9 @@ packaging/     Installer files per OS
 
 - Anything that waits on the internet or may take more than a moment runs off the main thread and talks to the
   window with **signals**, almost always through `ui/components/worker.py` (`Worker`, with progress and Stop).
+  Every thread is a `worker.Background`: Qt stops the whole app if a running thread is destroyed, and a window
+  takes its threads with it, so a window that goes first lets its thread go (told to stop, kept until it ends,
+  its answer going nowhere). `tests/test_threads.py` fails on a plain `QThread`.
   Today that's:
   - the Assistant's jobs and questions (`ui/window/ai.py`, `ui/panels/assistant.py`) and the list of models in AI
     Settings (`ui/dialogs/ai_setup.py`);
@@ -140,6 +147,11 @@ packaging/     Installer files per OS
 - A document's PDF is read back with an independent reader (pypdf): its words are real text.
 - UI changes: check screenshots (`QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR`).
 - Before a release, the packaged app must pass `--smoke-test` (CI does this on every platform).
+- **Real results, every push.** Before pushing, run every check in full on your computer (`ruff format . && ruff
+  check . && mypy && python -m pytest -q`) and read what it says. A pull request says what ran and what it said
+  (how many tests passed, what failed and why) and links CI's run on its last commit; "should pass" is never a
+  result. A check that couldn't run is said too, with why. Merging waits for all four builds (the owner's branch
+  protection, question 26).
 
 ---
 

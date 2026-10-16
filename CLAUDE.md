@@ -16,6 +16,9 @@ The owner is a filmmaker (director/DP/editor/colorist), not a full-time develope
   vocabulary, integrations, AI) and every departure from it, with the owner's yes. Follow the standard and the
   addendum; where this file or DESIGN.md disagrees with them, they win, and the difference is a fix to make (see
   **[docs/STANDARD_AUDIT.md](docs/STANDARD_AUDIT.md)** for what doesn't meet it yet).
+- **[docs/OVERVIEW.md](docs/OVERVIEW.md)**: what's built today, measured at a named commit (gaps and drift said
+  plainly); **[docs/SCOPE.md](docs/SCOPE.md)**: what Bodega builds, what Saldo and other apps own, what's put off.
+  Check the scope before adding a feature.
 - **[DESIGN.md](DESIGN.md)**: how the app and the paper look and read. All app values live in `bodega/ui/tokens.py`;
   paper colors in `bodega/core/looks.py`. Never type a size or color anywhere else.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)**: code rules.
