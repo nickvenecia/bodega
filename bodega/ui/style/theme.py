@@ -258,6 +258,15 @@ QFrame#Banner {{ background: {tokens.BANNER}; border: 1px solid {tokens.BANNER_E
 #Pager QToolButton#Circle {{ background: transparent; border-color: transparent; }}
 #Pager QToolButton#Circle:hover {{ background: {tokens.FILL}; }}
 #PagerText {{ color: {tokens.MUTED}; font-weight: {WEIGHT_MEDIUM}; }}
+#SelectionBar {{ background: {tokens.RAISED}; border: 1px solid {tokens.GLASS_STROKE}; border-radius: {tokens.SELBAR_H // 2}px; }}
+#SelectionCount {{ font-weight: {WEIGHT_SEMIBOLD}; }}
+#SelectionBar QPushButton#BarAction {{ background: {tokens.FILL}; border: none; border-radius: {CONTROL_H // 2}px;
+    min-height: {CONTROL_H}px; max-height: {CONTROL_H}px; padding: 0 {SPACE_3}px; font-weight: {WEIGHT_MEDIUM}; }}
+#SelectionBar QPushButton#BarAction:hover {{ background: {tokens.FILL_3}; }}
+#SelectionBar QPushButton#BarAction[danger="true"] {{ color: {tokens.BAD}; }}
+#SelectionBar QPushButton#BarAction::menu-indicator {{ image: none; width: 0; }}
+#SelectionBar QToolButton#Circle {{ background: {tokens.FILL}; border-color: transparent; }}
+#SelectionBar QToolButton#Circle:hover {{ background: {tokens.FILL_3}; }}
 /* the assistant's conversation (panels/assistant.py; the standard's G.25) */
 #Conversation, #ConversationBody {{ background: transparent; border: none; }}
 #Mine {{ background: {tokens.ACCENT_FILL}; border-radius: {tokens.BUBBLE_R}px; border-bottom-right-radius: {tokens.BUBBLE_TAIL_R}px; }}

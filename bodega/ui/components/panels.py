@@ -250,6 +250,78 @@ class RecordPager(QFrame):
         self.raise_()
 
 
+class SelectionBar(QFrame):
+    """G.10.7: while rows of a list are ticked, a glass capsule floats over the foot of the list: how many are
+    ticked, a capsule for each thing that can be done to all of them, and ✕ to untick them all. Its capsules are
+    made once (`names`, in their order) and only shown or hidden; each does its job once its click is over."""
+
+    cleared = Signal()  # its ✕
+
+    def __init__(self, parent: QWidget, names: tuple[str, ...]):
+        super().__init__(parent)
+        self.setObjectName("SelectionBar")
+        self.setFixedHeight(tokens.SELBAR_H)
+        lay = hbox(self, tokens.SELBAR_PAD, tokens.SELBAR_GAP)
+        self.count = QLabel()
+        self.count.setObjectName("SelectionCount")
+        theme.use_tabular(self.count)
+        lay.addWidget(self.count)
+        acts = hbox(spacing=tokens.SELBAR_ACTION_GAP)
+        self.buttons: dict[str, QPushButton] = {}
+        self._jobs: dict[str, object] = {}
+        for name in names:
+            b = QPushButton()
+            b.setObjectName("BarAction")
+            b.setCursor(Qt.CursorShape.PointingHandCursor)
+            b.clicked.connect(lambda _c=False, n=name: self._run(n))
+            b.hide()
+            acts.addWidget(b)
+            self.buttons[name] = b
+        lay.addLayout(acts)
+        self.close = circle_button("x", "Untick All")
+        self.close.clicked.connect(lambda: QTimer.singleShot(0, self, self.cleared.emit))
+        lay.addWidget(self.close)
+        self.shadow = QGraphicsDropShadowEffect(self)  # it floats, as the record pager does
+        self.shadow.setBlurRadius(tokens.PAGER_SHADOW)
+        self.shadow.setOffset(0, tokens.GLASS_SHADOW_DROP)
+        self.setGraphicsEffect(self.shadow)
+        self.hide()
+
+    def _run(self, name: str) -> None:
+        job = self._jobs.get(name)
+        if job is not None and not self.buttons[name].menu():
+            QTimer.singleShot(0, self, job)  # once the click is over (what it does refills the list)
+
+    def show_for(self, n: int, actions: list[tuple[str, str, object, bool]]) -> None:
+        """`n` rows ticked, and what can be done to all of them: (name, its words, what it does, destructive).
+        A job that's a QMenu opens it from the capsule. None ticked: it goes."""
+        if n <= 0:
+            self.hide()
+            return
+        self.count.setText(f"{n:,} Selected")
+        wanted = {name: (text, job, danger) for name, text, job, danger in actions}
+        for name, b in self.buttons.items():
+            if name not in wanted:
+                b.hide()
+                continue
+            text, job, danger = wanted[name]
+            b.setText(text)
+            if b.property("danger") != danger:
+                b.setProperty("danger", danger)
+                repolish(b)
+            if isinstance(job, QMenu):
+                b.setMenu(job)
+                self._jobs.pop(name, None)
+            else:
+                b.setMenu(None)
+                self._jobs[name] = job
+            b.show()
+        self.shadow.setColor(theme.qcolor(tokens.GLASS_SHADOW))
+        self.adjustSize()
+        self.show()
+        self.raise_()
+
+
 class SidePanel(QFrame):
     """A panel on the right. `more`: a ⋯ menu in the header (`more_menu`); `scroll`: the body scrolls.
     `pager`: a RecordPager floats at its foot while a record from a list is open (set_pager)."""

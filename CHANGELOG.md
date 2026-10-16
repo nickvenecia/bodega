@@ -92,6 +92,12 @@
 - Deleting gear, a kit, a quote, a renter or a profile, or removing a group, happens at once and says so with an Undo
   button in the message ("Deleted Sony FX6. Undo"); ⌘Z does the same. Nothing asks "are you sure?" for what Undo
   can take back. Gear that's on a rental is still retired instead of deleted, and that still asks.
+- Every list (gear, kits, rentals) has a tick on each row. A click still opens a row; its tick, ⌘-click (Ctrl-click
+  on Windows and Linux) or Space ticks it, Shift-click ticks a run, and the tick in the headings ticks every row
+  showing. While rows are ticked, a bar floats over the list saying how many, with what you can do to all of them:
+  Move to Group and Delete for gear, Delete for kits, and Delete for the quotes among ticked rentals (it says how
+  many will go). Ticks stay while you edit and clear when you search, filter or go somewhere else.
+- The grip you drag a piece by is at the end of its row now, where Mac lists keep it; the tick takes the start.
 - Single-key shortcuts, outside text fields: N makes something new (a piece, a kit or a rental, wherever you are),
   E puts the cursor in the open record (or opens the one you've marked), D deletes it (with Undo), / goes to the
   search, ? shows the keyboard shortcuts and A opens the assistant. They never act while you type in a field or

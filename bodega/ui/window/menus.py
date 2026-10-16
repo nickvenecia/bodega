@@ -405,6 +405,10 @@ class MenusMixin:
             if ids:
                 self.delete_gear(ids)
             return
+        ticked = (self.kit_table if kind == "packages" else self.rental_table).ticked_ids()
+        if ticked and self.view_key != "calendar":
+            self.delete_many(kind, ticked)
+            return
         cur = self.packages.pkg if kind == "packages" else self.rentals.r
         if cur is not None and self.dock.opened:
             self.delete(kind, cur.id)

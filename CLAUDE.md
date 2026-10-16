@@ -110,8 +110,9 @@ bodega/
                    photos.py (gear photos: keep() reads and saves every picture again into photos/, scaled to
                    PHOTO_MAX_PX; from_link() takes a product page's main picture through core.web; a picture
                    pasted (Copy Image in a browser) or dropped: picture_file/image/link, has_picture; thumbnails),
-                   panels.py (LeftPanel: every list of places on the left, with NavRow; SidePanel: every
-                   panel on the right, one header: title, round buttons, ⋯, ✕ at the far right),
+                   panels.py (LeftPanel: every list of places on the left, with NavRow; SelectionBar: while rows are
+                   ticked; SidePanel: every panel on the right, one header: title, round buttons, ⋯, ✕ at the far
+                   right),
                    widgets.py (Card, Disclosure, Section, TitleEdit, IconLabel, SearchField, button_row, fields…,
                    Toast: MainWindow.toast(text, tone) with "done" / "problem" / "" for news; Banner: a problem
                    that lasts, across the top; Guarded: a form with its own Save asks Discard Changes / Keep
@@ -132,11 +133,12 @@ bodega/
                    its groups, Kits with each kit; Rentals: All Rentals with Out Now and Coming Up, then Calendar; rows
                    fold, kept in settings "sidebar_folded"; a folded All Rentals still shows out/late; at the bottom:
                    your profile card (its menu: your profiles, Send Feedback, Check for Updates, Settings)); tables.py
-                   (GearTable, KitTable, RentalTable; COL_W widths; never per-row widgets); lift.py (Lift: drag by the
-                   grip, drawn live: rows slide apart to show where it lands; off to the left it becomes a normal drag
-                   for the sidebar's groups); filters.py (FilterButton + GearFilter: divide by, show, company, missing,
-                   Clear Filters); calendar_view.py (CalendarPage: Month, a wall calendar with bars, or Timeline;
-                   settings "calendar_mode")
+                   (GearTable, KitTable, RentalTable; a tick column first (TICK: the ticks are the selection, a click
+                   opens, chosen_ids() what's ticked), the gear grip last; COL_W widths; never per-row widgets); lift.py
+                   (Lift: drag by the grip, drawn live: rows slide apart to show where it lands; off to the left it
+                   becomes a normal drag for the sidebar's groups); filters.py (FilterButton + GearFilter: divide by,
+                   show, company, missing, Clear Filters); calendar_view.py (CalendarPage: Month, a wall calendar with
+                   bars, or Timeline; settings "calendar_mode")
     panels/        base.py (DetailsBase: header ⋯, footer_button(text, icon), Cards), item.py (gear: the head
                    (photo beside the TitleEdit name, the status line, company · group), Details / Value & Rate / added parts; Check Price; Update with AI),
                    kit.py (TitleEdit name, About, Gear, Price), rental.py (LineEditor per line…), assistant.py

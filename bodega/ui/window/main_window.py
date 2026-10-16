@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt, QTimer
+from PySide6.QtCore import QByteArray, QEvent, QPoint, QRect, QSize, Qt, QTimer
 from PySide6.QtGui import QGuiApplication, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.core import backups, dates, document, money, pricing, settings, update
+from bodega.core import backups, dates, document, money, pricing, settings, update, words
 from bodega.core.history import History
 from bodega.core.log import get_logger
 from bodega.core.model import Business
@@ -34,6 +34,7 @@ from bodega.core.store import Library
 from bodega.ui.components import titlebar
 from bodega.ui.components.empty import EmptyPage, NoResults
 from bodega.ui.components.glass import Dock, GlassRoot, glass
+from bodega.ui.components.panels import SelectionBar
 from bodega.ui.components.widgets import Banner, ElidedLabel, SearchField, Toast, hbox, vbox
 from bodega.ui.dialogs.preview import PageDialog
 from bodega.ui.panels.item import ItemPanel
@@ -116,6 +117,10 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         esc.activated.connect(self.escape)
         self.setCentralWidget(root)
         self.toaster = Toast(self, self._toast_area)
+        self.selbar = SelectionBar(self, ("move", "delete"))  # while rows are ticked (the standard's 4.17)
+        self.selbar.cleared.connect(self.untick)
+        self._move_menu = QMenu(self)  # the bar's Move to Group: your groups, as it opens
+        self._move_menu.aboutToShow.connect(self._fill_move_menu)
 
         self._save_timer = QTimer(self, singleShot=True, interval=tokens.SAVE_DELAY_MS, timeout=self.flush)
         self._save_cap = QTimer(self, singleShot=True, interval=tokens.SAVE_MAX_MS, timeout=self.flush)
@@ -218,7 +223,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.search.setMaximumWidth(tokens.SEARCH_W)
         self.search.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.search.addAction(theme.icon("search", theme.FAINT), QLineEdit.ActionPosition.LeadingPosition)
-        self.search.textChanged.connect(lambda _t: self._apply_search())
+        self.search.textChanged.connect(lambda _t: (self.untick(), self._apply_search()))
         self.search.returnPressed.connect(self._scanned)  # a label's QR code, read by a scanner (else: open)
         self.search.step_wanted.connect(self._mark_from_search)
         self.search.leave_to = lambda: (self._table() or self.pages).setFocus()  # Esc, once its words are gone
@@ -267,6 +272,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         lay.addWidget(self.banner)
 
         self.pages = QStackedWidget()
+        self.pages.installEventFilter(self)  # (the selection bar follows the list's middle)
         self.gear_table = GearTable()
         self.kit_table = KitTable()
         self.rental_table = RentalTable()
@@ -343,9 +349,12 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.gear_table.branded.connect(self._branded)
         self.gear_table.columns_changed.connect(self._columns_changed)
         self.gear_table.order_changed.connect(lambda keys: self.lib.settings.__setitem__("column_order", keys))
-        self.gear_table.itemSelectionChanged.connect(self._selection_count)
-        self.kit_table.delete_wanted.connect(lambda ids: self.delete("packages", ids[0]))
-        self.rental_table.delete_wanted.connect(lambda ids: self.delete("rentals", ids[0]))
+        self.kit_table.delete_wanted.connect(lambda ids: self.delete_many("packages", ids))
+        self.rental_table.delete_wanted.connect(
+            lambda ids: self.delete_many("rentals", ids) if len(ids) > 1 else self.delete("rentals", ids[0])
+        )  # (one: a booked one is cancelled, after asking; several: the quotes among them go)
+        for t in (self.gear_table, self.kit_table, self.rental_table):
+            t.ticks_changed.connect(self._ticks_changed)
         sb.menu_wanted.connect(self._sidebar_menu)
         sb.dropped.connect(self._sidebar_dropped)
         sb.new_group.connect(self.new_group)
@@ -405,12 +414,14 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         return got if got in {k for k, _l, _t in DIVIDES} else default
 
     def _view_picked(self) -> None:
+        self.untick()  # (a filter or a new divide: what's ticked could be out of sight)
         saved = settings.value(self.lib.settings, "divide")
         saved["grp" if self.view_key.startswith("grp:") else "all"] = self.view_menu.divide
         self.lib.settings["divide"] = saved
         self.refresh()
 
     def set_gear_filter(self, key: str) -> None:
+        self.untick()
         self.view_menu.filter.show = key
         self.view_menu.show_state()
         self.refresh()
@@ -423,7 +434,9 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             view = "gear"
         if view not in TITLES and not view.startswith("grp:"):
             view = "gear"
-        moved = view != self.view_key  # another place: it starts unsearched and unfiltered
+        moved = view != self.view_key  # another place: it starts unsearched and unfiltered, nothing ticked
+        if moved:
+            self.untick()
         self.view_key = view
         self.lib.settings["view"] = view
         self.sidebar.select(view)
@@ -905,8 +918,67 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             t.scrollToItem(row, QAbstractItemView.ScrollHint.PositionAtCenter)
 
     def _toast_area(self) -> QRect:
-        """Where toasts float: centred over the page, between the side panels, above the totals."""
-        return QRect(self.pages.mapTo(self, QPoint(0, 0)), self.pages.size())
+        """Where toasts float: centred over the page, between the side panels, above the totals (and above the
+        selection bar while it shows)."""
+        area = QRect(self.pages.mapTo(self, QPoint(0, 0)), self.pages.size())
+        if self.selbar.isVisible():
+            area.setBottom(self.selbar.geometry().top() - tokens.SPACE_2)
+        return area
+
+    # Ticks: the selection bar
+    def _ticks_changed(self) -> None:
+        """While rows are ticked, the selection bar floats over the list's foot with what can be done to all of
+        them; it goes when none are."""
+        t = self._table()
+        ids = t.ticked_ids() if t is not None and self.pages.currentWidget() is t else []
+        kind = kind_of(self.view_key)
+        acts: list = []
+        if ids and kind == "gear":
+            acts = [
+                ("move", "Move to Group", self._move_menu, False),
+                ("delete", "Delete", lambda: self.delete_gear(self.gear_table.ticked_ids()), True),
+            ]
+        elif ids and kind == "packages":
+            acts = [("delete", "Delete", lambda: self.delete_many("packages", self.kit_table.ticked_ids()), True)]
+        elif ids:  # rentals: only the quotes among them can go, and the words say how many
+            quotes = [i for i in ids if i in self.lib.rentals and self.lib.rentals[i].deletable()]
+            if quotes:
+                text = "Delete" if len(quotes) == len(ids) else f"Delete {words.count(len(quotes), 'Quote')}"
+                acts = [("delete", text, lambda: self.delete_many("rentals", self.rental_table.ticked_ids()), True)]
+        was = self.selbar.isVisible()
+        self.selbar.show_for(len(ids), acts)
+        self._place_selbar()
+        if self.toaster.isVisible() and was != self.selbar.isVisible():
+            self.toaster.place()
+
+    def _place_selbar(self) -> None:
+        """Centred over the list, SELBAR_LIFT above its foot (G.10.7), never wider than the list less its air."""
+        if not self.selbar.isVisible():
+            return
+        area = QRect(self.pages.mapTo(self, QPoint(0, 0)), self.pages.size())
+        w = min(self.selbar.sizeHint().width(), area.width() - 2 * tokens.SPACE_5)
+        top = area.bottom() - tokens.SELBAR_LIFT - tokens.SELBAR_H
+        self.selbar.setGeometry(area.center().x() - w // 2, top, w, tokens.SELBAR_H)
+        self.selbar.raise_()
+
+    def untick(self) -> None:
+        """Nothing ticked, on any list (the bar's ✕; a new place, search or filter: a tick never holds a row you
+        can no longer see)."""
+        for t in (self.gear_table, self.kit_table, self.rental_table):
+            if t.selectedItems():
+                t.clearSelection()
+
+    def _fill_move_menu(self) -> None:
+        m = self._move_menu
+        m.clear()
+
+        def move_to(group: str):
+            return lambda: QTimer.singleShot(0, self, lambda: self.move_gear(self.gear_table.ticked_ids(), group))
+
+        for g in self.lib.groups():
+            m.addAction(g, move_to(g))
+        m.addSeparator()
+        m.addAction("No Group", move_to(""))
 
     def show(self) -> None:
         """The first time: filling the screen (all of it but the menu bar and Dock). After that: the size
@@ -940,8 +1012,14 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.dock.set_target(w)
         for i in range(self.inspector.count()):  # every right-hand panel, whatever it is
             self.inspector.widget(i).setFixedWidth(w)
+        self._place_selbar()
         if self.toaster.isVisible():
             self.toaster.place()
+
+    def eventFilter(self, obj, e) -> bool:
+        if obj is getattr(self, "pages", None) and e.type() in (QEvent.Type.Resize, QEvent.Type.Move):
+            self._place_selbar()  # (the panel opening or closing moves the list's middle)
+        return super().eventFilter(obj, e)
 
     def _let_work_finish(self) -> None:
         """A price check or update check may still be waiting on a website. Give it a moment; if it's still

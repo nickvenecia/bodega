@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from bodega.core import pricing, settings
+from bodega.core import pricing, settings, words
 from bodega.core.log import get_logger
 from bodega.core.model import HOLD_VERBS, Business, Item, Package, PackageLine, Rental, RentalLine, new_id, now_iso
 from bodega.ui.components.widgets import one_stop
@@ -182,6 +182,34 @@ class EditingMixin:
         self.go(self.view_key)
         self.toast_undo(said)
 
+    def delete_many(self, kind: str, ids: list[str]) -> None:
+        """Delete what's ticked: kits, or the quotes among ticked rentals (a booked rental is cancelled, never
+        deleted, so those stay as they are), at once, with one Undo."""
+        if kind == "gear":
+            self.delete_gear(ids)
+            return
+        self.flush()
+        if kind == "packages":
+            gone = [i for i in ids if i in self.lib.packages]
+            what = (self.lib.packages[gone[0]].name or "the kit") if len(gone) == 1 else words.count(len(gone), "kit")
+            for i in gone:
+                self.lib.delete_package(i)
+            if self.packages.pkg is not None and self.packages.pkg.id in gone:
+                self.packages.pkg = None
+            said = f"Deleted {what}. The gear in {'it' if len(gone) == 1 else 'them'} stays."
+        else:
+            gone = [i for i in ids if i in self.lib.rentals and self.lib.rentals[i].deletable()]
+            for i in gone:
+                self._dirty_rentals.discard(i)
+                self.lib.delete_rental(i)
+            if self.rentals.r is not None and self.rentals.r.id in gone:
+                self.rentals.r = None
+            said = f"Deleted {words.count(len(gone), 'quote')}."
+        if not gone:
+            return
+        self.go(self.view_key)
+        self.toast_undo(said)
+
     def may_hold(self, r, status: str) -> bool:
         """Booking or marking out gear that's already promised (or in repair) asks first: a sub-rental can
         make it deliberate. True to go ahead."""
@@ -304,14 +332,6 @@ class EditingMixin:
             self.refresh()
             self.toast(f"Retired {listed}.", "done")
         return True
-
-    def _selection_count(self) -> None:
-        t = self._table()
-        if t is not self.gear_table:
-            return
-        picked = len(self.gear_table.chosen_ids()) if len(self.gear_table.selectedItems()) > 1 else 0
-        shown = sum(1 for r in self.gear_table.record_rows() if not r.isHidden())
-        self.count.set_full_text(f"{picked} selected" if picked > 1 else (f"{shown:,}" if shown else ""))
 
     def attach_to(self, item_id: str) -> None:
         """Pick gear that lives with this piece."""

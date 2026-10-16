@@ -699,7 +699,7 @@ def test_select_all_and_delete(win, monkeypatch):
     ids = t.chosen_ids()
     audio = [i.id for i in win.lib.items.values() if i.group == "Microphones"]
     assert sorted(ids) == sorted(audio) and len(ids) > 1
-    assert "selected" in win.count.full_text()
+    assert win.selbar.isVisibleTo(win) and win.selbar.count.text() == f"{len(ids)} Selected"  # the selection bar
     before = len(win.lib.items)
     t.keyPressEvent(QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Delete, Qt.KeyboardModifier.NoModifier))
     assert asked == []  # deleted at once (the standard's 4.19), said with Undo
@@ -1151,12 +1151,12 @@ def test_rental_columns_make_room_for_the_renter(win):
     t.resize(1300, 400)
     t.show()
     QApplication.processEvents()
-    assert not any(t.isColumnHidden(c) for c in range(6))
+    assert not any(t.isColumnHidden(c) for c in range(7))
     t.resize(640, 400)  # a 1280 window with a rental's panel open
     QApplication.processEvents()
-    assert t.isColumnHidden(2) and t.isColumnHidden(5)  # Production steps aside first, then Total
-    assert t.columnWidth(1) >= tokens.RENTER_MIN - 1
-    assert not any(t.isColumnHidden(c) for c in (0, 1, 3, 4))  # number, renter, dates and status stay
+    assert t.isColumnHidden(3) and t.isColumnHidden(6)  # Production steps aside first, then Total
+    assert t.columnWidth(2) >= tokens.RENTER_MIN - 1
+    assert not any(t.isColumnHidden(c) for c in (0, 1, 2, 4, 5))  # ticks, number, renter, dates and status stay
     t.close()
     t.deleteLater()
 
@@ -1419,7 +1419,7 @@ def test_a_status_is_a_dot_and_a_word_in_the_text_color(win):
     assert row.data(GEAR_COL["status"], DOT) and row.foreground(GEAR_COL["status"]).style() == Qt.BrushStyle.NoBrush
     win.go("rentals")
     r = win.rental_table.topLevelItem(0)
-    assert r.data(4, DOT)
+    assert r.data(5, DOT)  # (its status)
 
 
 def test_a_filter_shows_as_a_chip_that_takes_it_off(win):

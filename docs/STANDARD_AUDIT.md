@@ -31,7 +31,7 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **193 fixed, 20 partly, 23 not
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **195 fixed, 20 partly, 21 not
 started (larger redesigns), 16 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
@@ -62,7 +62,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 193 · Partly 20 · Open 23 · Waiting on the owner 16 · No longer applies 1.**
+**Of the 253 failures: Fixed 195 · Partly 20 · Open 21 · Waiting on the owner 16 · No longer applies 1.**
 
 ### Partly: what's left
 
@@ -95,12 +95,10 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 |---|---|---|
 | C-25 | S2 | Import and Review are wide windows; the standard wants them as pages. |
 | C-26 | S2 | Dialogs use the system's frame and a Cancel button: no ✕ circle, no scrim. |
-| C-37 | S3 | No selection bar for acting on several pieces at once (only the count). |
-| C-44 | S2 | Columns reorder and hide from the heading's menu, but rows have no ticks, no figure row, no + for columns. |
+| C-44 | S2 | Ticks on every row and sortable headings are in; there's no figure row, and no + at the headings' end for columns (a right-click chooses them). |
 | C-53 | S2 | The print window has no column ticks or order, no letterhead options, no presets. |
 | C-55 | S3 | The table is drawn straight on the page, not in a card. |
 | C-61 | S2 | The print window has no filter cards (column, from, to). |
-| C-73 | S2 | No ticks on table rows. |
 | C-76 | S2 | No batch Check Out / Check In for several rentals. |
 | C-88 | S3 | Tidy Up covers gear names and groups, not renters' names or addresses. |
 | C-108 | S2 | Attached gear sits indented under its piece; the piece doesn't fold them away or sum them up (a table rewrite). |
@@ -148,7 +146,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 
 - **A**: A-03, A-05, A-06, A-10, A-11, A-12, A-13
 - **AI**: AI-01, AI-03, AI-07, AI-08, AI-09, AI-14, AI-15, AI-16, AI-17, AI-19, AI-20, AI-23, AI-24, AI-29, AI-31
-- **C**: C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-19, C-21, C-23, C-24, C-27, C-28, C-29, C-31, C-32, C-34, C-38, C-39, C-42, C-45, C-47, C-50, C-51, C-54, C-58, C-59, C-66, C-67, C-69, C-72, C-82, C-100, C-105, C-106, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
+- **C**: C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-19, C-21, C-23, C-24, C-27, C-28, C-29, C-31, C-32, C-34, C-37, C-38, C-39, C-42, C-45, C-47, C-50, C-51, C-54, C-58, C-59, C-66, C-67, C-69, C-72, C-73, C-82, C-100, C-105, C-106, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
 - **D**: D-01, D-02, D-03, D-05, D-06, D-07, D-10, D-11, D-12, D-15, D-16, D-18, D-21, D-23, D-24, D-25, D-26, D-31, D-32, D-34, D-42, D-49, D-51
 - **G**: G-02
 - **I**: I-01, I-02, I-03, I-04, I-06, I-07, I-08, I-10, I-11, I-12, I-13, I-14, I-15, I-19, I-20, I-21, I-23, I-24, I-25, I-26, I-29, I-30, I-31
@@ -552,7 +550,7 @@ choice row 32 · bar 36, V-18 the radius scale, V-24 no literals), then the shar
 | C-158 | No opening balances. |
 | C-161 | No scrims. |
 | C-169 | No touch calendar. |
-| C-170 | No selection bar. |
+| C-170 | Was N/A; now a Pass: the selection bar's capsules and its ✕ are all `control-h` (28), from tokens.SELBAR_* (components/panels.py SelectionBar). |
 | I-22 | Bodega has no tabular paste: ⌘V outside a text field only pastes a photo onto the open piece. |
 | I-27 | Bodega imports only a gear list (master data). It keeps no stock ledger, balances, purchase orders or rental history to switch over. |
 | I-28 | No other system's stand-in records are imported: there are no promotions, deals or fake items to migrate. |

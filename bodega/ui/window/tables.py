@@ -1,6 +1,11 @@
 """The big tables in the middle: gear, kits and rentals. Click a row to edit it on the right.
 
-Every column sorts; the grip column is your own order (drag a row by its grip to change it). Gear is divided
+Every list leads with a tick on every row (the standard's 4.3 and 4.17): a click opens a row, its tick (or ⌘-click,
+or Space) ticks it, Shift-click ticks a range, ⌘A ticks every row showing, and the heading's tick ticks them all
+or none. What's ticked is what Delete, a drag or the selection bar acts on (chosen_ids()).
+
+Every column sorts; the grip column, at a gear row's trailing edge, is your own order (drag a row by its grip to
+change it). Gear is divided
 by department, group or company (or not at all), each divider with its totals; click one to fold it. Gear
 that goes with a piece isn't listed under it: the piece shows "+3" and the inspector lists them. Searching
 finds them too. Right-click the column titles to choose the columns.
@@ -57,6 +62,72 @@ RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 CENTER = Qt.AlignmentFlag.AlignCenter
 
 
+TICK = 0  # every list's first column: its ticks
+SHIFT, CMD = Qt.KeyboardModifier.ShiftModifier, Qt.KeyboardModifier.ControlModifier  # (⌘ on a Mac)
+
+
+def paint_tick(painter: QPainter, rect, state: str) -> None:
+    """A tick box (G.10.3's `check`), centred in `rect`: "off", "on" or "some" (a dash: some rows ticked)."""
+    size = tokens.INDICATOR
+    box = QRectF(rect.center().x() - size / 2 + 0.5, rect.center().y() - size / 2 + 0.5, size - 1, size - 1)
+    painter.save()
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    if state == "off":
+        painter.setPen(QPen(theme.qcolor(tokens.BORDER_CHECK), 1))
+        painter.setBrush(theme.qcolor(tokens.CARD))
+        painter.drawRoundedRect(box, tokens.RADIUS_XS, tokens.RADIUS_XS)
+    else:
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(theme.qcolor(tokens.ACCENT_FILL))
+        painter.drawRoundedRect(box, tokens.RADIUS_XS, tokens.RADIUS_XS)
+        pen = QPen(theme.qcolor(tokens.ON_ACCENT), tokens.CHECK_STROKE)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(pen)
+        c, u = box.center(), size / 16
+        if state == "some":
+            painter.drawLine(QPointF(c.x() - 4 * u, c.y()), QPointF(c.x() + 4 * u, c.y()))
+        else:
+            painter.drawPolyline(
+                [
+                    QPointF(c.x() - 4 * u, c.y()),
+                    QPointF(c.x() - 1.5 * u, c.y() + 2.5 * u),
+                    QPointF(c.x() + 4 * u, c.y() - 3 * u),
+                ]
+            )
+    painter.restore()
+
+
+class TickHeader(QHeaderView):
+    """The headings, led by the tick column's box: ticked when every row showing is, a dash when some are. A click
+    on it ticks every row showing, or none (it never sorts)."""
+
+    def __init__(self, table: Table):
+        super().__init__(Qt.Orientation.Horizontal, table)
+        self.table = table
+
+    def paintSection(self, painter, rect, logical) -> None:
+        painter.save()
+        super().paintSection(painter, rect, logical)
+        painter.restore()
+        if logical == TICK and self.table.has_rows():
+            paint_tick(painter, rect, self.table.tick_state())
+
+    def mousePressEvent(self, e) -> None:
+        if self.logicalIndexAt(e.position().toPoint()) == TICK:
+            if e.button() == Qt.MouseButton.LeftButton:
+                self.table.tick_every(self.table.tick_state() != "on")
+            e.accept()
+            return
+        super().mousePressEvent(e)
+
+    def mouseReleaseEvent(self, e) -> None:
+        if self.logicalIndexAt(e.position().toPoint()) == TICK:
+            e.accept()
+            return
+        super().mouseReleaseEvent(e)
+
+
 class Row(QTreeWidgetItem):
     """Sorts by the hidden sort key of the clicked column (numbers as numbers, words as words)."""
 
@@ -81,18 +152,19 @@ class Table(QTreeWidget):
     delete_wanted = Signal(list)  # Delete / Backspace on the selected rows
     cleared = Signal()  # a click on empty space: nothing picked
 
-    COLUMNS: list[tuple[str, int, object]] = []  # (title, width or 0 = stretch, alignment)
-    NAME_COL = 0  # typing a name jumps to it: the column that holds the names
+    COLUMNS: list[tuple[str, int, object]] = []  # (title, width or 0 = stretch, alignment); the first, the ticks
+    NAME_COL = 1  # the column that holds the names (the first after the ticks)
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
+        self.setHeader(TickHeader(self))
         self.setObjectName("Table")
         self.setColumnCount(len(self.COLUMNS))
         self.setHeaderLabels([c[0] for c in self.COLUMNS])
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
         self.setAlternatingRowColors(False)
-        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)  # the ticks (selectionCommand)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setSortingEnabled(True)
         self.setIndentation(tokens.ROW_INDENT)
@@ -105,6 +177,7 @@ class Table(QTreeWidget):
         h.setStretchLastSection(False)
         h.setSectionsMovable(False)
         h.setHighlightSections(False)
+        h.setMinimumSectionSize(min(w for _t, w, _a in self.COLUMNS if w))  # (else the style's own, wider)
         for i, (_t, w, align) in enumerate(self.COLUMNS):
             if w:
                 h.setSectionResizeMode(i, QHeaderView.ResizeMode.Interactive)
@@ -113,10 +186,15 @@ class Table(QTreeWidget):
                 h.setSectionResizeMode(i, QHeaderView.ResizeMode.Stretch)
             if align is not None:
                 self.headerItem().setTextAlignment(i, align)
-        self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+        h.setSectionResizeMode(TICK, QHeaderView.ResizeMode.Fixed)
+        self.setColumnWidth(TICK, tokens.TICK_W)
+        self.headerItem().setToolTip(TICK, "Tick every row shown, or none")
+        self.sortByColumn(self.NAME_COL, Qt.SortOrder.AscendingOrder)
         self.setItemDelegate(RowPainter(self))
         self.setMouseTracking(True)
         self.currentItemChanged.connect(self._current)
+        self.itemSelectionChanged.connect(self.ticks_changed)
+        self.ticks_changed.connect(self.header().viewport().update)  # (the heading's box follows)
         self._quiet = False
 
     # Sliding with the inspector
@@ -202,6 +280,8 @@ class Table(QTreeWidget):
         p.end()
 
     def _current(self, cur, _prev) -> None:
+        if cur is not None and cur.data(0, ID):
+            self._anchor = cur.data(0, ID)
         if cur is not None and not self._quiet and cur.data(0, ID):
             self.picked.emit(cur.data(0, ID))
 
@@ -241,24 +321,104 @@ class Table(QTreeWidget):
             while p is not None:
                 p.setExpanded(True)
                 p = p.parent()
-            # only this row is picked (on a list that picks several, a plain setCurrentItem adds it to the rows
-            # picked before, and Delete would take those too)
-            flags = QItemSelectionModel.SelectionFlag
-            self.setCurrentItem(found, 0, flags.ClearAndSelect | flags.Rows)
+            self.setCurrentItem(found, 0, QItemSelectionModel.SelectionFlag.NoUpdate)  # open, never ticked
             self.scrollToItem(found, QAbstractItemView.ScrollHint.PositionAtCenter)
-        else:
-            self.clearSelection()
         self._quiet = False
 
+    # Ticks: what's ticked is the table's selection; the row that's open is its current row (never ticked by
+    # opening it). A plain click or an arrow key moves the current row; a tick, ⌘-click or Space ticks.
+    ticks_changed = Signal()
+
+    def has_rows(self) -> bool:
+        return next(iter(self.showing_rows()), None) is not None
+
+    def ticked_ids(self) -> list[str]:
+        return [r.data(0, ID) for r in self.showing_rows() if r.isSelected()]
+
+    def tick_state(self) -> str:
+        """The heading's box: "on" (every row showing is ticked), "some" or "off"."""
+        rows = list(self.showing_rows())
+        n = sum(1 for r in rows if r.isSelected())
+        return "on" if rows and n == len(rows) else "some" if n else "off"
+
+    def tick_every(self, on: bool) -> None:
+        if on:
+            self.select_showing()
+        else:
+            self.clearSelection()
+
+    def selectionCommand(self, index, event=None):
+        """A plain click, an arrow key or the code moving the current row never ticks it (the standard's G.10.11:
+        a click opens a row, its tick selects it); ⌘-click and Space tick or untick one, Shift-click ticks a run."""
+        flags = QItemSelectionModel.SelectionFlag
+        if event is None:
+            return flags.NoUpdate
+        kind = event.type()
+        if kind == QEvent.Type.KeyPress:
+            if event.key() == Qt.Key.Key_Space and not event.modifiers() & ~Qt.KeyboardModifier.KeypadModifier:
+                return flags.Toggle | flags.Rows  # (the row under the cursor)
+            return super().selectionCommand(index, event) if event.modifiers() & SHIFT else flags.NoUpdate
+        if kind in (
+            QEvent.Type.MouseButtonPress,
+            QEvent.Type.MouseButtonDblClick,
+            QEvent.Type.MouseButtonRelease,
+            QEvent.Type.MouseMove,
+        ):
+            mods = event.modifiers()
+            return super().selectionCommand(index, event) if mods & CMD and not mods & SHIFT else flags.NoUpdate
+        return super().selectionCommand(index, event)
+
+    _anchor = ""  # the row last ticked or opened: where a Shift-click's run starts
+
     def mousePressEvent(self, e):
-        if self.itemAt(e.position().toPoint()) is None:
+        pos = e.position().toPoint()
+        row = self.itemAt(pos)
+        if row is None:
             self.cleared.emit()
             return
+        left = e.button() == Qt.MouseButton.LeftButton
+        if left and row.data(0, ID) and e.modifiers() & SHIFT:
+            self._tick_run(row)  # every row showing from the last one ticked or opened to this one
+            e.accept()
+            return
+        if left and row.data(0, ID) and self.columnAt(pos.x()) == TICK:
+            row.setSelected(not row.isSelected())  # its tick: ticked or not, the row that's open stays open
+            self._anchor = row.data(0, ID)
+            e.accept()
+            return
+        if left and row.data(0, ID) and e.modifiers() & CMD:
+            self._anchor = row.data(0, ID)
         super().mousePressEvent(e)
+
+    def _tick_run(self, row) -> None:
+        showing = list(self.showing_rows())
+        start = next((r for r in showing if r.data(0, ID) == self._anchor), None) or self.currentItem()
+        if start not in showing or row not in showing:
+            row.setSelected(True)
+        else:
+            a, b = sorted((showing.index(start), showing.index(row)))
+            for r in showing[a : b + 1]:
+                r.setSelected(True)
+        self._anchor = row.data(0, ID)
+
+    MOVES = {
+        Qt.Key.Key_Up: QAbstractItemView.CursorAction.MoveUp,
+        Qt.Key.Key_Down: QAbstractItemView.CursorAction.MoveDown,
+        Qt.Key.Key_Home: QAbstractItemView.CursorAction.MoveHome,
+        Qt.Key.Key_End: QAbstractItemView.CursorAction.MoveEnd,
+        Qt.Key.Key_PageUp: QAbstractItemView.CursorAction.MovePageUp,
+        Qt.Key.Key_PageDown: QAbstractItemView.CursorAction.MovePageDown,
+    }
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key.Key_Escape and getattr(self, "_lift", None) is not None:
             self.end_lift(drop=False)  # put it back
+            return
+        if e.key() in self.MOVES and not e.modifiers() & ~Qt.KeyboardModifier.KeypadModifier:
+            to = self.moveCursor(self.MOVES[e.key()], e.modifiers())  # the next row opens; the ticks stay
+            if to.isValid():
+                self.selectionModel().setCurrentIndex(to, QItemSelectionModel.SelectionFlag.NoUpdate)
+                self.scrollTo(to)
             return
         if e.key() in (Qt.Key.Key_Delete, Qt.Key.Key_Backspace):
             ids = self.chosen_ids()
@@ -310,7 +470,7 @@ class Table(QTreeWidget):
             r.setSelected(True)
 
     def chosen_ids(self) -> list[str]:
-        """The selected rows you can see, top to bottom (or the current row)."""
+        """The ticked rows you can see, top to bottom (or, with none ticked, the row that's open)."""
         ids = [r.data(0, ID) for r in self.showing_rows() if r.isSelected()]
         if not ids and self.current_id():
             ids = [self.current_id()]
@@ -337,19 +497,31 @@ class Table(QTreeWidget):
 
     def _fill_start(self) -> tuple[str, int, Qt.SortOrder]:
         keep = self.current_id()
+        self._kept_ticks = {r.data(0, ID) for r in self.selectedItems() if r.data(0, ID)}  # (a refill keeps them)
         col = self.sortColumn()
         order = self.header().sortIndicatorOrder()
         self._quiet = True
         self.setSortingEnabled(False)
+        self.blockSignals(True)  # (the ticks don't change: the rows are made again)
         self.clear()
+        self.blockSignals(False)
         return keep, col, order
 
     def _fill_end(self, keep: str, col: int, order) -> None:
         self.setSortingEnabled(True)
         self.sortItems(max(0, col), order)
+        kept = getattr(self, "_kept_ticks", set())
+        if kept:
+            self.blockSignals(True)
+            for r in self.record_rows():
+                if r.data(0, ID) in kept:
+                    r.setSelected(True)
+            self.blockSignals(False)
         self._quiet = False
         if keep:
             self.select_id(keep)
+        if kept:
+            self.ticks_changed.emit()  # (a ticked row that's gone is gone from the count)
 
 
 def status_of(it: Item, out: int) -> tuple[str, str]:
@@ -392,18 +564,31 @@ class RowPainter(QStyledItemDelegate):
         painter.restore()
 
     def backdrop(self, painter, option, index) -> bool:
-        """Paint the row's shape; True for a divider."""
+        """Paint the row's shape (G.10.3: ticked in the accent's soft tint, the row that's open in fill-2, hovered
+        in row-hover); True for a divider."""
         row0 = index.siblingAtColumn(0)
         divider = row0.data(HEAD) is not None
         hover = bool(option.state & QStyle.StateFlag.State_MouseOver)
-        selected = bool(option.state & QStyle.StateFlag.State_Selected)
+        ticked = bool(option.state & QStyle.StateFlag.State_Selected)
+        view = self.parent()
+        cur = view.currentIndex() if view is not None else None
+        current = cur is not None and cur.isValid() and cur.row() == index.row() and cur.parent() == index.parent()
         if divider:
             self.row_shape(painter, option, index, theme.qcolor(tokens.DIVIDER_HOVER if hover else tokens.DIVIDER))
-        elif selected:
+        elif ticked:
             self.row_shape(painter, option, index, theme.qcolor(tokens.CARD_SELECTED))
+        elif current:
+            self.row_shape(painter, option, index, theme.qcolor(tokens.FILL_2))
         elif hover:
             self.row_shape(painter, option, index, theme.qcolor(tokens.ROW_HOVER))
         return divider
+
+    @staticmethod
+    def tick(painter, option, index) -> None:
+        """A record row's tick box (a divider has none)."""
+        if index.siblingAtColumn(0).data(ID):
+            ticked = bool(option.state & QStyle.StateFlag.State_Selected)
+            paint_tick(painter, option.rect, "on" if ticked else "off")
 
     @staticmethod
     def plain(option) -> QStyleOptionViewItem:
@@ -416,6 +601,9 @@ class RowPainter(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         self.backdrop(painter, option, index)
+        if index.column() == TICK:
+            self.tick(painter, option, index)
+            return
         option = self.plain(option)
         if not self.dotted(painter, option, index):
             super().paint(painter, option, index)
@@ -473,11 +661,15 @@ class _GearPainter(RowPainter):
     def paint(self, painter, option, index):
         row0 = index.siblingAtColumn(0)
         divider = self.backdrop(painter, option, index)
-        option = self.plain(option)
-        if index.column() == 0:
+        if index.column() == TICK:
             if divider:
                 self._chevron(painter, option.rect, bool(row0.data(OPEN)))
-            elif row0.data(ID):
+            else:
+                self.tick(painter, option, index)  # (with its state: ticked or not)
+            return
+        option = self.plain(option)
+        if index.column() == GEAR_COL["grip"]:
+            if row0.data(ID) and not divider:
                 self._grip(painter, option.rect)
             return
         if index.column() == GEAR_COL["name"] and not divider and getattr(self.parent(), "thumbs", False):
@@ -547,7 +739,7 @@ class _GearPainter(RowPainter):
 
 # the gear table's columns: key, title, width (0 = takes the rest), alignment
 GEAR_COLUMNS = [
-    ("grip", "", tokens.GRIP_W, None),
+    ("tick", "", tokens.TICK_W, None),
     ("name", "Name", 0, None),
     ("kids", "", tokens.COL_W["kids"], None),
     ("with", "Goes With", tokens.COL_W["with"], None),  # the piece it's attached to
@@ -560,6 +752,7 @@ GEAR_COLUMNS = [
     ("value", "With Tax", tokens.COL_W["with_tax"], RIGHT),
     ("day", "Day Rate", tokens.COL_W["day"], RIGHT),
     ("earned", "Earned", tokens.COL_W["earned"], RIGHT),  # rental income so far (core/earnings.py)
+    ("grip", "", tokens.GRIP_W, None),  # your order: drag a row by it (always last, at the trailing edge)
 ]
 GEAR_COL = {key: n for n, (key, *_rest) in enumerate(GEAR_COLUMNS)}
 HIDDEN_AT_FIRST = ["series", "paid", "earned"]
@@ -604,7 +797,7 @@ class GearTable(Table):
         self.header().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.header().customContextMenuRequested.connect(self._column_menu)
         self.header().setSectionsMovable(True)  # drag a column's title to put it elsewhere
-        self.header().setFirstSectionMovable(False)  # (the grip stays first, and Name after it)
+        self.header().setFirstSectionMovable(False)  # (the ticks stay first and Name after them; the grip, last)
         self.header().sectionMoved.connect(self._column_moved)
         self._moving = False
         self.folded: set[str] = set()  # dividers you folded
@@ -630,14 +823,25 @@ class GearTable(Table):
         self._fill_later = None  # a refill asked for mid-drag, run when the row lands
         self.setDefaultDropAction(Qt.DropAction.CopyAction)
         self.setDropIndicatorShown(True)
+        self.sortByColumn(GEAR_COL["grip"], Qt.SortOrder.AscendingOrder)  # your order, at first
 
     # Columns
-    FIXED = ("grip", "name")  # always first, in this order
+    FIXED = ("tick", "name")  # always first, in this order
+    LAST = "grip"  # always last
 
     def column_order(self) -> list[str]:
         h = self.header()
         keys = [k for k, _t, _w, _a in GEAR_COLUMNS]
-        return [keys[h.logicalIndex(v)] for v in range(h.count()) if keys[h.logicalIndex(v)] not in self.FIXED]
+        mine = [keys[h.logicalIndex(v)] for v in range(h.count())]
+        return [k for k in mine if k not in self.FIXED and k != self.LAST]
+
+    def _grip_last(self) -> None:
+        h = self.header()
+        at = h.visualIndex(GEAR_COL[self.LAST])
+        if at != h.count() - 1:
+            self._moving = True
+            h.moveSection(at, h.count() - 1)
+            self._moving = False
 
     def set_column_order(self, order: list[str]) -> None:
         """Put the columns in this order (keys it doesn't know are skipped; columns it doesn't name stay after)."""
@@ -645,20 +849,22 @@ class GearTable(Table):
         self._moving = True
         at = len(self.FIXED)
         for key in order:
-            if key in GEAR_COL and key not in self.FIXED:
+            if key in GEAR_COL and key not in self.FIXED and key != self.LAST:
                 h.moveSection(h.visualIndex(GEAR_COL[key]), at)
                 at += 1
         self._moving = False
+        self._grip_last()
 
     def _column_moved(self, logical: int, old: int, new: int) -> None:
         if self._moving:
             return
         h = self.header()
-        if logical == GEAR_COL["name"] or new < len(self.FIXED):  # Name stays first: put it back
-            self._moving = True
+        if logical in (GEAR_COL["name"], GEAR_COL[self.LAST]) or new < len(self.FIXED):  # Name stays first:
+            self._moving = True  # put it back (and the grip stays last)
             h.moveSection(new, old)
             self._moving = False
             return
+        self._grip_last()  # (a column dropped past the grip)
         self.order_changed.emit(self.column_order())
 
     def _step_column(self, key: str, step: int) -> None:
@@ -677,7 +883,7 @@ class GearTable(Table):
         keys = [k for k, _t, _w, _a in GEAR_COLUMNS]
         logical = h.logicalIndexAt(pos)
         here = keys[logical] if 0 <= logical < len(keys) else ""
-        if here and here not in self.FIXED:
+        if here and here not in self.FIXED and here != self.LAST:
             v = h.visualIndex(logical)
             shown = [x for x in range(len(self.FIXED), h.count()) if not h.isSectionHidden(h.logicalIndex(x))]
             left = m.addAction("Move Left", lambda: self._step_column(here, -1))
@@ -686,7 +892,7 @@ class GearTable(Table):
             right.setEnabled(bool(shown) and v < shown[-1])
             m.addSeparator()
         for key, title, _w, _a in GEAR_COLUMNS:
-            if key in ("grip", "name"):
+            if key in (*self.FIXED, self.LAST):
                 continue
             a = m.addAction(title or "Gear With It (+3)")
             a.setCheckable(True)
@@ -765,10 +971,7 @@ class GearTable(Table):
     def mousePressEvent(self, e):
         row = self._on_grip(e.position().toPoint())
         if e.button() == Qt.MouseButton.LeftButton and row is not None and not e.modifiers():
-            if not row.isSelected():
-                self.clearSelection()
-                row.setSelected(True)
-            self._press = (e.position().toPoint(), row)
+            self._press = (e.position().toPoint(), row)  # (the ticked rows go with it if it's one of them)
             e.accept()
             return
         super().mousePressEvent(e)
@@ -778,8 +981,8 @@ class GearTable(Table):
         if not self.your_order():  # dragging means your own order: switch to it first
             self.sortByColumn(GEAR_COL["grip"], Qt.SortOrder.AscendingOrder)
             y = self.visualItemRect(row).center().y()
-        ids = [i for i in self.chosen_ids() if i] or [row.data(0, ID)]
-        if row.data(0, ID) not in ids:
+        ids = [i for i in self.ticked_ids() if i]
+        if row.data(0, ID) not in ids:  # a row that isn't ticked moves alone
             ids = [row.data(0, ID)]
         self._lift = Lift(self, self._visible_rows(), ids, row, y, self._describe)
         self.viewport().setCursor(Qt.CursorShape.ClosedHandCursor)
@@ -1057,7 +1260,7 @@ class GearTable(Table):
         row = self.make(
             it.id,
             [
-                ("", pos),
+                ("", pos),  # its tick
                 (it.name or "Untitled Piece", it.name.casefold()),
                 (f"+{kids}" if kids else "", kids),
                 (on, (on or "~").casefold()),
@@ -1073,6 +1276,7 @@ class GearTable(Table):
                     money.in_cents(day or 0),
                 ),
                 (money.fmt_short(made, cur) if made else "", money.in_cents(made)),
+                ("", pos),  # its grip: your order
             ],
             parent,
         )
@@ -1130,13 +1334,14 @@ class GearTable(Table):
 
 class KitTable(Table):
     COLUMNS = [
+        ("", tokens.TICK_W, None),
         ("Name", 0, None),
         ("Pieces", tokens.COL_W["pieces"], CENTER),
         ("Day Rate", tokens.COL_W["rate"], RIGHT),
         ("Week", tokens.COL_W["rate"], RIGHT),
         ("Value", tokens.COL_W["value"], RIGHT),
     ]
-    STEP_ASIDE = (4, 3)  # Value, then Week
+    STEP_ASIDE = (5, 4)  # Value, then Week
 
     def fill(self, lib: Library, b: Business | None) -> None:
         keep, col, order = self._fill_start()
@@ -1149,6 +1354,7 @@ class KitTable(Table):
             row = self.make(
                 p.id,
                 [
+                    ("", None),  # its tick
                     (p.name or "Untitled Kit", p.name.casefold()),
                     (str(pieces), pieces),
                     (money.fmt_short(rate, cur), money.in_cents(rate)),
@@ -1172,6 +1378,7 @@ STATUS_COLORS = {  # token names, read when filling (light and dark differ)
 
 class RentalTable(Table):
     COLUMNS = [
+        ("", tokens.TICK_W, None),
         ("Rental", tokens.COL_W["rental"], None),
         ("Renter", 0, None),
         ("Production", tokens.COL_W["production"], None),
@@ -1179,12 +1386,13 @@ class RentalTable(Table):
         ("Status", tokens.COL_W["rental_status"], None),
         ("Total", tokens.COL_W["total"], RIGHT),
     ]
-    STEP_ASIDE = (2, 5, 4)  # Production, then Total (the open rental's panel shows it), then Status
+    STEP_ASIDE = (3, 6, 5)  # Production, then Total (the open rental's panel shows it), then Status
     WIDE_MIN = tokens.RENTER_MIN
+    DATES = 4
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self.sortByColumn(3, Qt.SortOrder.DescendingOrder)  # newest dates first
+        self.sortByColumn(self.DATES, Qt.SortOrder.DescendingOrder)  # newest dates first
 
     def fill(self, lib: Library, which: str) -> None:
         keep, col, order = self._fill_start()
@@ -1202,6 +1410,7 @@ class RentalTable(Table):
             row = self.make(
                 r.id,
                 [
+                    ("", None),  # its tick
                     (r.number, r.number),
                     (who or "No renter yet", who.casefold() or "~"),
                     (r.project, r.project.casefold()),
@@ -1210,7 +1419,7 @@ class RentalTable(Table):
                     (money.fmt(t.total, cur), money.in_cents(t.total)),
                 ],
             )
-            row.setData(4, DOT, getattr(tokens, STATUS_COLORS[tone]))
+            row.setData(5, DOT, getattr(tokens, STATUS_COLORS[tone]))  # (its status)
             row.setData(0, HAY, search.rental_hay(r))
         self._fill_end(keep, col, order)
 
