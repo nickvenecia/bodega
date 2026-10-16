@@ -46,3 +46,21 @@ def test_saving_alone_is_not_a_change(tmp_path):
     h = History(lib)
     lib.save_rental(next(iter(lib.rentals.values())))  # stamps "updated"
     assert not h.mark()
+
+
+def test_undo_says_what_it_would_change_back(qapp, data_folder):
+    from bodega.ui.window.main_window import MainWindow
+
+    win = MainWindow(sample.fill(Library(data_folder).load()))
+    win._edit_menu_state()
+    assert win.act_undo.text() == "Undo" and not win.act_undo.isEnabled()
+    it = next(iter(win.lib.items.values()))
+    it.name = "Renamed"
+    win._item_edited(it)
+    win.flush()
+    win._edit_menu_state()
+    assert win.act_undo.text() == "Undo Change to Gear" and win.act_undo.isEnabled()
+    win.undo()
+    win._edit_menu_state()
+    assert win.act_redo.text() == "Redo Change to Gear"
+    win.close()

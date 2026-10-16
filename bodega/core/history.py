@@ -84,6 +84,16 @@ class History:
     def can_redo(self) -> bool:
         return bool(self.redos)
 
+    def undo_names(self) -> str:
+        """What Undo would change back ("gear", "2 pieces of gear"), or '' if nothing."""
+        now = state_of(self.lib)
+        if now != self.last:
+            return describe(now, self.last)
+        return describe(self.last, self.undos[-1]) if self.undos else ""
+
+    def redo_names(self) -> str:
+        return describe(self.last, self.redos[-1]) if self.redos else ""
+
     def undo(self) -> str | None:
         """Go back one step; what changed back (for a toast), or None if there's nothing to undo."""
         self.mark()

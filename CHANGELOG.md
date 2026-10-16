@@ -123,6 +123,11 @@
 - From the search box, ↓ goes on into the list and Return opens the first match. ⌥⌘F finds too.
 - A CSV saved by Excel on Windows keeps its accents and dashes ("Café", "–") when it's imported.
 - Importing from a Google Sheet and Back Up run in the background, so the window never freezes while they work.
+- The totals under the gear list say how many pieces showing have no price ("Paid · 3 not priced"), so the totals
+  aren't read as everything.
+- Gear can move up and down in its group from the keyboard: Edit › Move Up and Move Down (⌥⌘↑ and ⌥⌘↓), or a row's
+  right-click menu.
+- Edit › Undo and Redo say what they'll change back ("Undo Change to Gear", "Undo Typing").
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

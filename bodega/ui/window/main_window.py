@@ -561,6 +561,15 @@ class MainWindow(
         tax = b.value_tax if b else "0"
         self.total_values["pieces"].setText(f"{total.pieces:,}")
         self.total_values["paid"].setText(money.fmt(total.paid, cur))
+        # the totals are short by whatever has no price: say how many, so they aren't read as everything
+        unpriced = sum(1 for i in shown if i in self.lib.items and not money.parse(self.lib.items[i].value))
+        self.total_labels["paid"].setText(f"Paid · {unpriced:,} not priced" if unpriced else "Paid")
+        self.total_labels["paid"].setToolTip(
+            f"{unpriced:,} piece{'s' if unpriced != 1 else ''} showing {'have' if unpriced != 1 else 'has'} no "
+            "price, so the totals leave them out"
+            if unpriced
+            else ""
+        )
         self.total_values["tax"].setText(money.fmt(total.tax, cur))
         self.total_labels["tax"].setText(f"Tax {money.fmt_rate(tax)}")
         self.total_values["value"].setText(money.fmt(total.value, cur))
@@ -707,6 +716,8 @@ class MainWindow(
                 ids = [obj_id]
             m = QMenu(self)
             m.addMenu(self._move_menu(m, ids))
+            m.addAction(theme.menu_icon("arrow-up"), "Move Up", lambda: self.step_gear(-1, ids))
+            m.addAction(theme.menu_icon("arrow-down"), "Move Down", lambda: self.step_gear(1, ids))
             m.addSeparator()
             if len(ids) == 1:
                 it = self.lib.items.get(obj_id)

@@ -1,6 +1,9 @@
-"""What the main window's parts share: timings, the gear filters, page titles, kind_of()."""
+"""What the main window's parts share: the places (PLACES: the sidebar, the View menu and the page titles all
+read it), the gear filters, kind_of()."""
 
 from __future__ import annotations
+
+from dataclasses import dataclass
 
 from bodega.core.log import get_logger
 
@@ -14,14 +17,30 @@ GEAR_FILTERS = [
     ("repair", "In Repair", ""),
     ("rentable", "For Rent", ""),
 ]
-TITLES = {
-    "gear": "All Gear",
-    "kits": "Kits",
-    "out": "Out Now",
-    "upcoming": "Coming Up",
-    "rentals": "All Rentals",
-    "calendar": "Calendar",
-}
+
+
+@dataclass(frozen=True)
+class Place:
+    """One place in the sidebar. `under`: the row it sits under; `menu`/`keys`: its View menu item."""
+
+    key: str
+    title: str
+    icon: str = ""
+    under: str = ""
+    menu: str = ""
+    keys: str = ""
+
+
+PLACES = (  # in the sidebar's order (each group's own places, like Lenses, come from your gear)
+    Place("gear", "All Gear", "box", menu="All Gear", keys="Ctrl+1"),
+    Place("kits", "Kits", "case", menu="Kits", keys="Ctrl+2"),
+    Place("rentals", "All Rentals", "receipt", menu="Rentals", keys="Ctrl+3"),
+    Place("out", "Out Now", under="rentals"),
+    Place("upcoming", "Coming Up", under="rentals"),
+    Place("calendar", "Calendar", "calendar", menu="Calendar", keys="Ctrl+4"),
+)
+PLACE = {p.key: p for p in PLACES}
+TITLES = {p.key: p.title for p in PLACES}
 PAGE_DOCS = {
     "rental": [("agreement", "Rental Agreement")],
     "kit": [("package", "Kit Sheet"), ("ratecard", "Rate Card")],

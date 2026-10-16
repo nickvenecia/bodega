@@ -1252,3 +1252,40 @@ def test_back_up_runs_without_freezing_the_window(win, monkeypatch, tmp_path):
     assert said == ["Backing up…"]  # the window carries on while the zip is made
     wait_for(lambda: len(said) == 2)
     assert target.exists() and said[1].startswith("Backed up.")
+
+
+def test_the_totals_say_how_many_pieces_have_no_price(win):
+    win.go("gear")
+    assert win.total_labels["paid"].text() == "Paid" or "not priced" in win.total_labels["paid"].text()
+    it = next(i for i in win.lib.items.values() if i.value)
+    it.value = ""
+    win.refresh()
+    assert "not priced" in win.total_labels["paid"].text()
+
+
+def test_the_places_come_from_one_list(win):
+    from bodega.ui.window.common import PLACES
+
+    for p in PLACES:
+        assert win.sidebar.rows[p.key].label.text() == p.title
+    view = next(m for m in win.menuBar().findChildren(type(win.view_menu.menu())) if m.title() == "View")
+    shown = {a.text(): a.shortcut().toString() for a in view.actions()}
+    for p in PLACES:
+        if p.keys:
+            assert shown[p.menu or p.title] == p.keys
+
+
+def test_gear_moves_up_and_down_from_the_keyboard(win):
+    win.go("gear")
+    t = win.gear_table
+    rows = [r for r in t.showing_rows()]
+    first, second = rows[0], rows[1]
+    assert first.parent() is second.parent()
+    a, b = first.data(0, 256), second.data(0, 256)
+    win.step_gear(1, [a])
+    order = [i.id for i in win.lib.ordered_items()]
+    assert order.index(a) > order.index(b)
+    said = []
+    win.toast = lambda text, tone="": said.append(text)
+    win.step_gear(-1, [b])  # b is first in its group now
+    assert said and "first in its group" in said[0]

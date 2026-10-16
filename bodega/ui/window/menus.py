@@ -15,7 +15,13 @@ from bodega.core.fileutil import reveal
 from bodega.core.paths import data_dir, log_dir
 from bodega.ui.dialogs.common import about
 from bodega.ui.style import theme, tokens
-from bodega.ui.window.common import kind_of
+from bodega.ui.window.common import PLACES, kind_of
+
+
+def _titled(words: str) -> str:
+    """A menu item's title case: "2 pieces of gear" -> "2 Pieces of Gear"."""
+    small = {"of", "and", "to", "a", "the"}
+    return " ".join(w if w in small and n else w[:1].upper() + w[1:] for n, w in enumerate(words.split()))
 
 
 class MenusMixin:
@@ -80,13 +86,15 @@ class MenusMixin:
         act(e, "Duplicate", self._duplicate_current, "Ctrl+D")
         act(e, "Delete…", self.delete_selected, "Ctrl+Backspace")
         e.addSeparator()
+        act(e, "Move Up", lambda: self.step_gear(-1), "Ctrl+Alt+Up")
+        act(e, "Move Down", lambda: self.step_gear(1), "Ctrl+Alt+Down")
+        e.addSeparator()
         find = act(e, "Find", self._focus_search, QKeySequence.StandardKey.Find)
         find.setShortcuts([*find.shortcuts(), QKeySequence("Ctrl+Alt+F")])  # ⌥⌘F, the Mac's other Find
         v = bar.addMenu("View")
-        act(v, "All Gear", lambda: self.go("gear"), "Ctrl+1")
-        act(v, "Kits", lambda: self.go("kits"), "Ctrl+2")
-        act(v, "Rentals", lambda: self.go("rentals"), "Ctrl+3")
-        act(v, "Calendar", lambda: self.go("calendar"), "Ctrl+4")
+        for p in PLACES:  # the same places as the sidebar (window/common.py)
+            if p.keys:
+                act(v, p.menu or p.title, lambda _c=False, k=p.key: self.go(k), p.keys)
         act(v, "Close Panel", self.deselect)
         v.addSeparator()
         self.look_actions = {}
@@ -231,9 +239,19 @@ class MenusMixin:
         self.toast(f"Redid the change to {what}.", "done")
 
     def _edit_menu_state(self) -> None:
+        """Undo and Redo say what they'd change back ("Undo Change to Gear"), or "Undo Typing" in a text box."""
         h = self.history
-        self.act_undo.setEnabled(self._text_can_undo() or (h is not None and h.can_undo()))
-        self.act_redo.setEnabled(self._text_can_undo(redo=True) or (h is not None and h.can_redo()))
+        typing, typed_again = self._text_can_undo(), self._text_can_undo(redo=True)
+        undo = "" if typing or h is None else h.undo_names()
+        redo = "" if typed_again or h is None else h.redo_names()
+        self.act_undo.setEnabled(typing or bool(undo))
+        self.act_redo.setEnabled(typed_again or bool(redo))
+        self.act_undo.setText(
+            "Undo Typing" if typing else f"Undo Change to {_titled(undo)}" if undo else "Undo"
+        )
+        self.act_redo.setText(
+            "Redo Typing" if typed_again else f"Redo Change to {_titled(redo)}" if redo else "Redo"
+        )
 
     def _after_history(self) -> None:
         """Undo/redo put new copies of everything in the library: open them again in the panel."""

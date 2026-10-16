@@ -28,7 +28,9 @@ def keys_by_menu(bar: QMenuBar) -> list[tuple[str, list[tuple[str, str]]]]:
             keys = a.shortcuts()
             if a.isSeparator() or not keys or keys[0].isEmpty():
                 continue
-            rows.append((a.text().replace("&", ""), keys[0].toString(QKeySequence.SequenceFormat.NativeText)))
+            name = a.text().replace("&", "")
+            name = name.split(" Change to ")[0].removesuffix(" Typing")  # Undo and Redo, by their own names
+            rows.append((name, keys[0].toString(QKeySequence.SequenceFormat.NativeText)))
         if rows:
             out.append((top.text().replace("&", ""), rows))
     return out

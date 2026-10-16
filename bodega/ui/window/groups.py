@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QMenu
 
 from bodega.ui.dialogs.common import confirm
 from bodega.ui.style import theme
+from bodega.ui.window.common import kind_of
 from bodega.ui.window.tables import ID
 
 
@@ -58,6 +59,24 @@ class GroupsMixin:
         for r in t.item_rows():
             if r.data(0, ID) in ids:
                 r.setSelected(True)
+
+    def step_gear(self, step: int, ids: list[str] | None = None) -> None:
+        """Move Up / Move Down (⌥⌘↑ ↓): the picked gear swaps places with the row above or below it, inside its
+        group (the keyboard's way to do what dragging by the grip does)."""
+        t = self.gear_table
+        if kind_of(self.view_key) != "gear":
+            return
+        ids = ids or t.chosen_ids()
+        rows = [r for r in t.showing_rows() if r.data(0, ID)]
+        mine = [r for r in rows if r.data(0, ID) in ids]
+        if not mine:
+            return
+        edge = mine[0] if step < 0 else mine[-1]
+        at = rows.index(edge) + step
+        if not 0 <= at < len(rows) or rows[at].parent() is not edge.parent():
+            self.toast(f"It's already {'first' if step < 0 else 'last'} in its group.")
+            return
+        self._reordered([r.data(0, ID) for r in mine], rows[at].data(0, ID), after=step > 0)
 
     def _branded(self, ids: list[str], brand: str) -> None:
         self.flush()

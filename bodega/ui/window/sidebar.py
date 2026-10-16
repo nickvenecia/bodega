@@ -22,6 +22,7 @@ from bodega.ui.components.widgets import (
     vbox,
 )
 from bodega.ui.style import theme, tokens
+from bodega.ui.window.common import PLACE, PLACES
 
 FOLDED_AT_FIRST = ("gear", "rentals")  # rows whose lists start tucked away
 
@@ -148,18 +149,19 @@ class Sidebar(LeftPanel):
         # each section's + makes something new in it (the window gives Inventory's its menu: gear, group, kit)
         self.btn_new_dep = self._plus("New gear, group or kit")
         inv = self._section("inventory", "Inventory", self.btn_new_dep)
-        self._row("gear", "All Gear", "box", inv)
+        self._place("gear", inv)
         self.dep_lay = self._under("gear", inv)
-        self._row("kits", "Kits", "case", inv)
+        self._place("kits", inv)
         self.kit_lay = self._under("kits", inv)
         self.btn_new_rental = self._plus("New Rental")
         self.btn_new_rental.clicked.connect(self.new_rental.emit)
         rent = self._section("rental-section", "Rentals", self.btn_new_rental)
-        self._row("rentals", "All Rentals", "receipt", rent)
+        self._place("rentals", rent)
         under = self._under("rentals", rent)  # what's out, what's coming: views of the same list
-        for key, label in (("out", "Out Now"), ("upcoming", "Coming Up")):
-            self._row(key, label, "", under).as_child()
-        self._row("calendar", "Calendar", "calendar", rent)  # a different view (a timeline), so its own row
+        for p in PLACES:
+            if p.under == "rentals":
+                self._place(p.key, under).as_child()
+        self._place("calendar", rent)  # a different view (a timeline), so its own row
         self.lay.addStretch(1)
         folded = lib.settings.get("sidebar_folded", list(FOLDED_AT_FIRST))
         if not isinstance(folded, list):
@@ -297,6 +299,11 @@ class Sidebar(LeftPanel):
         self.lib.save_settings()
         if key == "rentals":
             self.refresh()  # its count shows out / late only while folded
+
+    def _place(self, key: str, into=None) -> NavRow:
+        """A row for one of PLACES (window/common.py), with its title and icon from there."""
+        p = PLACE[key]
+        return self._row(p.key, p.title, p.icon, into)
 
     def _row(self, key: str, label: str, icon: str = "", into=None) -> NavRow:
         r = self.add_row(key, label, icon, into)
