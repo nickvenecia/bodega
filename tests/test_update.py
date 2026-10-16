@@ -202,6 +202,9 @@ def test_mac_and_windows_helpers(tmp_path: Path, monkeypatch):
         z.writestr("Bodega/Bodega.exe", b"exe")
     portable = update.prepare("windows-portable", zipped, pid=4242).script.read_text(encoding="utf-8")
     assert "robocopy" in portable and "if errorlevel 8 exit" in portable and "finish-update.log" in portable
+    written = zipped.parent.joinpath("finish-update.cmd").read_bytes()  # (the script sits beside the download)
+    assert b"\r\r\n" not in written and written.count(b"\r\n") == written.count(b"\n")  # each line ends once
+    assert "chcp 65001" in portable  # its UTF-8 lines read as written (a path with é in it)
 
 
 def test_the_update_window_shows_the_release_and_how_to_get_it(monkeypatch):

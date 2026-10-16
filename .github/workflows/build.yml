@@ -370,6 +370,13 @@ jobs:
               Get-ChildItem $_.FullName -File -Filter "finish-update.*" | ForEach-Object { "--- $($_.Name)"; Get-Content $_.FullName }
             }
             Get-Process -Name Bodega -ErrorAction SilentlyContinue | Format-Table Id, Path
+            "--- helper processes still running"
+            Get-CimInstance Win32_Process | Where-Object { $_.Name -in "cmd.exe", "tasklist.exe", "find.exe", "PING.EXE", "Robocopy.exe" } | Format-Table ProcessId, ParentProcessId, CommandLine -AutoSize -Wrap
+            "--- the helper, run by hand"
+            Get-ChildItem $env:TEMP -Directory -Filter "bodega-update-*" | ForEach-Object {
+              $cmd = Join-Path $_.FullName "finish-update.cmd"
+              if (Test-Path $cmd) { & cmd.exe /c $cmd; "exit: $LASTEXITCODE"; if (Test-Path (Join-Path $_.FullName "finish-update.log")) { Get-Content (Join-Path $_.FullName "finish-update.log") } }
+            }
             if (-not $opened) { throw "the updated copy wasn't opened" }
             throw "the installed copy wasn't replaced"
           }

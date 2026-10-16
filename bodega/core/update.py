@@ -390,13 +390,15 @@ def prepare(kind: str, file: Path, pid: int | None = None) -> Plan:
 
 
 def run(plan: Plan) -> None:
-    """Start the helper so it outlives Bodega."""
+    """Start the helper so it outlives Bodega. Its input and output go nowhere: Bodega on Windows has no console, and
+    left to Python, a helper started from it gets pipes whose other ends are already closed."""
     log.info("update: starting %s", shlex.join(plan.command))
+    quiet = {"stdin": subprocess.DEVNULL, "stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
     if sys.platform == "win32":
         flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW
-        subprocess.Popen(plan.command, creationflags=flags, close_fds=True)
+        subprocess.Popen(plan.command, creationflags=flags, close_fds=True, **quiet)
     else:
-        subprocess.Popen(plan.command, start_new_session=True, close_fds=True)
+        subprocess.Popen(plan.command, start_new_session=True, close_fds=True, **quiet)
 
 
 def _q(p) -> str:
@@ -458,6 +460,7 @@ def _windows_script(work: Path, pid: int, lines: list[str], exe: Path, fails_at:
     body = [
         "@echo off",
         "rem Written by Bodega: waits for Bodega to quit, installs the new version, opens it.",
+        "chcp 65001 >NUL",  # (its lines are UTF-8: a path with é in it reads as written)
         ":wait",
         f'tasklist /FI "PID eq {pid}" 2>NUL | "%SystemRoot%\\System32\\find.exe" "{pid}" >NUL'
         f" && (ping -n 2 127.0.0.1 >NUL & goto wait)",
@@ -466,7 +469,7 @@ def _windows_script(work: Path, pid: int, lines: list[str], exe: Path, fails_at:
         f'start "" "{exe}"',
         f'rmdir /s /q "{work}"',
     ]
-    script.write_text("\r\n".join(body) + "\r\n", encoding="utf-8")
+    script.write_text("\r\n".join(body) + "\r\n", encoding="utf-8", newline="")  # (as written: no \r\r\n)
     return Plan(["cmd.exe", "/c", str(script)], script)
 
 
