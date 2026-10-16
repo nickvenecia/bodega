@@ -484,6 +484,35 @@ class Layout:
     labels: list[str]  # "A · Qty", "B · Equipment"… one per column
 
 
+LAYOUTS_KEPT = 20  # sheet layouts whose columns are remembered (the newest)
+
+
+def layout_key(rows: list[list], layout: Layout) -> str:
+    """What a sheet's layout is known by: its header row's words, in order ("" with no header row: nothing to
+    know it by). A sheet laid out the same way next month has the same one."""
+    if layout.head < 0 or layout.head >= len(rows):
+        return ""
+    return "|".join(_clean(v).casefold() for v in rows[layout.head])
+
+
+def remembered(saved, key: str, layout: Layout) -> dict[str, int] | None:
+    """The columns you set for a sheet laid out like this one, last time (only columns this sheet has)."""
+    cols = saved.get(key) if isinstance(saved, dict) and key else None
+    if not isinstance(cols, dict):
+        return None
+    width = len(layout.labels)
+    fields = {k for k, _label in FIELDS}
+    got = {k: v for k, v in cols.items() if k in fields and isinstance(v, int) and 0 <= v < width}
+    return got or None
+
+
+def remember(saved, key: str, cols: dict[str, int]) -> dict:
+    """`saved` with this layout's columns in it, newest last, at most LAYOUTS_KEPT."""
+    out = {k: v for k, v in (saved if isinstance(saved, dict) else {}).items() if k != key}
+    out[key] = dict(cols)
+    return dict(list(out.items())[-LAYOUTS_KEPT:])
+
+
 def column_letter(i: int) -> str:
     s = ""
     i += 1

@@ -1956,3 +1956,38 @@ def test_circles_swatches_lists_and_popups_are_measured_to_the_standard(win):
         ring = picker._rect(i)
         assert ring.width() == ring.height() == tokens.SWATCH + 4 * tokens.SWATCH_RING  # the swatch, ringed
     s.done(0)
+
+
+def test_import_remembers_the_columns_you_set_for_a_sheet_laid_out_the_same(qapp, data_folder, tmp_path):
+    """The standard's I-23: a sheet laid out like one you fixed the columns of comes in the same way next time
+    (and one laid out differently, or with no headings to know it by, starts from Bodega's own reading)."""
+    import openpyxl
+
+    from bodega.core import importer
+    from bodega.ui.dialogs.import_sheet import ImportDialog
+    from tests.test_importer import ROWS
+
+    wb = openpyxl.Workbook()
+    for row in ROWS:
+        wb.active.append(row)
+    path = tmp_path / "list.xlsx"
+    wb.save(path)
+    rows = importer.load_rows(path)
+    d = ImportDialog(path, rows, set())
+    assert d.columns_to_keep() is None  # nothing changed from what Bodega read: nothing to remember
+    total = d.layout_guess.cols.get("value")
+    d.pick_column("value", None)  # "Replacement Cost" isn't what you paid, say
+    key, cols = d.columns_to_keep()
+    assert "value" not in cols and key == importer.layout_key(rows, d.layout_guess)
+    saved = importer.remember({}, key, cols)
+    again = ImportDialog(path, rows, set(), saved_columns=saved)
+    assert again.as_last_time and "value" not in again._layout().cols  # as you set it
+    assert again.columns_to_keep() == (key, cols)  # kept fresh
+    other = [list(r) for r in rows]
+    other[1] = ["How Many", "Item", "Cost", "Total", "Rent?", 0.04]  # another layout
+    fresh = ImportDialog(path, other, set(), saved_columns=saved)
+    assert not fresh.as_last_time
+    assert (
+        total is not None
+        and len(importer.remember({str(n): {} for n in range(30)}, key, cols)) == importer.LAYOUTS_KEPT
+    )

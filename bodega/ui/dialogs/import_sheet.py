@@ -29,6 +29,7 @@ from bodega.ui.components.widgets import (
     ToggleRow,
     combo,
     hbox,
+    hint,
     primary_button,
     set_combo,
     vbox,
@@ -40,8 +41,10 @@ REF = Qt.ItemDataRole.UserRole
 
 
 class ImportDialog(QDialog):
-    """After Import: `.items` (what to add, parents tidied), `.pricing` ((rate %, tax %) or None) and
-    `.fill_links` (gear you have takes the sheet's links where it has none)."""
+    """After Import: `.items` (what to add, parents tidied), `.pricing` ((rate %, tax %) or None),
+    `.fill_links` (gear you have takes the sheet's links where it has none) and columns_to_keep(). `saved_columns`:
+    the columns you set for sheets laid out before (settings "import_columns"): a sheet laid out the same way
+    starts with them."""
 
     def __init__(
         self,
@@ -50,6 +53,7 @@ class ImportDialog(QDialog):
         have: set[tuple[str, str]],
         parent: QWidget | None = None,
         has_profile: bool = False,
+        saved_columns: dict | None = None,
     ):
         super().__init__(parent)
         self.fill_links = False
@@ -57,6 +61,12 @@ class ImportDialog(QDialog):
         self.rows = rows
         self.have = have  # (name, department) already in Bodega, casefolded
         self.layout_guess = importer.detect(rows)
+        self.layout_key = importer.layout_key(rows, self.layout_guess)
+        self._detected = dict(self.layout_guess.cols)  # what Bodega read from the headings, before your changes
+        again = importer.remembered(saved_columns, self.layout_key, self.layout_guess)
+        self.as_last_time = again is not None
+        if again is not None:  # laid out like a sheet you set the columns of: yours, not the guess
+            self.layout_guess = importer.Layout(self.layout_guess.head, again, self.layout_guess.labels)
         self.got = importer.Imported()
         self.items: list[Item] = []
         self.pricing: tuple[str, str] | None = None
@@ -78,6 +88,8 @@ class ImportDialog(QDialog):
 
         # which column is which
         self.columns = Disclosure("Columns", is_open=False, first=True)
+        if self.as_last_time:
+            self.columns.add(hint("As you set them for a sheet laid out like this one."))
         self.col_pickers: dict[str, object] = {}
         choices = [(NONE, "Not in This Sheet", "")] + [
             (str(i), label, "") for i, label in enumerate(self.layout_guess.labels)
@@ -203,6 +215,14 @@ class ImportDialog(QDialog):
         buttons.addWidget(self.go)
         outer.addLayout(buttons)
         self.reread()
+
+    def columns_to_keep(self) -> tuple[str, dict[str, int]] | None:
+        """(this sheet's layout, its columns) when they're worth remembering: you changed one from what Bodega
+        read, or they came from last time (kept fresh). None for a sheet with no header row to know it by."""
+        cols = self._layout().cols
+        if not self.layout_key or not cols or (cols == self._detected and not self.as_last_time):
+            return None
+        return self.layout_key, cols
 
     # Reading
     def _layout(self) -> importer.Layout:

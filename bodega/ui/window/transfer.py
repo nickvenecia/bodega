@@ -132,11 +132,15 @@ class TransferMixin:
         if ask:
             from bodega.ui.dialogs.import_sheet import ImportDialog
 
-            d = ImportDialog(path, rows, set(have), self, has_profile=bool(self.lib.businesses))
+            saved = settings.value(self.lib.settings, "import_columns")
+            d = ImportDialog(path, rows, set(have), self, has_profile=bool(self.lib.businesses), saved_columns=saved)
             if d.exec() != ImportDialog.DialogCode.Accepted:
                 return 0
             chosen, everything, pricing_found = d.items, d.got.items, d.pricing
             fill_links = d.fill_links
+            keep = d.columns_to_keep()
+            if keep is not None:  # a sheet laid out like this one starts with these columns next time
+                self.lib.settings["import_columns"] = importer.remember(saved, *keep)
         else:
             got = importer.parse_rows(rows)
             importer.attach_guesses(got.items)
