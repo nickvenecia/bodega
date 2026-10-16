@@ -77,4 +77,5 @@ known-first-party = ["bodega"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q -p no:cacheprovider"
+faulthandler_timeout = 300  # a test still running after 5 minutes writes out where every thread is (a hang)
 markers = ["qt_warnings: this test expects Qt to complain (a broken file on purpose, say)"]
