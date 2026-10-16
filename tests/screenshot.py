@@ -2,6 +2,7 @@
 
     QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR [SHEET.xlsx]
     BODEGA_LOOK=dark QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR    (the dark look)
+    BODEGA_ACCENT=yellow BODEGA_SIZE=1280x700 …                                     (another accent, another size)
 
 Uses a throwaway data folder with the made-up sample rental house (or a spreadsheet you point it at),
 never your real gear.
@@ -24,8 +25,9 @@ from bodega.core import sample
 from bodega.core.paths import use_data_dir
 from bodega.core.store import Library
 
-SIZE = (1600, 1000)
+SIZE = tuple(int(n) for n in os.environ.get("BODEGA_SIZE", "1600x1000").split("x"))  # the window's
 LOOK = os.environ.get("BODEGA_LOOK", "light")  # "light" or "dark"
+ACCENT = os.environ.get("BODEGA_ACCENT", "")  # "" = Bodega's blue; or a key of tokens.ACCENTS
 
 
 def wait(ms: int = 400) -> None:
@@ -86,6 +88,8 @@ def main(out: Path, sheet: Path | None = None) -> int:
         w._restored = True  # a fixed size, not the screen's
         w.resize(*SIZE)
         w.set_look(LOOK)
+        if ACCENT:
+            w.set_accent(ACCENT)
         w.show()
         return w
 

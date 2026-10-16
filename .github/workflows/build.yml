@@ -130,6 +130,7 @@ jobs:
         run: |
           python tests/screenshot.py screenshots/light
           BODEGA_LOOK=dark python tests/screenshot.py screenshots/dark
+          BODEGA_ACCENT=yellow BODEGA_SIZE=1280x700 python tests/screenshot.py screenshots/yellow-smallest
 
       - if: runner.os == 'Linux'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -256,6 +257,18 @@ jobs:
         run: |
           bash packaging/linux/build_appimage.sh dist/Bodega out/Bodega-linux-x64.AppImage
           out/Bodega-linux-x64.AppImage --smoke-test
+
+      - name: Each download stays a reasonable size
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pathlib, sys
+          cap = 400 * 1024 * 1024  # well above what a download is today: only a runaway build fails
+          big = [(f.name, f.stat().st_size) for f in pathlib.Path("out").iterdir() if f.stat().st_size > cap]
+          for name, size in big:
+              print(f"::error title=Too big::{name} is {size / 1e6:.0f} MB (the cap is {cap / 1e6:.0f} MB)")
+          sys.exit(1 if big else 0)
+          PY
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
