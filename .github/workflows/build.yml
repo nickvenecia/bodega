@@ -81,6 +81,7 @@ jobs:
 
   build:
     needs: lint
+    timeout-minutes: 75  # a machine that stops answering ends here, not after six hours
     strategy:
       fail-fast: false
       matrix:
@@ -124,6 +125,19 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: |
           set +e
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            # one file at a time, each stopped after 5 minutes, so a test that hangs Windows names its file
+            code=0
+            for f in tests/test_*.py; do
+              echo "::group::$f"
+              timeout 300 python -m pytest -v -p no:cacheprovider "$f" 2>&1 | tee -a pytest.log
+              c=${PIPESTATUS[0]}
+              echo "::endgroup::"
+              if [ "$c" -eq 124 ]; then echo "::error title=Hung::$f ran past 5 minutes and was stopped"; fi
+              if [ "$c" -ne 0 ]; then echo "$f ended with $c"; code=$c; fi
+            done
+            exit $code
+          fi
           # written out as it runs (a test that hangs shows where); pytest.log keeps it for the summary below
           python -m pytest -v -p no:cacheprovider 2>&1 | tee pytest.log
           code=${PIPESTATUS[0]}
