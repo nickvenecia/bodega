@@ -201,7 +201,7 @@ button is a capsule CONTROL_H tall; every icon button is a circle:
 | Section | `widgets.Section` | Every labelled group in the details panels and dialogs |
 | Multi-line text | `widgets.TextBox` | Addresses, notes, terms (`TEXT_BOX_H`, `TEXT_BOX_TALL`, `TEXT_BOX_TERMS`) |
 | How many | `widgets.qty_field()` | Every quantity: a typed whole number, arrow keys count up and down |
-| Date | `widgets.date_field()` | Every date (calendar popup, "Sun, Oct 18, 2026") |
+| Date | `widgets.date_field()` | Every date (`components/datefield.py`): typed ("10/16", "Oct 16", "today") or picked from its month; "Sun, Oct 18, 2026" |
 | Card | `widgets.Card` (`#Card`) | Every group in an inspector panel: a soft `BLOCK` tint, `RADIUS_LG`, `SPACE_3` inside, a `#CardTitle` |
 | Fold-away group | `widgets.Disclosure` | A Card whose title folds it away (kits, rentals, the profile dialog); folded, it says what's inside |
 | A big name | `widgets.TitleEdit` (`#BigName`) | The name of the piece or kit at the top of its panel: a title that wraps, editable in place |
