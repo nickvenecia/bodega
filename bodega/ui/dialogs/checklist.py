@@ -18,9 +18,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.core import document, errors
+from bodega.core import dates, document, errors
 from bodega.core.checks import pieces, progress, rows
-from bodega.core.model import CheckRow, Rental
+from bodega.core.model import CheckRow, Rental, now_iso
 from bodega.ui.components import photos
 from bodega.ui.components.widgets import (
     ElidedLabel,
@@ -67,10 +67,13 @@ class _Row(QFrame):
         self._show_photos()
 
     def _ticked(self, on: bool) -> None:
+        """Ticked, with the time it was (what left when, and came back when, if a piece goes missing)."""
+        when = now_iso() if on else ""
         if self.back:
-            self.c.back = on
+            self.c.back, self.c.back_at = on, when
         else:
-            self.c.out = on
+            self.c.out, self.c.out_at = on, when
+        self.setToolTip(f"Ticked {dates.fmt_moment(when)}" if when else "")
 
     def _show_photos(self) -> None:
         while self.shots_lay.count():

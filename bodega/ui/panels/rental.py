@@ -17,6 +17,7 @@ from bodega.core import dates, money, pricing
 from bodega.core.model import RENTAL_STATUSES, Client, Rental, RentalLine
 from bodega.core.store import Library
 from bodega.core.terms import terms_for
+from bodega.services import saldo
 from bodega.ui.components.widgets import (
     WHOLE_TYPED,
     ElidedLabel,
@@ -504,6 +505,9 @@ class RentalPanel(DetailsBase):
         row.addWidget(self.save_terms)
         row.addStretch(1)
         g["agreement"].add(row)
+        self.in_saldo = status_line()  # where its invoice stands, once it's been sent to Saldo
+        self.in_saldo.hide()
+        g["history"].add(self.in_saldo)
         self.history = QLabel()  # what happened to it, newest first
         self.history.setObjectName("Muted")
         self.history.setWordWrap(True)
@@ -577,6 +581,9 @@ class RentalPanel(DetailsBase):
             return
         lines = [f"{dates.fmt_moment(e.at)} · {e.what}" for e in reversed(r.history) if e.what]
         self.history.setText("\n".join(lines) or "Nothing yet.")
+        where = saldo.where(r)
+        self.in_saldo.setText(where)
+        self.in_saldo.setVisible(bool(where))
         last = r.history[-1] if r.history else None
         self.groups["history"].set_summary(last.what if last else "")
 

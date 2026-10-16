@@ -443,6 +443,9 @@ class TransferMixin:
         try:
             number, updated = saldo.send(self.lib, r, b, profile)
         except OSError as e:
+            r.happened("Sending to Saldo didn't work")  # its history says so too, not only the alert
+            self._dirty_rentals.add(r.id)
+            self.flush()
             notice(self, "Couldn't Send It to Saldo", errors.plain(e, "write the invoice into Saldo"))
             return
         self._dirty_rentals.add(r.id)

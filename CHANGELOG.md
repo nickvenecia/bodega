@@ -128,6 +128,9 @@
 - Gear can move up and down in its group from the keyboard: Edit › Move Up and Move Down (⌥⌘↑ and ⌥⌘↓), or a row's
   right-click menu.
 - Edit › Undo and Redo say what they'll change back ("Undo Change to Gear", "Undo Typing").
+- A rental sent to Saldo says where its invoice stands, under History: a draft not sent yet, sent, or paid. If a
+  send doesn't work, its history says so too.
+- Each tick in Check Out and Check In keeps the time it was made (point at a piece to see it).
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

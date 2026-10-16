@@ -328,6 +328,8 @@ class CheckRow(Record):
     item_id: str = ""
     out: bool = False  # ticked when it left
     back: bool = False  # ticked when it came back
+    out_at: str = ""  # when it was ticked out (ISO time; blank: not ticked, or ticked before this was kept)
+    back_at: str = ""  # when it was ticked back in
     note: str = ""  # its condition, damage
     photos: list[str] = field(default_factory=list)  # condition photos (file names in the photos folder)
     newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record

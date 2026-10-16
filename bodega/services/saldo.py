@@ -198,6 +198,21 @@ def draft_of(r: Rental) -> dict | None:
     return got if isinstance(got, dict) and str(got.get("id", "")) == r.saldo_invoice else None
 
 
+def where(r: Rental) -> str:
+    """Where the rental's invoice stands in Saldo, for its panel ('' if it was never sent)."""
+    if not r.saldo_invoice:
+        return ""
+    inv = draft_of(r)
+    if inv is None:
+        return f"Invoice {r.saldo_number} isn't in Saldo any more." if r.saldo_number else ""
+    n = str(inv.get("number", "") or r.saldo_number)
+    return {
+        "draft": f"Draft invoice {n} in Saldo, not sent yet.",
+        "sent": f"Invoice {n} sent from Saldo.",
+        "paid": f"Invoice {n} paid, in Saldo.",
+    }.get(str(inv.get("status")), f"Invoice {n} in Saldo.")
+
+
 def said(inv: dict) -> str:
     """ "sent INV-2026-014": what Saldo has done with an invoice, in a few words."""
     return f"{STATUS_WORDS.get(str(inv.get('status')), 'has')} {inv.get('number', '')}".strip()

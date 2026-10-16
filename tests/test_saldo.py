@@ -173,3 +173,17 @@ def test_an_open_saldo_is_found_without_being_told_anything(qapp):
     QTest.qWait(50)
     assert heard and not heard[0].bytesAvailable()  # Saldo's window stays where it is
     server.close()
+
+
+def test_a_rental_says_where_its_invoice_stands_in_saldo(tmp_path, saldo_home):
+    _setup(saldo_home, {"id": "p1", "name": "Juniper Lane Films", "prefix": "JLF", "terms_days": 15})
+    lib = sample.fill(Library(tmp_path / "b").load())
+    r = next(iter(lib.rentals.values()))
+    assert saldo.where(r) == ""  # never sent
+    number, _ = saldo.send(lib, r, lib.pricing(), {"id": "p1", "prefix": "JLF"})
+    assert saldo.where(r) == f"Draft invoice {number} in Saldo, not sent yet."
+    path = saldo_home / "invoices" / f"{r.saldo_invoice}.json"
+    path.write_text(json.dumps({**json.loads(path.read_text()), "status": "sent"}))
+    assert saldo.where(r) == f"Invoice {number} sent from Saldo."
+    path.unlink()  # deleted in Saldo
+    assert "isn't in Saldo any more" in saldo.where(r)

@@ -92,3 +92,17 @@ def test_only_the_hovered_sections_plus_fades_in(qapp, data_folder, monkeypatch)
     assert sb.btn_new_rental._fade.endValue() == 1.0  # Rentals' + fades in
     assert sb.btn_new_dep.graphicsEffect().opacity() == 0.0  # Inventory's stays away
     win.close()
+
+
+def test_a_tick_keeps_the_time_it_was_made(qapp, data_folder):
+    from bodega.ui.dialogs.checklist import CheckDialog
+
+    lib = sample.fill(Library(data_folder).load())
+    r = next(iter(lib.rentals.values()))
+    d = CheckDialog(lib, r, back=False)
+    row = next(iter(d.widgets.values()))
+    row.tick.setChecked(True)
+    assert row.c.out and row.c.out_at  # when it left, kept with the tick
+    row.tick.setChecked(False)
+    assert not row.c.out and row.c.out_at == ""
+    d.deleteLater()
