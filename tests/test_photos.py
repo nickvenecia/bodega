@@ -54,7 +54,7 @@ def test_a_pages_main_picture():
     assert web.image_of(bad, "https://x.example.com") == ""
 
 
-def test_from_link(qapp, data_folder, monkeypatch):
+def test_a_photo_comes_from_a_product_pages_main_picture(qapp, data_folder, monkeypatch):
     from bodega.ui.components import photos
 
     page = web.Page(

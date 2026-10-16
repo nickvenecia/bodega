@@ -25,7 +25,7 @@ def test_earned_on_rentals_that_went_out(tmp_path):
     assert all(r.id in e.rentals for e in got.values())
 
 
-def test_paid_off(tmp_path):
+def test_a_piece_says_how_much_of_its_cost_it_has_earned_back(tmp_path):
     lib = sample.fill(Library(tmp_path).load())
     it = next(i for i in lib.items.values() if i.value)
     it.qty = 2

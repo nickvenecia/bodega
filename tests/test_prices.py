@@ -21,16 +21,16 @@ def test_json_ld_list_and_low_price():
     assert prices.parse(html)[0] == Decimal("1299.99")
 
 
-def test_meta_tags():
+def test_a_price_is_read_from_a_pages_price_tags():
     assert prices.parse('<meta property="product:price:amount" content="279.00">')[0] == Decimal("279.00")
     assert prices.parse('<meta content="64.99" itemprop="price">')[0] == Decimal("64.99")
 
 
-def test_nothing_there():
+def test_a_page_with_no_price_gives_none():
     assert prices.parse("<html><body>Sold out</body></html>") is None
     assert prices.parse('<script type="application/ld+json">{not json</script>') is None
 
 
-def test_store_names():
+def test_a_stores_link_is_named_by_its_store():
     assert web.site_name("https://www.bhphotovideo.com/c/product/1.html") == "B&H"
     assert web.site_name("tilta.com/x") == "tilta.com"

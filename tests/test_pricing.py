@@ -50,11 +50,11 @@ def test_replacement_and_auto_rate():
         (6, 7, 6),
     ],
 )
-def test_billed_days(days, week, billed):
+def test_a_week_is_billed_as_the_profiles_week_days(days, week, billed):
     assert pricing.billed_for(days, week) == billed
 
 
-def test_weekend_deal():
+def test_friday_to_monday_bills_as_one_day_with_the_weekend_deal():
     fri = date(2026, 10, 9)
     r = Rental(pickup=fri.isoformat(), return_date=(fri + timedelta(days=3)).isoformat())
     assert pricing.rental_days(r, b()).billed == 1
@@ -76,7 +76,7 @@ def test_attached_gear_rides_along_and_is_shared_out(lib):
     assert pricing.item_rate(lib, fx6, b()) > pricing.own_rate(fx6, b())
 
 
-def test_package_discount(lib):
+def test_a_kit_discount_takes_its_percent_off_the_gear(lib):
     pkg = next(iter(lib.packages.values()))
     alone = pricing.package_sum(lib, pkg, b())
     pkg.pricing, pkg.discount = "discount", "20"
@@ -124,7 +124,7 @@ def test_repair_is_never_free(lib):
     assert any(s.why == "In repair" for s in pricing.shortages(lib, r))
 
 
-def test_out_now(lib):
+def test_a_line_with_later_dates_isnt_out_yet(lib):
     r = next(iter(lib.rentals.values()))
     r.status = "out"
     r.pickup = date.today().isoformat()
@@ -235,3 +235,55 @@ def test_booked_ahead_is_the_gear_on_bookings_still_to_come(lib):
     assert ids and ids <= set(lib.items)
     r.status = "cancelled"
     assert not pricing.booked_ahead(lib)
+
+
+def test_money_rounds_half_up_and_never_goes_wrong_on_odd_amounts():
+    from bodega.core import money
+
+    assert money.cents(Decimal("2.345")) == Decimal("2.35") and money.cents(Decimal("2.344")) == Decimal(
+        "2.34"
+    )
+    assert money.whole(Decimal("24.5")) == 25 and money.whole(Decimal("24.49")) == 24
+    assert money.parse("") == 0 and money.parse("-") == 0 and money.parse("abc") == 0
+    assert (
+        money.parse("1000000000000000") == 0
+    )  # too big to be real: a typo, never a quadrillion-dollar total
+    assert money.pct("-5") == 0  # a percent is never negative
+
+
+def test_a_piece_with_no_price_costs_nothing_and_breaks_nothing():
+    assert pricing.replacement(Item(value=""), b()) == 0
+    assert pricing.auto_day_rate(Item(value="0"), b()) == 0
+    assert pricing.auto_day_rate(Item(value="", qty=0), b()) == 0
+
+
+def test_a_leap_day_counts_like_any_other():
+    r = Rental(pickup="2028-02-28", return_date="2028-03-01")
+    assert pricing.rental_days(r, b()).out == 2  # the 28th and the 29th
+
+
+def test_units_needed_counts_every_line_and_what_goes_with_it(lib):
+    r = next(iter(lib.rentals.values()))
+    need = pricing.units_needed(lib, r)
+    assert need and all(n > 0 for n in need.values())
+    line = next(ln for ln in r.lines if ln.kind == "item")
+    before = need.get(line.ref, 0)
+    r.lines.append(RentalLine("item", line.ref, 2))
+    assert pricing.units_needed(lib, r)[line.ref] == before + 2
+
+
+def test_the_schedule_says_whats_held_each_day(lib):
+    r = next(iter(lib.rentals.values()))
+    r.status = "booked"
+    r.pickup = "2026-11-02"
+    r.return_date = "2026-11-04"
+    for ln in r.lines:
+        ln.pickup = ln.return_date = ""
+    it_id, units = next(iter(pricing.units_needed(lib, r).items()))
+    it = lib.items[it_id]
+    days = pricing.schedule(lib, it, date(2026, 11, 1), 5)
+    held = [d.booked for d in days]
+    assert (
+        held[0] == 0 and held[1] >= units and held[2] >= units and held[3] == 0
+    )  # back on the 4th: free that day
+    assert all(d.free == max(0, it.qty - d.booked) for d in days if it.status == "ready")

@@ -51,7 +51,7 @@ def test_pages_render_and_save(qapp, lib, tmp_path):
         assert pdf.read_bytes().startswith(b"%PDF")
 
 
-def test_summary_text(lib):
+def test_a_rentals_summary_for_email_has_its_gear_and_total(lib):
     b = next(iter(lib.businesses.values()))
     text = document.summary_text(lib, next(iter(lib.rentals.values())), b)
     assert "Total:" in text and "FX6 Run & Gun" in text

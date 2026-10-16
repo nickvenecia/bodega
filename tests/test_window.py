@@ -284,7 +284,7 @@ def test_scrolling_past_dropdowns_and_dates_leaves_the_cursor_alone(win):
     assert all(w.focusPolicy() == Qt.FocusPolicy.StrongFocus for w in controls)
 
 
-def test_sidebar_places(win):
+def test_every_sidebar_place_opens_and_is_marked(win):
     for key in ("gear", "kits", "out", "upcoming", "rentals", "calendar"):
         win.go(key)  # direct: an error inside a signal wouldn't fail the test
         assert win.view_key == key and win.sidebar.rows[key].property("selected")
@@ -306,7 +306,7 @@ def test_sidebar_places(win):
     assert win.title.text() == grp
 
 
-def test_page_window(win, monkeypatch):
+def test_the_page_window_shows_the_right_page_for_each_place(win, monkeypatch):
     from bodega.ui.dialogs.preview import PageDialog
 
     seen = []
@@ -372,7 +372,7 @@ def test_dividers_totals_and_attached(win):
     assert win.items.kids_lay.count() == len(pricing.children(win.lib, fx6.id))
 
 
-def test_toasts(win):
+def test_a_toast_says_its_news_and_goes(win):
     import time
 
     t = win.toaster
@@ -395,8 +395,7 @@ def test_toasts(win):
     wait(500)
     assert t.isVisible() and t.text == "Saved."
     t.dismiss()
-    wait(500)
-    assert not t.isVisible()
+    wait_for(lambda: not t.isVisible())
 
 
 def test_light_and_dark(win):
@@ -510,7 +509,7 @@ def test_import_into_the_window(win, tmp_path):
     assert win.import_file(path, ask=False) == 0  # nothing twice
 
 
-def test_export_pdf(win, tmp_path):
+def test_the_page_window_exports_a_pdf(win, tmp_path):
     from bodega.doc import export
 
     win.page_ctx = ("rental", next(iter(win.lib.rentals)))
@@ -682,7 +681,7 @@ def test_your_own_groups(win, monkeypatch):
     assert again.items[mic.id].group == "Shotguns"
 
 
-def test_tidy_up(win, monkeypatch):
+def test_tidy_up_groups_moves_gear_after_a_look_first(win, monkeypatch):
     from bodega.ui.dialogs import common as dialogs
 
     monkeypatch.setattr(dialogs, "tidy_preview", lambda *a, **k: True)
@@ -782,7 +781,7 @@ def test_sidebar_nests_groups_and_kits(win):
     assert sb.rows[f"kit:{kit.id}"].property("selected")
 
 
-def test_settings_window(win):
+def test_settings_change_the_look_and_updates_at_once(win):
     from bodega.ui.dialogs.settings import SettingsDialog
 
     d = SettingsDialog(win.lib, win)
@@ -897,7 +896,7 @@ def test_calendar_month_and_timeline(win):
     cal.set_mode("month")
 
 
-def test_filter_button(win):
+def test_the_filter_button_lights_up_while_a_filter_hides_gear(win):
     win.go("gear")
     f = win.view_menu
     assert not f.property("active") and f.is_default()
@@ -986,7 +985,7 @@ def test_alert_return_says_yes(win):
     assert confirm(win, "Delete it?", "", "Delete") is False
 
 
-def test_shortcuts_listed(win):
+def test_the_shortcuts_list_reads_the_menus(win):
     from bodega.ui.dialogs.shortcuts import keys_by_menu
 
     menus = dict(keys_by_menu(win.menuBar()))

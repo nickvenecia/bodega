@@ -9,7 +9,7 @@ from bodega.core.model import Item, Rental
 from bodega.core.store import Library
 
 
-def test_round_trip(data_folder):
+def test_everything_saved_reads_back_the_same(data_folder):
     lib = sample.fill(Library(data_folder).load())
     again = Library(data_folder).load()
     assert len(again.items) == len(lib.items)
@@ -149,7 +149,7 @@ def test_renter_edits_reach_quotes_only(data_folder):
     assert lib.rentals[r.id].client.phone != "1"
 
 
-def test_groups(tmp_path):
+def test_groups_keep_your_order_and_follow_their_gear(tmp_path):
     from bodega.core.model import Item
 
     lib = Library(tmp_path).load()
@@ -176,7 +176,7 @@ def test_groups(tmp_path):
     assert again.items[a.id].group == ""
 
 
-def test_tidy_groups(tmp_path):
+def test_tidy_up_groups_suggests_the_usual_names(tmp_path):
     from bodega.core import tidy
     from bodega.core.model import Item
 

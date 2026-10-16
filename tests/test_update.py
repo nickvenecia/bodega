@@ -194,7 +194,7 @@ def test_mac_and_windows_helpers(tmp_path: Path, monkeypatch):
     assert "/VERYSILENT" in win and "PID eq 4242" in win and "Bodega.exe" in win
 
 
-def test_update_window(monkeypatch):
+def test_the_update_window_shows_the_release_and_how_to_get_it(monkeypatch):
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication, QLabel
 

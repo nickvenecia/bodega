@@ -72,7 +72,7 @@ def test_csv_round_trip(tmp_path):
     assert by["Cage for FX6"].parent == by["FX6"].id
 
 
-def test_xlsx(tmp_path):
+def test_an_xlsx_gear_list_is_read_by_its_headings(tmp_path):
     import openpyxl
 
     wb = openpyxl.Workbook()
@@ -102,7 +102,7 @@ def test_links_on_names_come_in(tmp_path):
     assert sum(1 for i in got.items if i.link) == 1
 
 
-def test_google_sheets(tmp_path, monkeypatch):
+def test_a_google_sheet_is_read_as_a_spreadsheet_with_its_links(tmp_path, monkeypatch):
     import io
     import urllib.request
 
