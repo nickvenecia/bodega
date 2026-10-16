@@ -184,8 +184,8 @@
   Assistant's jobs).
 - Settings › Your Data has Import & Export: Import Spreadsheet…, Import from Google Sheets… and Export Gear as
   CSV…. These, Back Up… and Restore… close Settings first, so one window never opens on top of another.
-- The keyboard's ring around a button is thicker and clearer, and a field you're typing in has a clear accent
-  edge, so it's easy to see where the keyboard is.
+- The keyboard's ring is thicker and clearer everywhere: around a button, a field you're typing in, a place in the
+  sidebar and the accent colors, so it's easy to see where the keyboard is.
 - The Assistant's sign is now a sparkle, the usual sign for AI, and its button stays lit while the Assistant is
   open.
 - The words follow Bodega's own: the inventory list and rate card say Gear where they said Item, the Import button

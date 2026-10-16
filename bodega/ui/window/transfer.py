@@ -309,6 +309,7 @@ class TransferMixin:
         w.progress.connect(lambda i, total: self.toast(f"Getting photos… {i + 1} of {total}"))
         w.done.connect(self._photos_came)
         w.failed.connect(lambda e: self.toast(e, "problem"))
+        w.finished.connect(lambda: (setattr(self, "_photo_worker", None), w.deleteLater()))
         self._photo_worker = w
         w.start()
 

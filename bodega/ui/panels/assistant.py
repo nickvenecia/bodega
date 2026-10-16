@@ -641,6 +641,9 @@ class AssistantPanel(SidePanel):
         self.bar.setValue(n)
 
     def _finished(self) -> None:
+        w, self.worker = self.worker, None
+        if w is not None:
+            w.deleteLater()  # (its thread goes with it: nothing piles up over a long chat)
         self.busy.hide()
         self.thinking.stop()
         if self.thinking in self.chat.parts:

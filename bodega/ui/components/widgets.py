@@ -154,7 +154,7 @@ class ElidedLabel(QLabel):
         self._elide()
 
     def sizeHint(self) -> QSize:  # as wide as the whole text, when there's room
-        return QSize(self.fontMetrics().horizontalAdvance(self._full) + 2, super().sizeHint().height())
+        return QSize(self.fontMetrics().horizontalAdvance(self._full) + tokens.TEXT_SLACK, super().sizeHint().height())
 
     def minimumSizeHint(self) -> QSize:  # …but it gives way to everything else first
         return QSize(0, super().minimumSizeHint().height())
@@ -379,9 +379,9 @@ class AccentPicker(QWidget):
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(theme.qcolor(tokens.accent_of(k)))
             p.drawEllipse(dot)
-        if self.hasFocus():
-            pen = QPen(theme.qcolor(tokens.ACCENT_EDGE))
-            pen.setWidthF(1)
+        if self.hasFocus():  # the keyboard is here: the standard's 2-point ring
+            pen = QPen(theme.qcolor(tokens.ACCENT))
+            pen.setWidthF(tokens.FOCUS_RING)
             p.setPen(pen)
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawEllipse(self._rect(self.keys.index(self.current)))

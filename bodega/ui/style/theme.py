@@ -17,7 +17,6 @@ from bodega.ui.style.tokens import (
     CONTROL_H,
     HANDLE,
     ICON,
-    ICON_SM,
     ICON_STROKE,
     INDICATOR,
     RADIUS,
@@ -184,12 +183,17 @@ QComboBox, QLineEdit {{  /* G.3, G.5: fill at rest (its edge kept, transparent),
     selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT};
 }}
 QComboBox:hover {{ background: {tokens.FILL_3}; }}
-QLineEdit:focus, QComboBox:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT}; }}
+/* focus: the standard's 2-point ring, its padding and height giving back the extra point so nothing moves */
+QLineEdit:focus, QComboBox:focus {{ background: {tokens.FIELD}; border: {tokens.FOCUS_RING}px solid {tokens.ACCENT};
+    padding-left: {SPACE_3 - tokens.FOCUS_RING + 1}px; padding-right: {SPACE_3 - tokens.FOCUS_RING + 1}px;
+    min-height: {CONTROL_H - 2 * tokens.FOCUS_RING}px; max-height: {CONTROL_H - 2 * tokens.FOCUS_RING}px; }}
+QComboBox:focus {{ padding-right: {SPACE_5 + SPACE_1_5 - tokens.FOCUS_RING + 1}px; }}
 QLineEdit[bar="true"] {{ background: {tokens.RAISED}; border-color: {tokens.GLASS_STROKE}; }}
-QLineEdit[bar="true"]:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT}; }}
+QLineEdit[bar="true"]:focus {{ background: {tokens.FIELD}; border: {tokens.FOCUS_RING}px solid {tokens.ACCENT};
+    min-height: {tokens.BAR_CTRL_H - 2 * tokens.FOCUS_RING}px; max-height: {tokens.BAR_CTRL_H - 2 * tokens.FOCUS_RING}px; }}
 QComboBox {{ padding-right: {SPACE_5 + SPACE_1_5}px; }}
 QComboBox::drop-down {{ border: none; width: {SPACE_5 + SPACE_1_5}px; }}
-QComboBox::down-arrow {{ image: url(__UPDOWN__); width: {ICON_SM + 2}px; height: {ICON_SM + 2}px; }}
+QComboBox::down-arrow {{ image: url(__UPDOWN__); width: {tokens.ICON_UPDOWN}px; height: {tokens.ICON_UPDOWN}px; }}
 QComboBoxPrivateContainer {{ background: transparent; border: none; }}
 QComboBox QAbstractItemView, QListView#Suggestions {{
     background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {tokens.LIST_R}px;
@@ -330,7 +334,7 @@ QListWidget#Picker::indicator:checked {{ background: {tokens.ACCENT_FILL}; borde
 #ProfileSub[tone="problem"] {{ color: {tokens.WARN}; font-weight: {WEIGHT_SEMIBOLD}; }}
 #Nav {{ background: transparent; border-radius: {tokens.NAV_R}px; }}
 #Nav:hover {{ background: {tokens.ROW_HOVER}; }}
-#Nav:focus, #NavHead:focus, #LineHead:focus {{ border: 1px solid {tokens.ACCENT}; }}
+#Nav:focus, #NavHead:focus, #LineHead:focus {{ border: {tokens.FOCUS_RING}px solid {tokens.ACCENT}; }}
 #Nav[selected="true"] {{ background: {tokens.ACCENT_TINT}; }}
 #NavLabel {{ color: {tokens.TEXT}; font-weight: {WEIGHT_MEDIUM}; }}
 #NavSub {{ color: {tokens.TEXT}; }}
@@ -391,7 +395,8 @@ QPushButton#Where[tone="late"] {{ background: {tokens.BAD_TINT}; border-color: {
 QPlainTextEdit#Field {{ background: {tokens.FILL}; border: 1px solid transparent; border-radius: {RADIUS}px;
     font-family: inherit; font-size: {TEXT_MD}px; color: {tokens.TEXT}; padding: {SPACE_1}px {SPACE_2}px;
     selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}
-QPlainTextEdit#Field:focus {{ background: {tokens.FIELD}; border-color: {tokens.ACCENT_EDGE}; }}
+QPlainTextEdit#Field:focus {{ background: {tokens.FIELD}; border: {tokens.FOCUS_RING}px solid {tokens.ACCENT};
+    padding: {SPACE_1 - tokens.FOCUS_RING + 1}px {SPACE_2 - tokens.FOCUS_RING + 1}px; }}
 QPlainTextEdit#Field:disabled, QLineEdit:disabled, QComboBox:disabled {{ color: {tokens.TEXT_OFF}; border-color: {tokens.BORDER}; }}
 /* the date field (components/datefield.py): the date in the accent's words, its month in a popover */
 QLineEdit[date="true"] {{ color: {tokens.ACCENT_TEXT}; font-weight: {WEIGHT_MEDIUM}; }}

@@ -276,3 +276,28 @@ def test_a_segmented_controls_highlight_slides_unless_motion_is_reduced(qapp, mo
     assert s._slide.state() != QAbstractAnimation.State.Running
     assert s.thumb.geometry() == s.buttons["month"].geometry()  # straight there
     s.deleteLater()
+
+
+def test_a_field_takes_the_two_point_ring_without_moving(qapp):
+    from PySide6.QtWidgets import QLineEdit, QWidget
+
+    from bodega.ui.components.widgets import vbox
+    from bodega.ui.style import tokens
+
+    host = QWidget()
+    lay = vbox(host, 0, 0)
+    f, other = QLineEdit("Sony"), QLineEdit()
+    lay.addWidget(f)
+    lay.addWidget(other)
+    host.show()
+    other.setFocus()
+    qapp.processEvents()
+    rest = (f.height(), f.cursorRect().left())
+    f.setFocus()
+    host.activateWindow()
+    f.style().unpolish(f)
+    f.style().polish(f)
+    qapp.processEvents()
+    assert f.height() == tokens.CONTROL_H == rest[0]  # the ring is inside its height…
+    assert abs(f.cursorRect().left() - rest[1]) <= 1  # …and the words stay where they were
+    host.deleteLater()

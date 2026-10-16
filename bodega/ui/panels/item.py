@@ -690,8 +690,15 @@ class ItemPanel(DetailsBase):
         w = Worker(job, self)
         w.done.connect(lambda name: self._photo_came(item_id, name))
         w.failed.connect(lambda e: self.toast_wanted.emit(e, "problem"))
+        w.finished.connect(lambda: self._job_done(w))
         self._photo_job = w
         w.start()
+
+    def _job_done(self, w: Worker) -> None:
+        """A finished photo job goes (its thread with it), so nothing piles up as photos come in."""
+        if self._photo_job is w:
+            self._photo_job = None
+        w.deleteLater()
 
     def _photo_came(self, item_id: str, name: str) -> None:
         if self.it is not None and self.it.id == item_id:

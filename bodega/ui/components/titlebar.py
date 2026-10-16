@@ -20,7 +20,7 @@ from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QLabel, QMainWindow, QWidget
 
 from bodega.ui.components.widgets import hbox
-from bodega.ui.style import theme
+from bodega.ui.style import theme, tokens
 from bodega.ui.style.tokens import TITLEBAR_H
 
 
@@ -120,7 +120,8 @@ def toggle_size(window: QWidget) -> None:
         return
     area = screen.availableGeometry()
     g = window.frameGeometry()
-    if g.width() >= area.width() - 4 and g.height() >= area.height() - 4:
+    slack = tokens.FILLED_SLACK
+    if g.width() >= area.width() - slack and g.height() >= area.height() - slack:
         w, h = max(WINDOW_MIN[0], window.minimumWidth()), max(WINDOW_MIN[1], window.minimumHeight())
         to = QRect(area.x() + (area.width() - w) // 2, area.y() + (area.height() - h) // 2, w, h)
     else:
