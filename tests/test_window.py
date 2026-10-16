@@ -1225,3 +1225,30 @@ def test_a_toast_never_hides_the_row_youre_on(win):
         return QRect(t.viewport().mapTo(win, rect.topLeft()), rect.size())
 
     assert not on_window().intersects(win.toaster.geometry())
+
+
+def test_from_the_search_the_keyboard_goes_on_into_the_list(win):
+    win.go("gear")
+    win.search.setFocus()
+    QTest.keyClicks(win.search, "sony")
+    QTest.keyClick(win.search, Qt.Key.Key_Return)  # Return on words opens the first match
+    QApplication.processEvents()
+    first = next(iter(win.gear_table.showing_rows()))
+    assert win.gear_table.currentItem() is first and win.items.it is not None
+    assert win.items.it.id == first.data(0, 256)
+    win.search.setFocus()
+    QTest.keyClick(win.search, Qt.Key.Key_Down)
+    assert win.gear_table.hasFocus()
+
+
+def test_back_up_runs_without_freezing_the_window(win, monkeypatch, tmp_path):
+    from PySide6.QtWidgets import QFileDialog
+
+    target = tmp_path / "Backup.zip"
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *_a, **_k: (str(target), ""))
+    said = []
+    monkeypatch.setattr(win, "toast", lambda text, tone="": said.append(text))
+    win.back_up()
+    assert said == ["Backing up…"]  # the window carries on while the zip is made
+    wait_for(lambda: len(said) == 2)
+    assert target.exists() and said[1].startswith("Backed up.")

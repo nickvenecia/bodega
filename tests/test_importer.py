@@ -142,3 +142,12 @@ def test_google_sheets(tmp_path, monkeypatch):
     got = importer.read(path)
     handle = next(i for i in got.items if i.name == "Tilta Top Handle for Sony FX6")
     assert handle.link == "https://www.example.com/handle"
+
+
+def test_a_csv_saved_by_excel_on_windows_keeps_its_dashes_and_accents(tmp_path):
+    from bodega.core import importer
+
+    path = tmp_path / "gear.csv"
+    path.write_bytes("Item,Qty,Price\nCafé Lens – 50mm,1,900\n".encode("cp1252"))
+    rows = importer._rows_csv(path)
+    assert any("Café Lens – 50mm" in [str(c) for c in row] for row in rows)

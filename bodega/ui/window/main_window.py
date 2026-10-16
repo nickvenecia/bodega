@@ -206,7 +206,8 @@ class MainWindow(
         self.search.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.search.addAction(theme.icon("search", theme.FAINT), QLineEdit.ActionPosition.LeadingPosition)
         self.search.textChanged.connect(lambda _t: self._apply_search())
-        self.search.returnPressed.connect(self._scanned)  # a label's QR code, read by a scanner
+        self.search.returnPressed.connect(self._scanned)  # a label's QR code, read by a scanner (else: open)
+        self.search.down_wanted.connect(self._into_list)
         mid.addWidget(self.search)
         # how the list is divided and what it shows, behind one icon (the accent while a filter hides gear)
         self.view_menu = FilterButton(self.lib.brands)
@@ -492,10 +493,24 @@ class MainWindow(
         if self.history is not None:
             self.history.mark()
 
+    def _into_list(self, open_it: bool = False) -> None:
+        """From the search to the list: the keyboard moves on to the first row showing (`open_it`: open it)."""
+        t = self._table()
+        rows = list(t.showing_rows()) if t is not None else []
+        if not rows:
+            return
+        row = t.currentItem() if t.currentItem() in rows else rows[0]
+        if open_it or t.currentItem() is not row:
+            t.setCurrentItem(row)
+        t.setFocus()
+
     def _scanned(self) -> None:
-        """A scanner types a label's code and presses Return: open that piece."""
+        """A scanner types a label's code and presses Return: open that piece. Return on words you typed opens
+        the first match."""
         item_id = document.item_from_code(self.search.text())
         if item_id is None:
+            if self.search.text().strip():
+                self._into_list(open_it=True)
             return
         self.search.clear()
         if item_id in self.lib.items:

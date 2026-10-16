@@ -56,10 +56,11 @@ class ServicesMixin:
     def check_updates(self, quiet: bool = False) -> None:
         from bodega.ui.dialogs.update import CheckThread
 
-        self._check = CheckThread(self)
-        self._check.found.connect(lambda rel: self._found_release(rel, quiet))
-        self._check.failed.connect(lambda m: None if quiet else self.toast(m, "problem"))
-        self._check.start()
+        check = CheckThread(self)
+        check.found.connect(lambda rel: self._found_release(rel, quiet))
+        check.failed.connect(lambda m: None if quiet else self.toast(m, "problem"))
+        check.finished.connect(check.deleteLater)  # a finished check doesn't stay under the window
+        check.start()
 
     def _found_release(self, rel: update.Release, quiet: bool) -> None:
         self.lib.settings["last_update_check"] = time.time()

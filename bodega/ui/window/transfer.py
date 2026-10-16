@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl
+from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QFileDialog
 
@@ -31,9 +31,8 @@ class TransferMixin:
 
     def import_google(self) -> None:
         """Import straight from a Google Sheet (shared as Anyone with the link). Links on it come along."""
+        import shutil
         import tempfile
-
-        from PySide6.QtWidgets import QApplication
 
         from bodega.ui.dialogs.common import ask_name
 
@@ -50,17 +49,45 @@ class TransferMixin:
         if importer.google_export_url(link) is None:
             self.toast("That isn't a Google Sheets link.", "problem")
             return
-        with tempfile.TemporaryDirectory(prefix="bodega-sheet-") as folder:  # gone once it's read
-            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        if not self._transfer_free():
+            return
+        folder = Path(tempfile.mkdtemp(prefix="bodega-sheet-"))  # gone once it's read
+
+        def got(path: Path) -> None:
             try:
-                path = importer.download_google_sheet(link, Path(folder))
-            except OSError as e:
-                QApplication.restoreOverrideCursor()
-                notice(self, "Couldn't Open the Sheet", errors.plain(e, "open the sheet"))
-                return
-            QApplication.restoreOverrideCursor()
-            self.lib.settings["google_sheet"] = link
-            self.import_file(path)
+                self.lib.settings["google_sheet"] = link
+                self.import_file(path)
+            finally:
+                shutil.rmtree(folder, ignore_errors=True)
+
+        def failed(message: str) -> None:
+            shutil.rmtree(folder, ignore_errors=True)
+            notice(self, "Couldn't Open the Sheet", message)
+
+        self.toast("Getting the sheet from Google…")
+        self._run_transfer(
+            lambda _p, _c: importer.download_google_sheet(link, folder), got, failed, "open the sheet"
+        )
+
+    def _transfer_free(self) -> bool:
+        """One download or backup at a time."""
+        job = getattr(self, "_transfer_job", None)
+        if job is not None and job.isRunning():
+            self.toast("Still working on the last one. A moment…")
+            return False
+        return True
+
+    def _run_transfer(self, job, done, failed, doing: str) -> None:
+        """Slow file work (a download, a zip) off the window's thread, so the window never freezes."""
+        from bodega.ui.components.worker import Worker
+
+        w = Worker(job, self, doing)
+        w.done.connect(done)
+        w.failed.connect(failed)
+        w.finished.connect(w.deleteLater)
+        w.finished.connect(lambda: setattr(self, "_transfer_job", None))
+        self._transfer_job = w
+        w.start()
 
     def import_file(self, path: Path, ask: bool = True) -> int:
         """Read a spreadsheet. With `ask`, the Import window shows what's in it and lets you choose what
@@ -152,14 +179,17 @@ class TransferMixin:
         path, _ = QFileDialog.getSaveFileName(
             self, "Back Up", str(documents_dir() / name), "Zip Files (*.zip)"
         )
-        if not path:
+        if not path or not self._transfer_free():
             return
-        try:
-            zip_folder(data_dir(), Path(path), skip=("ui",))
-        except OSError as e:
-            notice(self, "Couldn't Back Up", errors.plain(e, "save the backup"))
-            return
-        self.toast("Backed up. It holds your renters' details, so keep it somewhere private.", "done")
+        self.toast("Backing up…")
+        self._run_transfer(
+            lambda _p, _c: zip_folder(data_dir(), Path(path), skip=("ui",)),
+            lambda _r: self.toast(
+                "Backed up. It holds your renters' details, so keep it somewhere private.", "done"
+            ),
+            lambda message: notice(self, "Couldn't Back Up", message),
+            "save the backup",
+        )
 
     def restore(self) -> None:
         """File › Restore from Backup…: put a Back Up zip or a safety copy back in place of everything, after a

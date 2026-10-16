@@ -680,10 +680,19 @@ class Guarded:
 
 
 class SearchField(QLineEdit):
-    """The toolbar's search: asks for SEARCH_W, gives way down to SEARCH_MIN on a narrow window."""
+    """The toolbar's search: asks for SEARCH_W, gives way down to SEARCH_MIN on a narrow window. ↓ goes on into
+    the list it searches (`down_wanted`)."""
+
+    down_wanted = Signal()
 
     def sizeHint(self) -> QSize:
         return QSize(tokens.SEARCH_W, super().sizeHint().height())
+
+    def keyPressEvent(self, e):
+        if e.key() == Qt.Key.Key_Down and not e.modifiers():
+            self.down_wanted.emit()
+            return
+        super().keyPressEvent(e)
 
 
 def set_combo(c: QComboBox, key: str) -> None:

@@ -23,19 +23,20 @@ class Worker(QThread):
     done = Signal(object)
     failed = Signal(str)
 
-    def __init__(self, job: Job, parent=None):
+    def __init__(self, job: Job, parent=None, doing: str = "finish that"):
+        """`doing`: what a failure says couldn't be done ("open the sheet")."""
         super().__init__(parent)
         self.job = job
+        self.doing = doing
         self.cancel = threading.Event()
 
     def run(self) -> None:
         try:
             result = self.job(lambda n, total: self.progress.emit(n, total), self.cancel)
-        except OSError as e:  # the plain-words errors (AIError, web, keychain), or the computer's, translated
-            self.failed.emit(errors.plain(e, "finish that"))
-            return
-        except Exception as e:
-            self.failed.emit(errors.plain(e, "finish that"))  # with a reference that matches the log
+        except (
+            Exception
+        ) as e:  # plain words: Bodega's own, the computer's translated, or a reference to the log
+            self.failed.emit(errors.plain(e, self.doing))
             return
         self.done.emit(result)
 

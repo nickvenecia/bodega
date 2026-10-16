@@ -370,14 +370,24 @@ def _rows_xlsx(path: Path) -> Rows:
     return rows
 
 
+def _decoded(raw: bytes) -> str:
+    """A CSV's words: UTF-8 (what most apps write), else Windows' own (Excel's "CSV" on Windows: "Café", "–"),
+    else Latin-1, which reads any bytes at all."""
+    for encoding in ("utf-8-sig", "cp1252"):
+        try:
+            return raw.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    return raw.decode("latin-1")
+
+
 def _rows_csv(path: Path) -> list[list]:
     _check_size(path)
     try:
-        text = path.read_text(encoding="utf-8-sig")
-    except UnicodeDecodeError:
-        text = path.read_text(encoding="latin-1")
+        raw = path.read_bytes()
     except OSError as e:
         raise OSError(f"Bodega can't open {path.name}.") from e
+    text = _decoded(raw)
     out = []
     try:
         for r in csv.reader(io.StringIO(text, newline="")):  # keeps line breaks inside cells

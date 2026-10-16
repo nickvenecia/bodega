@@ -536,6 +536,7 @@ class ItemPanel(DetailsBase):
         t = PriceCheck(self.it.id, self.it.link, self)
         t.done.connect(self._price_done)
         t.finished.connect(self._price_checked)
+        t.finished.connect(t.deleteLater)  # a finished check doesn't stay under the panel
         self._price_thread = t
         self._link_state()
         t.start()

@@ -120,6 +120,9 @@
   how far a check-out has got.
 - A message at the bottom of the window never covers the row you're on: the list scrolls it clear.
 - After you pick a renter for a new rental, the keyboard goes on to the pickup date.
+- From the search box, ↓ goes on into the list and Return opens the first match. ⌥⌘F finds too.
+- A CSV saved by Excel on Windows keeps its accents and dashes ("Café", "–") when it's imported.
+- Importing from a Google Sheet and Back Up run in the background, so the window never freezes while they work.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.
