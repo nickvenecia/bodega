@@ -148,6 +148,7 @@ class FigureStrip(QWidget):
         while n > 1:
             gaps = n - 1  # each: a hairline, with a pad either side
             pad = (room - sum(widths[:n]) - gaps) // (2 * gaps)
+            pad -= pad % tokens.SPACE_1  # (on the 4-point grid, G.28's 19)
             if pad >= tokens.STRIP_PAD_MIN:
                 break
             n -= 1

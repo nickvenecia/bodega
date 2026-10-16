@@ -31,7 +31,7 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **212 fixed, 11 partly, 13 not
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **213 fixed, 10 partly, 13 not
 started (larger redesigns), 16 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
@@ -62,7 +62,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 212 · Partly 11 · Open 13 · Waiting on the owner 16 · No longer applies 1.**
+**Of the 253 failures: Fixed 213 · Partly 10 · Open 13 · Waiting on the owner 16 · No longer applies 1.**
 
 ### Partly: what's left
 
@@ -78,7 +78,6 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | N-18 | S2 | A renter opens in a sheet over the window now; editing one in place needs a Renters page of its own (a list and a panel), not built yet. |
 | T-04 | S2 | Tests still reach some controls through private names (about 48 in test_window.py). |
 | T-15 | S2 | Packaged builds check for their own update file, but none downloads and swaps in an update. |
-| T-18 | S2 | Pointer-size measurements exist; the full G.28 check list isn't run in both light and dark. |
 
 ### Not started: the larger redesigns
 
@@ -139,7 +138,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 - **P**: P-01, P-02, P-03, P-04, P-09, P-13, P-15, P-16
 - **R**: R-01, R-05
 - **S**: S-17, S-21, S-25
-- **T**: T-01, T-03, T-05, T-06, T-09, T-11, T-12, T-14, T-16
+- **T**: T-01, T-03, T-05, T-06, T-09, T-11, T-12, T-14, T-16, T-18
 - **V**: V-04, V-08, V-09, V-11, V-13, V-14, V-15, V-17, V-18, V-19, V-23, V-24, V-25, V-26, V-32, V-33, V-35, V-36, V-37, V-40, V-41
 - **W**: W-02, W-03, W-04, W-06, W-09, W-10, W-11, W-12, W-14, W-15, W-16, W-17, W-18, W-19, W-20, W-21, W-22
 - **X**: X-01, X-06, X-08

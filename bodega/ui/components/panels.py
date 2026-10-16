@@ -405,6 +405,7 @@ class SidePanel(QFrame):
         room = self.pager.sizeHint().height() + 2 * tokens.PAGER_LIFT if on else 0  # the record scrolls clear of it
         m = self.lay.contentsMargins()
         self.lay.setContentsMargins(m.left(), m.top(), m.right(), self._pad + room)
+        self.lay.parentWidget().setProperty("measured", bool(room))  # (room measured for the floating pager)
 
     def _place_pager(self) -> None:
         p = self.pager

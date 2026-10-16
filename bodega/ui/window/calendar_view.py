@@ -484,6 +484,7 @@ class CalendarPage(QWidget):
     def set_edge(self, inset: int) -> None:
         """How far in the month and its title start, so they line up with the page's title."""
         self.layout().setContentsMargins(inset, 0, inset, tokens.SPACE_3)
+        self.setProperty("measured", True)  # (lined up with the page's title by measuring, not a typed value)
 
     def __init__(self, parent: QWidget | None = None):
         from bodega.ui.components.widgets import FitScroll, Segmented, hbox, vbox

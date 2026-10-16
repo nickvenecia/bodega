@@ -296,6 +296,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         # one left edge and one right edge: a list's words line up with the title and the bar's last button
         edge = max(0, tokens.PAGE_INSET - words_inset(self.gear_table))
         box = QWidget()
+        box.setProperty("measured", True)  # (its margins come from the style's own words inset, not a typed value)
         vbox(box, (edge, 0, edge, 0), 0).addWidget(self.pages)
         self.calendar.set_edge(tokens.PAGE_INSET - edge)  # (the calendar's own words have no cell around them)
         lay.addWidget(box, 1)
