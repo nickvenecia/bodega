@@ -415,11 +415,18 @@ def totals(lib, r: Rental, b: Business | None) -> Totals:
     )
 
 
+DEFAULT_DEPOSIT_PCT = "10"  # a security deposit's percent of replacement value, when the profile sets none
+
+
+def deposit_pct(b: Business | None) -> str:
+    """The percent a suggested deposit takes: the profile's, or DEFAULT_DEPOSIT_PCT."""
+    return b.deposit_pct.strip() if b is not None and b.deposit_pct.strip() else DEFAULT_DEPOSIT_PCT
+
+
 def suggested_deposit(lib, r: Rental, b: Business | None) -> Decimal:
-    if b is None or not b.deposit_pct.strip():
-        return ZERO
+    """A security deposit for the rental: deposit_pct() of its replacement value, in whole money."""
     t = totals(lib, r, b)
-    return money.whole(t.value * money.pct(b.deposit_pct))
+    return money.whole(t.value * money.pct(deposit_pct(b)))
 
 
 # ---------------------------------------------------------------------------- availability

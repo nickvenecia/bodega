@@ -160,6 +160,10 @@ class AISetupDialog(Embeddable, QDialog):
             if current in models:
                 set_combo(self.model, current)
                 self.model.setCurrentText(current)
+            elif current and models:  # kept, never swapped silently for another (and billed differently)
+                self.model.setCurrentText(current)
+                self.status.setText(f"{current} isn't offered for this key any more. Pick another.")
+                return
             self.status.setText(f"{len(models)} models." if models else "No models came back for this key.")
 
         self._run(lambda _p, _c: providers.list_models(setup, key=key), shown, "Asking for the list…")

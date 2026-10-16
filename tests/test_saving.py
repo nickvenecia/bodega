@@ -246,3 +246,11 @@ def test_typing_without_a_pause_is_still_saved(win):
     win._app_state(Qt.ApplicationState.ApplicationInactive)  # going to another app saves at once
     assert not win._save_cap.isActive()
     assert Library(win.lib.root).load().items[it.id].name == "Typed Without a Pause"
+
+
+def test_quitting_while_a_job_runs_asks_first(win, answers, monkeypatch):
+    said, asked = answers
+    monkeypatch.setattr(win.assistant, "running", lambda: True)
+    assert not win.may_quit() and asked == ["Stop and Quit?"]  # Cancel: Bodega stays open
+    said.append(QDialog.DialogCode.Accepted)
+    assert win.may_quit()

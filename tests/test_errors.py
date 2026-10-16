@@ -76,3 +76,32 @@ def test_number_fields_take_only_what_they_can_read(qapp):
         QTest.keyClicks(field, typed)
         assert field.text().strip() == kept, (typed, field.text())
         field.deleteLater()
+
+
+def test_an_error_nobody_expected_is_said_in_the_window(qapp, data_folder, monkeypatch, caplog):
+    import sys
+
+    from PySide6.QtWidgets import QApplication
+
+    from bodega import app as app_module
+    from bodega.core import sample
+    from bodega.core.store import Library
+    from bodega.ui.window.main_window import MainWindow
+
+    win = MainWindow(sample.fill(Library(data_folder).load()))
+    win.show()
+    said = []
+    monkeypatch.setattr(win, "toast", lambda text, tone="": said.append((text, tone)))
+    monkeypatch.setattr(sys, "excepthook", sys.excepthook)  # put back afterwards
+    monkeypatch.setattr("threading.excepthook", __import__("threading").excepthook)
+    app_module._log_uncaught()
+    monkeypatch.setattr(sys, "__excepthook__", lambda *_a: None)
+    try:
+        raise RuntimeError("deep inside Qt")
+    except RuntimeError:
+        sys.excepthook(*sys.exc_info())
+    QApplication.processEvents()
+    assert said and said[0][1] == "problem" and "deep inside" not in said[0][0]
+    ref = said[0][0].rsplit("ref ", 1)[1].rstrip(".")
+    assert any(f"ref {ref}" in r.getMessage() for r in caplog.records)  # the same reference as the log
+    win.close()

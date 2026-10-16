@@ -199,3 +199,15 @@ def test_rentals_booked_before_this_lock_when_read(data_folder):
     again = Library(data_folder).load()
     assert all(ln.locked_day for ln in again.rentals[r.id].lines if ln.kind != "fee" and not ln.rate)
     assert again.rentals[r.id].week_days == again.businesses[r.business_id].week_days
+
+
+def test_a_suggested_deposit_is_the_profiles_percent_or_ten(lib):
+    from bodega.core import money
+
+    r = next(iter(lib.rentals.values()))
+    plain = b()
+    value = pricing.totals(lib, r, plain).value
+    assert pricing.suggested_deposit(lib, r, plain) == money.whole(value * Decimal("0.10"))
+    plain.deposit_pct = "20"
+    assert pricing.suggested_deposit(lib, r, plain) == money.whole(value * Decimal("0.20"))
+    assert pricing.deposit_pct(None) == pricing.DEFAULT_DEPOSIT_PCT

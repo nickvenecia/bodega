@@ -695,9 +695,6 @@ class RentalPanel(DetailsBase):
             return
         b = self.b()
         amt = pricing.suggested_deposit(self.lib, self.r, b)
-        if not amt:
-            t = pricing.totals(self.lib, self.r, b)
-            amt = money.whole(t.value * money.pct("10"))
         self.deposit.set_value(f"{amt:f}".split(".")[0])
         self._edit("deposit", self.deposit.value())
 
@@ -886,9 +883,8 @@ class RentalPanel(DetailsBase):
             k.setVisible(show)
             v.setVisible(show)
         self.suggest.setToolTip(
-            f"{money.fmt_rate(b.deposit_pct)} of the replacement value (your profile)"
-            if b and b.deposit_pct.strip()
-            else "10% of the replacement value"
+            f"{money.fmt_rate(pricing.deposit_pct(b))} of the replacement value"
+            + (" (your profile)" if b and b.deposit_pct.strip() else "")
         )
         g = self.groups
         g["who"].set_summary(r.client.company or r.client.name or "No renter yet")

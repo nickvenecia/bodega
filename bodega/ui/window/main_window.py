@@ -827,10 +827,28 @@ class MainWindow(
         self.shutdown()
         super().closeEvent(e)
 
-    def may_quit(self) -> bool:
-        """Quitting over changes that couldn't be saved asks first: Try Again, Quit Anyway or Cancel."""
-        from bodega.ui.dialogs.common import Alert
+    def _jobs_running(self) -> str:
+        """What's still working in the background ('' if nothing): an AI job, or a photo coming from a link."""
+        if self.assistant.running():
+            return "Your AI is still working on a job"
+        job = self.items._photo_job
+        if job is not None and job.isRunning():
+            return "A photo is still coming from its link"
+        return ""
 
+    def may_quit(self) -> bool:
+        """Quitting over changes that couldn't be saved asks first: Try Again, Quit Anyway or Cancel. So does
+        quitting while a job runs in the background: what it finds would be lost."""
+        from bodega.ui.dialogs.common import Alert, confirm
+
+        busy = self._jobs_running()
+        if busy and not confirm(
+            self,
+            "Stop and Quit?",
+            f"{busy}. If you quit now, what it found so far is lost.",
+            "Stop and Quit",
+        ):
+            return False
         while True:
             self.flush()
             if not self.lib.unsaved:

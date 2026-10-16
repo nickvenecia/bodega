@@ -197,3 +197,16 @@ def test_a_big_job_says_how_many_questions_first(win, monkeypatch):
     win.ai_job("names", list(win.lib.items.values()))
     assert len(asked) == 1 and asked[0].startswith("Ask Your AI Up to")
     assert not sent and not win.assistant.running()  # Cancel: nothing asked, nothing billed
+
+
+def test_a_model_the_provider_dropped_is_kept_and_said(qapp, data_folder, monkeypatch):
+    from bodega.core.store import Library
+    from bodega.ui.dialogs.ai_setup import AISetupDialog
+
+    d = AISetupDialog(Library(data_folder).load())
+    d.model.setCurrentText("retired-model-1")
+    monkeypatch.setattr(d, "_run", lambda _job, done, _msg: done(["model-a", "model-b"]))
+    d._load_models()
+    assert d.model.currentText() == "retired-model-1"  # never swapped for another without asking
+    assert "isn't offered" in d.status.text()
+    d.deleteLater()

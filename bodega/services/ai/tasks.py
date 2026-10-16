@@ -159,6 +159,9 @@ def _same(a: str, b: str) -> bool:
     return " ".join(a.split()).casefold() == " ".join(b.split()).casefold()
 
 
+AI_SAID = "AI suggestion"  # Review's From column, for a change no page backs up (a guess to check)
+
+
 def _change(it: Item, field: str, new: str, why: str = "") -> Change | None:
     old = getattr(it, field)
     if field == "value":
@@ -478,7 +481,7 @@ def tidy_names(
                 new = clean_text(row.get(field, ""), LIMITS[field])
                 if field != "name" and getattr(it, field) and not new:
                     continue  # never blank out something you typed
-                c = _change(it, field, new)
+                c = _change(it, field, new, AI_SAID)
                 if c:
                     out.append(c)
     progress(len(todo), len(todo))
@@ -531,7 +534,7 @@ def organize_groups(
                 continue
             it = batch[row["n"]]
             new = clean_text(row.get("group", ""), LIMITS["group"])
-            c = _change(it, "group", new)
+            c = _change(it, "group", new, AI_SAID)
             if c:
                 out.append(c)
                 if new not in known:
@@ -574,7 +577,7 @@ def chat(
         if field not in CHAT_FIELDS:
             continue  # nothing else can be changed from the chat
         new = clean_text(row.get("value", ""), LIMITS[field])
-        c = _change(shown[row["n"]], field, new)
+        c = _change(shown[row["n"]], field, new, AI_SAID)
         if c and not any(x.item_id == c.item_id and x.field == c.field for x in out):
             out.append(c)
     return reply or ("Changes to review." if out else "No answer came back. Try asking another way."), Result(

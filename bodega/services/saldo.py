@@ -29,6 +29,7 @@ from bodega.core.model import Business, Rental
 from bodega.core.store import safe_id, write_json
 
 STATUS_WORDS = {"draft": "drafted", "sent": "sent", "paid": "was paid for"}
+TERMS_DAYS = 15  # days to pay, when the Saldo profile sets none (Saldo's own default)
 # what Bodega fills in on a draft it updates; everything else on it stays as Saldo has it
 FROM_THE_RENTAL = ("client", "project", "work_dates", "items", "discount", "tax_rate")
 
@@ -166,7 +167,7 @@ def invoice_for(lib, r: Rental, b: Business | None, profile: dict, taken: list[s
         "auto_number": True,
         "client": client,
         "issued": dates.iso(today),
-        "terms_days": _whole(profile.get("terms_days"), 15),
+        "terms_days": _whole(profile.get("terms_days"), TERMS_DAYS),
         "project": r.project or r.number,
         "work_dates": dates.span(pick, ret or pick) if pick else "",
         "delivered": "",

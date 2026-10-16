@@ -70,8 +70,9 @@ def _network(e: BaseException) -> tuple[str, str] | None:
     return None
 
 
-def plain(e: BaseException, doing: str) -> str:
-    """'Couldn't {doing}: {why}. {What to do}' — or, for something unknown, the same with a reference."""
+def plain(e: BaseException, doing: str, ref: str = "") -> str:
+    """'Couldn't {doing}: {why}. {What to do}' — or, for something unknown, the same with a reference (`ref`
+    when the caller logged it already, else one made and logged here)."""
     found = _network(e)
     if found is None and isinstance(e, OSError) and e.errno is None and str(e) and str(e)[0] not in "[<":
         return str(e)  # Bodega's own plain-words errors (web, AI, keychain) pass through as they are
@@ -80,6 +81,4 @@ def plain(e: BaseException, doing: str) -> str:
     if found is not None:
         why, todo = found
         return f"Couldn't {doing}: {why}. {todo}"
-    return (
-        f"Couldn't {doing}. Try again; if it keeps happening, send feedback with ref {reference(e, doing)}."
-    )
+    return f"Couldn't {doing}. Try again; if it keeps happening, send feedback with ref {ref or reference(e, doing)}."

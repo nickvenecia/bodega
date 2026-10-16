@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import secrets
 import sys
 import tempfile
 from pathlib import Path
@@ -27,6 +28,7 @@ from PySide6.QtWidgets import (
 )
 
 from bodega import APP_NAME, __version__
+from bodega.core import errors
 from bodega.core.log import get_logger, setup_logging
 from bodega.core.paths import ASSETS, data_dir, log_dir, use_data_dir
 from bodega.ui.components.widgets import ComboItemDelegate
@@ -214,15 +216,29 @@ def _log_uncaught() -> None:
     previous = sys.excepthook
 
     def hook(kind, value, tb):
-        log.error("unexpected error", exc_info=(kind, value, tb))
+        ref = secrets.token_hex(2).upper()
+        log.error("unexpected error, ref %s", ref, exc_info=(kind, value, tb))
         if previous is not None:
             previous(kind, value, tb)
+        if isinstance(value, Exception):  # say so in the window too, in plain words with the log's reference
+            _say_problem(errors.plain(value, "finish that", ref))
 
     sys.excepthook = hook
     threading.excepthook = lambda a: log.error(
         "unexpected error in %s", a.thread.name if a.thread else "a thread",
         exc_info=(a.exc_type, a.exc_value, a.exc_traceback),
     )  # fmt: skip
+
+
+def _say_problem(text: str) -> None:
+    """A problem toast in the main window, once whatever failed is over."""
+    from PySide6.QtCore import QTimer
+
+    app = QApplication.instance()
+    for w in app.topLevelWidgets() if app is not None else []:
+        if hasattr(w, "toast") and w.isVisible():
+            QTimer.singleShot(0, w, lambda w=w: w.toast(text, "problem"))
+            return
 
 
 def _crash_log() -> None:

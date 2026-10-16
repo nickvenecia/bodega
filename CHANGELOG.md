@@ -109,6 +109,12 @@
 - Late rentals say "1 late" in the sidebar, not only in red.
 - Screen readers now name the pickup and return dates, a line's quantity and rate, the accent colors and your
   profile card, which the keyboard can now reach.
+- Quitting while your AI is still on a job, or a photo is still coming from a link, asks first (Stop and Quit).
+- If something unexpected goes wrong, Bodega says so in the window, with a short reference to send with
+  feedback, instead of only writing it to its log.
+- AI Review's From column says "AI suggestion" for changes no web page backs up, so you know which to check.
+- If your AI provider stops offering the model you chose, AI Settings keeps it and says so, instead of quietly
+  switching to another one.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.
