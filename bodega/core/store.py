@@ -24,7 +24,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from bodega.core import dates, errors
+from bodega.core import dates, errors, pricing
 from bodega.core.log import get_logger
 from bodega.core.model import Business, Client, Item, Package, Rental, RentalLine, new_id, now_iso
 from bodega.core.paths import data_dir
@@ -220,8 +220,6 @@ class Library:
 
     def _settle_rentals(self) -> None:
         """Rentals booked before prices locked at booking: lock them now, at today's prices."""
-        from bodega.core import pricing
-
         for r in self.rentals.values():
             if r.past_quote() and pricing.settle(self, r, self.businesses.get(r.business_id) or self.pricing()):
                 try:
@@ -314,8 +312,6 @@ class Library:
         self._write("profiles", self.root / "businesses.json", [b.to_dict() for b in self.businesses.values()])
 
     def save_rental(self, r: Rental) -> None:
-        from bodega.core import pricing
-
         pricing.settle(self, r, self.businesses.get(r.business_id) or self.pricing())  # booked: prices hold
         self._note_history(r)
         r.updated = now_iso()
@@ -525,8 +521,6 @@ class Library:
             if kid is None or kid.id in above:
                 continue
             kid.parent = parent_id
-            from bodega.core import pricing
-
             for x, _u, _d in pricing.with_attached(self, kid, 1):
                 x.department, x.group, x.updated = parent.department, parent.group, now_iso()
             n += 1
@@ -619,14 +613,15 @@ class Library:
                 it.parent = landing(it.parent)
         for p in self.packages.values():
             p.lines = [ln for ln in p.lines if ln.item_id not in gone]
-        changed = self._keep_rental_prices(held)
-        for r in self.rentals.values():
-            for ln in r.lines:
-                if ln.kind == "item" and ln.ref in gone and not ln.name:
-                    ln.name = gone[ln.ref].name
-                    changed.add(r.id)
-        for rid in changed:
-            self.save_rental(self.rentals[rid])
+        with pricing.indexed(self):  # what's attached to what is settled from here on
+            changed = self._keep_rental_prices(held)
+            for r in self.rentals.values():
+                for ln in r.lines:
+                    if ln.kind == "item" and ln.ref in gone and not ln.name:
+                        ln.name = gone[ln.ref].name
+                        changed.add(r.id)
+            for rid in changed:
+                self.save_rental(self.rentals[rid])
         self.save_items()
         self.save_packages()
         return len(gone)
@@ -649,33 +644,31 @@ class Library:
             return
         held = self._hold_rental_prices()
         gone = self.packages.pop(pkg_id)
-        changed = self._keep_rental_prices(held)
-        for r in self.rentals.values():
-            for ln in r.lines:
-                if ln.kind == "package" and ln.ref == pkg_id and not ln.name:
-                    ln.name = gone.name
-                    changed.add(r.id)
-        for rid in changed:
-            self.save_rental(self.rentals[rid])
+        with pricing.indexed(self):
+            changed = self._keep_rental_prices(held)
+            for r in self.rentals.values():
+                for ln in r.lines:
+                    if ln.kind == "package" and ln.ref == pkg_id and not ln.name:
+                        ln.name = gone.name
+                        changed.add(r.id)
+            for rid in changed:
+                self.save_rental(self.rentals[rid])
         self.save_packages()
 
     # a rental's prices must not change because gear or a kit it used was deleted
     def _hold_rental_prices(self) -> list:
         """Every rental line priced by its gear: (rental, line, today's rate for one)."""
-        from bodega.core import pricing
-
         held = []
-        for r in self.rentals.values():
-            b = self.businesses.get(r.business_id) or self.pricing()
-            for ln in r.lines:
-                if ln.kind in ("item", "package") and not ln.rate.strip():
-                    held.append((r, ln, pricing.line_unit(self, ln, b)))
+        with pricing.indexed(self):
+            for r in self.rentals.values():
+                b = self.businesses.get(r.business_id) or self.pricing()
+                for ln in r.lines:
+                    if ln.kind in ("item", "package") and not ln.rate.strip():
+                        held.append((r, ln, pricing.line_unit(self, ln, b)))
         return held
 
     def _keep_rental_prices(self, held: list) -> set[str]:
         """After a delete: write the old rate onto any line whose price moved. Returns the rentals changed."""
-        from bodega.core import pricing
-
         changed = set()
         for r, ln, was in held:
             b = self.businesses.get(r.business_id) or self.pricing()

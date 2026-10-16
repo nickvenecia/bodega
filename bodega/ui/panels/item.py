@@ -203,7 +203,7 @@ class ItemPanel(DetailsBase):
         )
         self.photo.hide()
         self._photo_job: Worker | None = None
-        self.earned: dict | None = None  # what the gear list worked out on its last fill (None: work it out here)
+        self.earned: dict | None = None  # what's earned, until the next change (None: work it out here)
         self.setAcceptDrops(True)  # drop a picture anywhere on the panel (a file, or one out of a browser)
 
         # what it is
@@ -987,7 +987,9 @@ class ItemPanel(DetailsBase):
                 it.rentable and has_kids and bool(with_kids),
             ),
         }
-        e = (self.earned if self.earned is not None else earnings.earnings(self.lib)).get(it.id)
+        if self.earned is None:  # worked out once until the next change (each refresh starts it again)
+            self.earned = earnings.earnings(self.lib)
+        e = self.earned.get(it.id)
         made = e.amount if e is not None else money.ZERO
         n = len(e.rentals) if e is not None else 0
         coming = e.coming if e is not None else money.ZERO

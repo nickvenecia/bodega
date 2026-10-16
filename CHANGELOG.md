@@ -143,7 +143,8 @@
 - Coming Up goes by every line's dates: a rental with gear that goes out later than the rest stays in Coming Up
   until its last line's dates go by.
 - Much faster with a big inventory: with 3,000 pieces and 2,000 rentals, opening Bodega went from about 10 seconds
-  to under 2, and opening a piece from about 5 seconds to a fraction of one. Undo uses a small fraction of the memory it did.
+  to under 2, opening a piece from about 5 seconds to a fraction of one, and deleting 300 pieces at once from
+  about 3 seconds to half of one. Undo uses a small fraction of the memory it did, and keeps track twice as fast.
 - A right-click on a row offers what the ⋯ in its panel does: Update with AI on gear; Add to Calendar, Check Out,
   Check In and Send to Saldo on rentals.
 - The share button above the gear list opens the page window straight away (Inventory List, Rate Card, Labels).

@@ -20,6 +20,12 @@ LIMITS_S = {
     "refresh": 4.0,
     "open a piece": 1.5,
     "undo mark": 1.0,
+    "open a rental": 1.5,
+    "change a rental": 2.0,
+    "undo": 4.0,
+    "tidy": 1.0,
+    "import": 6.0,
+    "delete 300": 6.0,
 }
 
 
@@ -78,4 +84,27 @@ def test_the_window_stays_quick_at_a_rental_houses_size(qapp, big):
     piece = next(i for i in big.items.values() if i.name.startswith("Piece"))
     assert timed(lambda: (w.open("gear", piece.id), QApplication.processEvents())) < LIMITS_S["open a piece"]
     assert timed(w.history.mark) < LIMITS_S["undo mark"]
+    r = next(r for r in big.rentals.values() if r.lines and r.is_quote())
+    assert timed(lambda: (w.open("rentals", r.id), QApplication.processEvents())) < LIMITS_S["open a rental"]
+
+    def changed():
+        r.lines[0].qty += 1
+        w.rentals.changed.emit(r)
+        w.flush()
+        QApplication.processEvents()
+
+    assert timed(changed) < LIMITS_S["change a rental"]
+    assert timed(lambda: (w.undo(), QApplication.processEvents())) < LIMITS_S["undo"]
     w.close()
+
+
+def test_the_big_jobs_stay_quick_at_a_rental_houses_size(big, tmp_path):
+    """Tidy Up Groups, an import of every piece and deleting many at once (last: it changes the library)."""
+    from bodega.core import importer, tidy
+
+    assert timed(lambda: tidy.changes(big.items)) < LIMITS_S["tidy"]
+    sheet = importer.write_csv(list(big.items.values()), big.items, tmp_path / "all.csv")
+    assert timed(lambda: importer.read(sheet)) < LIMITS_S["import"]
+    ids = [i.id for i in big.items.values() if i.name.startswith("Piece")][:300]
+    assert timed(lambda: big.delete_items(ids)) < LIMITS_S["delete 300"]
+    assert not any(i in big.items for i in ids)

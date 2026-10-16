@@ -11,6 +11,7 @@ Amounts are kept as the text that was typed ("249.99") and turned into exact dec
 from __future__ import annotations
 
 import copy
+import functools
 import re
 import uuid
 from dataclasses import dataclass, field, fields, is_dataclass
@@ -111,14 +112,25 @@ def _read(cls, d: dict):
     return obj
 
 
+_SIMPLE = (str, int, float, bool, type(None))
+
+
 def _plain(v: Any) -> Any:
-    if is_dataclass(v):
+    if isinstance(v, _SIMPLE):  # most fields: first, as undo reads every record whenever things settle
+        return v
+    if isinstance(v, Record):
         return v.to_dict()
     if isinstance(v, list):
         return [_plain(x) for x in v]
     if isinstance(v, dict):
         return {k: _plain(x) for k, x in v.items()}
     return v
+
+
+@functools.cache
+def _written(cls: type) -> tuple[str, ...]:
+    """The fields a record writes, in order (all but `newer`)."""
+    return tuple(f.name for f in fields(cls) if f.name != "newer")
 
 
 class Record:
@@ -130,10 +142,9 @@ class Record:
     CHOICES: dict[str, tuple[tuple, Any]] = {}
 
     def to_dict(self) -> dict:
-        out = copy.deepcopy(self.newer)
-        for f in fields(self):
-            if f.name != "newer":
-                out[f.name] = _plain(getattr(self, f.name))
+        out = copy.deepcopy(self.newer) if self.newer else {}
+        for name in _written(type(self)):
+            out[name] = _plain(getattr(self, name))
         for name, (_allowed, cautious) in self.CHOICES.items():
             if name in self.newer and getattr(self, name) == cautious:  # not changed since: as it was
                 out[name] = copy.deepcopy(self.newer[name])
