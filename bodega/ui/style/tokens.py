@@ -191,6 +191,16 @@ LIST_ROW_R = RADIUS_SM  # a row's corners: 14 − 6, concentric
 LIST_ROW_H = CHOICE_ROW_H
 LIST_GAP = 0
 LIST_SEARCH_ABOVE = 12  # a list longer than this always has search
+# Search Everything (⌘K): the command palette (the standard's G.23)
+PALETTE_W = 640  # (palette-w) as wide as this, inside the window…
+PALETTE_TOP = 90  # …this far from its top
+PALETTE_MAX_H = 540  # at most this tall…
+PALETTE_MAX_SHARE = 0.62  # …and this much of the window
+PALETTE_PAD_X = 22  # its search field's sides
+PALETTE_HEAD_H = 28  # a group's heading row ("Go To", "Gear", "Commands")
+PALETTE_ICON = 17  # a row's icon…
+PALETTE_TEXT_X = SPACE_3 + PALETTE_ICON + SPACE_3  # …and where its words start
+PALETTE_FIND_H = 30  # the search field: Title 2 words, no box
 AVATAR = 32  # your profile's initials, bottom of the sidebar
 ASSISTANT_ICON = 28  # the assistant's face next to its title
 ASSISTANT_ICON_BIG = 64  # and saying hi in an empty chat
@@ -301,6 +311,7 @@ DARK = {
     "TOAST_TEXT": "#F5F5F7",
     "TOAST_EDGE": "rgba(255, 255, 255, 0.12)",
     "TOAST_SHADOW": "rgba(0, 0, 0, 0.60)",
+    "SCRIM": "rgba(0, 0, 0, 0.40)",  # (scrim) the window, dimmed under a palette
     "TOAST_DONE": "#30D158",  # its icon: it worked
     "TOAST_PROBLEM": "#FFB340",  # …it didn't (amber: red means late or delete)
     "TOAST_PROBLEM_FILL": "#4A3F25",  # a problem's toast is tinted amber, so it's never missed
@@ -377,6 +388,7 @@ LIGHT = {
     "TOAST_TEXT": "#F5F5F7",
     "TOAST_EDGE": "rgba(255, 255, 255, 0.10)",
     "TOAST_SHADOW": "rgba(0, 0, 0, 0.30)",
+    "SCRIM": "rgba(0, 0, 0, 0.20)",
     "TOAST_DONE": "#30D158",  # (the dark look's: these sit on the dark toast)
     "TOAST_PROBLEM": "#FFB340",
     "TOAST_PROBLEM_FILL": "#4A3F25",

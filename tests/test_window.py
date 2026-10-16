@@ -1742,3 +1742,35 @@ def test_a_tooltips_keys_are_written_for_this_computer(win):
     tip = win.btn_ai.toolTip()
     assert tip.startswith("Assistant (") and ("⌘J" in tip) == (sys.platform == "darwin")
     assert win.btn_ai.accessibleName() == "Assistant"  # the name, without the keys
+
+
+def test_search_everything_finds_places_records_and_commands(win, monkeypatch):
+    from bodega.ui.dialogs import palette
+
+    lens = next(i for i in win.lib.items.values() if i.group == "Lenses")
+    got = {h.group for h in palette.hits(win, "")}
+    assert got == {"Go To", "Commands"}  # nothing typed: places and commands
+    found = palette.hits(win, lens.name.split()[0].lower() + " " + lens.name.split()[-1])
+    assert any(h.group == "Gear" and h.title == lens.name for h in found)  # found as the gear list finds it
+    rank = {"Go To": 0, "Gear": 1, "Kits": 2, "Rentals": 3, "Commands": 4}
+    order = [rank[h.group] for h in palette.hits(win, "s")]
+    assert order == sorted(order) and 4 in order  # places, then records, then commands
+    assert any(h.title == "New Rental" for h in palette.hits(win, "new rental"))
+    r = next(iter(win.lib.rentals.values()))
+    assert any(h.group == "Rentals" for h in palette.hits(win, r.client.company or r.client.name))
+
+    d = palette.CommandPalette(win)
+    d.show()
+    d.find.setText("calendar")
+    QTest.keyClick(d.find, Qt.Key.Key_Return)  # the first: Go To › Calendar
+    wait_for(lambda: win.view_key == "calendar")
+    assert d.chosen.group == "Go To" and not d.isVisible()
+
+
+def test_the_sidebar_search_opens_search_everything(win, monkeypatch):
+    opened = []
+    monkeypatch.setattr(win, "search_everything", lambda: opened.append(True))
+    win.sidebar.search_wanted.disconnect()
+    win.sidebar.search_wanted.connect(win.search_everything)
+    win.sidebar.search.click()
+    wait_for(lambda: opened)

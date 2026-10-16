@@ -1066,8 +1066,7 @@ class GearTable(Table):
             row.setToolTip(GEAR_COL["name"], theme.plain_tip(f"{it.name}\nGoes with {on}"))
         row.setData(0, WHERE, (it.group, it.brand))
         row.setData(0, PHOTO, it.photo)
-        hay = (it.name, it.brand, it.series, it.group, it.notes, " ".join(it.serials), on)
-        row.setData(0, HAY, search.folded(" ".join(hay)))
+        row.setData(0, HAY, search.gear_hay(it, on))
         return row
 
     def item_rows(self):
@@ -1136,7 +1135,7 @@ class KitTable(Table):
                     (money.fmt_short(money.whole(value), cur), money.in_cents(value)),
                 ],
             )
-            row.setData(0, HAY, search.folded(p.name + " " + p.notes))
+            row.setData(0, HAY, search.kit_hay(p))
         self._fill_end(keep, col, order)
 
 
@@ -1191,7 +1190,7 @@ class RentalTable(Table):
                 ],
             )
             row.setData(4, DOT, getattr(tokens, STATUS_COLORS[tone]))
-            row.setData(0, HAY, search.folded(" ".join((r.number, r.client.name, r.client.company, r.project))))
+            row.setData(0, HAY, search.rental_hay(r))
         self._fill_end(keep, col, order)
 
 

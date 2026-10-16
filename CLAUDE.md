@@ -133,6 +133,7 @@ bodega/
                    kit.py (TitleEdit name, About, Gear, Price), rental.py (LineEditor per line…), assistant.py
                    (AssistantPanel: the AI chat and jobs, in the right-hand panel; toggled by its button or ⌘J)
     dialogs/       common.py (Alert: confirm and notice, Return says yes; ask_name, tidy_preview, about),
+                   palette.py (Search Everything, ⌘K: places, records by core/search's *_hay, the menus' commands),
                    checklist.py (CheckDialog: tick, scan, note, photos; Mark as Out / Returned),
                    shortcuts.py (Settings › Keyboard Shortcuts, read from the menus); ProfileDialog, AISetupDialog
                    and SignInDialog are Embeddable (widgets.py): the same form stands alone or sits in Settings, settings.py (Settings: a glass sidebar of sections that edit in place; one window at a time),

@@ -286,6 +286,16 @@ QPushButton#Suggestion {{ background: transparent; border: none; border-bottom: 
 QPushButton#Suggestion[last="true"] {{ border-bottom-color: transparent; }}
 QPushButton#Suggestion:hover {{ background: {tokens.FILL_2}; }}
 QPushButton#Suggestion:pressed {{ background: {tokens.FILL}; }}
+/* Search Everything (dialogs/palette.py) */
+#Palette {{ background: {tokens.RAISED}; border: 1px solid {tokens.GLASS_STROKE}; border-radius: {tokens.RADIUS_XL}px; }}
+#PaletteHead {{ border-bottom: 1px solid {tokens.BORDER}; }}
+QLineEdit#PaletteFind {{ background: transparent; border: none; padding: 0; font-size: {TEXT_XL}px; min-height: {tokens.PALETTE_FIND_H}px; }}
+QLineEdit#PaletteFind:focus {{ background: transparent; border: none; }}
+QListWidget#PaletteList {{ background: transparent; border: none; padding: {SPACE_2}px {SPACE_2_5}px {SPACE_2_5}px; }}
+#PaletteNone {{ color: {tokens.MUTED}; padding: {SPACE_5}px {SPACE_3}px; }}
+QPushButton#SideSearch {{ background: {tokens.FILL}; border: 1px solid transparent; border-radius: {CONTROL_H // 2}px; color: {tokens.MUTED};
+    text-align: left; padding: 0 {SPACE_3}px; min-height: {_INNER}px; max-height: {_INNER}px; }}
+QPushButton#SideSearch:hover {{ background: {tokens.FILL_3}; }}
 #CardTitle {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #Card {{ background: {tokens.BLOCK}; border: none; border-radius: {RADIUS_LG}px; }}
 QPlainTextEdit#BigName {{ font-size: {TEXT_RECORD}px; font-weight: {WEIGHT_BOLD}; color: {tokens.TEXT};

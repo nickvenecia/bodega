@@ -317,6 +317,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
     def _wire(self) -> None:
         sb = self.sidebar
         sb.picked.connect(self._place_picked)
+        sb.search_wanted.connect(self.search_everything)
         sb.profile_card.clicked.connect(self._app_menu)
         sb.btn_update.clicked.connect(self.show_update)
         self.gear_table.picked.connect(lambda i: self.open("gear", i))
@@ -661,6 +662,13 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         else:
             self.rentals.r = None
         self.dock.set_open(False)
+
+    def search_everything(self) -> None:
+        """⌘K, or the sidebar's Search: places, gear, kits, rentals and every command, from one field."""
+        from bodega.ui.dialogs.palette import open_palette
+
+        self.flush()
+        open_palette(self)
 
     def escape(self) -> None:
         """Esc closes one layer at a time: the search's words first, then the search itself, then the panel (but

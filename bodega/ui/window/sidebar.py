@@ -7,7 +7,7 @@ Each row shows a count. Import and the tools menu (⋯) sit at the bottom.
 from __future__ import annotations
 
 from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, Qt, QTimer, Signal
-from PySide6.QtGui import QCursor
+from PySide6.QtGui import QCursor, QKeySequence
 from PySide6.QtWidgets import QFrame, QGraphicsOpacityEffect, QLabel, QPushButton, QToolButton, QWidget
 
 from bodega.core import pricing, settings
@@ -143,6 +143,7 @@ class Sidebar(LeftPanel):
     dropped = Signal(str)  # gear dropped on a place
     new_group = Signal()
     new_rental = Signal()
+    search_wanted = Signal()  # the Search capsule at the top: Search Everything (⌘K)
 
     def __init__(self, lib: Library, parent: QWidget | None = None):
         super().__init__(tokens.SIDEBAR_W, tokens.TOOLBAR_H, parent)
@@ -152,6 +153,20 @@ class Sidebar(LeftPanel):
         word.setObjectName("Wordmark")
         word.setTextFormat(Qt.TextFormat.RichText)
         self.top_lay.addWidget(word)
+
+        # at the top, as a Mac's sidebar has it: Search, for the whole of Bodega (⌘K)
+        keys = QKeySequence("Ctrl+K").toString(QKeySequence.SequenceFormat.NativeText)
+        self.search = QPushButton("Search")
+        self.search.setObjectName("SideSearch")
+        self.search.setIcon(theme.icon("search", theme.MUTED, tokens.ICON))
+        self.search.setToolTip(f"Search Everything ({keys})")
+        self.search.setAccessibleName("Search Everything")
+        self.search.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.search.clicked.connect(
+            lambda: QTimer.singleShot(0, self, self.search_wanted.emit)
+        )  # once the click is over
+        self.lay.addWidget(self.search)
+        self.lay.addSpacing(tokens.SPACE_2)
 
         self.heads: dict[str, SectionHead] = {}
         self.boxes: dict[str, QWidget] = {}  # what folds: a section's list, or the rows under a row
