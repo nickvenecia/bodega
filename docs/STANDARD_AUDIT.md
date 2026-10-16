@@ -31,8 +31,8 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **214 fixed, 8 partly, 13 not
-started (larger redesigns), 17 waiting on the owner, and 1 no longer applies** (a web page's rule).
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **215 fixed, 7 partly, 11 not
+started (larger redesigns), 19 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
 |---|---|---|---|---|---|---|---|
@@ -62,14 +62,13 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 214 · Partly 8 · Open 13 · Waiting on the owner 17 · No longer applies 1.**
+**Of the 253 failures: Fixed 215 · Partly 7 · Open 11 · Waiting on the owner 19 · No longer applies 1.**
 
 ### Partly: what's left
 
 | Check | Sev | What's left |
 |---|---|---|
 | A-07 | S2 | Text sizes are fixed, so the system's text size and Bold Text aren't followed (with V-16). |
-| AI-18 | S3 | The message box has no attach button, and files can't be dropped on the assistant. |
 | C-70 | S3 | No account card at the top of Settings: there's no account service to show yet (accounts.REQUIRED is off). |
 | C-90 | S3 | The profile form is sized by kind; the side panels' fields still stretch to the panel's width. |
 | K-09 | S2 | Each tick is saved as it's made, with its time; who ticked it waits on accounts (D-41). |
@@ -87,19 +86,18 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | C-61 | S2 | The print window has no filter cards (column, from, to). |
 | C-88 | S3 | Tidy Up covers gear names and groups, not renters' names or addresses. |
 | C-120 | S3 | Settings › General is sections, not grouped rows in cards; Profiles is one long form. |
-| D-04 | S3 | A record's row menu and its panel's ⋯ come from one list (record_acts); the menu bar and the + menus are still listed by hand. |
 | D-41 | S3 | No booked by / checked out by / checked in by on a rental: waits on accounts. |
 | I-09 | S3 | Scroll bars are drawn by Bodega's stylesheet, not the system's own. |
 | I-18 | S3 | Hover changes a fill only, with no lift. |
 | T-13 | S3 | Tests find controls by their code names, not by role and visible words. |
 | V-16 | S2 | Text sizes are fixed points: nothing follows the system's text size, no 200% check (a layout pass). |
-| V-42 | S3 | No style sets its own line height (plain-text labels in Qt take the font's). |
 
 ### Waiting on the owner
 
 | Check | Sev | Decided by |
 |---|---|---|
 | AI-13 | S1 | a key stored as the repository secret BODEGA_EVAL_KEY: the evaluation (services/ai/evals.py) then runs on every change |
+| AI-18 | S3 | what files the assistant would take (a spreadsheet to import, a photo to name a piece: photos cost more and go to your provider); the standard says build no door to a room that isn't built |
 | AI-28 | S2 | question 15 |
 | C-129 | S2 | question 8 |
 | D-08 | S1 | the whole-dollar lists in PROJECT_ADDENDUM.md |
@@ -114,6 +112,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | S-23 | S1 | question 27: later, by the owner's choice (not wanted yet) |
 | V-22 | S3 | the accent in PROJECT_ADDENDUM.md |
 | V-28 | S3 | the accent in PROJECT_ADDENDUM.md |
+| V-42 | S3 | a proposed departure: line heights stay the font's own (within 2 points of A.4); exact ones need formatted labels, which Bodega avoids so names and AI words never become formatting |
 | W-05 | S3 | question 20 |
 | W-08 | S3 | question 20 |
 
@@ -128,7 +127,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 - **A**: A-01, A-03, A-05, A-06, A-10, A-11, A-12, A-13
 - **AI**: AI-01, AI-03, AI-07, AI-08, AI-09, AI-11, AI-14, AI-15, AI-16, AI-17, AI-19, AI-20, AI-23, AI-24, AI-29, AI-30, AI-31
 - **C**: C-01, C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-17, C-19, C-21, C-23, C-24, C-26, C-27, C-28, C-29, C-31, C-32, C-34, C-37, C-38, C-39, C-42, C-44, C-45, C-47, C-49, C-50, C-51, C-54, C-58, C-59, C-65, C-66, C-67, C-69, C-72, C-73, C-76, C-82, C-100, C-105, C-106, C-108, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
-- **D**: D-01, D-02, D-03, D-05, D-06, D-07, D-10, D-11, D-12, D-15, D-16, D-18, D-21, D-23, D-24, D-25, D-26, D-31, D-32, D-34, D-42, D-49, D-51
+- **D**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-10, D-11, D-12, D-15, D-16, D-18, D-21, D-23, D-24, D-25, D-26, D-31, D-32, D-34, D-42, D-49, D-51
 - **G**: G-01, G-02
 - **I**: I-01, I-02, I-03, I-04, I-06, I-07, I-08, I-10, I-11, I-12, I-13, I-14, I-15, I-19, I-20, I-21, I-23, I-24, I-25, I-26, I-29, I-30, I-31
 - **K**: K-02, K-03, K-04, K-06, K-07, K-10, K-12

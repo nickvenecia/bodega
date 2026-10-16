@@ -2157,3 +2157,23 @@ def test_a_delete_says_so_with_undo_for_a_while_and_undo_brings_it_back(win):
     t.repaint()
     QTest.mouseClick(t, Qt.MouseButton.LeftButton, pos=t._action_rect.center().toPoint())
     wait_for(lambda: p.id in win.lib.packages)  # Undo, once the click is over
+
+
+def test_the_plus_menus_and_file_list_one_set_of_commands(win, monkeypatch):
+    """(D-04) The File menu, the + beside Inventory and the toolbar's + come from one registry (menus.COMMANDS):
+    the same words everywhere, and picking one runs the same thing."""
+    from bodega.ui.window.menus import COMMANDS, GEAR_PLUS, INVENTORY_PLUS
+
+    def words(menu):
+        return [a.text() for a in menu.actions() if not a.isSeparator()]
+
+    file_menu = next(m.menu() for m in win.menuBar().actions() if m.text() == "File")
+    titles = {COMMANDS[c][0] for c in COMMANDS}
+    assert titles <= set(words(file_menu))
+    assert words(win.sidebar.btn_new_dep.menu()) == [COMMANDS[c][0] for c in INVENTORY_PLUS if c]
+    assert words(win.new_menu) == [COMMANDS[c][0] for c in GEAR_PLUS if c]
+    made = []
+    monkeypatch.setattr(win, "new_group", lambda: made.append("group"))
+    next(a for a in win.new_menu.actions() if a.text() == "New Group…").trigger()
+    next(a for a in file_menu.actions() if a.text() == "New Group…").trigger()
+    assert made == ["group", "group"]

@@ -33,7 +33,38 @@ SINGLE_KEYS = (  # (key, what it does, the window's method)
 )
 
 
+# Commands more than one menu offers (the standard's D-04: one registry): the File menu, the sidebar's + and the
+# toolbar's + list them from here, and Search Everything reads them from the menus.
+COMMANDS = {  # id -> (title, menu icon, the window's method and what it's given)
+    "new_gear": ("New Gear", "box", ("new", "gear")),
+    "new_kit": ("New Kit", "case", ("new", "packages")),
+    "new_rental": ("New Rental", "receipt", ("new", "rentals")),
+    "new_group": ("New Group…", "folder", ("new_group",)),
+    "import_sheet": ("Import Spreadsheet…", "table", ("import_sheet",)),
+    "import_google": ("Import from Google Sheets…", "link", ("import_google",)),
+}
+INVENTORY_PLUS = ("new_gear", "new_group", "new_kit", None, "import_sheet", "import_google")  # the + beside Inventory
+GEAR_PLUS = ("new_gear", "new_group", None, "import_sheet", "import_google")  # the toolbar's + on gear pages
+
+
 class MenusMixin:
+    def run_command(self, cid: str) -> None:
+        """A command from COMMANDS, whichever menu it was picked in."""
+        method, *given = COMMANDS[cid][2]
+        getattr(self, method)(*given)
+
+    def _command_menu(self, parent, ids) -> QMenu:
+        """A menu of COMMANDS (None: a divider), with their icons."""
+        m = QMenu(parent)
+        for cid in ids:
+            if cid is None:
+                m.addSeparator()
+            else:
+                m.addAction(
+                    theme.menu_icon(COMMANDS[cid][1]), COMMANDS[cid][0], lambda _c=False, c=cid: self.run_command(c)
+                )
+        return m
+
     def _menus(self) -> None:
         """Every command, with its shortcut, in a full menu bar (the standard's 3.7): the Mac's own at the top of
         the screen; on Windows and Linux, across the top of the window."""
@@ -46,15 +77,17 @@ class MenusMixin:
                 self.addAction(a)
             return a
 
+        def command(m: QMenu, cid: str, keys=None) -> QAction:
+            return act(m, COMMANDS[cid][0], lambda _c=False, c=cid: self.run_command(c), keys)
+
         f = bar.addMenu("File")
         act(f, "New", self.new_here, QKeySequence.StandardKey.New)
-        act(f, "New Gear", lambda: self.new("gear"))
-        act(f, "New Kit", lambda: self.new("packages"))
-        act(f, "New Rental", lambda: self.new("rentals"))
-        act(f, "New Group…", self.new_group, "Ctrl+Shift+N")
+        for cid in ("new_gear", "new_kit", "new_rental"):
+            command(f, cid)
+        command(f, "new_group", "Ctrl+Shift+N")
         f.addSeparator()
-        act(f, "Import Spreadsheet…", self.import_sheet, "Ctrl+Shift+I")
-        act(f, "Import from Google Sheets…", self.import_google)
+        command(f, "import_sheet", "Ctrl+Shift+I")
+        command(f, "import_google")
         act(f, "Export Gear as CSV…", self.export_csv, "Ctrl+Shift+E")
         act(f, "Export Kits as CSV…", self.export_kits_csv)
         act(f, "Export Rentals as CSV…", self.export_rentals_csv)
@@ -184,22 +217,10 @@ class MenusMixin:
         # (importing is in File and the + menus; Export as CSV and Get Photos in File)
         self.btn_export.clicked.connect(lambda: self.show_pages(("gear", self._grp()), "inventory"))
 
-        g = QMenu(self.sidebar.btn_new_dep)  # the + beside Inventory
-        g.addAction(theme.menu_icon("box"), "New Gear", lambda: self.new("gear"))
-        g.addAction(theme.menu_icon("folder"), "New Group…", self.new_group)
-        g.addAction(theme.menu_icon("case"), "New Kit", lambda: self.new("packages"))
-        g.addSeparator()
-        g.addAction(theme.menu_icon("table"), "Import Spreadsheet…", self.import_sheet)
-        g.addAction(theme.menu_icon("link"), "Import from Google Sheets…", self.import_google)
-        self.sidebar.btn_new_dep.setMenu(g)
+        self.sidebar.btn_new_dep.setMenu(self._command_menu(self.sidebar.btn_new_dep, INVENTORY_PLUS))
         self.sidebar.btn_new_dep.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         # the toolbar's + on gear pages: a piece or a group (elsewhere it makes a kit or a rental at once)
-        self.new_menu = QMenu(self.btn_new)
-        self.new_menu.addAction(theme.menu_icon("box"), "New Gear", lambda: self.new("gear"))
-        self.new_menu.addAction(theme.menu_icon("folder"), "New Group…", self.new_group)
-        self.new_menu.addSeparator()
-        self.new_menu.addAction(theme.menu_icon("table"), "Import Spreadsheet…", self.import_sheet)
-        self.new_menu.addAction(theme.menu_icon("link"), "Import from Google Sheets…", self.import_google)
+        self.new_menu = self._command_menu(self.btn_new, GEAR_PLUS)
 
     def _single_keys(self) -> None:
         self.single_acts = []
