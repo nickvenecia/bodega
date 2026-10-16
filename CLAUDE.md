@@ -157,6 +157,7 @@ bodega/
                    `python -m bodega cli update-check` (offline: finds this build's own update file)
 scripts/make_icon.py   draws bodega/assets/icon.png ("b." on the dark tile, the full stop in sky blue)
 scripts/release_notes.py   a Release's text: the version's CHANGELOG entries, then the downloads
+scripts/lock.py        requirements.lock (every build, every computer) and requirements-lint.lock, with hashes
 tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR [SHEET.xlsx]
 ```
 
@@ -207,6 +208,7 @@ tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTD
 ## Commands
 ```bash
 pip install -r requirements-dev.txt
+python scripts/lock.py                    # after changing requirements*.txt: the hashed locks CI installs from
 python -m bodega
 python -m pytest -q
 QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR

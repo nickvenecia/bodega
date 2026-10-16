@@ -16,7 +16,7 @@ bodega/
   app.py       Starts the window (fonts, stylesheet, one window at a time, --smoke-test)
   cli.py       Same drawing without a window: `python -m bodega cli ...`
 tests/         One test file per area (test_pricing.py, test_store.py, test_documents.py, test_window.py…)
-scripts/       make_icon.py, release_notes.py (a Release's text, from CHANGELOG.md)
+scripts/       make_icon.py, release_notes.py (a Release's text, from CHANGELOG.md), lock.py (the hashed locks)
 packaging/     Installer files per OS
 ```
 
@@ -151,5 +151,10 @@ packaging/     Installer files per OS
   `__version__` in `bodega/__init__.py` (the last number for fixes and polish, the middle one for a new feature).
 - Merging is releasing: when main has a version with no tag yet, CI builds, tags it `vX.Y.Z` and publishes the
   downloads. A pull request that doesn't bump the version (docs, tests, tidying) releases nothing.
+- A dependency changes in `requirements*.txt` (by hand, or a Dependabot pull request), then `python scripts/lock.py`
+  writes `requirements.lock` and `requirements-lint.lock` again; commit them with it. CI installs only from the
+  locks (every file's fingerprint checked, ready-built packages only, so no setup script runs), fails while they
+  don't match `requirements*.txt`, audits every package in them for every computer, and attaches the software bill
+  of materials (`Bodega-sbom.cdx.json`) to each release.
 - Never commit `build/`, `dist/`, real gear lists, rentals, personal details, or anything with a password or key in it.
   Signing secrets live only in GitHub → Settings → Secrets.

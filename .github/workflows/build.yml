@@ -27,19 +27,29 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version-file: .python-version  # the exact Python every build uses
-      - run: pip install "ruff==0.16.8"
+      - name: The checking tools, from their lock (each file's fingerprint checked, no setup scripts run)
+        run: pip install --require-hashes --only-binary :all: --no-deps -r requirements-lint.lock
       - name: Format check
         run: ruff format --check .
       - name: Lint (style, bugs, security)
         run: ruff check .
       - name: Type check (the parts with no Qt)
+        run: mypy
+      - name: The locks match requirements*.txt
+        run: python scripts/lock.py --check
+      - name: Known vulnerabilities in what ships (and what builds it), on every computer it's built for
         run: |
-          pip install "mypy==1.15.0"
-          mypy
-      - name: Known vulnerabilities in what ships (and what builds it)
+          python scripts/lock.py --everything > "$RUNNER_TEMP/everything.txt"
+          pip-audit --strict --disable-pip --no-deps -r "$RUNNER_TEMP/everything.txt"
+      - name: Software bill of materials (attached to the release)
         run: |
-          pip install "pip-audit==2.9.0"
-          pip-audit --strict -r requirements-dev.txt
+          mkdir -p sbom
+          pip-audit --disable-pip --no-deps -r "$RUNNER_TEMP/everything.txt" -f cyclonedx-json -o sbom/Bodega-sbom.cdx.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Bodega-sbom
+          path: sbom/Bodega-sbom.cdx.json
+          if-no-files-found: error
       - name: Is this a release?
         # main with a version that has no tag yet, or a tag pushed by hand (which must match the version: a
         # release whose app reports an older number keeps offering itself as an update)
@@ -101,10 +111,10 @@ jobs:
           sudo apt-get install -y libegl1 libxkbcommon0 libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 \
             libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libgl1 libcups2
 
-      - name: Install Python packages
+      - name: Install Python packages (from the lock: each file's fingerprint checked, no setup scripts run)
         run: |
           python -m pip install "pip==25.2"
-          pip install -r requirements-dev.txt
+          pip install --require-hashes --only-binary :all: --no-deps -r requirements.lock
 
       - name: Run tests
         shell: bash
@@ -242,6 +252,7 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+          Write-Output "Inno Setup $((Get-Item 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe').VersionInfo.ProductVersion)"
           $v = (python -c "import bodega; print(bodega.__version__)")
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$v packaging\windows\bodega.iss
           Copy-Item packaging\windows\Output\Bodega-Setup.exe out\Bodega-windows-setup.exe

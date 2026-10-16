@@ -1,0 +1,6 @@
+# The tools CI checks the code with (scripts/lock.py makes requirements-lint.lock from this)
+-c requirements-dev.txt  # ruff and mypy at the versions requirements-dev.txt has
+ruff
+mypy
+pip-audit==2.9.0  # known vulnerabilities in what ships, and the software bill of materials
+uv==0.11.32  # makes and checks the locks
