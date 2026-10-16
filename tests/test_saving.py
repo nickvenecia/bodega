@@ -219,3 +219,30 @@ def test_account_settings_wait_for_an_account_service(win):
     s = SettingsDialog(win.lib, win, "account")
     assert s.rows["account"].isHidden() and s.current_pane() == "general"  # nothing to sign in to yet
     s.close()
+
+
+def test_a_new_day_refreshes_what_today_decides(win, monkeypatch):
+    from datetime import timedelta
+
+    from bodega.core import dates
+
+    tomorrow = dates.today() + timedelta(days=1)
+    refreshed = []
+    monkeypatch.setattr(win, "refresh", lambda: refreshed.append(1))
+    win._new_day()
+    assert not refreshed  # the same day: nothing to do
+    monkeypatch.setattr(dates, "today", lambda: tomorrow)
+    win._new_day()
+    assert refreshed and win._day == tomorrow and win._midnight.isActive()
+
+
+def test_typing_without_a_pause_is_still_saved(win):
+    from PySide6.QtCore import Qt
+
+    it = next(iter(win.lib.items.values()))
+    it.name = "Typed Without a Pause"
+    win._item_edited(it)
+    assert win._save_cap.isActive()  # however long the typing goes on, it's saved by then
+    win._app_state(Qt.ApplicationState.ApplicationInactive)  # going to another app saves at once
+    assert not win._save_cap.isActive()
+    assert Library(win.lib.root).load().items[it.id].name == "Typed Without a Pause"

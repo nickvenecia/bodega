@@ -76,6 +76,7 @@ def test_picking_an_accent_in_settings(qapp, data_folder):
 
     win = MainWindow(sample.fill(Library(data_folder).load()))
     win.show()
+    set_appearance(qapp, "dark", "")  # whatever look an earlier test left on
     try:
         d = SettingsDialog(win.lib, win, "general")
         assert d.accent.current == tokens.APP_ACCENT

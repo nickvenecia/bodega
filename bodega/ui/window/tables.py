@@ -590,6 +590,9 @@ class GearTable(Table):
         h.setToolTip(GEAR_COL["kids"], "Gear that goes with it")
         h.setToolTip(GEAR_COL["paid"], "What it cost, before tax (what goes with it included)")
         h.setToolTip(GEAR_COL["value"], "Replacement value: paid plus sales tax")
+        h.setToolTip(
+            GEAR_COL["earned"], "An estimate: each rental's gear total, shared out by each piece's day rate"
+        )
         self.header().setSectionResizeMode(GEAR_COL["grip"], QHeaderView.ResizeMode.Fixed)
         self.header().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.header().customContextMenuRequested.connect(self._column_menu)

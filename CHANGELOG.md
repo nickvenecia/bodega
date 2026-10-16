@@ -98,6 +98,17 @@
 - Secondary words (retired pieces, cancelled rentals, the calendar's days and numbers) are a little darker, so they
   read clearly on every background.
 - Settings and About show which build of Bodega you have.
+- The profile card's menu has Keyboard Shortcuts, next to Settings. Adding and editing profiles is in
+  Settings › Profiles (and the Bodega menu).
+- Going to another place in the sidebar starts with an empty search and no filters, so nothing stays hidden by a
+  search you typed somewhere else.
+- After midnight Bodega updates on its own: late rentals, Out Now and Coming Up go by the new day, and the day's
+  safety copy is made. Switching to another app saves what you were typing at once, and nonstop typing is saved
+  every few seconds.
+- A piece's Earned figure is marked as an estimate (≈), and pointing at it says how it's worked out.
+- Late rentals say "1 late" in the sidebar, not only in red.
+- Screen readers now name the pickup and return dates, a line's quantity and rate, the accent colors and your
+  profile card, which the keyboard can now reach.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

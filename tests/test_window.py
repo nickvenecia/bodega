@@ -1176,3 +1176,31 @@ def test_a_date_is_never_cut_off(qapp):
     assert d.fontMetrics().horizontalAdvance(d.text()) <= d.width()
     d.close()
     d.deleteLater()
+
+
+def test_another_place_starts_unsearched_and_unfiltered(win):
+    win.go("gear")
+    win.search.setText("sony")
+    win.view_menu.filter.show = "out"
+    win.go("rentals")
+    assert win.search.text() == "" and not win.view_menu.filter.active()
+    win.go("gear")
+    win.search.setText("sony")
+    win.go("gear")  # the same place again (a refresh) keeps what you typed
+    assert win.search.text() == "sony"
+
+
+def test_late_says_so_in_words_not_only_in_red(win):
+    from datetime import timedelta
+
+    from bodega.core import dates
+
+    r = next(iter(win.lib.rentals.values()))
+    r.status = "out"
+    r.pickup = dates.iso(dates.today() - timedelta(days=5))
+    r.return_date = dates.iso(dates.today() - timedelta(days=2))
+    for line in r.lines:
+        line.pickup = line.return_date = ""  # every line on the rental's dates
+    win.lib.save_rental(r)
+    win.refresh()
+    assert win.sidebar.rows["out"].count.text() == "1 late"

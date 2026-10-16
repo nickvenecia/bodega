@@ -62,6 +62,7 @@ from bodega.ui.panels.base import DetailsBase
 from bodega.ui.style import theme, tokens
 
 log = get_logger(__name__)
+EARNED_TIP = "An estimate: each rental's gear total, shared out by each piece's day rate"
 
 PASTE_INSTEAD = "In your browser, right-click the photo, choose Copy Image, then paste it here."
 STATUS_LABELS = {"ready": "Ready", "repair": "In Repair", "retired": "Retired"}
@@ -952,7 +953,7 @@ class ItemPanel(DetailsBase):
         made = e.amount if e is not None else money.ZERO
         n = len(e.rentals) if e is not None else 0
         coming = e.coming if e is not None else money.ZERO
-        what = f"{money.fmt(made, cur)} on {n} rental{'s' if n != 1 else ''}"
+        what = f"≈ {money.fmt_short(made, cur)} on {n} rental{'s' if n != 1 else ''}"  # an estimate
         if coming:
             what += f" (+{money.fmt_short(coming, cur)} booked)"
         rows["earned"] = ("Earned", what, bool(made or coming))
@@ -970,6 +971,7 @@ class ItemPanel(DetailsBase):
             k.setText(label)
             v.setText(value)
             k.parentWidget().setVisible(show)
+        self.sum_rows["earned"][0].parentWidget().setToolTip(EARNED_TIP)
         self.sums.setVisible(any(show for _l, _v, show in rows.values()))
 
     def _hints(self) -> None:

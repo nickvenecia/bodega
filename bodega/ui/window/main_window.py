@@ -7,6 +7,7 @@ Edits save themselves a moment after you stop typing.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from PySide6.QtCore import QByteArray, QPoint, QRect, QSize, Qt, QTimer
@@ -24,7 +25,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.core import backups, document, money, pricing, update
+from bodega.core import backups, dates, document, money, pricing, update
 from bodega.core.history import History
 from bodega.core.log import get_logger
 from bodega.core.model import Business
@@ -104,6 +105,7 @@ class MainWindow(
         self.toaster = Toast(self, self._toast_area)
 
         self._save_timer = QTimer(self, singleShot=True, interval=tokens.SAVE_DELAY_MS, timeout=self.flush)
+        self._save_cap = QTimer(self, singleShot=True, interval=tokens.SAVE_MAX_MS, timeout=self.flush)
         self._retry_timer = QTimer(self, interval=tokens.SAVE_RETRY_MS, timeout=self.flush)  # while not saved
         self._was_unsaved = False
         self.lib.on_unsaved = lambda: QTimer.singleShot(0, self, self.show_save_state)
@@ -143,6 +145,30 @@ class MainWindow(
         if self.lib.newer_format:
             QTimer.singleShot(0, self, self._say_newer_format)
         QTimer.singleShot(tokens.UPDATE_CHECK_DELAY_MS, self._auto_check_updates)
+        self._day = dates.today()  # a new day refreshes what "today" decides: late, out now, coming up
+        self._midnight = QTimer(self, singleShot=True, timeout=self._new_day)
+        self._arm_midnight()
+        QGuiApplication.instance().applicationStateChanged.connect(self._app_state)
+
+    # ------------------------------------------------------------------ the day, and going to the background
+    def _arm_midnight(self) -> None:
+        now = datetime.now()
+        nxt = datetime.combine(now.date() + timedelta(days=1), datetime.min.time())
+        self._midnight.start(int((nxt - now).total_seconds() * 1000) + tokens.MIDNIGHT_SLACK_MS)
+
+    def _new_day(self) -> None:
+        """Past midnight (or back to Bodega on another day): late rentals, Out Now and Coming Up go by today."""
+        if dates.today() != self._day:
+            self._day = dates.today()
+            backups.daily_copy(self.lib.root)  # today's safety copy
+            self.refresh()
+        self._arm_midnight()
+
+    def _app_state(self, state) -> None:
+        if state == Qt.ApplicationState.ApplicationActive:
+            self._new_day()  # a computer asleep over midnight misses the timer
+        elif state in (Qt.ApplicationState.ApplicationInactive, Qt.ApplicationState.ApplicationHidden):
+            self.flush()  # going to another app: what you typed is saved now
 
     # ------------------------------------------------------------------ building
     def _build_center(self) -> QWidget:
@@ -373,7 +399,7 @@ class MainWindow(
             view = "gear"
         if view not in TITLES and not view.startswith("grp:"):
             view = "gear"
-        changed_kind = kind_of(view) != kind_of(self.view_key)
+        moved = view != self.view_key  # another place: it starts unsearched and unfiltered
         self.view_key = view
         self.lib.settings["view"] = view
         self.sidebar.select(view)
@@ -391,10 +417,11 @@ class MainWindow(
             else QToolButton.ToolButtonPopupMode.DelayedPopup
         )
         self.view_menu.set_divide(self._divide_for(view), "brand" if view.startswith("grp:") else "group")
-        if changed_kind:
+        if moved:
             self.search.blockSignals(True)
             self.search.clear()
             self.search.blockSignals(False)
+            self.view_menu.clear_filter()
         if self.assistant_showing():  # the assistant stays while you move around
             self.refresh()
             self._ai_state()

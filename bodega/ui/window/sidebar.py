@@ -74,6 +74,7 @@ class ProfileCard(QFrame):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)  # Tab reaches it; Return or Space opens its menu
         self.setFixedHeight(tokens.PROFILE_CARD_H)
         lay = hbox(self, (tokens.SPACE_2, 0, tokens.SPACE_2, 0), tokens.SPACE_2)
         self.avatar = QLabel()
@@ -111,11 +112,19 @@ class ProfileCard(QFrame):
             if problem
             else "Profiles and Settings · Saved on this computer"
         )
+        self.setAccessibleName(f"{name}, Profiles and Settings")
+        self.setAccessibleDescription(sub)
 
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
         super().mousePressEvent(e)
+
+    def keyPressEvent(self, e):
+        if e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
+            QTimer.singleShot(0, self, self.clicked.emit)  # once the key is over
+            return
+        super().keyPressEvent(e)
 
 
 class Sidebar(LeftPanel):
@@ -338,8 +347,11 @@ class Sidebar(LeftPanel):
         self.show_who()
         rentals = list(lib.rentals.values())
         out = [r for r in rentals if r.status == "out"]
-        late = any(pricing.late(r) for r in out)
-        self.rows["out"].set_count(len(out), "late" if late else ("out" if out else ""))
+        late = sum(1 for r in out if pricing.late(r))
+        # late says so in words, not only in red ("2 late"): color is never the only sign
+        self.rows["out"].set_count(
+            f"{late} late" if late else len(out), "late" if late else ("out" if out else "")
+        )
         today = dates.iso(dates.today())
         self.rows["upcoming"].set_count(
             sum(
@@ -347,8 +359,9 @@ class Sidebar(LeftPanel):
             )
         )
         # folded, All Rentals still shows when something's out (amber) or late (red)
-        tone = ("late" if late else ("out" if out else "")) if self.rows["rentals"].folded else ""
-        self.rows["rentals"].set_count(len(rentals), tone)
+        folded = self.rows["rentals"].folded
+        tone = ("late" if late else ("out" if out else "")) if folded else ""
+        self.rows["rentals"].set_count(f"{late} late" if late and folded else len(rentals), tone)
         self.select(
             self.current
             if self.current in self.rows

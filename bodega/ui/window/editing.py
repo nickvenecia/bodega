@@ -398,28 +398,36 @@ class EditingMixin:
     def _item_edited(self, it: Item) -> None:
         it.updated = now_iso()
         self._dirty_items = True
-        self._save_timer.start()
+        self._save_soon()
         self._table_timer.start()
 
     def _structure_changed(self) -> None:
         self._dirty_items = True
-        self._save_timer.start()
+        self._save_soon()
         self._table_timer.start()
 
     def _package_edited(self, p: Package) -> None:
         p.updated = now_iso()
         self._dirty_packages = True
-        self._save_timer.start()
+        self._save_soon()
         self._table_timer.start()
 
     def _rental_edited(self, r: Rental) -> None:
         self._dirty_rentals.add(r.id)
-        self._save_timer.start()
+        self._save_soon()
         self._table_timer.start()
+
+    def _save_soon(self) -> None:
+        """Save a moment after the last change, and never later than SAVE_MAX_MS after the first one (typing
+        without a pause still gets saved)."""
+        self._save_timer.start()
+        if not self._save_cap.isActive():
+            self._save_cap.start()
 
     def flush(self) -> None:
         """Write anything edited, now, and anything that couldn't be written before. A write that fails is
         kept in memory (lib.unsaved) and said in a banner until it works."""
+        self._save_cap.stop()
         had_problem = bool(self.lib.unsaved)
         try:
             if self.lib.unsaved:

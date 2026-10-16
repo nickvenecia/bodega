@@ -146,6 +146,7 @@ class LineEditor(QFrame):
         if line.kind == "fee":
             self.desc = QLineEdit(line.name)
             self.desc.setPlaceholderText("Delivery, tech day, cleaning…")
+            self.desc.setAccessibleName("Fee")
             bl.addWidget(self.desc)
             self.desc.textEdited.connect(lambda t: self._set("name", t))
         row = hbox(spacing=tokens.SPACE_2)
@@ -155,6 +156,8 @@ class LineEditor(QFrame):
         self.rate = MoneyField()
         self.rate.set_value(line.rate)
         self.rate.setFixedWidth(tokens.NUM_FIELD_W)
+        self.qty.setAccessibleName("How Many")
+        self.rate.setAccessibleName("Day Rate" if line.kind != "fee" else "Amount")
         per = QLabel("a day" if line.kind != "fee" else "each, once")
         per.setObjectName("Muted")
         row.addWidget(self.qty)

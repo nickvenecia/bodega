@@ -119,3 +119,18 @@ def test_a_folded_card_says_so(win):
     assert d.header.accessibleName() == "Agreement" and d.header.accessibleDescription() == "Collapsed"
     d.set_open(True)
     assert d.header.accessibleDescription() == "Expanded"
+
+
+def test_screen_readers_hear_dates_lines_the_card_and_the_accent(win):
+    from bodega.ui.components.widgets import AccentPicker
+    from bodega.ui.style import tokens
+
+    r = next(iter(win.lib.rentals.values()))
+    win.open("rentals", r.id)
+    assert win.rentals.pickup.accessibleName() == "Pickup" and win.rentals.ret.accessibleName() == "Return"
+    card = win.sidebar.profile_card
+    assert "Profiles and Settings" in card.accessibleName()
+    picker = AccentPicker("purple")
+    assert picker.accessibleName() == "Accent Color"
+    assert picker.accessibleDescription() == tokens.ACCENTS["purple"][0]
+    picker.deleteLater()

@@ -137,6 +137,11 @@ class FilterButton(QToolButton):
         self.divide = self.default_divide
         self.show_state()
 
+    def clear_filter(self) -> None:
+        """What's shown back to everything (how it's divided stays: that's kept per place)."""
+        self.filter = GearFilter()
+        self.show_state()
+
     def show_state(self) -> None:
         on = self.filter.active()
         self.setIcon(theme.icon("filter", theme.ACCENT if on else theme.MUTED))

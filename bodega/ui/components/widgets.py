@@ -22,6 +22,7 @@ from PySide6.QtCore import (
 from PySide6.QtGui import QCursor, QFontMetrics, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QAbstractButton,
+    QAbstractSpinBox,
     QButtonGroup,
     QComboBox,
     QDateEdit,
@@ -113,7 +114,11 @@ class Section(QWidget):
     def _name(self, w: QWidget) -> None:
         """A field is known by its label (a screen reader says "Company, text field", not just "text field")."""
         title = self.label.text().replace("&&", "&")
-        if title and isinstance(w, (QLineEdit, QComboBox, QPlainTextEdit)) and not w.accessibleName():
+        if (
+            title
+            and isinstance(w, (QLineEdit, QComboBox, QPlainTextEdit, QAbstractSpinBox))
+            and not w.accessibleName()
+        ):
             w.setAccessibleName(title)
             self.label.setBuddy(w)
 
@@ -295,6 +300,12 @@ class AccentPicker(QWidget):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setFixedHeight(tokens.CONTROL_H)
         self.setMinimumWidth(self._pitch() * len(self.keys))
+        self.setAccessibleName("Accent Color")
+        self._say()
+
+    def _say(self) -> None:
+        """The chosen color, for screen readers ("Blue")."""
+        self.setAccessibleDescription(tokens.ACCENTS[self.current][0])
 
     @staticmethod
     def _pitch() -> int:
@@ -313,11 +324,13 @@ class AccentPicker(QWidget):
 
     def set_value(self, key: str) -> None:
         self.current = key if key in tokens.ACCENTS else tokens.APP_ACCENT
+        self._say()
         self.update()
 
     def _pick(self, key: str) -> None:
         if key and key != self.current:
             self.current = key
+            self._say()
             self.update()
             self.picked.emit(key)
 
