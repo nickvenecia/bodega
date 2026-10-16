@@ -60,7 +60,7 @@ def test_the_plus_buttons(qapp, data_folder):
     win.show()
     win.go("gear")
     texts = [a.text() for a in win.btn_new.menu().actions()]
-    assert texts == ["New Gear", "New Group…"]
+    assert texts == ["New Gear", "New Group…", "", "Import Spreadsheet…", "Import from Google Sheets…"]
     win.go("kits")
     assert win.btn_new.menu() is None
     n = len(win.lib.rentals)
@@ -70,6 +70,9 @@ def test_the_plus_buttons(qapp, data_folder):
         "New Gear",
         "New Group…",
         "New Kit",
+        "",
+        "Import Spreadsheet…",
+        "Import from Google Sheets…",
     ]
     win.close()
 
