@@ -189,6 +189,8 @@
 - The Assistant's header has Clear Chat, to start over, and a ⋯ with AI Settings…. Before the first question it
   offers a few to try: click one and it's in the box, ready to send.
 - Anything that's off (a button, a field, a switch, a menu item) is dimmed the same way everywhere, as on a Mac.
+- The page window says which page you're looking at ("Page 2 of 5") as you scroll a long list, and its scroll bar
+  is always there, so the pages never shift sideways.
 - Gear that's attached to another piece says which in its own Goes With column, instead of grey words squeezed in
   after its name, so whole names fit. The column stays away until something is attached.
 - Saving a calendar file offers Open Google Calendar, which goes straight to where Google takes the file in, instead

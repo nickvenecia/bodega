@@ -13,6 +13,7 @@ from PySide6.QtGui import QImage, QPainter
 from PySide6.QtWidgets import (
     QDialog,
     QFrame,
+    QLabel,
     QMenu,
     QPushButton,
     QScrollArea,
@@ -63,6 +64,15 @@ class PageView(QWidget):
         if self.pages and abs(self._fit() - self._scale) > 0.01:
             self._render()
 
+    def page_at(self, y: float) -> int:
+        """Which page (counting from 0) is at this height: the last one whose top is above it."""
+        top, at = float(tokens.PAGE_GAP), 0
+        for n, page in enumerate(self.pages):
+            if y >= top:
+                at = n
+            top += page.size[1] * self._scale + tokens.PAGE_GAP
+        return at
+
     def paintEvent(self, _e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -109,6 +119,10 @@ class PreviewPanel(QFrame):
         self.btn_dark.setObjectName("Circle")
         self.btn_dark.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_dark.clicked.connect(lambda: self._toggle_dark())
+        self.page_of = QLabel()  # "Page 2 of 5", while there's more than one
+        self.page_of.setObjectName("Muted")
+        theme.use_tabular(self.page_of)
+        self.header.actions.addWidget(self.page_of)
         self.header.actions.addWidget(self.btn_dark)
         header = self.header
         outer.addWidget(header)
@@ -117,6 +131,9 @@ class PreviewPanel(QFrame):
         self.area.setWidgetResizable(True)
         self.area.setFrameShape(QFrame.Shape.NoFrame)
         self.area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)  # the pages never shift over
+        self.area.verticalScrollBar().valueChanged.connect(lambda _v: self._say_page())
+        self.area.verticalScrollBar().rangeChanged.connect(lambda _a, _b: self._say_page())
         self.view = PageView()
         self.area.setWidget(self.view)
         self.area.viewport().setAutoFillBackground(True)
@@ -187,10 +204,21 @@ class PreviewPanel(QFrame):
         self.view.set_pages(pages)
         for b in (self.btn_pdf, self.btn_print, self.btn_more):
             b.setEnabled(bool(pages))
+        self._say_page()
+
+    def _say_page(self) -> None:
+        """Which page is in the middle of the window, of how many."""
+        n = len(self.view.pages)
+        self.page_of.setVisible(n > 1)
+        if n > 1:
+            bar = self.area.verticalScrollBar()
+            at = self.view.page_at(bar.value() + self.area.viewport().height() / 2)
+            self.page_of.setText(f"Page {at + 1} of {n}")
 
     def clear(self, message: str) -> None:
         self.view.message = message
         self.view.set_pages([])
+        self._say_page()
         for b in (self.btn_pdf, self.btn_print, self.btn_more):
             b.setEnabled(False)
         self.saved_hint(None, False)

@@ -66,3 +66,27 @@ def test_counts_read_right_at_one():
 
     assert words.count(1, "piece") == "1 piece" and words.count(2, "piece") == "2 pieces"
     assert words.count(1200, "piece") == "1,200 pieces" and words.count(0, "group") == "0 groups"
+
+
+def test_the_page_window_says_which_page_is_in_view(qapp, lib):
+    from dataclasses import replace
+
+    from bodega.doc import render
+    from bodega.ui.dialogs.preview import PreviewPanel
+
+    b = lib.pricing()
+    many = [replace(it, id=f"{it.id}-{n}") for n in range(12) for it in lib.ordered_items()]
+    pages = render.layout(document.build_inventory(lib, many, b), palette("blue"))
+    assert len(pages) > 2
+    p = PreviewPanel()
+    p.resize(900, 700)
+    p.show()
+    p.set_pages(pages)
+    qapp.processEvents()
+    assert p.page_of.text() == f"Page 1 of {len(pages)}"
+    bar = p.area.verticalScrollBar()
+    bar.setValue(bar.maximum())
+    assert p.page_of.text() == f"Page {len(pages)} of {len(pages)}"
+    p.set_pages(pages[:1])
+    assert p.page_of.isHidden()  # one page: nothing to count
+    p.deleteLater()
