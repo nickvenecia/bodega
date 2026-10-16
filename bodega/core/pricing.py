@@ -15,6 +15,10 @@ The rules, in plain words:
   10 days out costs 3 + 3 = 6. Pick up Friday and return Monday counts as one day (the weekend deal).
 - Total = gear per day × billed days + fees, less the discount, plus sales tax on the rental.
   The security deposit is listed separately: it's refundable and not part of the price.
+- **A rental's prices lock when it's booked** (as rental houses do): a quote follows today's day rates, kit
+  prices and the profile's pricing; once a rental is booked (and while it's out, returned or cancelled) each line
+  keeps what it cost a day, and its name, and the rental keeps the profile's week. Back to a quote, it follows
+  again. `settle()` does it whenever a rental is saved.
 
 No Qt in here: everything takes the Library (or anything with .items / .packages / .rentals dicts).
 """
@@ -187,9 +191,18 @@ class Days:
     manual: bool = False
 
 
-def days_for(pick: date | None, ret: date | None, b: Business | None, weekend_deal: bool) -> Days:
+def week_days(r: Rental | None, b: Business | None) -> int:
+    """How many days a 7-day week of this rental is billed as: kept on it once booked, else the profile's."""
+    if r is not None and r.week_days:
+        return r.week_days
+    return b.week_days if b else 7
+
+
+def days_for(
+    pick: date | None, ret: date | None, b: Business | None, weekend_deal: bool, wd: int | None = None
+) -> Days:
     n = nights(pick, ret)
-    wd = b.week_days if b else 7
+    wd = wd or (b.week_days if b else 7)
     if weekend_deal and is_weekend(pick, ret):
         return Days(n, 1, "Friday to Monday, billed as 1 day (weekend)")
     billed = billed_for(n, wd)
@@ -206,7 +219,7 @@ def rental_days(r: Rental, b: Business | None) -> Days:
         typed = money.parse(r.billed_days)
         days = max(1, int(typed)) if typed > 0 else 1
         return Days(n, days, f"{_days(n)} out, billed as {days} (typed)", True)
-    return days_for(pick, ret, b, r.weekend_deal)
+    return days_for(pick, ret, b, r.weekend_deal, week_days(r, b))
 
 
 def line_dates(r: Rental, line: RentalLine) -> tuple[date | None, date | None]:
@@ -221,7 +234,7 @@ def line_dates(r: Rental, line: RentalLine) -> tuple[date | None, date | None]:
 def line_days(r: Rental, line: RentalLine, b: Business | None) -> Days:
     if r.own_dates(line):
         a, z = line_dates(r, line)
-        return days_for(a, z, b, r.weekend_deal)
+        return days_for(a, z, b, r.weekend_deal, week_days(r, b))
     return rental_days(r, b)
 
 
@@ -256,10 +269,23 @@ def _days(n: int) -> str:
 
 
 # ---------------------------------------------------------------------------- rentals
+LOCKED = ("booked", "out", "returned", "cancelled")  # a rental's prices hold from booking on
+
+
 def line_day(lib, line: RentalLine, b: Business | None) -> Decimal:
     """What this whole line costs per day, its quantity included (a fee: its flat amount × qty)."""
     if line.rate.strip():
         return money.cents(max(ZERO, money.parse(line.rate)) * line.qty)
+    if line.locked_day and line.kind != "fee":
+        held = max(ZERO, money.parse(line.locked_day))
+        if line.qty == line.locked_qty:
+            return money.cents(held)
+        return money.cents(held / max(1, line.locked_qty) * line.qty)  # booked at that price for each
+    return live_day(lib, line, b)
+
+
+def live_day(lib, line: RentalLine, b: Business | None) -> Decimal:
+    """What the line costs a day at today's rates (its gear's or kit's own)."""
     if line.kind == "item":
         it = lib.items.get(line.ref)
         return item_rate(lib, it, b, line.qty) if it else ZERO
@@ -295,7 +321,33 @@ def line_gear(lib, line: RentalLine) -> list[tuple[Item, int, int]]:
     return []
 
 
+def settle(lib, r: Rental, b: Business | None) -> bool:
+    """Lock a booked rental's prices, or let a quote follow today's again. True if anything changed."""
+    changed = False
+    if r.status in LOCKED:
+        for line in r.lines:
+            if line.kind == "fee" or line.rate.strip() or line.locked_day:
+                continue
+            line.locked_day, line.locked_qty = str(live_day(lib, line, b)), line.qty
+            line.name = line_name(lib, line)
+            changed = True
+        if not r.week_days and b is not None:
+            r.week_days = b.week_days
+            changed = True
+    else:
+        for line in r.lines:
+            if line.locked_day:
+                line.locked_day, line.locked_qty = "", 0
+                changed = True
+        if r.week_days:
+            r.week_days = 0
+            changed = True
+    return changed
+
+
 def line_name(lib, line: RentalLine) -> str:
+    if line.locked_day and line.name:  # booked under this name
+        return line.name
     if line.kind == "item":
         it = lib.items.get(line.ref)
         return it.name if it else (line.name or "Removed gear")

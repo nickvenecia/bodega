@@ -789,7 +789,9 @@ class RentalPanel(DetailsBase):
         cur = (b.currency if b else "$") or "$"
         for e in self.editors:
             e.refresh()
-        auto = pricing.days_for(dates.parse(r.pickup), dates.parse(r.return_date), b, r.weekend_deal)
+        auto = pricing.days_for(
+            dates.parse(r.pickup), dates.parse(r.return_date), b, r.weekend_deal, pricing.week_days(r, b)
+        )
         self.billed.setPlaceholderText(str(auto.billed))
         self.days_hint.setText(_billed(t.days))
         self.weekend.setVisible(True)

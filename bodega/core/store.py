@@ -189,11 +189,22 @@ class Library:
         for b in self.businesses.values():  # a logo is a file name in the logos folder, nothing more
             b.logo = Path(b.logo).name if b.logo else ""
         self.untangle()
+        self._settle_rentals()
         log.info(
             "loaded %d items, %d packages, %d rentals, %d renters from %s",
             len(self.items), len(self.packages), len(self.rentals), len(self.clients), self.root,
         )  # fmt: skip
         return self
+
+    def _settle_rentals(self) -> None:
+        """Rentals booked before prices locked at booking: lock them now, at today's prices."""
+        from bodega.core import pricing
+
+        for r in self.rentals.values():
+            if r.status in pricing.LOCKED and pricing.settle(
+                self, r, self.businesses.get(r.business_id) or self.pricing()
+            ):
+                write_json(self._rental_dir / f"{r.id}.json", r.to_dict())
 
     def untangle(self) -> None:
         """An item can't belong to something that's gone, to itself, or (through others) to itself."""
@@ -242,6 +253,9 @@ class Library:
         write_json(self.root / "businesses.json", [b.to_dict() for b in self.businesses.values()])
 
     def save_rental(self, r: Rental) -> None:
+        from bodega.core import pricing
+
+        pricing.settle(self, r, self.businesses.get(r.business_id) or self.pricing())  # booked: prices hold
         r.updated = now_iso()
         self.rentals[r.id] = r
         write_json(self._rental_dir / f"{r.id}.json", r.to_dict())

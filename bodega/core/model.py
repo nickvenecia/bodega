@@ -268,6 +268,8 @@ class RentalLine:
     name: str = ""  # a fee's description; for gear, the name it had (shown if the gear is deleted)
     pickup: str = ""  # this line's own dates (ISO); blank = the rental's dates
     return_date: str = ""
+    locked_day: str = ""  # what the whole line cost a day when its rental was booked (blank: priced live)
+    locked_qty: int = 0  # …for this many
 
     @classmethod
     def from_dict(cls, d: dict) -> RentalLine:
@@ -277,6 +279,8 @@ class RentalLine:
             line.kind = "item"
         line.qty = clamp_qty(line.qty)
         line.rate, line.name, line.ref = _text(line.rate), _text(line.name), _text(line.ref)
+        line.locked_day = _text(line.locked_day)
+        line.locked_qty = clamp_qty(line.locked_qty) if line.locked_day else 0
         return line
 
 
@@ -316,6 +320,9 @@ class Rental:
     return_date: str = ""
     billed_days: str = ""  # blank = worked out from the dates
     weekend_deal: bool = True
+    week_days: int = (
+        0  # a week billed as this many days, kept from the profile when booked (0: the profile's)
+    )
     lines: list[RentalLine] = field(default_factory=list)
     discount: str = ""  # percent off the whole rental
     tax_rate: str = ""
@@ -350,6 +357,7 @@ class Rental:
             setattr(r, k, _text(getattr(r, k)))
         for k in ("auto_number", "weekend_deal", "show_serials", "show_checks"):
             setattr(r, k, bool(getattr(r, k)))
+        r.week_days = r.week_days if r.week_days in WEEK_DAYS else 0
         raw = r.checks if isinstance(r.checks, list) else []
         r.checks = [CheckRow.from_dict(x) for x in raw if isinstance(x, dict)]
         r.checked_out, r.checked_in = _text(r.checked_out), _text(r.checked_in)

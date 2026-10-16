@@ -137,3 +137,65 @@ def test_out_now(lib):
 def test_package_of_unknown_gear_is_harmless(lib):
     p = Package(lines=[PackageLine("nope", 2)])
     assert pricing.package_sum(lib, p, b()) == 0
+
+
+def test_a_booked_rentals_prices_hold_when_rates_change(lib, data_folder):
+    """Industry practice: a quote follows today's rates; once booked, the price is what was agreed."""
+    r = next(iter(lib.rentals.values()))
+    prof = lib.businesses[r.business_id]
+    r.status = "quote"
+    lib.save_rental(r)
+    piece = next(lib.items[ln.ref] for ln in r.lines if ln.kind == "item" and not ln.rate)
+    quoted = pricing.totals(lib, r, prof).total
+    piece.day_rate = "999"
+    assert pricing.totals(lib, r, prof).total != quoted  # a quote follows
+    piece.day_rate = ""
+    r.status = "booked"
+    lib.save_rental(r)
+    booked = pricing.totals(lib, r, prof).total
+    assert booked == quoted
+    piece.day_rate, piece.name = "999", "Renamed"
+    prof.rate_pct, prof.week_days = "9", 7
+    lib.save_items()
+    lib.save_businesses()
+    again = Library(data_folder).load()
+    r2 = again.rentals[r.id]
+    assert pricing.totals(again, r2, again.businesses[r2.business_id]).total == booked
+    line = next(ln for ln in r2.lines if ln.ref == piece.id)
+    assert pricing.line_name(again, line) != "Renamed"  # the name it was booked under
+    for status in ("out", "returned"):
+        r2.status = status
+        again.save_rental(r2)
+        assert pricing.totals(again, r2, again.businesses[r2.business_id]).total == booked
+    r2.status = "quote"  # back to a quote: today's prices again
+    again.save_rental(r2)
+    assert pricing.totals(again, r2, again.businesses[r2.business_id]).total != booked
+
+
+def test_a_booked_lines_quantity_keeps_its_price_for_each(lib):
+    r = next(iter(lib.rentals.values()))
+    prof = lib.businesses[r.business_id]
+    line = next(ln for ln in r.lines if ln.kind == "item" and not ln.rate)
+    line.qty = 1
+    r.status = "booked"
+    lib.save_rental(r)
+    one = pricing.line_day(lib, line, prof)
+    lib.items[line.ref].day_rate = "5000"
+    line.qty = 3
+    assert pricing.line_day(lib, line, prof) == one * 3
+
+
+def test_rentals_booked_before_this_lock_when_read(data_folder):
+    lib = sample.fill(Library(data_folder).load())
+    r = next(iter(lib.rentals.values()))
+    r.status = "booked"
+    lib.save_rental(r)
+    for ln in r.lines:  # as an older Bodega wrote it
+        ln.locked_day, ln.locked_qty = "", 0
+    r.week_days = 0
+    from bodega.core.store import write_json
+
+    write_json(data_folder / "rentals" / f"{r.id}.json", r.to_dict())
+    again = Library(data_folder).load()
+    assert all(ln.locked_day for ln in again.rentals[r.id].lines if ln.kind != "fee" and not ln.rate)
+    assert again.rentals[r.id].week_days == again.businesses[r.business_id].week_days

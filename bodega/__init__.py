@@ -1,4 +1,4 @@
 """Bodega: keep track of your gear, put it in packages, rent it out."""
 
-__version__ = "1.2.2"
+__version__ = "1.3.0"
 APP_NAME = "Bodega"
