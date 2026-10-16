@@ -249,6 +249,11 @@ QFrame#Banner {{ background: {tokens.BANNER}; border: 1px solid {tokens.BANNER_E
 #Sum {{ color: {tokens.TEXT}; font-size: {TEXT_LG}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #SumLabel {{ color: {tokens.MUTED}; }}
 #SumValue {{ font-weight: {WEIGHT_MEDIUM}; }}
+/* the record pager: a glass capsule, its ‹ › clear until pointed at */
+#Pager {{ background: {tokens.RAISED}; border: 1px solid {tokens.GLASS_STROKE}; border-radius: {(tokens.BAR_CTRL_H + 2 * SPACE_1) // 2}px; }}
+#Pager QToolButton#Circle {{ background: transparent; border-color: transparent; }}
+#Pager QToolButton#Circle:hover {{ background: {tokens.FILL}; }}
+#PagerText {{ color: {tokens.MUTED}; font-weight: {WEIGHT_MEDIUM}; }}
 #CardTitle {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #Card {{ background: {tokens.BLOCK}; border: none; border-radius: {RADIUS_LG}px; }}
 QPlainTextEdit#BigName {{ font-size: {TEXT_RECORD}px; font-weight: {WEIGHT_BOLD}; color: {tokens.TEXT};

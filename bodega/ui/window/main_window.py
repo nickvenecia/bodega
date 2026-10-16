@@ -314,6 +314,10 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.kit_table.menu_wanted.connect(lambda i, pos: self._row_menu("packages", i, pos))
         self.rental_table.menu_wanted.connect(lambda i, pos: self._row_menu("rentals", i, pos))
         self.gear_table.folds_changed.connect(self._remember_folds)
+        for panel in (self.items, self.packages, self.rentals):  # after the click is over (rule 16)
+            panel.pager.step.connect(lambda d: QTimer.singleShot(0, self, lambda: self._step_record(d)))
+        for t in (self.gear_table, self.kit_table, self.rental_table):
+            t.header().sortIndicatorChanged.connect(lambda _c, _o: QTimer.singleShot(0, self, self._pager_update))
         self.gear_table.divider_menu.connect(self._divider_menu)
         self.gear_table.dropped.connect(self.move_gear)
         self.gear_table.delete_wanted.connect(self.delete_gear)
@@ -547,6 +551,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             self.no_results.show_over(t, text)
         else:
             self.no_results.hide()
+        self._pager_update()
 
     def _mark_assistant(self) -> None:
         """The assistant's button is on while the assistant is open."""
@@ -670,6 +675,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
 
     def _remember_folds(self) -> None:
         self.lib.settings["folded"] = sorted(self.gear_table.folded)
+        self._pager_update()  # (what the pager walks folds too)
 
     # Opening
     def open(self, kind: str, obj_id: str) -> None:
@@ -729,6 +735,42 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         if kind == "packages" and self.view_key == "kits":  # the kit's own row in the sidebar
             self.sidebar.select(f"kit:{obj_id}" if f"kit:{obj_id}" in self.sidebar.rows else "kits")
         self.dock.set_open(True)
+        self._pager_update()
+
+    # The record pager: ‹ n / N › through the list as it shows
+    def _open_record(self) -> tuple[str, str]:
+        """The record open on the right, as (kind, id), or ("", "")."""
+        w = self.inspector.currentWidget()
+        if not self.dock.opened:
+            return "", ""
+        if w is self.items and self.items.it is not None:
+            return "gear", self.items.it.id
+        if w is self.packages and self.packages.pkg is not None:
+            return "packages", self.packages.pkg.id
+        if w is self.rentals and self.rentals.r is not None:
+            return "rentals", self.rentals.r.id
+        return "", ""
+
+    def _listed(self, kind: str) -> list[str]:
+        """The ids the list shows right now, top to bottom (its search, filters, sort and folds)."""
+        t = self._table()
+        if t is None or kind != kind_of(self.view_key):
+            return []
+        return [r.data(0, ID) for r in t.showing_rows()]
+
+    def _pager_update(self) -> None:
+        kind, obj_id = self._open_record()
+        ids = self._listed(kind)
+        for kind_, panel in (("gear", self.items), ("packages", self.packages), ("rentals", self.rentals)):
+            here = kind_ == kind and obj_id in ids
+            panel.set_pager(ids.index(obj_id) + 1 if here else 0, len(ids) if here else 0)
+
+    def _step_record(self, step: int) -> None:
+        """‹ or › (or ← →): the record before or after this one in the list."""
+        kind, obj_id = self._open_record()
+        ids = self._listed(kind)
+        if obj_id in ids and 0 <= ids.index(obj_id) + step < len(ids):
+            self.open(kind, ids[ids.index(obj_id) + step])
 
     def _row_menu(self, kind: str, obj_id: str, pos) -> None:
         if kind == "gear":

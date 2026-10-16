@@ -197,6 +197,8 @@
   brackets came out of agreements as odd symbols (and screen readers read them that way).
 - A rental's lines, a kit's gear and what goes with a piece are now rows with thin lines between them, instead of
   boxes inside a box.
+- A piece, kit or rental open on the right has ‹ 2 / 18 › at its foot: step to the one before or after it in the
+  list, as the list shows it (your search, filters and sort). ← and → step too, unless you're typing in a field.
 - Drag a column's title in the gear list to put the columns in your own order (Name stays first); right-click a
   title for Move Left and Move Right. Bodega keeps the order for next time.
 - Switching Month and Timeline (and every other row of choices like it) slides the highlight across, as on a Mac.

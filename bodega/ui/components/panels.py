@@ -12,8 +12,8 @@ Subclass them; change what's inside, never the frame.
 
 from __future__ import annotations
 
-from PySide6.QtCore import QPoint, Qt, QTimer, Signal
-from PySide6.QtWidgets import QFrame, QLabel, QMenu, QPushButton, QToolButton, QWidget
+from PySide6.QtCore import QEvent, QPoint, Qt, QTimer, Signal
+from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QLabel, QMenu, QPushButton, QToolButton, QWidget
 
 from bodega.ui.components.glass import glass
 from bodega.ui.components.widgets import (
@@ -199,12 +199,57 @@ class LeftPanel(QFrame):
             r.recolor()
 
 
+class RecordPager(QFrame):
+    """‹ 12 / 38 ›: the record before or after this one, in the list as it's shown (its search, filters, sort and
+    folds). A glass capsule floating at the foot of the record; ← and → step too, unless a field has the keys."""
+
+    step = Signal(int)  # -1 or +1
+
+    def __init__(self, parent: QWidget):
+        super().__init__(parent)
+        self.setObjectName("Pager")
+        lay = hbox(self, tokens.SPACE_1, tokens.SPACE_0_5)
+        self.prev = circle_button("chevron-left", "Previous (←)")
+        self.next = circle_button("chevron-right", "Next (→)")
+        self.where = QLabel()
+        self.where.setObjectName("PagerText")
+        self.where.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.where.setMinimumWidth(tokens.PAGER_TEXT_W)
+        theme.use_tabular(self.where)
+        for w in (self.prev, self.where, self.next):
+            lay.addWidget(w)
+        for b in (self.prev, self.next):
+            b.setProperty("bar", True)
+            b.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # ← and → are its keys
+        self.prev.clicked.connect(lambda: self.step.emit(-1))
+        self.next.clicked.connect(lambda: self.step.emit(1))
+        self.shadow = QGraphicsDropShadowEffect(self)  # it floats: a soft shadow lifts it off the record
+        self.shadow.setBlurRadius(tokens.PAGER_SHADOW)
+        self.shadow.setOffset(0, tokens.GLASS_SHADOW_DROP)
+        self.setGraphicsEffect(self.shadow)
+        self.hide()
+
+    def show_at(self, n: int, total: int) -> None:
+        """Record n (from 1) of total."""
+        self.where.setText(f"{n:,} / {total:,}")
+        self.where.setAccessibleName(f"{n:,} of {total:,}")
+        self.prev.setEnabled(n > 1)
+        self.next.setEnabled(n < total)
+        self.shadow.setColor(theme.qcolor(tokens.GLASS_SHADOW))  # (light or dark, as it is now)
+        self.adjustSize()
+        self.show()
+        self.raise_()
+
+
 class SidePanel(QFrame):
-    """A panel on the right. `more`: a ⋯ menu in the header (`more_menu`); `scroll`: the body scrolls."""
+    """A panel on the right. `more`: a ⋯ menu in the header (`more_menu`); `scroll`: the body scrolls.
+    `pager`: a RecordPager floats at its foot while a record from a list is open (set_pager)."""
 
     close_wanted = Signal()  # its round ✕
 
-    def __init__(self, title: str, more: bool = False, scroll: bool = True, parent: QWidget | None = None):
+    def __init__(
+        self, title: str, more: bool = False, scroll: bool = True, pager: bool = False, parent: QWidget | None = None
+    ):
         super().__init__(parent)
         self.setObjectName("Details")
         self.setFixedWidth(tokens.INSPECTOR_W)
@@ -238,6 +283,49 @@ class SidePanel(QFrame):
         self.footer_lay = hbox(self.footer, tokens.SPACE_4, tokens.SPACE_2)
         self.footer.hide()
         outer.addWidget(self.footer)
+        self._pad = pad
+        self.pager = RecordPager(self) if pager else None
+        if self.pager is not None and self.scroll is not None:
+            self.scroll.installEventFilter(self)  # ← → reach it from anything that doesn't take them
+
+    def set_pager(self, n: int, total: int) -> None:
+        """Show ‹ n / total › (n from 1), or hide it (n 0, or a list of one)."""
+        if self.pager is None:
+            return
+        on = n > 0 and total > 1
+        if on:
+            self.pager.show_at(n, total)
+            self._place_pager()
+        else:
+            self.pager.hide()
+        room = self.pager.sizeHint().height() + 2 * tokens.PAGER_LIFT if on else 0  # the record scrolls clear of it
+        m = self.lay.contentsMargins()
+        self.lay.setContentsMargins(m.left(), m.top(), m.right(), self._pad + room)
+
+    def _place_pager(self) -> None:
+        p = self.pager
+        if p is None or p.isHidden():
+            return
+        foot = self.footer.geometry().top() if self.footer.isVisible() else self.height()
+        p.move((self.width() - p.width()) // 2, foot - p.height() - tokens.PAGER_LIFT)
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self._place_pager()
+
+    def eventFilter(self, obj, e):
+        if (
+            self.pager is not None
+            and self.pager.isVisible()
+            and e.type() == QEvent.Type.KeyPress
+            and e.key() in (Qt.Key.Key_Left, Qt.Key.Key_Right)
+            and not e.modifiers()
+        ):
+            b = self.pager.prev if e.key() == Qt.Key.Key_Left else self.pager.next
+            if b.isEnabled():
+                b.click()
+            return True
+        return super().eventFilter(obj, e)
 
     def to_top(self) -> None:
         """Back to the top (something else opened in it)."""

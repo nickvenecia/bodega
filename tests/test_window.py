@@ -1676,3 +1676,23 @@ def test_a_destructive_menu_choice_is_red(win):
     assert near and min(y for _x, y in near) > img.height() // 2  # in the lower row only…
     assert max(x for x, _y in near) > 3 * tokens.ICON  # …its words too, not only its icon
     m.close()
+
+
+def test_the_record_pager_walks_the_list_as_it_shows(win):
+    win.go("gear")
+    t = win.gear_table
+    ids = [r.data(0, 256) for r in t.showing_rows()]
+    win.open("gear", ids[1])
+    p = win.items.pager
+    assert p.isVisibleTo(win.items) and p.where.text() == f"2 / {len(ids)}"
+    p.next.click()
+    wait_for(lambda: win.items.it is not None and win.items.it.id == ids[2])
+    assert t.current_id() == ids[2] and p.where.text() == f"3 / {len(ids)}"  # the list follows
+    QTest.keyClick(win.items.scroll, Qt.Key.Key_Left)  # ← steps back, when no field has the key
+    wait_for(lambda: win.items.it.id == ids[1])
+    win.items.name.setFocus()
+    QTest.keyClick(win.items.name, Qt.Key.Key_Left)  # in a field, ← is the field's
+    QApplication.processEvents()
+    assert win.items.it.id == ids[1]
+    win.search.setText(win.lib.items[ids[1]].name)  # a search: it walks what's left
+    assert p.where.text().endswith(f"/ {len(list(t.showing_rows()))}") or p.isHidden()

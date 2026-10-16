@@ -22,7 +22,7 @@ class DetailsBase(SidePanel):
     GROUPS: dict[str, tuple[str, bool]] = {}
 
     def __init__(self, parent: QWidget | None = None):
-        super().__init__(self.TITLE, more=True, parent=parent)
+        super().__init__(self.TITLE, more=True, pager=True, parent=parent)
         self._loading = False
         self.more.setToolTip("Duplicate, delete")
         self.header_buttons: list[QWidget] = [self.more]
