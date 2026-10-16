@@ -179,6 +179,9 @@ class Item(Record):
     photo: str = ""  # a file name in the photos folder ("3f9c…a1.jpg"); see PHOTO_NAME
     log: list[LogEntry] = field(default_factory=list)  # maintenance: services, repairs, notes (newest last)
     service_days: int = 0  # remind every this many days after the last service (0: never)
+    imported_as: str = (
+        ""  # the name a spreadsheet gave it, if it came from one (a later import knows it by it)
+    )
     status: str = "ready"  # ready / repair / retired
     extras: list[str] = field(default_factory=list)  # sections added by hand: link, serials, works, notes
     created: str = field(default_factory=now_iso)

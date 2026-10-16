@@ -100,6 +100,11 @@ class TransferMixin:
             self.toast(errors.plain(e, "read that file"), "problem")
             return 0
         have = {(i.name.casefold(), i.department.casefold()): i.id for i in self.lib.items.values()}
+        for i in (
+            self.lib.items.values()
+        ):  # a piece renamed since it came from a sheet is still known by the sheet's name
+            if i.imported_as:
+                have.setdefault((i.imported_as.casefold(), i.department.casefold()), i.id)
         if ask:
             from bodega.ui.dialogs.import_sheet import ImportDialog
 

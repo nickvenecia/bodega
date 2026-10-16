@@ -1446,3 +1446,14 @@ def test_settings_search_narrows_its_sections(win):
     d.find.setText("")
     assert not d.rows["data"].isHidden() and d.rows["account"].isHidden()  # (no account service yet)
     d.close()
+
+
+def test_a_piece_renamed_after_an_import_isnt_imported_twice(win, tmp_path):
+    sheet = tmp_path / "gear.csv"
+    sheet.write_text("Item,Qty,Price\nArri SkyPanel S60-C,1,7000\n", encoding="utf-8")
+    assert win.import_file(sheet, ask=False) == 1
+    it = next(i for i in win.lib.items.values() if i.imported_as == "Arri SkyPanel S60-C")
+    it.name = "SkyPanel (the big one)"
+    win._item_edited(it)
+    win.flush()
+    assert win.import_file(sheet, ask=False) == 0  # the same sheet again: it's known by the sheet's name

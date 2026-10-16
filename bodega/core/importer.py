@@ -589,7 +589,7 @@ def parse_rows(
             else:
                 group = name
             continue
-        it = Item(name=name, department=_clean(get("department")) or department)
+        it = Item(name=name, department=_clean(get("department")) or department, imported_as=name)
         it.group = _clean(get("group")) or group or it.department  # no sub-heading: the heading is its group
         it.brand = _clean(get("brand"))
         it.series = _clean(get("series"))
