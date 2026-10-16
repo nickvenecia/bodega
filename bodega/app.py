@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QAbstractSpinBox,
     QApplication,
     QComboBox,
+    QDialog,
     QLabel,
     QLineEdit,
     QMenu,
@@ -139,7 +140,9 @@ class _RoundPopups(QObject):
     cursor (Qt gives dropdowns and dates the focus as the wheel goes over them: they take it from a click or Tab
     only, so the field you're typing in keeps it while you scroll past). And a field you're typing in keeps its
     own editing keys: ⌘⌫ / Ctrl+Backspace deletes a word or a line there, never the piece (Delete…). Buttons that
-    are only an icon take their tooltip as their name, for screen readers."""
+    are only an icon take their tooltip as their name, for screen readers. And a window Bodega opens on top
+    (Settings, the page window, an alert) is let go once it closes, instead of staying in memory until Bodega
+    quits (_lets_go)."""
 
     @staticmethod
     def _see_through(win: QWidget) -> None:
@@ -165,7 +168,21 @@ class _RoundPopups(QObject):
                 return True
         return False  # nothing starts so: the menu does what it would
 
+    @staticmethod
+    def _lets_go(d: QDialog) -> None:
+        """Once a dialog Bodega made finishes as its own window, it's deleted when the window gets back to its
+        events: whoever opened it has read what they need by then (they do it as soon as exec() returns). Qt's
+        own dialogs (a file picker) aren't Bodega's to delete; a form sitting in Settings isn't a window."""
+        import shiboken6
+
+        if d.property("lets_go") or not shiboken6.createdByPython(d):
+            return
+        d.setProperty("lets_go", True)
+        d.finished.connect(lambda _r, d=d: d.deleteLater() if shiboken6.isValid(d) and d.isWindow() else None)
+
     def eventFilter(self, obj, ev):
+        if ev.type() == QEvent.Type.Polish and isinstance(obj, QDialog) and obj.parentWidget() is not None:
+            self._lets_go(obj)
         if (
             ev.type() == QEvent.Type.KeyPress
             and isinstance(obj, QMenu)

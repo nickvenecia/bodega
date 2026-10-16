@@ -47,7 +47,7 @@ class NavRow(QFrame):
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)  # Tab reaches every place (a click doesn't move the focus)
         self.setFixedHeight(tokens.NAV_H)
         lay = hbox(self, (tokens.SPACE_1 if foldable else tokens.SPACE_2, 0, tokens.SPACE_2, 0), tokens.SPACE_1)
-        self.arrow = QToolButton()  # shown on rows with rows under them; keeps its room on the others
+        self.arrow = QToolButton(self)  # shown on rows with rows under them; keeps its room on the others
         self.arrow.setObjectName("NavArrow")
         self.arrow.setFixedSize(tokens.TARGET_MIN, tokens.TARGET_MIN)  # inside a row that's a target too
         self.arrow.setCursor(Qt.CursorShape.PointingHandCursor)

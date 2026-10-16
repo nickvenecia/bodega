@@ -1785,7 +1785,8 @@ def test_search_everything_finds_places_records_and_commands(win, monkeypatch):
     d.find.setText("calendar")
     QTest.keyClick(d.find, Qt.Key.Key_Return)  # the first: Go To › Calendar
     wait_for(lambda: win.view_key == "calendar")
-    assert d.chosen.group == "Go To" and not d.isVisible()
+    assert d.chosen.group == "Go To"
+    assert not shiboken6.isValid(d)  # closed, and let go (not kept in memory until Bodega quits)
 
 
 def test_the_sidebar_search_opens_search_everything(win, monkeypatch):

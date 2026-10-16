@@ -142,6 +142,8 @@
   is on it.
 - Coming Up goes by every line's dates: a rental with gear that goes out later than the rest stays in Coming Up
   until its last line's dates go by.
+- Bodega no longer grows in memory as you work: every time Settings, the page window, Search Everything or an alert
+  closed, it used to stay in memory until you quit (Settings alone, about a megabyte each time).
 - Much faster with a big inventory: with 3,000 pieces and 2,000 rentals, opening Bodega went from about 10 seconds
   to under 2, opening a piece from about 5 seconds to a fraction of one, and deleting 300 pieces at once from
   about 3 seconds to half of one. Undo uses a small fraction of the memory it did, and keeps track twice as fast.

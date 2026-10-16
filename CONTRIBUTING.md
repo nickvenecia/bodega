@@ -91,6 +91,9 @@ packaging/     Installer files per OS
 17. A part of a window that's thrown away while the window stays open is hidden first, then `deleteLater()`
     (Settings' `_fill`). Destroyed while it still shows with the focus in it (on a Mac, the field you just typed
     in), a form takes Bodega down with it.
+18. A dialog Bodega opens on top is let go once it closes (app.py `_RoundPopups._lets_go`), so read what you
+    need from it as soon as `exec()` returns and never keep one to show again: make a new one.
+    `tests/test_memory.py` opens and closes every screen and fails if anything stays behind.
 
 ---
 
