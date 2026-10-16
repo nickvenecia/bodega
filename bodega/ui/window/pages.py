@@ -65,32 +65,48 @@ class PagesMixin:
         if not doc and self.page is not None:
             doc = self.page.panel.current_doc()
         doc = doc or PAGE_DOCS[kind][0][0]
-        lib = self.lib
-        if kind == "rental":
-            r = lib.rentals.get(ref)
-            if r is None:
-                return None
-            b = lib.businesses.get(r.business_id) or self.business()
-            return document.build_rental(lib, r, b), b, document.rental_stem(r)
+        pages = {  # each page the window shows, by its key in PAGE_DOCS
+            "agreement": self._agreement,
+            "package": self._kit_sheet,
+            "ratecard": self._rate_card,
+            "labels": self._labels,
+            "inventory": self._inventory,
+        }
+        return pages[doc](ref)
+
+    def _agreement(self, ref: str):
+        r = self.lib.rentals.get(ref)
+        if r is None:
+            return None
+        b = self.lib.businesses.get(r.business_id) or self.business()
+        return document.build_rental(self.lib, r, b), b, document.rental_stem(r)
+
+    def _kit_sheet(self, ref: str):
+        p, b = self.lib.packages.get(ref), self.lib.pricing()
+        if p is None:
+            return None
+        return document.build_package(self.lib, p, b), b, document.file_name(p.name or "Kit")
+
+    def _rate_card(self, _ref: str):
+        lib, b = self.lib, self.lib.pricing()
+        page = document.build_ratecard(lib, lib.ordered_items(), list(lib.packages.values()), b)
+        return page, b, f"Rate Card {dates.iso(dates.today())}"
+
+    def _labels(self, ref: str):
         b = self.lib.pricing()
-        today = dates.iso(dates.today())
-        if doc == "ratecard":
-            return (
-                document.build_ratecard(lib, lib.ordered_items(), list(lib.packages.values()), b),
-                b,
-                f"Rate Card {today}",
-            )
-        if doc == "labels":
-            items = [i for i in lib.ordered_items() if not ref or i.group == ref]
-            return document.build_labels(items, b), b, document.file_name(f"{ref or 'Gear'} Labels {today}")
-        if kind == "kit":
-            p = lib.packages.get(ref)
-            if p is None:
-                return None
-            return document.build_package(lib, p, b), b, document.file_name(p.name or "Kit")
-        items = [i for i in lib.ordered_items() if not ref or i.group == ref]
+        items = [i for i in self.lib.ordered_items() if not ref or i.group == ref]
+        return (
+            document.build_labels(items, b),
+            b,
+            document.file_name(f"{ref or 'Gear'} Labels {dates.iso(dates.today())}"),
+        )
+
+    def _inventory(self, ref: str):
+        b = self.lib.pricing()
+        items = [i for i in self.lib.ordered_items() if not ref or i.group == ref]
         title = f"{ref} Inventory" if ref else "Equipment Inventory"
-        return document.build_inventory(lib, items, b, title), b, document.file_name(f"{title} {today}")
+        page = document.build_inventory(self.lib, items, b, title)
+        return page, b, document.file_name(f"{title} {dates.iso(dates.today())}")
 
     def page_list(self, dark: bool = False, doc: str = "") -> list[render.Page]:
         """The page, laid out. `dark` only ever for the window's Dark Page: exports stay white."""
