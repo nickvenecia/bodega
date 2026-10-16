@@ -1,5 +1,5 @@
 """What the main window's parts share: the places (PLACES: the sidebar, the View menu and the page titles all
-read it), the gear filters, kind_of()."""
+read it), the page window's pages (PAGES), the gear filters, kind_of()."""
 
 from __future__ import annotations
 
@@ -41,10 +41,40 @@ PLACES = (  # in the sidebar's order (each group's own places, like Lenses, come
 )
 PLACE = {p.key: p for p in PLACES}
 TITLES = {p.key: p.title for p in PLACES}
-PAGE_DOCS = {
-    "rental": [("agreement", "Rental Agreement")],
-    "kit": [("package", "Kit Sheet"), ("ratecard", "Rate Card")],
-    "gear": [("inventory", "Inventory List"), ("ratecard", "Rate Card"), ("labels", "Labels")],
+
+
+@dataclass(frozen=True)
+class PageDoc:
+    """One page the page window can show. `build`: the window's method that makes it, from what it's of (a
+    rental's, a kit's or a group's id) to (the page, whose it is, its file name), or None if that's gone."""
+
+    key: str
+    label: str
+    build: str
+
+
+@dataclass(frozen=True)
+class PageKind:
+    """The pages for one kind of thing, the first shown first. `rental`: the rental's own tools are there
+    (Mark as Booked, Email Renter) and its title names it."""
+
+    docs: tuple[PageDoc, ...]
+    rental: bool = False
+
+    def choices(self) -> list[tuple[str, str]]:
+        return [(d.key, d.label) for d in self.docs]
+
+    def doc(self, key: str) -> PageDoc:
+        return next((d for d in self.docs if d.key == key), self.docs[0])
+
+
+RATE_CARD = PageDoc("ratecard", "Rate Card", "_rate_card")
+PAGES = {  # what the page window shows, by what it was opened for
+    "rental": PageKind((PageDoc("agreement", "Rental Agreement", "_agreement"),), rental=True),
+    "kit": PageKind((PageDoc("package", "Kit Sheet", "_kit_sheet"), RATE_CARD)),
+    "gear": PageKind(
+        (PageDoc("inventory", "Inventory List", "_inventory"), RATE_CARD, PageDoc("labels", "Labels", "_labels"))
+    ),
 }
 
 

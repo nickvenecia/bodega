@@ -1892,3 +1892,17 @@ def test_the_calendars_bars_are_reached_from_the_keyboard_and_heard(win):
         assert view._current(view._ordered()) == 0
         QTest.keyClick(view, Qt.Key.Key_Return)
         assert got[-1] == order[0][1].id
+
+
+def test_every_page_the_page_window_offers_is_one_the_window_builds(win):
+    """The page window's pages come from one table (common.PAGES): each names how it's built, and is."""
+    from bodega.ui.window.common import PAGES
+
+    refs = {"rental": next(iter(win.lib.rentals)), "kit": next(iter(win.lib.packages)), "gear": ""}
+    assert set(PAGES) == set(refs)
+    for kind, pages in PAGES.items():
+        win.page_ctx = (kind, refs[kind])
+        for d in pages.docs:
+            got = win.view(d.key)
+            assert got is not None and got[0].kind, (kind, d.key)
+        assert pages.doc("no such page") is pages.docs[0]  # an old setting's page: the first instead

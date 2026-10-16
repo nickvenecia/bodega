@@ -20,7 +20,7 @@ from bodega.core.paths import documents_dir, logos_dir
 from bodega.doc import export, render
 from bodega.ui.dialogs.common import notice
 from bodega.ui.dialogs.preview import PageDialog
-from bodega.ui.window.common import PAGE_DOCS
+from bodega.ui.window.common import PAGES
 
 log = get_logger(__name__)
 
@@ -36,13 +36,10 @@ class PagesMixin:
         d = PageDialog(self)
         self.page = d
         panel = d.panel
-        docs = PAGE_DOCS[ctx[0]]
-        keys = [k for k, _l in docs]
-        title = ""
-        if ctx[0] == "rental" and ctx[1] in self.lib.rentals:
-            title = document.rental_title(self.lib.rentals[ctx[1]])
-        panel.set_docs(docs, doc if doc in keys else keys[0], title)
-        panel.set_rental_tools(ctx[0] == "rental")
+        kind = PAGES[ctx[0]]
+        r = self.lib.rentals.get(ctx[1]) if kind.rental else None
+        panel.set_docs(kind.choices(), kind.doc(doc).key, document.rental_title(r) if r is not None else "")
+        panel.set_rental_tools(kind.rental)
         panel.set_dark(settings.value(self.lib.settings, "dark_preview"))
         panel.save_pdf.connect(self.save_pdf)
         panel.print_wanted.connect(self.print_pages)
@@ -64,15 +61,7 @@ class PagesMixin:
         kind, ref = self.page_ctx
         if not doc and self.page is not None:
             doc = self.page.panel.current_doc()
-        doc = doc or PAGE_DOCS[kind][0][0]
-        pages = {  # each page the window shows, by its key in PAGE_DOCS
-            "agreement": self._agreement,
-            "package": self._kit_sheet,
-            "ratecard": self._rate_card,
-            "labels": self._labels,
-            "inventory": self._inventory,
-        }
-        return pages[doc](ref)
+        return getattr(self, PAGES[kind].doc(doc).build)(ref)
 
     def _agreement(self, ref: str):
         r = self.lib.rentals.get(ref)
