@@ -1373,3 +1373,17 @@ def test_the_share_button_opens_the_page_window_at_once(win, monkeypatch):
     assert shown == [(("gear", ""), "inventory")]
     texts = [a.text() for a in win.new_menu.actions()]
     assert "Import Spreadsheet…" in texts and "Import from Google Sheets…" in texts  # importing lives under +
+
+
+def test_a_status_is_a_dot_and_a_word_in_the_text_color(win):
+    from bodega.ui.window.tables import DOT, GEAR_COL
+
+    win.go("gear")
+    row = next(iter(win.gear_table.showing_rows()))
+    assert (
+        row.data(GEAR_COL["status"], DOT)
+        and row.foreground(GEAR_COL["status"]).style() == Qt.BrushStyle.NoBrush
+    )
+    win.go("rentals")
+    r = win.rental_table.topLevelItem(0)
+    assert r.data(4, DOT)

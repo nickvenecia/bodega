@@ -147,6 +147,8 @@
   Check In and Send to Saldo on rentals.
 - The share button above the gear list opens the page window straight away (Inventory List, Rate Card, Labels).
   Importing a spreadsheet or a Google Sheet is under the + (and in File).
+- Statuses in the lists are a small colored dot and the word in the normal text color ("● Booked"), easier to
+  read than colored words.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

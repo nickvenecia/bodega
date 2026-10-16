@@ -38,6 +38,7 @@ HEAD = Qt.ItemDataRole.UserRole + 3  # a divider row: its place in the list
 ATTACHED = Qt.ItemDataRole.UserRole + 4  # attached gear: only shown when searching
 DEP = Qt.ItemDataRole.UserRole + 5  # a divider's department
 GRP = Qt.ItemDataRole.UserRole + 6  # a group divider's group (None on a department divider)
+DOT = Qt.ItemDataRole.UserRole + 12  # a status cell: its dot's color (the word stays in the text color)
 
 RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 CENTER = Qt.AlignmentFlag.AlignCenter
@@ -388,7 +389,37 @@ class RowPainter(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         self.backdrop(painter, option, index)
-        super().paint(painter, self.plain(option), index)
+        option = self.plain(option)
+        if not self.dotted(painter, option, index):
+            super().paint(painter, option, index)
+
+    def dotted(self, painter, option, index) -> bool:
+        """A status: a small dot in its color, then the word in the text color (the color is never the only
+        sign). The cell itself (its hairline) is drawn whole. False if the cell isn't a status."""
+        color = index.data(DOT)
+        if not color:
+            return False
+        opt = QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+        words, opt.text = opt.text, ""
+        w = opt.widget
+        style = w.style() if w else QApplication.style()
+        style.drawControl(
+            QStyle.ControlElement.CE_ItemViewItem, opt, painter, w
+        )  # the cell, without its words
+        rect = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, opt, w)
+        d = tokens.STATUS_DOT
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(theme.qcolor(color))
+        painter.drawEllipse(QRectF(rect.left() + tokens.SPACE_1, rect.center().y() - d / 2 + 1, d, d))
+        painter.setPen(theme.qcolor(tokens.TEXT))
+        text = rect.adjusted(tokens.SPACE_1 + d + tokens.SPACE_2, 0, 0, 0)
+        painter.drawText(text, int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
+                         opt.fontMetrics.elidedText(words, Qt.TextElideMode.ElideRight, text.width()))  # fmt: skip
+        painter.restore()
+        return True
 
     def helpEvent(self, event, view, option, index):
         """A cell's own tooltip, or else, when the cell cuts its words short, the whole of them."""
@@ -434,7 +465,8 @@ class _GearPainter(RowPainter):
         if with_ and index.column() == GEAR_COL["name"]:
             self._name_with(painter, option, index, with_)
             return
-        QStyledItemDelegate.paint(self, painter, option, index)
+        if not self.dotted(painter, option, index):
+            QStyledItemDelegate.paint(self, painter, option, index)
 
     @staticmethod
     def _thumb(painter, option, name: str) -> QStyleOptionViewItem:
@@ -1002,7 +1034,7 @@ class GearTable(Table):
             ],
             parent,
         )
-        row.setForeground(GEAR_COL["status"], theme.qcolor(color))
+        row.setData(GEAR_COL["status"], DOT, color)
         row.setForeground(GEAR_COL["kids"], theme.qcolor(tokens.MUTED))  # a count, not a button
         for k in ("brand", "series"):
             row.setForeground(GEAR_COL[k], theme.qcolor(tokens.MUTED))
@@ -1144,7 +1176,7 @@ class RentalTable(Table):
                     (money.fmt(t.total, cur), money.in_cents(t.total)),
                 ],
             )
-            row.setForeground(4, theme.qcolor(getattr(tokens, STATUS_COLORS[tone])))
+            row.setData(4, DOT, getattr(tokens, STATUS_COLORS[tone]))
             row.setData(
                 0, HAY, search.folded(" ".join((r.number, r.client.name, r.client.company, r.project)))
             )

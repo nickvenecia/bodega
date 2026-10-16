@@ -20,6 +20,7 @@ SPACE_0_5 = 2  # the hairline gaps: a key cap's top and bottom, a number under a
 CONTROL_H = 28  # (control-h) EVERY button, dropdown, text field, segmented control and icon circle
 SMALL_H = 20  # (control-sm) chips, token buttons, small icon buttons
 TARGET_MIN = 24  # a small target inside a row that's clickable too: never less (WCAG 2.5.8's 24-point circle)
+STATUS_DOT = 7  # a status's dot, before its word in a table
 FOCUS_RING = 2  # a painted focus ring's width (the standard: at least 2 points)
 FOCUS_GAP = 2  # its gap outside what it rings
 BAR_CTRL_H = 36  # (bar-h) the bar's circles and search field
