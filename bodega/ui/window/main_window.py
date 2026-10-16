@@ -35,7 +35,7 @@ from bodega.ui.components import titlebar
 from bodega.ui.components.empty import EmptyPage, NoResults
 from bodega.ui.components.figures import FigureRow
 from bodega.ui.components.glass import Dock, GlassRoot, glass
-from bodega.ui.components.panels import SelectionBar
+from bodega.ui.components.panels import Act, SelectionBar, tidy_dividers
 from bodega.ui.components.widgets import Banner, ElidedLabel, SearchField, Toast, hbox, vbox
 from bodega.ui.dialogs.preview import PageDialog
 from bodega.ui.panels.item import ItemPanel
@@ -367,24 +367,20 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         it = self.items
         it.changed.connect(self._item_edited)
         it.toast_wanted.connect(self.toast)
-        it.ai_wanted.connect(self.ai_this_piece)
         it.structure_changed.connect(self._structure_changed)
         it.open_item.connect(lambda i: self.open("gear", i))
         it.attach_wanted.connect(self.attach_to)
         it.detach_wanted.connect(self.detach)
-        it.duplicate_wanted.connect(lambda i: self.duplicate("gear", i))
-        self.packages.duplicate_wanted.connect(lambda i: self.duplicate("packages", i))
-        self.rentals.duplicate_wanted.connect(lambda i: self.duplicate("rentals", i))
         for panel in (self.items, self.packages, self.rentals):
             panel.close_wanted.connect(self.deselect)  # the round ✕
-        it.delete_wanted.connect(lambda i: self.delete("gear", i))
         it.rent_wanted.connect(lambda _i: self.rent_this())
+        for panel, kind in ((self.items, "gear"), (self.packages, "packages"), (self.rentals, "rentals")):
+            panel.acts = lambda obj_id, k=kind: self.record_acts(k, obj_id)  # (its ⋯: the row's own list)
         it.open_rental.connect(lambda i: self.open("rentals", i))
         p = self.packages
         p.changed.connect(self._package_edited)
         p.add_wanted.connect(self.add_to_package)
         p.open_item.connect(lambda i: self.open("gear", i))
-        p.delete_wanted.connect(lambda i: self.delete("packages", i))
         p.sheet_wanted.connect(lambda i: self.show_pages(("kit", i)))
         r = self.rentals
         r.changed.connect(self._rental_edited)
@@ -394,10 +390,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         r.add_wanted.connect(self.add_to_rental)
         r.open_item.connect(lambda i: self.open("gear", i))
         r.defaults_saved.connect(self._defaults_saved)
-        r.delete_wanted.connect(lambda i: self.delete("rentals", i))
-        r.calendar_wanted.connect(self.add_to_calendar)
         r.check_wanted.connect(self.check_rental)
-        r.saldo_wanted.connect(self.send_to_saldo)
         r.sheet_wanted.connect(lambda i: self.show_pages(("rental", i)))
         for panel in (self.items, self.packages, self.rentals):
             panel.groups_changed.connect(self._groups_changed)
@@ -864,43 +857,22 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             m.addAction(theme.menu_icon("arrow-down"), "Move Down", lambda: self.step_gear(1, ids))
             m.addSeparator()
             if len(ids) == 1:
-                it = self.lib.items.get(obj_id)
-                m.addAction(theme.menu_icon("copy"), "Duplicate", lambda: self.duplicate(kind, obj_id))
-                if it is not None and it.parent:
-                    m.addAction(theme.menu_icon("unlink"), "Make It Its Own Piece", lambda: self.detach(obj_id))
-                m.addAction(
-                    theme.menu_icon("receipt"),
-                    "Rent This",
-                    lambda: (self.open("gear", obj_id), self.rent_this()),
-                )
-                m.addAction(theme.menu_icon("assistant"), "Update with AI…", lambda: self.ai_this_piece(obj_id))
-                m.addSeparator()
-                m.addAction(theme.menu_icon("trash"), "Delete", lambda: self.delete(kind, obj_id))
+                for a in self._row_order(self.record_acts(kind, obj_id)):
+                    if a.text == "-":
+                        m.addSeparator()
+                    else:
+                        m.addAction(theme.menu_icon(a.icon), a.text, a.run)
             else:
                 m.addAction(theme.menu_icon("trash"), f"Delete {len(ids):,}", lambda: self.delete_gear(ids))
             m.exec(pos)
             return
-        items = [("copy", "Duplicate", lambda: self.duplicate(kind, obj_id))]
-        if kind == "rentals":  # the same commands as the rental's own ⋯ (and its Agreement…)
-            r = self.lib.rentals.get(obj_id)
-            steps = []  # its next step, when it has one (the Rental menu's rule: booked goes out, out comes back)
-            if r is not None and r.is_booked():
-                steps = [("check", "Check Out…", lambda: self.check_rental(obj_id, False))]
-            elif r is not None and r.is_out():
-                steps = [("check", "Check In…", lambda: self.check_rental(obj_id, True))]
-            items += [
-                ("file", "Agreement…", lambda: self.show_pages(("rental", obj_id))),
-                ("calendar", "Add to Calendar", lambda: self.add_to_calendar(obj_id)),
-                *steps,
-                ("receipt", "Send to Saldo…", lambda: self.send_to_saldo(obj_id)),
-            ]
-            if r is not None and not r.deletable():  # a booked rental is cancelled, never deleted
-                if not r.is_cancelled():
-                    items += [("", "-", None), ("x", "Mark as Cancelled…", lambda: self.cancel_rental(r))]
-                menu(self, items).exec(pos)
-                return
-        items += [("", "-", None), ("trash", "Delete", lambda: self.delete(kind, obj_id))]
-        menu(self, items).exec(pos)
+        menu(self, [(a.icon, a.text, a.run) for a in self._row_order(self.record_acts(kind, obj_id))]).exec(pos)
+
+    @staticmethod
+    def _row_order(acts: list) -> list:
+        """A row's menu: the record's next step first, then what it prints, then the rest (destructive last)."""
+        first = [a for a in acts if a.place == "step"] + [a for a in acts if a.place == "print"]
+        return tidy_dividers([*first, Act("", "-"), *(a for a in acts if a.place == "more")])
 
     # Groups
 

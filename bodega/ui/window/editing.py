@@ -9,6 +9,7 @@ from dataclasses import replace
 from bodega.core import money, pricing, settings, words
 from bodega.core.log import get_logger
 from bodega.core.model import HOLD_VERBS, Business, Item, Package, PackageLine, Rental, RentalLine, new_id, now_iso
+from bodega.ui.components.panels import Act
 from bodega.ui.components.widgets import one_stop
 from bodega.ui.dialogs.client import ClientDialog
 from bodega.ui.dialogs.common import confirm
@@ -590,6 +591,55 @@ class EditingMixin:
         groups = settings.value(self.lib.settings, "groups")
         groups[key] = state
         self.lib.settings["groups"] = groups
+
+    # What a record can do
+    def record_acts(self, kind: str, obj_id: str) -> list[Act]:
+        """Everything a piece, kit or rental can do, in one list: its row's menu shows them all, its panel shows
+        the next step and Print beside its ⋯, and the rest in it (the standard's 4.5, C-65). Only what applies."""
+        if kind == "gear":
+            it = self.lib.items.get(obj_id)
+            if it is None:
+                return []
+            return [
+                *(
+                    [Act("plus", "Rent This", lambda: (self.open("gear", obj_id), self.rent_this()), "step")]
+                    if it.can_rent()
+                    else []
+                ),
+                Act("copy", "Duplicate", lambda: self.duplicate("gear", obj_id)),
+                *([Act("unlink", "Make It Its Own Piece", lambda: self.detach(obj_id))] if it.parent else []),
+                Act("assistant", "Update with AI…", lambda: self.ai_this_piece(obj_id)),
+                Act("", "-"),
+                Act("trash", "Delete", lambda: self.delete("gear", obj_id)),
+            ]
+        if kind == "packages":
+            if obj_id not in self.lib.packages:
+                return []
+            return [
+                Act("printer", "Kit Sheet…", lambda: self.show_pages(("kit", obj_id)), "print"),
+                Act("copy", "Duplicate", lambda: self.duplicate("packages", obj_id)),
+                Act("", "-"),
+                Act("trash", "Delete", lambda: self.delete("packages", obj_id)),
+            ]
+        r = self.lib.rentals.get(obj_id)
+        if r is None:
+            return []
+        acts = [Act("printer", "Agreement…", lambda: self.show_pages(("rental", obj_id)), "print")]
+        if r.is_booked():  # its next step (the Rental menu's rule: booked goes out, out comes back)
+            acts.append(Act("check", "Check Out…", lambda: self.check_rental(obj_id, False), "step"))
+        elif r.is_out():
+            acts.append(Act("check", "Check In…", lambda: self.check_rental(obj_id, True), "step"))
+        acts += [
+            Act("copy", "Duplicate", lambda: self.duplicate("rentals", obj_id)),
+            Act("calendar", "Add to Calendar", lambda: self.add_to_calendar(obj_id)),
+            Act("receipt", "Send to Saldo…", lambda: self.send_to_saldo(obj_id)),
+            Act("", "-"),
+        ]
+        if r.deletable():
+            acts.append(Act("trash", "Delete", lambda: self.delete("rentals", obj_id)))
+        elif not r.is_cancelled():  # a booked rental is cancelled, never deleted
+            acts.append(Act("x", "Mark as Cancelled…", lambda: self.cancel_rental(r)))
+        return acts
 
     # Check out / check in
     def can_check(self, ids: list[str], back: bool) -> list[Rental]:

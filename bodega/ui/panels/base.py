@@ -3,10 +3,12 @@ fold-away groups (kits and rentals), and remembering which groups are open."""
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QSizePolicy, QWidget
 
-from bodega.ui.components.panels import SidePanel
+from bodega.ui.components.panels import Act, SidePanel, tidy_dividers
 from bodega.ui.components.widgets import Disclosure, circle_button, hbox, primary_button, vbox
 from bodega.ui.style import theme, tokens
 
@@ -41,6 +43,8 @@ class DetailsBase(SidePanel):
         actions.insertWidget(0, self.capsule, 0, Qt.AlignmentFlag.AlignVCenter)
         self.header_buttons: list[QWidget] = [self.capsule]
         self.capsule.hide()
+        self.acts: Callable[[str], list[Act]] | None = None  # the window's list of what a record can do
+        self.more_menu.aboutToShow.connect(self.fill_more)
 
         self.empty = QWidget()
         el = vbox(self.empty, (0, tokens.SPACE_5, 0, 0), tokens.SPACE_3)
@@ -92,13 +96,25 @@ class DetailsBase(SidePanel):
         self.form.show()
         for b in self.header_buttons:
             b.show()
+        QTimer.singleShot(0, self, self.fill_more)  # (once the record is in: its ⋯ is ready to read)
 
-    def menu_action(self, icon: str, text: str, slot):
-        """A command under the header's ⋯ (Duplicate, Delete). Returns its QAction (None for "-")."""
-        if text == "-":
-            self.more_menu.addSeparator()
-            return None
-        return self.more_menu.addAction(theme.menu_icon(icon), text, lambda: self.later(slot))
+    def current_id(self) -> str:
+        """The open record's id ('' with none)."""
+        return ""
+
+    def fill_more(self) -> None:
+        """⋯ holds what the record can do (the window's one list for it, `acts`) less what the bar shows beside it:
+        so it and the record's row always offer the same."""
+        m = self.more_menu
+        m.clear()
+        rid = self.current_id()
+        if self.acts is None or not rid:
+            return
+        for a in tidy_dividers([a for a in self.acts(rid) if a.place == "more"]):
+            if a.text == "-":
+                m.addSeparator()
+            else:
+                m.addAction(theme.menu_icon(a.icon), a.text, lambda run=a.run: run and self.later(run))
 
     def print_button(self, tip: str):
         """🖨, first in the header's capsule: what this record prints (its agreement, its kit sheet)."""

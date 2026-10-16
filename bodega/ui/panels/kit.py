@@ -53,8 +53,6 @@ class PackagePanel(DetailsBase):
     changed = Signal(object)  # Package
     add_wanted = Signal(str)  # package id
     open_item = Signal(str)
-    delete_wanted = Signal(str)
-    duplicate_wanted = Signal(str)
     sheet_wanted = Signal(str)
 
     def __init__(self, lib: Library, parent: QWidget | None = None):
@@ -63,9 +61,6 @@ class PackagePanel(DetailsBase):
         self.pkg: Package | None = None
         g = self.groups
         self.sheet = self.print_button("Kit Sheet…")
-        self.menu_action("copy", "Duplicate", lambda: self.pkg and self.duplicate_wanted.emit(self.pkg.id))
-        self.menu_action("", "-", None)
-        self.menu_action("trash", "Delete Kit", lambda: self.pkg and self.delete_wanted.emit(self.pkg.id))
         self.sheet.clicked.connect(lambda: self.pkg and self.sheet_wanted.emit(self.pkg.id))
         self.name = TitleEdit()  # the kit's name as its title, like a piece of gear's
         self.name.setPlaceholderText("FX6 Run && Gun, Interview Kit…".replace("&&", "&"))
@@ -127,6 +122,9 @@ class PackagePanel(DetailsBase):
         self.discount.textEdited.connect(lambda t: self._set("discount", t))
         self.fixed.textEdited.connect(lambda t: self._set("day_rate", t.replace("$", "").replace(",", "").strip()))
         self.form.hide()
+
+    def current_id(self) -> str:
+        return self.pkg.id if self.pkg is not None else ""
 
     def b(self):
         return self.lib.pricing()

@@ -749,7 +749,9 @@ def test_order_columns_and_divide(win):
     # duplicate from the ⋯ menu
     n = len(lib.items)
     win.open("gear", first)
-    win.items.duplicate_wanted.emit(first)
+    win.items.fill_more()
+    next(a for a in win.items.more_menu.actions() if a.text() == "Duplicate").trigger()  # (its ⋯)
+    QApplication.processEvents()  # (once the click is over)
     assert len(lib.items) == n + 1
 
 
@@ -1371,7 +1373,7 @@ def test_a_rows_menu_has_what_its_panels_more_menu_has(win, monkeypatch):
 
     class Noted(QMenu):  # a menu that's noted instead of shown
         def exec(self, *_a):
-            seen.append({a.text() for a in self.actions()})
+            seen.append({a.text() for a in self.actions() if a.text()})  # (dividers have none)
 
     monkeypatch.setattr(main_window, "QMenu", Noted)
     monkeypatch.setattr(tables, "QMenu", Noted)
@@ -1383,9 +1385,12 @@ def test_a_rows_menu_has_what_its_panels_more_menu_has(win, monkeypatch):
     for kind, obj_id, panel in cases:
         win.open(kind, obj_id)
         win._row_menu(kind, obj_id, QPoint(0, 0))
-        mine = {a.text() for a in panel.more_menu.actions() if a.text() and a.isVisible()}
-        missing = mine - seen[-1] - {"Delete Rental", "Delete Kit"}  # (the row says Delete)
-        assert not missing, (kind, missing)
+        panel.fill_more()
+        mine = {a.text() for a in panel.more_menu.actions() if a.text()}
+        beside = {b.toolTip() or b.text() for b in (panel.print_btn, *panel.header_buttons[1:]) if not b.isHidden()}
+        assert mine and not (mine - seen[-1]), (kind, mine - seen[-1])  # the row does what the panel's ⋯ does…
+        assert not (beside - seen[-1]), (kind, beside - seen[-1])  # …and what its buttons do
+        assert seen[-1] - mine - beside <= {"Move To…", "Move Up", "Move Down"}, (kind, seen[-1] - mine - beside)
 
 
 def test_no_two_commands_share_a_key(win):

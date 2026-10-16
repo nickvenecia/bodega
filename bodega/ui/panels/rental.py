@@ -334,11 +334,7 @@ class RentalPanel(DetailsBase):
     add_wanted = Signal(str)  # rental id
     open_item = Signal(str)
     defaults_saved = Signal(object)  # Business
-    delete_wanted = Signal(str)
-    duplicate_wanted = Signal(str)
-    calendar_wanted = Signal(str)  # its pickup and return in your calendar app
     check_wanted = Signal(str, bool)  # rental id, back in (else out)
-    saldo_wanted = Signal(str)  # send it to Saldo as an invoice
     sheet_wanted = Signal(str)
 
     def __init__(self, lib: Library, parent: QWidget | None = None):
@@ -354,13 +350,6 @@ class RentalPanel(DetailsBase):
         self.sheet = self.print_button("Agreement…")
         self.check = self.next_step("Check Out…")  # its next step while it has one: out, then back in
         self.check.clicked.connect(lambda: self.r and self.check_wanted.emit(self.r.id, self.r.is_out()))
-        self.menu_action("copy", "Duplicate", lambda: self.r and self.duplicate_wanted.emit(self.r.id))
-        self.menu_action("calendar", "Add to Calendar", lambda: self.r and self.calendar_wanted.emit(self.r.id))
-        self.menu_action("receipt", "Send to Saldo…", lambda: self.r and self.saldo_wanted.emit(self.r.id))
-        self.menu_action("", "-", None)
-        self.delete_act = self.menu_action(
-            "trash", "Delete Rental", lambda: self.r and self.delete_wanted.emit(self.r.id)
-        )  # a booked one: Mark as Cancelled… (it's never deleted)
         self.sheet.clicked.connect(lambda: self.r and self.sheet_wanted.emit(self.r.id))
 
         # the head (the standard's 4.5, G.17): who it's for as its name, its number and status, what and when, figures
@@ -581,6 +570,9 @@ class RentalPanel(DetailsBase):
         self.reset_terms.clicked.connect(self._reset_terms)
         self.save_terms.clicked.connect(self._save_terms)
 
+    def current_id(self) -> str:
+        return self.r.id if self.r is not None else ""
+
     def b(self):
         if self.r is not None and self.r.business_id in self.lib.businesses:
             return self.lib.businesses[self.r.business_id]
@@ -601,13 +593,6 @@ class RentalPanel(DetailsBase):
             self.r.auto_number = False
         self._edit("number", t)
         self._show_clash()
-
-    def _show_delete(self) -> None:
-        r = self.r
-        if r is None:
-            return
-        self.delete_act.setText("Delete Rental" if r.deletable() else "Mark as Cancelled…")
-        self.delete_act.setVisible(r.deletable() or not r.is_cancelled())
 
     def show_history(self) -> None:
         """Its history, newest first (it's written as it's saved)."""
@@ -677,7 +662,6 @@ class RentalPanel(DetailsBase):
     def _apply_status(self, status: str) -> None:
         self.r.status = status
         self._show_check()
-        self._show_delete()
         if self.r.past_quote():
             self.r.auto_number = False
         self.recalc()
@@ -798,7 +782,6 @@ class RentalPanel(DetailsBase):
         self._show_check()
         self.number.setText(r.number)
         self._show_clash()
-        self._show_delete()
         self.project.setText(r.project)
         self.pickup.setDate(to_qdate(r.pickup))
         self.ret.setDate(to_qdate(r.return_date or r.pickup))

@@ -13,6 +13,9 @@ Subclass them; change what's inside, never the frame.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from PySide6.QtCore import QEvent, QPoint, Qt, QTimer, Signal
 from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QLabel, QMenu, QPushButton, QToolButton, QWidget
 
@@ -321,6 +324,30 @@ class SelectionBar(QFrame):
         self.adjustSize()
         self.show()
         self.raise_()
+
+
+@dataclass(frozen=True)
+class Act:
+    """One thing a record can do (the standard's 4.5: a record does what its row does, from one list): every one is
+    on its row's menu; on its panel, `place` says where: "step", the next step beside the capsule; "print", the
+    capsule's 🖨; "more", its ⋯. A text of "-" is a divider."""
+
+    icon: str
+    text: str
+    run: Callable[[], object] | None = None
+    place: str = "more"
+
+
+def tidy_dividers(acts: list[Act]) -> list[Act]:
+    """No divider first, last or twice."""
+    out: list[Act] = []
+    for a in acts:
+        if a.text == "-" and (not out or out[-1].text == "-"):
+            continue
+        out.append(a)
+    while out and out[-1].text == "-":
+        out.pop()
+    return out
 
 
 class SidePanel(QFrame):

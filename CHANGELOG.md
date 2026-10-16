@@ -136,6 +136,8 @@
   sheet) and ⋯ sit together in one capsule, and the next step stands on its own beside it: Check Out… or
   Check In… for a rental, + Rent This for a piece. They used to sit across the bottom of the panel.
 - Buttons are all the same height as the fields beside them; most were two points taller.
+- A row's right-click menu and its panel's ⋯ now come from one list, so they always offer the same: a kit's
+  right-click menu gains Kit Sheet…, a rental's gains its agreement, and a piece's ⋯ offers Make It Its Own Piece.
 - Undo is about six times quicker in a big inventory: taking back a change to one rental rewrites that rental, not
   every file, and the list is filled once instead of twice.
 - The Undo and Stop buttons in a message work from the moment it appears (a quick click could miss them while it

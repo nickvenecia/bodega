@@ -158,12 +158,9 @@ class ItemPanel(DetailsBase):
     open_item = Signal(str)
     attach_wanted = Signal(str)  # pick gear that goes with this piece
     detach_wanted = Signal(str)  # gear that went with a piece becomes its own
-    delete_wanted = Signal(str)
-    duplicate_wanted = Signal(str)
     rent_wanted = Signal(str)
     open_rental = Signal(str)
     toast_wanted = Signal(str, str)  # a short message for the window to show, and its tone (MainWindow.toast)
-    ai_wanted = Signal(str)  # Update with AI (this piece)
 
     def __init__(self, lib: Library, parent: QWidget | None = None):
         super().__init__(parent)
@@ -174,10 +171,6 @@ class ItemPanel(DetailsBase):
         lay = self.form_lay
         lay.setSpacing(tokens.SPACE_3)
 
-        self.menu_action("copy", "Duplicate", lambda: self.it and self.duplicate_wanted.emit(self.it.id))
-        self.menu_action("assistant", "Update with AI…", lambda: self.it and self.ai_wanted.emit(self.it.id))
-        self.menu_action("", "-", None)
-        self.menu_action("trash", "Delete", lambda: self.it and self.delete_wanted.emit(self.it.id))
         self.rent = self.next_step("Rent This", plus=True)  # a new rental with it
         self.rent.clicked.connect(lambda: self.it and self.rent_wanted.emit(self.it.id))
 
@@ -792,6 +785,9 @@ class ItemPanel(DetailsBase):
             e.acceptProposedAction()
 
     # Loading
+    def current_id(self) -> str:
+        return self.it.id if self.it is not None else ""
+
     def b(self):
         return self.lib.pricing()
 
