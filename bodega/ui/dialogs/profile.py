@@ -21,7 +21,8 @@ from bodega.core.log import get_logger
 from bodega.core.looks import COLORS
 from bodega.core.model import WEEK_DAYS, Business
 from bodega.core.paths import logos_dir
-from bodega.core.store import DEFAULT_NOTE, DEFAULT_TERMS, clean_prefix, initials
+from bodega.core.store import clean_prefix, initials
+from bodega.core.terms import DEFAULT_NOTE, DEFAULT_TERMS
 from bodega.ui.components.photos import write_picture
 from bodega.ui.components.widgets import (
     Disclosure,

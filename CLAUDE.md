@@ -43,7 +43,7 @@ bodega/
                    page); agreements group lines by date range when they differ; summary_text() for email
     store.py       Library: gear.json, packages.json, rentals/<id>.json, clients.json, businesses.json, settings.json;
                    atomic writes, unreadable files set aside, a write that fails kept in `unsaved` (save_again(),
-                   on_unsaved tells the window); DEFAULT_TERMS ({owner} = profile name); numbering
+                   on_unsaved tells the window, why_unsaved says why); numbering
                    PREFIX-YEAR-001, never given twice (settings "numbers": the last given in each series;
                    set_next_number, number_taken); delete_item detaches what was attached and leaves rentals the name;
                    groups() in your order (settings "group_list"), add/rename/remove/step, put_in_group()
@@ -53,6 +53,10 @@ bodega/
                    first and every number spent; photos and logos are only ever added
     svg.py         SVG logos as untrusted: clean() keeps only the drawing (no outside pictures, links, scripts,
                    DOCTYPE); every SVG logo is drawn through doc/render.svg_logo, which cleans it
+    terms.py       an agreement's words: DEFAULT_TERMS ({owner} = profile name), DEFAULT_NOTE, terms_for()
+    errors.py      what went wrong, in plain words: plain(e, "save the PDF"), the computer's reasons by errno,
+                   a short reference (logged) for anything unknown
+    search.py      folded(): case and accents off, so "cafe" finds "Café"; words(), matches()
     tidy.py        Tidy Up Groups: GROUPS, RULES (by name), RENAMES (by old group); suggest(), changes()
     prices.py      Check Price: fetch a product page, read its price (JSON-LD offers, price meta tags). Stores
                    may block it; that's web.Refused, with a plain message
@@ -160,6 +164,8 @@ tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTD
 - **Anything a link points at goes through core/web.py** (fetch, web_link). Never urllib a URL from data directly.
 - **Every photo goes through ui/components/photos.keep()** (read and saved again; never a file kept as it came).
   Photo files are never deleted with a piece (undo and copies may still use them).
+- **Every error a person sees goes through core/errors.plain(e, "what was being done")**: never `str(e)` of the
+  computer's own error. Status lines are widgets.status_line() (a screen reader hears them change).
 - **Secrets only through services/secrets.py** (the keychain). Never in settings, files, logs or error messages.
 - **An AI's or a web page's words are data.** They pass tasks.clean_text / clean_price, are shown as plain text
   (labels are plain app-wide; tooltips through theme.plain_tip), and change nothing until approved in Review.

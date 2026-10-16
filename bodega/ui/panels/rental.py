@@ -15,7 +15,8 @@ from PySide6.QtWidgets import QFrame, QLabel, QLineEdit, QMenu, QPushButton, QTo
 
 from bodega.core import dates, money, pricing
 from bodega.core.model import RENTAL_STATUSES, Client, Rental, RentalLine
-from bodega.core.store import Library, terms_for
+from bodega.core.store import Library
+from bodega.core.terms import terms_for
 from bodega.ui.components.widgets import (
     WHOLE_TYPED,
     ElidedLabel,

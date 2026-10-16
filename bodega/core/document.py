@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 
 from bodega.core import dates, money, pricing
 from bodega.core.model import Business, Item, Package, Rental
-from bodega.core.store import terms_for
+from bodega.core.terms import terms_for
 
 STATUS_LABELS = {
     "quote": "Quote",
