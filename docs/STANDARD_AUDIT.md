@@ -31,7 +31,7 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **205 fixed, 14 partly, 17 not
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **206 fixed, 14 partly, 16 not
 started (larger redesigns), 16 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
@@ -62,7 +62,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 205 · Partly 14 · Open 17 · Waiting on the owner 16 · No longer applies 1.**
+**Of the 253 failures: Fixed 206 · Partly 14 · Open 16 · Waiting on the owner 16 · No longer applies 1.**
 
 ### Partly: what's left
 
@@ -88,7 +88,6 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | Check | Sev | What it needs |
 |---|---|---|
 | C-25 | S2 | Import and Review are wide windows; the standard wants them as pages. |
-| C-26 | S2 | Dialogs use the system's frame and a Cancel button: no ✕ circle, no scrim. |
 | C-53 | S2 | The print window has no column ticks or order, no letterhead options, no presets. |
 | C-55 | S3 | The table is drawn straight on the page, not in a card. |
 | C-61 | S2 | The print window has no filter cards (column, from, to). |
@@ -136,7 +135,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 
 - **A**: A-03, A-05, A-06, A-10, A-11, A-12, A-13
 - **AI**: AI-01, AI-03, AI-07, AI-08, AI-09, AI-14, AI-15, AI-16, AI-17, AI-19, AI-20, AI-23, AI-24, AI-29, AI-31
-- **C**: C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-17, C-19, C-21, C-23, C-24, C-27, C-28, C-29, C-31, C-32, C-34, C-37, C-38, C-39, C-42, C-44, C-45, C-47, C-49, C-50, C-51, C-54, C-58, C-59, C-65, C-66, C-67, C-69, C-72, C-73, C-76, C-82, C-100, C-105, C-106, C-108, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
+- **C**: C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-17, C-19, C-21, C-23, C-24, C-26, C-27, C-28, C-29, C-31, C-32, C-34, C-37, C-38, C-39, C-42, C-44, C-45, C-47, C-49, C-50, C-51, C-54, C-58, C-59, C-65, C-66, C-67, C-69, C-72, C-73, C-76, C-82, C-100, C-105, C-106, C-108, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
 - **D**: D-01, D-02, D-03, D-05, D-06, D-07, D-10, D-11, D-12, D-15, D-16, D-18, D-21, D-23, D-24, D-25, D-26, D-31, D-32, D-34, D-42, D-49, D-51
 - **G**: G-01, G-02
 - **I**: I-01, I-02, I-03, I-04, I-06, I-07, I-08, I-10, I-11, I-12, I-13, I-14, I-15, I-19, I-20, I-21, I-23, I-24, I-25, I-26, I-29, I-30, I-31

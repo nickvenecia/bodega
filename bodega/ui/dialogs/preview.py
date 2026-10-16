@@ -270,6 +270,8 @@ class PreviewPanel(QFrame):
 class PageDialog(QDialog):
     """The PreviewPanel in its own big window, opened from a rental, a kit or the gear toolbar."""
 
+    SHEET = False  # a window of its own: the pages, as big as you make it
+
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setWindowTitle("Bodega")

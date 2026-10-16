@@ -7,6 +7,7 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.services import account, feedback
+from bodega.ui.components import sheet
 from bodega.ui.components.widgets import (
     Guarded,
     Section,
@@ -23,6 +24,7 @@ from bodega.ui.style import tokens
 class FeedbackDialog(Guarded, QDialog):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
+        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.setWindowTitle("Send Feedback")
         self.setMinimumWidth(tokens.DIALOG_W_WIDE)
         self.sent_now = False

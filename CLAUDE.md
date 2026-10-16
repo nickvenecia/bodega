@@ -124,7 +124,10 @@ bodega/
                    Editing before dropping typing, and says what "changed" means), glass.py
                    (GlassRoot backdrop drawn once and reused; Dock: the inspector floats and slides, the content
                    makes room through the row's right margin, a Table slides as two pictures: freeze/thaw),
-                   access.py (the system's Reduce Motion, Increase Contrast, Reduce Transparency: every
+                   sheet.py (every dialog shows over its window: prepare() as it's made; the window blurred and
+                   dimmed behind, a ✕ level with its title, a click outside closes it unless SHEET_OUTSIDE = False;
+                   Settings is SHEET_KIND = "window"; still() the blurred picture), access.py (the system's Reduce
+                   Motion, Increase Contrast, Reduce Transparency: every
                    animation asks duration()/reduce_motion(); tokens.use(contrast=, opaque=)),
                    datefield.py (DateField: typed or picked from its month popover, the standard's G.22),
                    empty.py (EmptyPage: where a table would be with nothing in it: tiles, the ways to start;

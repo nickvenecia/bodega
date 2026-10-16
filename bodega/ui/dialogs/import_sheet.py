@@ -22,6 +22,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QListWidget, QListWidgetItem, QPu
 
 from bodega.core import importer, money, words
 from bodega.core.model import Item
+from bodega.ui.components import sheet
 from bodega.ui.components.widgets import (
     Disclosure,
     FitScroll,
@@ -46,6 +47,8 @@ class ImportDialog(QDialog):
     the columns you set for sheets laid out before (settings "import_columns"): a sheet laid out the same way
     starts with them."""
 
+    SHEET_OUTSIDE = False  # (a click beside it never drops the columns you set)
+
     def __init__(
         self,
         path: Path,
@@ -56,6 +59,7 @@ class ImportDialog(QDialog):
         saved_columns: dict | None = None,
     ):
         super().__init__(parent)
+        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.fill_links = False
         self.path = path
         self.rows = rows

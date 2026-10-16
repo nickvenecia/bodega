@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 from bodega import __version__
 from bodega.core import errors, update
 from bodega.core.log import get_logger
+from bodega.ui.components import sheet
 from bodega.ui.components.widgets import hbox, hint, primary_button, status_line, vbox
 from bodega.ui.components.worker import Background
 from bodega.ui.style import theme, tokens
@@ -101,8 +102,11 @@ class DownloadThread(Background):
 class UpdateDialog(QDialog):
     """Shows a release. `busy()` -> a reason not to restart now ('' if fine)."""
 
+    SHEET_OUTSIDE = False  # (a click beside it never stops a download)
+
     def __init__(self, release: update.Release, busy=lambda: "", parent: QWidget | None = None):
         super().__init__(parent)
+        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.release, self.busy = release, busy
         self.kind = update.install_kind()
         self.plan: update.Plan | None = None

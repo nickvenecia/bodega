@@ -23,6 +23,7 @@ from bodega.core.model import WEEK_DAYS, Business
 from bodega.core.paths import logos_dir
 from bodega.core.store import clean_prefix, initials
 from bodega.core.terms import DEFAULT_NOTE, DEFAULT_TERMS
+from bodega.ui.components import sheet
 from bodega.ui.components.address import AddressFields
 from bodega.ui.components.photos import write_picture
 from bodega.ui.components.widgets import (
@@ -148,6 +149,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         """`new` with a business: a new profile that starts from those values. `next_for(prefix)` is the
         next number free in that series this year (without it, there's no Next Number field)."""
         super().__init__(parent)
+        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.next_for = next_for
         self.next_number = 0
         self.editing = business is not None and not new

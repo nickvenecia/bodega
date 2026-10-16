@@ -107,6 +107,13 @@ SETTINGS_SIZE = (820, 620)  # the Settings window
 SETTINGS_MIN = (680, 480)
 SETTINGS_SIDE_W = 210  # its sidebar
 ALERT_W = 300  # an alert (Delete …?), narrow like a Mac's
+SHEET_PAD = (16, 48)  # (G.18) a sheet keeps this far from the window's sides, and from its top and foot
+WINDOW_PAD = 28  # (G.18) …and the window over the app (Settings), this far all round
+SHEET_BLUR = 6  # (G.18) the window behind a sheet, blurred this much…
+WINDOW_BLUR = 10  # …behind Settings…
+PALETTE_BLUR = 4  # …and behind Search Everything
+SHEET_RISE = 10  # (G.18) a sheet rises this far as it comes in
+SHEET_CLOSE_INSET = 18  # (G.18) a sheet's ✕: its trailing edge this far in from the sheet's
 ALERT_ICON = 56  # the app icon at the top of it
 PROFILE_DIALOG_H = 680  # the profile dialog: name, logo and contact show without scrolling
 PICKER_SIZE = (560, 620)  # the Add Gear window
@@ -132,6 +139,8 @@ GLASS_SHADOW_DROP = 3  # how far below the panel it sits: barely
 DOCK_MS = 240  # the inspector sliding in or out
 FADE_MS = 150  # small things appearing or going (a sidebar section's +): a quick fade, never a pop
 SEG_SLIDE_MS = 200  # a segmented control's highlight sliding to the new choice
+SHEET_FADE_MS = 160  # (G.18) the scrim behind a sheet fades in…
+SHEET_RISE_MS = 200  # …and the sheet rises into place
 TURN_MS = 180  # (G.11) a chevron turning as what it holds opens or closes
 LIFT_STEP_MS = 16  # dragging a row: how often the other rows move (about 60 a second)
 LIFT_EASE = 0.3  # …and how far towards their new place each step (smaller is slower)
@@ -347,7 +356,9 @@ DARK = {
     "TOAST_SHADOW": "rgba(0, 0, 0, 0.60)",
     "TOAST_TRACK": "rgba(255, 255, 255, 0.18)",  # a job's progress track (and its spinner's) on the toast
     "TOAST_BUTTON": "rgba(255, 255, 255, 0.14)",  # a job's Stop, a capsule on the toast
-    "SCRIM": "rgba(0, 0, 0, 0.40)",  # (scrim) the window, dimmed under a palette
+    "SCRIM": "rgba(0, 0, 0, 0.50)",  # (scrim) the window, dimmed (and blurred) under a sheet, Settings or a palette
+    "SHEET_SHADOW": "rgba(0, 0, 0, 0.60)",  # (shadow-lg) a sheet's and Settings' shadow…
+    "SHEET_RING": "rgba(255, 255, 255, 0.10)",  # …and its hairline ring
     "TOAST_DONE": "#30D158",  # its icon: it worked
     "TOAST_PROBLEM": "#FFB340",  # …it didn't (amber: red means late or delete)
     "TOAST_PROBLEM_FILL": "#4A3F25",  # a problem's toast is tinted amber, so it's never missed
@@ -427,7 +438,9 @@ LIGHT = {
     "TOAST_SHADOW": "rgba(0, 0, 0, 0.30)",
     "TOAST_TRACK": "rgba(255, 255, 255, 0.18)",
     "TOAST_BUTTON": "rgba(255, 255, 255, 0.14)",
-    "SCRIM": "rgba(0, 0, 0, 0.20)",
+    "SCRIM": "rgba(0, 0, 0, 0.25)",
+    "SHEET_SHADOW": "rgba(0, 0, 0, 0.20)",
+    "SHEET_RING": "rgba(0, 0, 0, 0.08)",
     "TOAST_DONE": "#30D158",  # (the dark look's: these sit on the dark toast)
     "TOAST_PROBLEM": "#FFB340",
     "TOAST_PROBLEM_FILL": "#4A3F25",

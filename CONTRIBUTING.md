@@ -109,6 +109,11 @@ packaging/     Installer files per OS
     rebuilt, a field moved), and the next object made at that address crashes. The same goes for anything Qt made
     itself: keep the widget you made, not what Qt hands back for it (`tests/test_memory.py` and
     `tests/test_code_rules.py` check).
+23. Every dialog calls `sheet.prepare(self)` right after it's made (a plain `QDialog(parent)`: `sheet.prepare(d)`),
+    so it shows over its window as a sheet: frameless, the window blurred and dimmed behind it, a ✕ level with its
+    DialogTitle (components/sheet.py). Say how it's shown with `SHEET_*` class attributes (no ✕, not closed by a
+    click outside, the window over the app); only a window of its own (the page window) or one that draws its own
+    scrim says `SHEET = False` (`tests/test_sheets.py` checks).
 
 ---
 

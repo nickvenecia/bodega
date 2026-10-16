@@ -325,6 +325,10 @@
   With Reduce Motion on, it moves at once.
 - The page window says which page you're looking at ("Page 2 of 5") as you scroll a long list, and its scroll bar
   is always there, so the pages never shift sideways.
+- Settings, the renter and profile forms, Check Out, alerts and every other window Bodega opens on top now open over
+  Bodega's own window instead of beside it: the window behind is blurred and dimmed, a ✕ in the corner closes them
+  (so does Esc), and a click on the dimmed area closes them too, unless that would lose what you typed or an import
+  you're setting up. They fade in, unless Reduce Motion is on. Search Everything blurs the window behind it as well.
 - Gear that goes with a piece (the FX6's cage, the 80c's fresnel) is listed under it, one step in, and folds away:
   click the arrow before the piece's name, or press → and ←, and Bodega remembers what you opened. The piece's row
   adds up everything with it (a day of renting it, what it's all worth), and closed, it shows the most pressing

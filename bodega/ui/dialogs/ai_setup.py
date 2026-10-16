@@ -16,6 +16,7 @@ from bodega.core.store import Library
 from bodega.services import secrets
 from bodega.services.ai import providers, usage
 from bodega.services.ai.providers import PROVIDERS, Setup
+from bodega.ui.components import sheet
 from bodega.ui.components.widgets import (
     COUNT_TYPED,
     Embeddable,
@@ -53,6 +54,7 @@ BILLED = (
 class AISetupDialog(Embeddable, QDialog):
     def __init__(self, lib: Library, parent: QWidget | None = None):
         super().__init__(parent)
+        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.lib = lib
         self.setWindowTitle("AI")
         self.setMinimumWidth(DIALOG_W_WIDE)

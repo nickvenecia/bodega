@@ -6,6 +6,7 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QDialog, QHeaderView, QLabel, QPushButton, QTreeWidget, QTreeWidgetItem, QWidget
 
 from bodega.services.ai.tasks import Change, Result
+from bodega.ui.components import sheet
 from bodega.ui.components.widgets import button_row, hint, primary_button, vbox
 from bodega.ui.style import theme, tokens
 from bodega.ui.window.tables import RowPainter
@@ -14,8 +15,11 @@ MAX_PROBLEMS_SHOWN = 4
 
 
 class ReviewDialog(QDialog):
+    SHEET_OUTSIDE = False  # (a click beside it never drops what your AI suggested)
+
     def __init__(self, title: str, result: Result, names: dict[str, str], parent: QWidget | None = None):
         super().__init__(parent)
+        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.result = result
         self.setWindowTitle(title)
         self.setMinimumWidth(tokens.DIALOG_W_XWIDE)

@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
 from bodega.core import dates, document, errors
 from bodega.core.checks import pieces, progress, rows
 from bodega.core.model import CheckRow, Rental, now_iso
-from bodega.ui.components import photos
+from bodega.ui.components import photos, sheet
 from bodega.ui.components.widgets import (
     ElidedLabel,
     FitScroll,
@@ -117,6 +117,7 @@ class CheckDialog(QDialog):
 
     def __init__(self, lib, r: Rental, back: bool, parent: QWidget | None = None):
         super().__init__(parent)
+        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.back = back
         self.mark = False
         title = f"Check In {r.number}" if back else f"Check Out {r.number}"

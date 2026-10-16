@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QListWidget, QListWidg
 from bodega.core import money, pricing, search, words
 from bodega.core.model import Business
 from bodega.core.store import Library
+from bodega.ui.components import sheet
 from bodega.ui.components.widgets import SearchField, hbox, hint, primary_button, vbox
 from bodega.ui.style import theme, tokens
 
@@ -36,6 +37,7 @@ class GearPicker(QDialog):
         parent: QWidget | None = None,
     ):
         super().__init__(parent)
+        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.lib = lib
         self.picked: list[tuple[str, str]] = []
         self.setWindowTitle(title)

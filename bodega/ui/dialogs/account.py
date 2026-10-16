@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.core import errors
 from bodega.services import account
+from bodega.ui.components import sheet
 from bodega.ui.components.widgets import Embeddable, Section, button_row, primary_button, status_line, vbox
 from bodega.ui.style import theme, tokens
 
@@ -14,6 +15,7 @@ from bodega.ui.style import theme, tokens
 class SignInDialog(Embeddable, QDialog):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
+        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.setWindowTitle("Sign In")
         self.setMinimumWidth(tokens.DIALOG_W)
         lay = vbox(self, tokens.SPACE_5, tokens.SPACE_3)

@@ -91,6 +91,7 @@ QMainWindow {{ background: {tokens.BG}; }}
 *[glass="true"] {{ background: transparent; border: none; }}
 QDialog {{ background: {tokens.PANEL}; }}
 QDialog#Embedded {{ background: transparent; }}
+QDialog[sheet="true"] {{ background: transparent; }}
 QToolTip {{ background: {tokens.RAISED}; color: {tokens.TEXT}; border: 1px solid {tokens.BORDER_STRONG};
     padding: {SPACE_1}px {SPACE_2}px; border-radius: {RADIUS_SM}px; font-size: {TEXT_SM}px; }}
 

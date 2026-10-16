@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 )
 
 from bodega.core import pricing, search
+from bodega.ui.components import sheet
 from bodega.ui.components.widgets import IconLabel, hbox, vbox
 from bodega.ui.style import theme, tokens
 
@@ -162,6 +163,8 @@ class _Rows(QStyledItemDelegate):
 class CommandPalette(QDialog):
     """The palette over a dimmed window: a glass panel PALETTE_TOP from the top, up to PALETTE_W wide."""
 
+    SHEET = False  # it draws its own scrim (a Spotlight panel, near the top)
+
     def __init__(self, window: QWidget):
         super().__init__(window, Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
@@ -272,14 +275,19 @@ class CommandPalette(QDialog):
         body = (self.none.sizeHint().height() + 2 * tokens.SPACE_5) if self.none.isVisibleTo(self) else rows
         self.panel.setGeometry((w.width() - width) // 2, tokens.PALETTE_TOP, width, min(most, head + body))
 
+    _still = None  # the window as it was, blurred
+
     def showEvent(self, e):
         super().showEvent(e)
+        self._still = sheet.still(self.window_, tokens.PALETTE_BLUR)
         self._fit()
         self.find.setFocus()
 
     def paintEvent(self, _e):
         p = QPainter(self)
-        p.fillRect(self.rect(), theme.qcolor(tokens.SCRIM))  # the window, dimmed under it
+        if self._still is not None:
+            p.drawPixmap(self.rect(), self._still)
+        p.fillRect(self.rect(), theme.qcolor(tokens.SCRIM))  # the window, blurred and dimmed under it
         p.end()
 
     def mousePressEvent(self, e):

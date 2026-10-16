@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from bodega.core import words
+from bodega.ui.components import sheet
 from bodega.ui.components.widgets import (
     button_row,
     combo,
@@ -38,6 +39,11 @@ class Alert(QDialog):
 
     OTHER = 2
 
+    SHEET_CLOSE = False  # (Cancel is its way out)
+    SHEET_PANEL = False  # (its card is its own)
+    SHEET_AT = "third"  # a little above the middle, like a Mac's
+    SHEET_OUTSIDE = False  # (a decision: Esc or Cancel says no)
+
     def __init__(
         self,
         parent: QWidget | None,
@@ -52,6 +58,7 @@ class Alert(QDialog):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        sheet.prepare(self)  # over its window, dimmed (components/sheet.py)
         self.setWindowTitle(title)
         outer = vbox(self, 0, 0)
         card = QFrame()
@@ -107,10 +114,11 @@ class Alert(QDialog):
     def showEvent(self, e):
         super().showEvent(e)
         self.go.setFocus()
-        win = self.parentWidget().window() if self.parentWidget() is not None else None
-        if win is not None:  # over the middle of the window, a little above centre, like a Mac alert
-            g = win.frameGeometry()
-            self.move(g.center().x() - self.width() // 2, g.top() + g.height() // 3 - self.height() // 2)
+        if not self.property("sheet"):  # (no window to sit over): over the middle of the screen it's on
+            win = self.parentWidget().window() if self.parentWidget() is not None else None
+            if win is not None:
+                g = win.frameGeometry()
+                self.move(g.center().x() - self.width() // 2, g.top() + g.height() // 3 - self.height() // 2)
 
 
 def confirm(parent: QWidget, title: str, text: str, action: str, danger: bool = True) -> bool:
@@ -150,6 +158,7 @@ def ask_name(
 ) -> str | None:
     """One name, typed (a new department, a renamed group). None if cancelled or left blank."""
     d = QDialog(parent)
+    sheet.prepare(d)
     d.setWindowTitle(title)
     d.setMinimumWidth(DIALOG_W)
     lay = vbox(d, SPACE_5, SPACE_3)
@@ -183,6 +192,7 @@ def ask_name(
 def ask_choice(parent: QWidget, title: str, text: str, choices: list[tuple[str, str]], action: str) -> str | None:
     """One of a few choices ((key, words) each), picked from a dropdown. The key, or None if cancelled."""
     d = QDialog(parent)
+    sheet.prepare(d)
     d.setWindowTitle(title)
     d.setMinimumWidth(DIALOG_W)
     lay = vbox(d, SPACE_5, SPACE_3)
@@ -218,6 +228,7 @@ def pick_from(
     from bodega.ui.components.widgets import SearchField
 
     d = QDialog(parent)
+    sheet.prepare(d)
     d.setWindowTitle(title)
     d.setMinimumWidth(DIALOG_W)
     lay = vbox(d, SPACE_5, SPACE_3)
@@ -285,6 +296,7 @@ def tidy_preview(parent: QWidget, moves: list) -> bool:
     from PySide6.QtWidgets import QListWidget
 
     d = QDialog(parent)
+    sheet.prepare(d)
     d.setWindowTitle("Tidy Up Groups")
     d.setMinimumWidth(DIALOG_W)
     lay = vbox(d, SPACE_5, SPACE_3)
@@ -313,6 +325,7 @@ def tidy_preview(parent: QWidget, moves: list) -> bool:
 
 def about(parent: QWidget, version: str, data_folder: str) -> None:
     d = QDialog(parent)
+    sheet.prepare(d)
     d.setWindowTitle("About Bodega")
     d.setMinimumWidth(DIALOG_W)
     lay = vbox(d, SPACE_5, SPACE_3)

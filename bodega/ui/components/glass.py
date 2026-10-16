@@ -148,6 +148,11 @@ class GlassRoot(QWidget):
 
     def paintEvent(self, e):
         p = QPainter(self)
+        if self.window() is not self and self.window().property("sheet"):  # Settings over the window: its corners
+            p.setRenderHint(QPainter.RenderHint.Antialiasing)
+            corners = QPainterPath()
+            corners.addRoundedRect(QRectF(self.rect()), tokens.GLASS_R, tokens.GLASS_R)
+            p.setClipPath(corners)
         p.drawPixmap(0, 0, self._backdrop())
         d = self.dock
         if d is not None and d.isVisible():

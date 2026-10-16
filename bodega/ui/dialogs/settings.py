@@ -21,6 +21,7 @@ from bodega.core import backups, dates, errors, settings
 from bodega.core.paths import data_dir
 from bodega.core.store import Library
 from bodega.services import account
+from bodega.ui.components import sheet
 from bodega.ui.components.glass import GlassRoot
 from bodega.ui.components.panels import LeftPanel
 from bodega.ui.components.widgets import (
@@ -62,6 +63,8 @@ PANES = [
 
 
 class SettingsDialog(QDialog):
+    SHEET_KIND = "window"  # (the standard's window over the app)
+
     def __init__(
         self,
         lib: Library,
@@ -73,6 +76,7 @@ class SettingsDialog(QDialog):
         parent: QWidget | None = None,
     ):
         super().__init__(parent or window)
+        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.lib = lib
         self.win = window
         self.setWindowTitle("Settings")

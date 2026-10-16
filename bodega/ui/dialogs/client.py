@@ -7,6 +7,7 @@ from dataclasses import replace
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.core.model import Client
+from bodega.ui.components import sheet
 from bodega.ui.components.address import AddressFields
 from bodega.ui.components.widgets import Guarded, ReturnMovesOn, Section, TextBox, hbox, primary_button, vbox
 from bodega.ui.style.tokens import DIALOG_W_WIDE, SPACE_2, SPACE_3, SPACE_4, SPACE_5, TEXT_BOX_H
@@ -17,6 +18,7 @@ class ClientDialog(Guarded, QDialog):
 
     def __init__(self, client: Client | None, can_delete: bool, parent: QWidget | None = None):
         super().__init__(parent)
+        sheet.prepare(self)  # shown over its window (components/sheet.py)
         self.editing = client is not None
         self.client = replace(client) if client else Client()
         self.deleted = False
