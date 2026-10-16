@@ -73,6 +73,7 @@ def test_a_logo_from_before_is_drawn_from_its_cleaned_drawing(qapp, tmp_path):
     assert out.pixelColor(5, 5).alpha() == 0  # the file from the computer never reached the page
 
 
+@pytest.mark.qt_warnings  # (the planted parts of the SVG, which Qt can't find once they're cleaned out)
 def test_adding_an_svg_logo_keeps_the_cleaned_one(qapp, data_folder, tmp_path):
     from bodega.core.paths import logos_dir
     from bodega.ui.dialogs.profile import import_logo

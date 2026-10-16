@@ -252,7 +252,10 @@ def test_a_segmented_controls_highlight_slides_unless_motion_is_reduced(qapp, mo
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "0")
     s.buttons["timeline"].click()
     assert s._slide.state() == QAbstractAnimation.State.Running  # on its way…
-    QTest.qWait(400)
+    for _ in range(200):  # (it takes SEG_SLIDE_MS)
+        if s._slide.state() != QAbstractAnimation.State.Running:
+            break
+        QTest.qWait(10)
     assert s.thumb.geometry() == s.buttons["timeline"].geometry()  # …and there
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "1")
     s.buttons["month"].click()

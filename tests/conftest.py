@@ -1,5 +1,9 @@
 """Shared test setup: an offscreen Qt app and a throwaway data folder for every test.
 
+A warning from Qt fails the test it came in (unless the test is marked qt_warnings: it feeds Qt a broken file
+on purpose). The offscreen screen's own limits ("This plugin does not support raise()") aren't warnings about
+Bodega and are let through.
+
 Qt objects made during the UI tests can crash while Python tears itself down after the last test,
 turning a green run red in CI. Once every test has finished, leave with pytest's own result.
 """
@@ -14,6 +18,23 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 _status = {"code": 0}
+QT_NOISE = ("This plugin does not support",)  # the offscreen screen has no window manager to ask
+_qt_said: list[str] = []
+
+
+def _qt_message(kind, _context, message: str) -> None:
+    from PySide6.QtCore import QtMsgType
+
+    bad = kind in (QtMsgType.QtWarningMsg, QtMsgType.QtCriticalMsg, QtMsgType.QtFatalMsg)
+    if bad and not message.startswith(QT_NOISE):
+        _qt_said.append(message)
+        sys.stderr.write(f"Qt: {message}\n")
+
+
+def pytest_configure(config):
+    from PySide6.QtCore import qInstallMessageHandler
+
+    qInstallMessageHandler(_qt_message)
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -65,3 +86,13 @@ def _no_leftover_windows():
         w.close()
         w.deleteLater()
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
+
+@pytest.fixture(autouse=True)
+def _qt_stays_quiet(request):
+    """Qt said nothing was wrong during the test."""
+    _qt_said.clear()
+    yield
+    said, _qt_said[:] = list(_qt_said), []
+    if said and request.node.get_closest_marker("qt_warnings") is None:
+        pytest.fail("Qt warned: " + " | ".join(said[:5]))

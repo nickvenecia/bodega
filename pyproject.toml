@@ -68,3 +68,4 @@ known-first-party = ["bodega"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q -p no:cacheprovider"
+markers = ["qt_warnings: this test expects Qt to complain (a broken file on purpose, say)"]

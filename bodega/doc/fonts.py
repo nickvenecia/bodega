@@ -62,6 +62,9 @@ def make(spec: FontSpec, device: QPaintDevice) -> QFont:
     f.setWeight(QFont.Weight(spec.weight))
     f.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
     f.setKerning(True)
+    # no contextual alternates: the raised hyphen and brackets they put between figures have no letter behind
+    # them, so a PDF's "JLF-2026-001" or "(505)" would copy out (and be read aloud) as symbols
+    f.setFeature(QFont.Tag("calt"), 0)
     if spec.spacing:
         f.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, size * spec.spacing)
     return f

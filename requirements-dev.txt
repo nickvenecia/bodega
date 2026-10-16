@@ -1,5 +1,6 @@
 -r requirements.txt
 Pillow==12.3.0  # build only: the Windows icon and scripts/make_icon.py
 pyinstaller==6.22.3
+pypdf==6.17.0  # tests only: reads the PDFs back, as another app would
 pytest==9.1.1
 ruff==0.16.8

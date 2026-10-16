@@ -189,6 +189,8 @@
 - The Assistant's header has Clear Chat, to start over, and a ⋯ with AI Settings…. Before the first question it
   offers a few to try: click one and it's in the box, ready to send.
 - Anything that's off (a button, a field, a switch, a menu item) is dimmed the same way everywhere, as on a Mac.
+- Copying from a saved PDF now gives the right characters: a rental number like JLF-2026-001 and a phone number in
+  brackets came out of agreements as odd symbols (and screen readers read them that way).
 - A rental's lines, a kit's gear and what goes with a piece are now rows with thin lines between them, instead of
   boxes inside a box.
 - Drag a column's title in the gear list to put the columns in your own order (Name stays first); right-click a

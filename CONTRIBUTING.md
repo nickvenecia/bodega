@@ -125,6 +125,10 @@ packaging/     Installer files per OS
 - A fix comes with a test that fails on the code before the fix: run it once without the fix and see it fail.
 - Never skip, disable or loosen a test to get green.
 - Tests never touch real data: `tests/conftest.py` gives every test its own empty data folder.
+- A warning from Qt fails the test it came in. A test that hands Qt a broken file on purpose is marked
+  `@pytest.mark.qt_warnings`. The offscreen screen's own limits ("This plugin does not support…") are let through.
+- Wait for what you're waiting on (`wait_for(done)` in `tests/test_window.py`), never a fixed time.
+- A document's PDF is read back with an independent reader (pypdf): its words are real text.
 - UI changes: check screenshots (`QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR`).
 - Before a release, the packaged app must pass `--smoke-test` (CI does this on every platform).
 
