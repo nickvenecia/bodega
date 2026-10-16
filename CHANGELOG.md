@@ -155,6 +155,10 @@
   the menu: type a few letters, press Return.
 - Settings has a search box: type "logo", "tax" or "backup" and only the section that holds it stays; Return opens
   it.
+- Importing a sheet with blanks lets you choose what they mean: a blank Rent? can mean for rent or not, and pieces
+  with no quantity can come in as 1 or be left out. (The usual choices stay as before.)
+- When a sheet has its own Equipment Total row, the Import window checks it against what was read and says whether
+  it matches, or by how much it's off.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

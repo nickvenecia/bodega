@@ -168,7 +168,27 @@ class Imported:
     # under Rent? means for rent, and a company guessed from the name
     assumed_qty: int = 0
     assumed_rent: int = 0
+    skipped_qty: int = 0  # pieces with no quantity, left out (when asked)
     guessed_brand: int = 0
+    sheet_total: Decimal | None = None  # the sheet's own Total row, to check what was read against
+
+
+def total_check(got: Imported, currency: str = "$") -> str:
+    """What the sheet's own total says about what was read: it matches (by each piece's price, or by price × how
+    many), or the difference. '' when the sheet has no total to check."""
+    if got.sheet_total is None:
+        return ""
+    each = sum((money.parse(i.value) for i in got.items), money.ZERO)
+    every = sum((money.parse(i.value) * i.qty for i in got.items), money.ZERO)
+    said = money.fmt(got.sheet_total, currency)
+    if money.cents(got.sheet_total) in (money.cents(each), money.cents(every)):
+        return f"The sheet's own total, {said}, matches what was read."
+    read = every if abs(every - got.sheet_total) <= abs(each - got.sheet_total) else each
+    return (
+        f"The sheet's own total is {said}; what was read adds up to {money.fmt(read, currency)} "
+        f"({money.fmt(abs(got.sheet_total - read), currency)} {'less' if read < got.sheet_total else 'more'}). "
+        "Check the rows that were left out."
+    )
 
 
 def _clean(v) -> str:
@@ -500,9 +520,17 @@ def _find_header(rows: list[list]) -> tuple[int, dict[str, int]]:
     return -1, {}
 
 
-def parse_rows(rows: list[list], layout: Layout | None = None, guess_brands: bool = True) -> Imported:
+def parse_rows(
+    rows: list[list],
+    layout: Layout | None = None,
+    guess_brands: bool = True,
+    blank_rent: bool = True,
+    no_qty: str = "one",
+) -> Imported:
     """Turn rows into items. `layout` says which column is which (detect() guesses it). What the sheet
-    leaves blank is filled in and counted (Imported.assumed_*); `guess_brands`: a blank company is guessed."""
+    leaves blank is filled in and counted (Imported.assumed_*); `guess_brands`: a blank company is guessed;
+    `blank_rent`: what a blank Rent? means (for rent, or not); `no_qty`: a piece with no quantity counts as
+    "one", or is left out ("skip", counted in Imported.skipped_qty)."""
     out = Imported()
     layout = layout or detect(rows)
     head, cols = layout.head, dict(layout.cols)
@@ -547,6 +575,8 @@ def parse_rows(rows: list[list], layout: Layout | None = None, guess_brands: boo
             continue
         low = name.lower()
         if low in ("equipment total", "total", "rental cost", "subtotal"):
+            if low in ("equipment total", "total") and value is not None:
+                out.sheet_total = Decimal(str(value))  # kept, to check what was read against it
             continue
         # a heading in the name column ("1000c", "Steel", or "Post" under a repeated header row)
         others_empty = (
@@ -563,11 +593,14 @@ def parse_rows(rows: list[list], layout: Layout | None = None, guess_brands: boo
         it.group = _clean(get("group")) or group or it.department  # no sub-heading: the heading is its group
         it.brand = _clean(get("brand"))
         it.series = _clean(get("series"))
+        if qty is None and no_qty == "skip":
+            out.skipped_qty += 1
+            continue
         it.qty = clamp_qty(qty) if qty is not None else 1
         out.assumed_qty += qty is None
         it.value = _value_text(value)
         rent = _truthy(get("rentable"))
-        it.rentable = True if rent is None else rent
+        it.rentable = blank_rent if rent is None else rent
         out.assumed_rent += rent is None
         serial_text = _clean(get("serials"))
         if serial_text:

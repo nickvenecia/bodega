@@ -132,6 +132,19 @@ class ImportDialog(QDialog):
         self.links.setToolTip("Only where a piece has no link yet")
         self.links.setVisible(bool(known_links))
         self.options.add(self.links)
+        # what a blank means, when the sheet leaves some blank (shown only then): today's defaults, chosen
+        self.blank_rent = ToggleRow("A Blank Rent? Means For Rent", True)
+        self.blank_rent.setToolTip("Off: gear the sheet doesn't say about stays off rentals")
+        self.blank_rent.toggled.connect(lambda _on: self.reread())
+        self.options.add(self.blank_rent)
+        self.blank_qty = ToggleRow("Bring In Pieces With No Quantity, as 1", True)
+        self.blank_qty.setToolTip("Off: rows with no quantity are left out")
+        self.blank_qty.toggled.connect(lambda _on: self.reread())
+        self.options.add(self.blank_qty)
+        self.total_note = QLabel()  # the sheet's own total, checked against what was read
+        self.total_note.setObjectName("Hint")
+        self.total_note.setWordWrap(True)
+        self.options.add(self.total_note)
         self.filled = QLabel()  # what the sheet left blank, filled in
         self.filled.setObjectName("Hint")
         self.filled.setWordWrap(True)
@@ -205,7 +218,13 @@ class ImportDialog(QDialog):
     def reread(self) -> None:
         """Read the sheet again with the columns and options as they are now."""
         layout = self._layout()
-        self.got = importer.parse_rows(self.rows, layout, guess_brands=self.guess.isChecked())
+        self.got = importer.parse_rows(
+            self.rows,
+            layout,
+            guess_brands=self.guess.isChecked(),
+            blank_rent=self.blank_rent.isChecked(),
+            no_qty="one" if self.blank_qty.isChecked() else "skip",
+        )
         if self.attach.isChecked():
             self.got.attached = importer.attach_guesses(self.got.items)
         if self.tidy.isChecked():
@@ -226,10 +245,16 @@ class ImportDialog(QDialog):
         said = [
             f"{n:,} with {what}" for n, what in (
                 (g.assumed_qty, "no quantity count as 1"),
-                (g.assumed_rent, "no Rent? say are for rent"),
+                (g.skipped_qty, "no quantity are left out"),
+                (g.assumed_rent, f"no Rent? are {'for rent' if self.blank_rent.isChecked() else 'not for rent'}"),
                 (g.guessed_brand, "no company got one from the name"),
             ) if n
         ]  # fmt: skip
+        check = importer.total_check(g)
+        self.total_note.setText(check)
+        self.total_note.setVisible(bool(check))
+        self.blank_rent.setVisible(bool(g.assumed_rent))
+        self.blank_qty.setVisible(bool(g.assumed_qty or g.skipped_qty))
         self.filled.setText("Filled in for you: " + "; ".join(said) + "." if said else "")
         self.filled.setVisible(bool(said))
         names = [label for key, label in importer.FIELDS if key in layout.cols]

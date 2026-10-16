@@ -151,3 +151,35 @@ def test_a_csv_saved_by_excel_on_windows_keeps_its_dashes_and_accents(tmp_path):
     path.write_bytes("Item,Qty,Price\nCafé Lens – 50mm,1,900\n".encode("cp1252"))
     rows = importer._rows_csv(path)
     assert any("Café Lens – 50mm" in [str(c) for c in row] for row in rows)
+
+
+def test_you_choose_what_a_blank_quantity_or_rent_means():
+    from bodega.core import importer
+
+    rows = [["Item", "Qty", "Price", "Rent?"], ["Sony FX6", 1, 5998, "Yes"], ["C-Stand", None, 120, None]]
+    usual = importer.parse_rows(rows)
+    stand = next(i for i in usual.items if i.name == "C-Stand")
+    assert stand.qty == 1 and stand.rentable and usual.assumed_qty == 1 and usual.assumed_rent == 1
+    strict = importer.parse_rows(rows, blank_rent=False, no_qty="skip")
+    assert [i.name for i in strict.items] == ["Sony FX6"] and strict.skipped_qty == 1
+    kept = importer.parse_rows(rows, blank_rent=False)
+    assert not next(i for i in kept.items if i.name == "C-Stand").rentable
+
+
+def test_the_sheets_own_total_checks_what_was_read():
+    from decimal import Decimal
+
+    from bodega.core import importer
+
+    rows = [
+        ["Item", "Qty", "Price"],
+        ["Sony FX6", 1, 5998],
+        ["Mini V-Mount", 6, 225],
+        ["Equipment Total", None, 7348],
+    ]
+    got = importer.parse_rows(rows)
+    assert got.sheet_total == Decimal(7348) and "matches" in importer.total_check(got)  # 5,998 + 6 × 225
+    rows[-1][2] = 9000
+    said = importer.total_check(importer.parse_rows(rows))
+    assert "$9,000.00" in said and "$1,652.00 less" in said
+    assert importer.total_check(importer.parse_rows(rows[:-1])) == ""  # no total row: nothing to check

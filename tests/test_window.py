@@ -616,7 +616,7 @@ def test_an_import_never_replaces_your_pricing_unasked_and_says_what_it_filled_i
     assert not d.use_pricing.isChecked()  # you have a profile: its pricing stays yours
     assert (
         "1 with no quantity count as 1" in d.filled.text()
-        and "2 with no Rent? say are for rent" in d.filled.text()
+        and "2 with no Rent? are for rent" in d.filled.text()
     )
     assert "company" in d.filled.text() and all(i.brand == "Aputure" for i in d.chosen())
     d.guess.setChecked(False)
