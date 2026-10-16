@@ -32,6 +32,7 @@ from bodega.ui.components.widgets import (
     ToggleRow,
     combo,
     hbox,
+    set_combo,
     vbox,
 )
 from bodega.ui.style import tokens
@@ -193,7 +194,8 @@ class SettingsDialog(QDialog):
             choices = [(b.id, b.name or "Unnamed Profile", "") for b in lib.businesses.values()]
             if self._adding:
                 choices.append(("", "New Profile", ""))
-            self.profile_pick = combo(choices, "" if self._adding else (pick or ""))
+            self._showing = "" if self._adding else (pick or "")
+            self.profile_pick = combo(choices, self._showing)
             self.profile_pick.activated.connect(lambda _i: self._pick_profile())
             row.addWidget(self.profile_pick, 1)
             add = QPushButton("Add a Profile")
@@ -223,13 +225,29 @@ class SettingsDialog(QDialog):
         self.profile_editor = d
         self._fill("profiles", w, scroll=False)
 
+    def _profile_may_go(self) -> bool:
+        """Changes typed into the profile form are asked about before it's swapped or closed."""
+        d = getattr(self, "profile_editor", None)
+        return d is None or d.may_leave()
+
+    def reject(self) -> None:
+        if self._profile_may_go():
+            super().reject()
+
     def _pick_profile(self) -> None:
         key = self.profile_pick.currentData()
+        if key == self._showing:
+            return
+        if not self._profile_may_go():
+            set_combo(self.profile_pick, self._showing)
+            return
         self._adding = not key
         self._profile_id = key or None
         self._build_profiles()
 
     def _add_profile(self) -> None:
+        if not self._profile_may_go():
+            return
         self._adding = True
         self._profile_id = None
         self._build_profiles()

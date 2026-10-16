@@ -32,7 +32,7 @@ from bodega.core.store import Library
 from bodega.ui.components import titlebar
 from bodega.ui.components.empty import EmptyPage
 from bodega.ui.components.glass import Dock, GlassRoot, glass
-from bodega.ui.components.widgets import ElidedLabel, SearchField, Toast, hbox, vbox
+from bodega.ui.components.widgets import Banner, ElidedLabel, SearchField, Toast, hbox, vbox
 from bodega.ui.dialogs.preview import PageDialog
 from bodega.ui.panels.item import ItemPanel
 from bodega.ui.panels.kit import PackagePanel
@@ -103,6 +103,9 @@ class MainWindow(
         self.toaster = Toast(self, self._toast_area)
 
         self._save_timer = QTimer(self, singleShot=True, interval=tokens.SAVE_DELAY_MS, timeout=self.flush)
+        self._retry_timer = QTimer(self, interval=tokens.SAVE_RETRY_MS, timeout=self.flush)  # while not saved
+        self._was_unsaved = False
+        self.lib.on_unsaved = lambda: QTimer.singleShot(0, self, self.show_save_state)
         self._table_timer = QTimer(
             self, singleShot=True, interval=tokens.TABLE_DELAY_MS, timeout=self.refresh
         )
@@ -204,6 +207,9 @@ class MainWindow(
         grid.addLayout(right, 0, 2)
         lay.addWidget(bar)
         self.toolbar = bar
+        self.banner = Banner("Try Again")  # a save that failed, until it works
+        self.banner.acted.connect(self.try_saving_again)
+        lay.addWidget(self.banner)
 
         self.pages = QStackedWidget()
         self.gear_table = GearTable()
@@ -734,8 +740,34 @@ class MainWindow(
             QTimer.singleShot(0, self.titlebar.fit)
 
     def closeEvent(self, e):
+        if not self.may_quit():
+            e.ignore()
+            return
         self.shutdown()
         super().closeEvent(e)
+
+    def may_quit(self) -> bool:
+        """Quitting over changes that couldn't be saved asks first: Try Again, Quit Anyway or Cancel."""
+        from bodega.ui.dialogs.common import Alert
+
+        while True:
+            self.flush()
+            if not self.lib.unsaved:
+                return True
+            answer = Alert(
+                self,
+                "Quit Without Saving?",
+                "Bodega couldn't write your latest changes to its folder. Check that there's free space on this "
+                "computer and try again; if you quit now, they're lost.",
+                "Try Again",
+                "Cancel",
+                other="Quit Anyway",
+            ).exec()
+            if answer == Alert.OTHER:
+                log.warning("quit with unsaved changes: %s", ", ".join(sorted(self.lib.unsaved)))
+                return True
+            if answer != Alert.DialogCode.Accepted:
+                return False
 
     def shutdown(self) -> None:
         """Save everything before quitting (and the window's size and place for next time)."""

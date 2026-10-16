@@ -98,6 +98,8 @@ class ServicesMixin:
 
         d = UpdateDialog(self._release, parent=self)
         if d.exec() == UpdateDialog.DialogCode.Accepted and d.plan is not None:
+            if not self.may_quit():
+                return
             self.shutdown()
             restart_into(d.plan)
 

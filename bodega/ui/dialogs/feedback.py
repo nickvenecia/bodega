@@ -7,11 +7,11 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.services import account, feedback
-from bodega.ui.components.widgets import Section, Segmented, TextBox, button_row, hint, vbox
+from bodega.ui.components.widgets import Guarded, Section, Segmented, TextBox, button_row, hint, vbox
 from bodega.ui.style import tokens
 
 
-class FeedbackDialog(QDialog):
+class FeedbackDialog(Guarded, QDialog):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setWindowTitle("Send Feedback")
@@ -54,6 +54,10 @@ class FeedbackDialog(QDialog):
         row.addWidget(self.send)
         lay.addLayout(row)
         self._can_send()
+        self.settled()
+
+    def form_values(self) -> object:
+        return self.message.text().strip()
 
     def _can_send(self) -> None:
         self.send.setEnabled(bool(self.message.text().strip()))

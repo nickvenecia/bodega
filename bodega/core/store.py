@@ -19,6 +19,7 @@ import os
 import re
 import tempfile
 import time
+from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -137,6 +138,10 @@ class Library:
         self.clients: dict[str, Client] = {}
         self.businesses: dict[str, Business] = {}
         self.settings: dict[str, Any] = {}
+        # what couldn't be written last time ("gear", "kits", "renters", "profiles", "settings" or a rental's
+        # id): still in memory, tried again by save_again(). on_unsaved is told the moment a write fails.
+        self.unsaved: set[str] = set()
+        self.on_unsaved: Callable[[], None] | None = None
 
     # ------------------------------------------------------------------ files
     @property
@@ -207,7 +212,10 @@ class Library:
             if r.status in pricing.LOCKED and pricing.settle(
                 self, r, self.businesses.get(r.business_id) or self.pricing()
             ):
-                write_json(self._rental_dir / f"{r.id}.json", r.to_dict())
+                try:
+                    self._write(r.id, self._rental_dir / f"{r.id}.json", r.to_dict())
+                except OSError:
+                    pass  # kept as unsaved, and tried again with the next save
 
     def untangle(self) -> None:
         """An item can't belong to something that's gone, to itself, or (through others) to itself."""
@@ -242,18 +250,53 @@ class Library:
             return None
         return dest
 
+    def _write(self, what: str, path: Path, data: Any) -> None:
+        """Write one file; if it fails, remember it as unsaved (and say so) before the error goes on up."""
+        try:
+            write_json(path, data)
+        except OSError:
+            log.warning("couldn't save %s", what, exc_info=True)
+            self.unsaved.add(what)
+            if self.on_unsaved is not None:
+                self.on_unsaved()
+            raise
+        self.unsaved.discard(what)
+
+    def save_again(self) -> bool:
+        """Write again everything that couldn't be written. True once nothing is left unsaved."""
+        for what in sorted(self.unsaved):
+            save = {
+                "gear": self.save_items,
+                "kits": self.save_packages,
+                "renters": self.save_clients,
+                "profiles": self.save_businesses,
+                "settings": self.save_settings,
+            }.get(what)
+            try:
+                if save is not None:
+                    save()
+                elif (r := self.rentals.get(what)) is not None:
+                    self.save_rental(r)
+                else:  # a rental that's gone since (deleted, or undone)
+                    self.unsaved.discard(what)
+            except OSError:
+                return False
+        return not self.unsaved
+
     def save_items(self) -> None:
-        write_json(self.root / "gear.json", [i.to_dict() for i in self.items.values()])
+        self._write("gear", self.root / "gear.json", [i.to_dict() for i in self.items.values()])
 
     def save_packages(self) -> None:
-        write_json(self.root / "packages.json", [p.to_dict() for p in self.packages.values()])
+        self._write("kits", self.root / "packages.json", [p.to_dict() for p in self.packages.values()])
 
     def save_clients(self) -> None:
         clients = sorted(self.clients.values(), key=lambda c: c.name.casefold())
-        write_json(self.root / "clients.json", [c.to_dict() for c in clients])
+        self._write("renters", self.root / "clients.json", [c.to_dict() for c in clients])
 
     def save_businesses(self) -> None:
-        write_json(self.root / "businesses.json", [b.to_dict() for b in self.businesses.values()])
+        self._write(
+            "profiles", self.root / "businesses.json", [b.to_dict() for b in self.businesses.values()]
+        )
 
     def save_rental(self, r: Rental) -> None:
         from bodega.core import pricing
@@ -261,10 +304,10 @@ class Library:
         pricing.settle(self, r, self.businesses.get(r.business_id) or self.pricing())  # booked: prices hold
         r.updated = now_iso()
         self.rentals[r.id] = r
-        write_json(self._rental_dir / f"{r.id}.json", r.to_dict())
+        self._write(r.id, self._rental_dir / f"{r.id}.json", r.to_dict())
 
     def save_settings(self) -> None:
-        write_json(self.root / "settings.json", self.settings)
+        self._write("settings", self.root / "settings.json", self.settings)
 
     # ------------------------------------------------------------------ gear
     # ------------------------------------------------------------------ groups
@@ -655,6 +698,7 @@ class Library:
     def delete_rental(self, r_id: str) -> None:
         if (r := self.rentals.pop(r_id, None)) is not None:
             self._spend_number(r.number)
+        self.unsaved.discard(r_id)
         f = self._rental_dir / f"{r_id}.json"
         try:
             f.unlink(missing_ok=True)

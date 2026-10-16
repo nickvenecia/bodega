@@ -483,7 +483,7 @@ def test_next_number_in_the_profile_form(qapp, data_folder):
     b = next(iter(lib.businesses.values()))
     d = ProfileDialog(b, False, next_for=lambda prefix: lib.number_after(prefix, 2026))
     free = lib.number_after(b.prefix, 2026)
-    assert d.next_field.text() == f"{free:03d}" and d.save.isEnabled()
+    assert d.next_field.text() == f"{free:03d}" and not d.save.isEnabled()  # nothing changed yet
     d.next_field.setText("000")
     d.next_field.textEdited.emit("000")
     assert not d.save.isEnabled() and not d.next_note.isHidden()

@@ -22,7 +22,16 @@ from bodega.core import document
 from bodega.core.checks import pieces, progress, rows
 from bodega.core.model import CheckRow, Rental
 from bodega.ui.components import photos
-from bodega.ui.components.widgets import ElidedLabel, FitScroll, button_row, hbox, hint, icon_button, vbox
+from bodega.ui.components.widgets import (
+    ElidedLabel,
+    FitScroll,
+    Guarded,
+    button_row,
+    hbox,
+    hint,
+    icon_button,
+    vbox,
+)
 from bodega.ui.style import tokens
 
 
@@ -88,7 +97,7 @@ class _Row(QFrame):
         self._show_photos()
 
 
-class CheckDialog(QDialog):
+class CheckDialog(Guarded, QDialog):
     """`back`: checking in (otherwise out). After it closes, `.rows` and `.mark` (True: Mark as Out / Returned)."""
 
     def __init__(self, lib, r: Rental, back: bool, parent: QWidget | None = None):
@@ -142,6 +151,10 @@ class CheckDialog(QDialog):
         lay.addLayout(row)
         self._count()
         self.scan.setFocus()
+        self.settled()
+
+    def form_values(self) -> object:
+        return [(c.out, c.back, c.note, tuple(c.photos)) for c in self.rows]
 
     def say(self, text: str) -> None:
         self.status.setText(text)

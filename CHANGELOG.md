@@ -11,6 +11,11 @@
 - Settings › Profiles › Numbers & Paper has a Next Number, so a series from your old spreadsheet carries on (type 48
   and the next rental is JLF-2026-048). It never goes below a number already given.
 - When you type a rental number another rental already has, it says so under the field.
+- When Bodega can't save (the disk is full, say), a banner across the top says so and stays until it can, with Try
+  Again; your profile card at the bottom of the sidebar says Not Saved. Bodega keeps trying, and tells you when it's
+  saved. Quitting while something isn't saved asks first: Try Again, Quit Anyway or Cancel.
+- Closing a renter, your profile, Send Feedback or Check Out with changes you haven't saved asks first (Discard
+  Changes or Keep Editing), instead of dropping them. Save Changes stays off until you've changed something.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

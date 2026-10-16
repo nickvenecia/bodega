@@ -102,6 +102,7 @@ LIFT_SHADOW_STEPS = 6
 GLASS_EDGE_FADE = 60  # the hairline is brightest along the top, settling over this many px
 QUIT_WAIT_MS = 1500  # how long quitting waits for a price or update check to finish
 SAVE_DELAY_MS = 400  # save this long after the last keystroke
+SAVE_RETRY_MS = 20000  # after a save failed: try again this often while it lasts
 TABLE_DELAY_MS = 350  # refresh the table this long after an edit
 UPDATE_CHECK_DELAY_MS = 1500  # the automatic update check, just after the window is up (every launch)
 UPDATE_WAIT_MS = 1500  # a found update waits this long between looks while another window is open
@@ -230,6 +231,8 @@ DARK = {
     "TOAST_PROBLEM": "#E9B949",  # …it didn't (amber: red means late or delete)
     "TOAST_PROBLEM_FILL": "#4A3F25",  # a problem's toast is tinted amber, so it's never missed
     "TOAST_PROBLEM_EDGE": "rgba(233, 185, 73, 0.45)",
+    "BANNER": "rgba(233, 185, 73, 0.14)",  # a problem that lasts, across the top (amber, like a problem's toast)
+    "BANNER_EDGE": "rgba(233, 185, 73, 0.45)",
     "CHIP": "rgba(74, 144, 247, 0.16)",  # a tinted capsule (+ Link, + Notes)
     "CHIP_HOVER": "rgba(74, 144, 247, 0.26)",
     "FIELD": "rgba(255, 255, 255, 0.07)",  # a text field or dropdown: lightly frosted
@@ -287,6 +290,8 @@ LIGHT = {
     "TOAST_PROBLEM": "#E9B949",
     "TOAST_PROBLEM_FILL": "#4A3F25",
     "TOAST_PROBLEM_EDGE": "rgba(233, 185, 73, 0.45)",
+    "BANNER": "rgba(169, 122, 6, 0.10)",  # a problem that lasts, across the top (amber, like a problem's toast)
+    "BANNER_EDGE": "rgba(169, 122, 6, 0.40)",
     "CHIP": "rgba(47, 111, 219, 0.10)",
     "CHIP_HOVER": "rgba(47, 111, 219, 0.18)",
     "FIELD": "rgba(255, 255, 255, 1.0)",

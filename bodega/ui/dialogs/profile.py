@@ -26,6 +26,7 @@ from bodega.ui.components.widgets import (
     Disclosure,
     Embeddable,
     FitScroll,
+    Guarded,
     Section,
     TextBox,
     ToggleRow,
@@ -116,7 +117,7 @@ WEEK_LABELS = {
 }
 
 
-class ProfileDialog(Embeddable, QDialog):
+class ProfileDialog(Guarded, Embeddable, QDialog):
     """Add or edit a profile. After Save, `.business` holds the result; `.deleted` if Delete was chosen;
     `.next_number` the number this year's rentals carry on from, when it was changed (else 0)."""
 
@@ -281,8 +282,27 @@ class ProfileDialog(Embeddable, QDialog):
         self.week_days.currentIndexChanged.connect(lambda _i: self._summaries())
         for group in (self.contact, self.pricing, self.numbers, self.agreement):
             group.toggled.connect(lambda _on: self._summaries())
+        for f in (
+            self.tagline,
+            self.email,
+            self.phone,
+            self.website,
+            self.rental_tax,
+            self.deposit_pct,
+            self.note,
+        ):
+            f.textChanged.connect(lambda _t: self._summaries())
+        for box in (self.address, self.terms):
+            box.edited.connect(self._summaries)
+        self.weekend.toggled.connect(lambda _on: self._summaries())
+        self.color.currentIndexChanged.connect(lambda _i: self._summaries())
         self._name_changed(self.name.text())
         self._show_logo()
+        self.settled()
+        self._summaries()
+
+    def form_values(self) -> object:
+        return self._draft(), self.next_field.text().strip() if self._next_typed else ""
 
     def side_margin(self, px: int) -> None:
         """The room on the left and right (none inside Settings, which has its own)."""
@@ -375,7 +395,7 @@ class ProfileDialog(Embeddable, QDialog):
         )
         self.pricing.set_summary(f"{money.fmt_rate(b.rate_pct)} a day · {b.week_days}-day week")
         ok = self._check_next()
-        self.save.setEnabled(bool(b.name) and ok)
+        self.save.setEnabled(bool(b.name) and ok and (not self.editing or self.unsaved()))
         text = self.next_field.text().strip()
         n = int(text) if ok and text.isdigit() else self._free()
         self.numbers.set_summary(
@@ -423,6 +443,7 @@ class ProfileDialog(Embeddable, QDialog):
     def _set_logo(self, name: str) -> None:
         self.business.logo = name
         self._show_logo()
+        self._summaries()
 
     def _choose_logo(self) -> None:
         path, _ = QFileDialog.getOpenFileName(

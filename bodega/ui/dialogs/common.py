@@ -21,11 +21,23 @@ from bodega.ui.style.tokens import IMPORT_LIST_H as PICKER_LIST_H
 
 
 class Alert(QDialog):
-    """A Mac-style alert: the app's icon, a bold question, a line of detail, two buttons side by side.
-    Return does the action, Esc cancels. A rounded card floating over the window, with no title bar."""
+    """A Mac-style alert: the app's icon, a bold question, a line of detail, its buttons. Esc cancels. Return
+    does the action, unless `safe` (the loss is a side effect nobody asked for): then Return does the cancel
+    button. A third button (`other`) stacks the three, the action on top; exec() returns OTHER for it.
+    A rounded card floating over the window, with no title bar."""
+
+    OTHER = 2
 
     def __init__(
-        self, parent: QWidget | None, title: str, text: str, action: str, cancel: str = "", danger=False
+        self,
+        parent: QWidget | None,
+        title: str,
+        text: str,
+        action: str,
+        cancel: str = "",
+        danger=False,
+        other: str = "",
+        safe: bool = False,
     ):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
@@ -54,20 +66,33 @@ class Alert(QDialog):
             body.setAlignment(Qt.AlignmentFlag.AlignCenter)
             lay.addWidget(body)
         lay.addSpacing(tokens.SPACE_3)
-        row = hbox(spacing=tokens.SPACE_2)
-        if cancel:
-            no = QPushButton(cancel)
-            no.setAutoDefault(False)
-            no.clicked.connect(self.reject)
-            row.addWidget(no, 1)
         go = QPushButton(action)
         go.setObjectName("DangerFill" if danger else "Primary")
-        go.setDefault(True)  # Return
-        go.setAutoDefault(True)
         go.clicked.connect(self.accept)
-        row.addWidget(go, 1)
-        lay.addLayout(row)
-        self.go = go
+        no = None
+        if cancel:
+            no = QPushButton(cancel)
+            no.clicked.connect(self.reject)
+        third = None
+        if other:
+            third = QPushButton(other)
+            third.setObjectName("DangerFill")
+            third.clicked.connect(lambda: self.done(self.OTHER))
+        if third is not None:  # three stack: the action on top, Cancel at the bottom
+            for b in (go, third, no):
+                if b is not None:
+                    lay.addWidget(b)
+        else:  # two side by side: Cancel leading, the action trailing
+            row = hbox(spacing=tokens.SPACE_2)
+            if no is not None:
+                row.addWidget(no, 1)
+            row.addWidget(go, 1)
+            lay.addLayout(row)
+        self.go = no if safe and no is not None else go  # what Return does
+        for b in (go, no, third):
+            if b is not None:
+                b.setAutoDefault(b is self.go)
+                b.setDefault(b is self.go)
 
     def showEvent(self, e):
         super().showEvent(e)
@@ -81,6 +106,23 @@ class Alert(QDialog):
 def confirm(parent: QWidget, title: str, text: str, action: str, danger: bool = True) -> bool:
     """Ask before doing something big. Return says yes (you pressed Delete to get here); Esc says no."""
     return Alert(parent, title, text, action, "Cancel", danger).exec() == QDialog.DialogCode.Accepted
+
+
+def ask_discard(parent: QWidget) -> bool:
+    """Typing would be lost (Cancel, Esc, closing, going elsewhere): True to Discard Changes. Return and Esc
+    Keep Editing."""
+    return (
+        Alert(
+            parent,
+            "Discard Your Changes?",
+            "What you changed here hasn't been saved.",
+            "Discard Changes",
+            "Keep Editing",
+            danger=True,
+            safe=True,
+        ).exec()
+        == QDialog.DialogCode.Accepted
+    )
 
 
 def notice(parent: QWidget, title: str, text: str) -> None:

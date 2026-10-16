@@ -17,6 +17,7 @@ from bodega.ui.components.widgets import (
     ElidedLabel,
     IconLabel,
     hbox,
+    repolish,
     section_label,
     vbox,
 )
@@ -94,13 +95,22 @@ class ProfileCard(QFrame):
         lay.addLayout(texts, 1)
         lay.addWidget(IconLabel("updown", "FAINT"))
 
-    def show_who(self, name: str, sub: str) -> None:
+    def show_who(self, name: str, sub: str, problem: bool = False) -> None:
+        """`problem`: `sub` says what's wrong (Not Saved), in color."""
         words = [w for w in name.replace("&", " ").split() if w[:1].isalnum()]
         self.avatar.setText("".join(w[0] for w in words[:2]).upper() or "B")
         self.name.set_full_text(name)
         self.sub.set_full_text(sub)
-        self.sub.setVisible(bool(sub))  # nothing to say until someone's signed in
-        self.setToolTip("Profiles and Settings")
+        self.sub.setVisible(bool(sub))  # nothing to say until someone's signed in, or something's wrong
+        tone = "problem" if problem else ""
+        if self.sub.property("tone") != tone:
+            self.sub.setProperty("tone", tone)
+            repolish(self.sub)
+        self.setToolTip(
+            "Profiles and Settings · Your latest changes aren't saved"
+            if problem
+            else "Profiles and Settings · Saved on this computer"
+        )
 
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
@@ -247,7 +257,11 @@ class Sidebar(LeftPanel):
         lib = self.lib
         b = lib.businesses.get(lib.settings.get("business", "")) or next(iter(lib.businesses.values()), None)
         who = account.current()
-        self.profile_card.show_who((b.name if b and b.name else "Your Profile"), who.email if who else "")
+        name = b.name if b and b.name else "Your Profile"
+        if lib.unsaved:
+            self.profile_card.show_who(name, "Not Saved", problem=True)
+        else:
+            self.profile_card.show_who(name, who.email if who else "")
 
     def recolor(self) -> None:
         """The look changed: redraw the icons."""

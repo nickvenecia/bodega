@@ -7,11 +7,11 @@ from dataclasses import replace
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.core.model import Client
-from bodega.ui.components.widgets import Section, TextBox, hbox, vbox
+from bodega.ui.components.widgets import Guarded, Section, TextBox, hbox, vbox
 from bodega.ui.style.tokens import DIALOG_W_WIDE, SPACE_2, SPACE_3, SPACE_4, SPACE_5, TEXT_BOX_H
 
 
-class ClientDialog(QDialog):
+class ClientDialog(Guarded, QDialog):
     """Add or edit a renter. After Save, `.client` holds the result; `.deleted` if Delete was chosen."""
 
     def __init__(self, client: Client | None, can_delete: bool, parent: QWidget | None = None):
@@ -64,9 +64,15 @@ class ClientDialog(QDialog):
         buttons.addWidget(cancel)
         buttons.addWidget(self.save)
         lay.addLayout(buttons)
-        for f in (self.name, self.company):
+        for f in (self.name, self.company, self.email, self.phone):
             f.textChanged.connect(self._check)
+        for box in (self.address, self.notes):
+            box.edited.connect(self._check)
+        self.settled()
         self._check()
+
+    def form_values(self) -> object:
+        return self._draft()
 
     def _line(self, row, label: str, value: str, placeholder: str) -> QLineEdit:
         sec = Section(label)
@@ -77,10 +83,11 @@ class ClientDialog(QDialog):
         return f
 
     def _check(self, *_a) -> None:
-        self.save.setEnabled(bool(self.name.text().strip() or self.company.text().strip()))
+        named = bool(self.name.text().strip() or self.company.text().strip())
+        self.save.setEnabled(named and (not self.editing or self.unsaved()))
 
-    def _save(self) -> None:
-        self.client = replace(
+    def _draft(self) -> Client:
+        return replace(
             self.client,
             name=self.name.text().strip(),
             company=self.company.text().strip(),
@@ -89,6 +96,9 @@ class ClientDialog(QDialog):
             address=self.address.text().strip(),
             notes=self.notes.text().strip(),
         )
+
+    def _save(self) -> None:
+        self.client = self._draft()
         self.accept()
 
     def _delete(self) -> None:

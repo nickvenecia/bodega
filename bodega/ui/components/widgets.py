@@ -376,6 +376,36 @@ class Segmented(QFrame):
         return ""
 
 
+class Banner(QFrame):
+    """A problem that lasts, across the top of the page: what's wrong and what to do, one action, and ✕ to
+    put it away. Put away, it comes back the next time the problem happens (standard §4.10)."""
+
+    acted = Signal()
+
+    def __init__(self, action: str, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setObjectName("Banner")
+        lay = hbox(self, (tokens.SPACE_3, tokens.SPACE_2, tokens.SPACE_2, tokens.SPACE_2), tokens.SPACE_2)
+        self.icon = QLabel()
+        self.icon.setPixmap(theme.icon("alert", tokens.WARN).pixmap(tokens.ICON, tokens.ICON))
+        lay.addWidget(self.icon, 0, Qt.AlignmentFlag.AlignTop)
+        self.text = QLabel()
+        self.text.setWordWrap(True)
+        lay.addWidget(self.text, 1)
+        self.button = QPushButton(action)
+        self.button.clicked.connect(self.acted)
+        lay.addWidget(self.button)
+        self.close_btn = icon_button("x", "Hide this until it happens again")
+        self.close_btn.setAccessibleName("Hide")
+        self.close_btn.clicked.connect(self.hide)
+        lay.addWidget(self.close_btn)
+        self.hide()
+
+    def say(self, text: str) -> None:
+        self.text.setText(text)
+        self.show()
+
+
 class Toast(QWidget):
     """A short message floating over the bottom of the page: it rises and fades in, waits, and fades away.
     Its tone's icon says what kind it is: "done" (a green check), "problem" (an amber alert, on an amber-tinted
@@ -545,6 +575,33 @@ class Embeddable:
         self.setResult(r)
         self.finished.emit(r)
         (self.accepted if r else self.rejected).emit()
+
+
+class Guarded:
+    """A form with its own Save never drops what was typed in it without asking. It gives `form_values()` (what
+    it holds now, comparable) and calls `settled()` once it's filled in; a value typed back to what it was counts
+    as no change. Cancel, Esc and closing leave at once when nothing changed and otherwise ask Discard Changes /
+    Keep Editing; a window it sits in asks `may_leave()` before showing something else."""
+
+    _settled: object = None
+
+    def form_values(self) -> object:
+        raise NotImplementedError
+
+    def settled(self) -> None:
+        self._settled = self.form_values()
+
+    def unsaved(self) -> bool:
+        return self._settled is not None and self.form_values() != self._settled
+
+    def may_leave(self) -> bool:
+        from bodega.ui.dialogs.common import ask_discard
+
+        return not self.unsaved() or ask_discard(self)
+
+    def reject(self) -> None:  # Cancel, Esc and the window's close button all come here
+        if self.may_leave():
+            super().reject()
 
 
 class SearchField(QLineEdit):

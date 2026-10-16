@@ -320,8 +320,12 @@ class EditingMixin:
         self._table_timer.start()
 
     def flush(self) -> None:
-        """Write anything edited, now."""
+        """Write anything edited, now, and anything that couldn't be written before. A write that fails is
+        kept in memory (lib.unsaved) and said in a banner until it works."""
+        had_problem = bool(self.lib.unsaved)
         try:
+            if self.lib.unsaved:
+                self.lib.save_again()
             if self._dirty_items:
                 self.lib.save_items()
                 self._dirty_items = False
@@ -334,10 +338,35 @@ class EditingMixin:
                     self.lib.save_rental(r)
                 self._dirty_rentals.discard(rid)
         except OSError:
-            log.warning("couldn't save", exc_info=True)
-            self.toast("Couldn't save. Check that there's free space on this computer.", "problem")
+            pass  # the store kept what failed (lib.unsaved), and the banner says so
+        self.show_save_state(had_problem)
         if self.history is not None:
             self.history.mark()
+
+    def show_save_state(self, had_problem: bool = False) -> None:
+        """Not saved: a banner across the top (back each time a save fails again), "Not Saved" in the profile
+        card, and another try every little while. Saved again: all of that goes, with a word that it worked."""
+        unsaved = bool(self.lib.unsaved)
+        if unsaved:
+            self.banner.say(
+                "Your latest changes aren't saved: Bodega can't write to its folder. Check that there's free space "
+                "on this computer; Bodega keeps trying."
+            )
+            if not self._retry_timer.isActive():
+                self._retry_timer.start()
+        else:
+            self.banner.hide()
+            self._retry_timer.stop()
+            if had_problem:
+                self.toast("Saved.", "done")
+        if unsaved != self._was_unsaved:
+            self._was_unsaved = unsaved
+            self.sidebar.show_who()
+
+    def try_saving_again(self) -> None:
+        self.flush()
+        if self.lib.unsaved:
+            self.toast("Still not saved.", "problem")
 
     def edit_client(self, new: bool, assign: bool = True) -> None:
         r = self.rentals.r if kind_of(self.view_key) == "rentals" else None

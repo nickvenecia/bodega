@@ -229,6 +229,8 @@ QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::su
 /* ---------- gear rows */
 #RowMeta {{ color: {tokens.FAINT}; font-size: {TEXT_SM}px; }}
 #Warn {{ color: {tokens.WARN}; font-size: {TEXT_SM}px; }}
+QFrame#Banner {{ background: {tokens.BANNER}; border: 1px solid {tokens.BANNER_EDGE}; border-radius: {RADIUS}px;
+    margin: 0 {SPACE_4}px {SPACE_2}px {SPACE_4}px; }}
 #Bad {{ color: {tokens.BAD}; font-size: {TEXT_SM}px; }}
 #Sum {{ color: {tokens.TEXT}; font-size: {TEXT_LG}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #SumLabel {{ color: {tokens.MUTED}; }}
@@ -263,6 +265,7 @@ QListWidget#Picker::indicator:checked {{ background: {tokens.ACCENT}; border-col
     font-size: {TEXT_SM}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #ProfileName {{ font-weight: {WEIGHT_SEMIBOLD}; }}
 #ProfileSub {{ color: {tokens.MUTED}; font-size: {TEXT_SM}px; }}
+#ProfileSub[tone="problem"] {{ color: {tokens.WARN}; font-weight: {WEIGHT_SEMIBOLD}; }}
 #Nav {{ background: transparent; border-radius: {tokens.NAV_R}px; }}
 #Nav:hover {{ background: {tokens.CARD_HOVER}; }}
 #Nav[selected="true"] {{ background: {tokens.ACCENT_TINT}; }}

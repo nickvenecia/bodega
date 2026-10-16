@@ -40,7 +40,8 @@ bodega/
                    (labels: a sticker per unit, QR "bodega:<item id>", item_from_code() reads a scan) (every string on the
                    page); agreements group lines by date range when they differ; summary_text() for email
     store.py       Library: gear.json, packages.json, rentals/<id>.json, clients.json, businesses.json, settings.json;
-                   atomic writes, unreadable files set aside; DEFAULT_TERMS ({owner} = profile name); numbering
+                   atomic writes, unreadable files set aside, a write that fails kept in `unsaved` (save_again(),
+                   on_unsaved tells the window); DEFAULT_TERMS ({owner} = profile name); numbering
                    PREFIX-YEAR-001, never given twice (settings "numbers": the last given in each series;
                    set_next_number, number_taken); delete_item detaches what was attached and leaves rentals the name;
                    groups() in your order (settings "group_list"), add/rename/remove/step, put_in_group()
@@ -88,7 +89,9 @@ bodega/
                    panels.py (LeftPanel: every list of places on the left, with NavRow; SidePanel: every
                    panel on the right, one header: title, round buttons, ⋯, ✕ at the far right),
                    widgets.py (Card, Disclosure, Section, TitleEdit, IconLabel, SearchField, button_row, fields…,
-                   Toast: MainWindow.toast(text, tone) with "done" / "problem" / "" for news), glass.py
+                   Toast: MainWindow.toast(text, tone) with "done" / "problem" / "" for news; Banner: a problem
+                   that lasts, across the top; Guarded: a form with its own Save asks Discard Changes / Keep
+                   Editing before dropping typing, and says what "changed" means), glass.py
                    (GlassRoot backdrop drawn once and reused; Dock: the inspector floats and slides, the content
                    makes room through the row's right margin, a Table slides as two pictures: freeze/thaw),
                    empty.py (EmptyPage: where a table would be with nothing in it: tiles, the ways to start;
@@ -130,6 +133,8 @@ tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTD
 
 ## Rules that matter
 - **Never lose gear or a rental.** Every write is atomic (`store.write_json`); unreadable files are renamed aside.
+- **A save that fails is said until it works**: the banner and Not Saved in the profile card, tried again every
+  SAVE_RETRY_MS; quitting over it asks (MainWindow.may_quit). Every form with its own Save is a `Guarded`.
 - **The preview is the export.** Everything goes through `render.layout` + `render.paint`; only the Dark Page differs.
 - **Pricing lives in core/pricing.py only.** The UI and documents ask it; never compute a rate or a day count elsewhere.
 - Attached gear: `Item.parent` is the item it lives with. Always walk it with `pricing.with_attached` / `root_of`
