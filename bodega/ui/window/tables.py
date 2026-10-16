@@ -563,6 +563,7 @@ class GearTable(Table):
     branded = Signal(list, str)  # gear ids dropped onto a company divider
     reordered = Signal(list, str, bool)  # gear ids, the row they were dropped on, after it?
     columns_changed = Signal(list)  # the column keys you hid
+    order_changed = Signal(list)  # the column keys in the order you put them (after the grip and Name)
     folds_changed = Signal()  # a divider folded or opened, by a click or the keyboard (kept in settings)
 
     COLUMNS = [(title, w, align) for _k, title, w, align in GEAR_COLUMNS]
@@ -581,6 +582,10 @@ class GearTable(Table):
         self.header().setSectionResizeMode(GEAR_COL["grip"], QHeaderView.ResizeMode.Fixed)
         self.header().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.header().customContextMenuRequested.connect(self._column_menu)
+        self.header().setSectionsMovable(True)  # drag a column's title to put it elsewhere
+        self.header().setFirstSectionMovable(False)  # (the grip stays first, and Name after it)
+        self.header().sectionMoved.connect(self._column_moved)
+        self._moving = False
         self.folded: set[str] = set()  # dividers you folded
         self.opened: set[str] = set()  # kept for older settings files
         self.hidden_cols: set[str] = set(HIDDEN_AT_FIRST)
@@ -606,8 +611,59 @@ class GearTable(Table):
         self.setDropIndicatorShown(True)
 
     # Columns
+    FIXED = ("grip", "name")  # always first, in this order
+
+    def column_order(self) -> list[str]:
+        h = self.header()
+        keys = [k for k, _t, _w, _a in GEAR_COLUMNS]
+        return [keys[h.logicalIndex(v)] for v in range(h.count()) if keys[h.logicalIndex(v)] not in self.FIXED]
+
+    def set_column_order(self, order: list[str]) -> None:
+        """Put the columns in this order (keys it doesn't know are skipped; columns it doesn't name stay after)."""
+        h = self.header()
+        self._moving = True
+        at = len(self.FIXED)
+        for key in order:
+            if key in GEAR_COL and key not in self.FIXED:
+                h.moveSection(h.visualIndex(GEAR_COL[key]), at)
+                at += 1
+        self._moving = False
+
+    def _column_moved(self, logical: int, old: int, new: int) -> None:
+        if self._moving:
+            return
+        h = self.header()
+        if logical == GEAR_COL["name"] or new < len(self.FIXED):  # Name stays first: put it back
+            self._moving = True
+            h.moveSection(new, old)
+            self._moving = False
+            return
+        self.order_changed.emit(self.column_order())
+
+    def _step_column(self, key: str, step: int) -> None:
+        """Move Left / Move Right: past the next column that shows."""
+        h = self.header()
+        v = h.visualIndex(GEAR_COL[key])
+        to = v + step
+        while len(self.FIXED) <= to < h.count() and h.isSectionHidden(h.logicalIndex(to)):
+            to += step
+        if len(self.FIXED) <= to < h.count():
+            h.moveSection(v, to)
+
     def _column_menu(self, pos) -> None:
         m = QMenu(self)
+        h = self.header()
+        keys = [k for k, _t, _w, _a in GEAR_COLUMNS]
+        logical = h.logicalIndexAt(pos)
+        here = keys[logical] if 0 <= logical < len(keys) else ""
+        if here and here not in self.FIXED:
+            v = h.visualIndex(logical)
+            shown = [x for x in range(len(self.FIXED), h.count()) if not h.isSectionHidden(h.logicalIndex(x))]
+            left = m.addAction("Move Left", lambda: self._step_column(here, -1))
+            left.setEnabled(bool(shown) and v > shown[0])
+            right = m.addAction("Move Right", lambda: self._step_column(here, 1))
+            right.setEnabled(bool(shown) and v < shown[-1])
+            m.addSeparator()
         for key, title, _w, _a in GEAR_COLUMNS:
             if key in ("grip", "name"):
                 continue

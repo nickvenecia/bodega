@@ -25,6 +25,7 @@ DEFAULTS: dict[str, tuple[type, object]] = {  # key -> (what it holds, its defau
     "export_dir": (str, ""),  # where the last PDF went
     "geometry": (str, ""),  # the window's size and place
     "folded": (list, []),  # gear dividers you folded
+    "column_order": (list, []),  # the gear list's columns, in the order you put them
     "companies_guessed": (bool, False),  # gear from before Company existed got its company once
 }
 

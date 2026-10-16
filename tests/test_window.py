@@ -1632,3 +1632,23 @@ def test_goes_with_stays_away_while_nothing_is_attached(win):
     win.refresh()
     win.go("gear")
     assert win.gear_table.isColumnHidden(GEAR_COL["with"])
+
+
+def test_gear_columns_go_in_your_order_and_stay_there(win, data_folder):
+    from bodega.ui.window.main_window import MainWindow
+    from bodega.ui.window.tables import GEAR_COL
+
+    win.go("gear")
+    t = win.gear_table
+    h = t.header()
+    h.moveSection(h.visualIndex(GEAR_COL["day"]), 2)  # dragged in front of the others
+    assert t.column_order()[0] == "day" and win.lib.settings["column_order"][0] == "day"
+    h.moveSection(h.visualIndex(GEAR_COL["name"]), 5)  # Name stays first
+    assert h.visualIndex(GEAR_COL["name"]) == 1
+    t._step_column("day", 1)  # Move Right, past what's hidden
+    assert t.column_order().index("day") > 0
+    win.flush()
+    win.lib.save_settings()
+    again = MainWindow(Library(data_folder).load())
+    assert again.gear_table.column_order() == t.column_order()  # the same order next time
+    again.close()

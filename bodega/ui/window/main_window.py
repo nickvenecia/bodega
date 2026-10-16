@@ -128,6 +128,9 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             known = set(known) if isinstance(known, list) else set()
             self.gear_table.hidden_cols |= {"earned"} - known  # columns added since start tucked away
         self.lib.settings["columns_known"] = ["earned"]
+        self.gear_table.set_column_order(
+            [k for k in settings.value(self.lib.settings, "column_order") if isinstance(k, str)]
+        )
         if not settings.value(self.lib.settings, "companies_guessed"):  # gear from before Company existed
             if self.lib.guess_brands():
                 self.lib.save_items()
@@ -319,6 +322,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.gear_table.reordered.connect(self._reordered)
         self.gear_table.branded.connect(self._branded)
         self.gear_table.columns_changed.connect(self._columns_changed)
+        self.gear_table.order_changed.connect(lambda keys: self.lib.settings.__setitem__("column_order", keys))
         self.gear_table.itemSelectionChanged.connect(self._selection_count)
         self.kit_table.delete_wanted.connect(lambda ids: self.delete("packages", ids[0]))
         self.rental_table.delete_wanted.connect(lambda ids: self.delete("rentals", ids[0]))
