@@ -157,3 +157,36 @@ def test_rentals_bar_deletes_only_the_quotes_and_says_how_many(win):
     QTest.qWait(50)
     assert q.id not in lib.rentals and booked.id in lib.rentals  # a booked one is never deleted
     assert isinstance(lib.rentals[booked.id], Rental)
+
+
+def test_rentals_bar_checks_out_the_booked_ones_at_once_asked_once(win, monkeypatch):
+    from bodega.ui.window import editing
+
+    lib = win.lib
+    b = next(iter(lib.businesses.values()))
+    q = lib.new_rental(b)  # a quote: it can't go out from here
+    booked = next(r for r in lib.rentals.values() if r.id != q.id)
+    booked.status = "booked"
+    lib.save_rental(booked)
+    win.go("rentals")
+    t = win.rental_table
+    for row in rows(t):
+        row.setSelected(row.data(0, ID) in (q.id, booked.id))
+    bar = win.selbar
+    assert bar.buttons["out"].text() == "Check Out 1…" and not bar.buttons["in"].isVisibleTo(bar)  # says how many
+    asked = []
+    monkeypatch.setattr(
+        editing, "confirm", lambda _p, title, text, _a, danger=True: asked.append((title, text)) or True
+    )
+    bar.buttons["out"].click()
+    QTest.qWait(50)  # (once the click is over)
+    assert lib.rentals[booked.id].is_out() and lib.rentals[q.id].is_quote()
+    assert len(asked) == 1 and asked[0][0] == "Check Out 1 Rental?" and "in all" in asked[0][1]
+    assert "The other one stays as it is." in asked[0][1]  # what's left as it was is said
+    assert win.toaster._action_word == "Undo"
+    for row in rows(t):
+        row.setSelected(row.data(0, ID) == booked.id)
+    assert bar.buttons["in"].text() == "Check In…" and not bar.buttons["out"].isVisibleTo(bar)
+    bar.buttons["in"].click()
+    QTest.qWait(50)
+    assert win.lib.rentals[booked.id].is_returned()

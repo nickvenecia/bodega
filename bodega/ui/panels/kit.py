@@ -62,7 +62,7 @@ class PackagePanel(DetailsBase):
         self.lib = lib
         self.pkg: Package | None = None
         g = self.groups
-        self.sheet = self.footer_button("Kit Sheet…", "receipt")
+        self.sheet = self.print_button("Kit Sheet…")
         self.menu_action("copy", "Duplicate", lambda: self.pkg and self.duplicate_wanted.emit(self.pkg.id))
         self.menu_action("", "-", None)
         self.menu_action("trash", "Delete Kit", lambda: self.pkg and self.delete_wanted.emit(self.pkg.id))

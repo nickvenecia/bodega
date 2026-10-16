@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
 
 from bodega.doc import export
 from bodega.doc.render import Page
-from bodega.ui.components.widgets import PanelHeader, Segmented, hbox, primary_button, status_line, vbox
+from bodega.ui.components.widgets import PanelHeader, Segmented, hbox, menu_item, primary_button, status_line, vbox
 from bodega.ui.style import theme, tokens
 
 
@@ -165,8 +165,8 @@ class PreviewPanel(QFrame):
         self.btn_more.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         m = QMenu(self.btn_more)
         m.addAction(theme.menu_icon("image"), "Save as PNG…", self.save_png.emit)
-        self.act_copy = m.addAction(theme.menu_icon("copy"), "Copy as Text", self.copy_text.emit)
-        self.act_email = m.addAction(theme.menu_icon("mail"), "Email Renter…", self.email_wanted.emit)
+        self.act_copy = menu_item(m, theme.menu_icon("copy"), "Copy as Text", self.copy_text.emit)
+        self.act_email = menu_item(m, theme.menu_icon("mail"), "Email Renter…", self.email_wanted.emit)
         m.addSeparator()
         m.addAction(theme.menu_icon("folder"), "Open Bodega Folder", self.open_folder.emit)
         self.btn_more.setMenu(m)

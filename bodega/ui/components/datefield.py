@@ -9,7 +9,7 @@ setMinimumDate(), minimumDate().
 from __future__ import annotations
 
 from PySide6.QtCore import QDate, QEvent, QPoint, QRectF, QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QKeyEvent, QPainter, QPen
+from PySide6.QtGui import QAction, QKeyEvent, QPainter, QPen
 from PySide6.QtWidgets import QApplication, QFrame, QLabel, QLineEdit, QWidget
 
 from bodega.core import dates
@@ -249,7 +249,8 @@ class DateField(QLineEdit):
         self._min = EARLIEST
         self._fmt = DATE_FORMATS[0]
         self._pop: MonthPopover | None = None
-        self.glyph = self.addAction(theme.icon("calendar", theme.ACCENT), QLineEdit.ActionPosition.TrailingPosition)
+        self.glyph = QAction(theme.icon("calendar", theme.ACCENT), "", self)  # (made here: see widgets.menu_item)
+        self.addAction(self.glyph, QLineEdit.ActionPosition.TrailingPosition)
         self.glyph.setToolTip("Choose a Date (↓)")
         self.glyph.triggered.connect(lambda: QTimer.singleShot(0, self, self.open_month))
         self.textEdited.connect(self._typed)

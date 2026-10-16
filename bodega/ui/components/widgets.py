@@ -20,7 +20,7 @@ from PySide6.QtCore import (
     QVariantAnimation,
     Signal,
 )
-from PySide6.QtGui import QCursor, QFontMetrics, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QAction, QCursor, QFontMetrics, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QAbstractButton,
     QAbstractSpinBox,
@@ -297,6 +297,19 @@ def status_line(text: str = "", hinted: bool = True) -> StatusLabel:
 def one_stop(text: str) -> str:
     """A sentence that ends in a name with its own full stop ("Saved Northwind Inc..") ends with one."""
     return text[:-1] if text.endswith("..") and not text.endswith("...") else text
+
+
+def menu_item(menu: QWidget, icon, text: str, slot=None) -> QAction:
+    """A command in a menu (or on a field: `menu` is any widget), made here rather than by Qt, for one that's kept
+    (`self.act_up = menu_item(…)`). Python hears when Qt deletes an action it made itself, never one Qt made: kept,
+    that one outlives its action when a rebuilt row is thrown away, and the next object Qt makes at the same
+    address meets the old stand-in (CI crashed on it). `icon` may be None."""
+    a = QAction(text, menu) if icon is None else QAction(icon, text, menu)
+    if slot is not None:
+        a.triggered.connect(slot)
+    if isinstance(menu, QMenu):
+        menu.addAction(a)
+    return a
 
 
 def repolish(w: QWidget) -> None:

@@ -4,8 +4,9 @@ LeftPanel   every list of places on the left (the main sidebar, Settings' sectio
             (NavRow) inset NAV_INSET from its edges so their corners curve with the glass, an optional top
             (the wordmark), a list that scrolls, an optional foot (the profile card)
 SidePanel   every panel on the right (gear, kit, rental details; the assistant): the same header everywhere
-            (title, your own round buttons, ⋯ when it has a menu, then the round ✕ at the far right), a body
-            that scrolls or not, and a footer for its one main action
+            (title, your own round buttons, ⋯ when it has a menu, then the round ✕ at the far right; a record's
+            panel puts 🖨 and ⋯ in one capsule with its next step beside it: panels/base.py), and a body that
+            scrolls or not
 
 Subclass them; change what's inside, never the frame.
 """
@@ -359,11 +360,6 @@ class SidePanel(QFrame):
             self.lay = vbox(body, (pad, 0, pad, pad), tokens.SPACE_3)
             self.scroll = None
             outer.addWidget(body, 1)
-        self.footer = QFrame()
-        self.footer.setObjectName("PanelFoot")
-        self.footer_lay = hbox(self.footer, tokens.SPACE_4, tokens.SPACE_2)
-        self.footer.hide()
-        outer.addWidget(self.footer)
         self._pad = pad
         self.pager = RecordPager(self) if pager else None
         if self.pager is not None and self.scroll is not None:
@@ -387,8 +383,7 @@ class SidePanel(QFrame):
         p = self.pager
         if p is None or p.isHidden():
             return
-        foot = self.footer.geometry().top() if self.footer.isVisible() else self.height()
-        p.move((self.width() - p.width()) // 2, foot - p.height() - tokens.PAGER_LIFT)
+        p.move((self.width() - p.width()) // 2, self.height() - p.height() - tokens.PAGER_LIFT)
 
     def resizeEvent(self, e):
         super().resizeEvent(e)
@@ -417,14 +412,4 @@ class SidePanel(QFrame):
         """A round button in the header, before the ⋯ and the ✕."""
         b = circle_button(icon, tip)
         self.header.actions.insertWidget(0, b)
-        return b
-
-    def footer_button(self, text: str, icon: str = "", primary: bool = True) -> QPushButton:
-        """The panel's next step (Rent This, Agreement…), across the bottom, with its icon: the light raised
-        capsule (`primary` is kept for the callers; the standard gives the accent only to +)."""
-        b = QPushButton(text)
-        b.setObjectName("Raised")  # a record's next step: raised, never the accent (only + is)
-        if icon:
-            b.setIcon(theme.icon(icon, theme.TEXT, tokens.ICON_SM))
-        self.footer_lay.addWidget(b, 1)
         return b

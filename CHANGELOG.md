@@ -97,6 +97,9 @@
   showing. While rows are ticked, a bar floats over the list saying how many, with what you can do to all of them:
   Move to Group and Delete for gear, Delete for kits, and Delete for the quotes among ticked rentals (it says how
   many will go). Ticks stay while you edit and clear when you search, filter or go somewhere else.
+- Tick several rentals to check them out or in at once: the bar offers Check Out for the booked ones and Check In
+  for the ones that are out, asks once (how many, what they come to, and how many stay as they are), and says if
+  any have gear that isn't free. Undo puts them back. A rental's right-click menu offers only its own next step.
 - The grip you drag a piece by is at the end of its row now, where Mac lists keep it; the tick takes the start.
 - A + at the end of the gear list's headings chooses its columns (a right-click on them still does). The menu
   stays open while you tick several, has Reset Columns at the end, and Sort by Your Order at the top.
@@ -127,6 +130,12 @@
   while a background job ran (the test machines hit it on a Mac). That now happens only between clicks and keys.
 - Closing a window while it was still working in the background (Settings loading the list of models, a price
   check, an update downloading) could close Bodega at once. Now the work is told to stop and ends on its own.
+- A rare crash after checking a rental out or in (its lines are built again) is fixed: the menus a line keeps
+  are now ones Bodega can see being cleared away.
+- The top of each panel works the same way for a piece, a kit and a rental: Print (a rental's agreement, a kit's
+  sheet) and ⋯ sit together in one capsule, and the next step stands on its own beside it: Check Out… or
+  Check In… for a rental, + Rent This for a piece. They used to sit across the bottom of the panel.
+- Buttons are all the same height as the fields beside them; most were two points taller.
 - The Undo and Stop buttons in a message work from the moment it appears (a quick click could miss them while it
   slid in).
 - After Duplicate, only the copy is picked in the list: the piece you copied stayed picked with it, so Delete could

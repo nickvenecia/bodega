@@ -118,7 +118,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         esc.activated.connect(self.escape)
         self.setCentralWidget(root)
         self.toaster = Toast(self, self._toast_area)
-        self.selbar = SelectionBar(self, ("move", "delete"))  # while rows are ticked (the standard's 4.17)
+        self.selbar = SelectionBar(self, ("out", "in", "move", "delete"))  # while rows are ticked (the standard's 4.17)
         self.selbar.cleared.connect(self.untick)
         self._move_menu = QMenu(self)  # the bar's Move to Group: your groups, as it opens
         self._move_menu.aboutToShow.connect(self._fill_move_menu)
@@ -880,14 +880,18 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             return
         items = [("copy", "Duplicate", lambda: self.duplicate(kind, obj_id))]
         if kind == "rentals":  # the same commands as the rental's own ⋯ (and its Agreement…)
+            r = self.lib.rentals.get(obj_id)
+            steps = []  # its next step, when it has one (the Rental menu's rule: booked goes out, out comes back)
+            if r is not None and r.is_booked():
+                steps = [("check", "Check Out…", lambda: self.check_rental(obj_id, False))]
+            elif r is not None and r.is_out():
+                steps = [("check", "Check In…", lambda: self.check_rental(obj_id, True))]
             items += [
                 ("file", "Agreement…", lambda: self.show_pages(("rental", obj_id))),
                 ("calendar", "Add to Calendar", lambda: self.add_to_calendar(obj_id)),
-                ("check", "Check Out…", lambda: self.check_rental(obj_id, False)),
-                ("check", "Check In…", lambda: self.check_rental(obj_id, True)),
+                *steps,
                 ("receipt", "Send to Saldo…", lambda: self.send_to_saldo(obj_id)),
             ]
-            r = self.lib.rentals.get(obj_id)
             if r is not None and not r.deletable():  # a booked rental is cancelled, never deleted
                 if not r.is_cancelled():
                     items += [("", "-", None), ("x", "Mark as Cancelled…", lambda: self.cancel_rental(r))]
@@ -971,11 +975,16 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             ]
         elif ids and kind == "packages":
             acts = [("delete", "Delete", lambda: self.delete_many("packages", self.kit_table.ticked_ids()), True)]
-        elif ids:  # rentals: only the quotes among them can go, and the words say how many
+        elif ids:  # rentals: their next step for the ones that can take it; only the quotes can go
+            for name, back, verb in (("out", False, "Check Out"), ("in", True, "Check In")):
+                can = self.can_check(ids, back)
+                if can:
+                    text = f"{verb}…" if len(can) == len(ids) else f"{verb} {len(can):,}…"
+                    acts.append((name, text, lambda b=back: self.check_many(self.rental_table.ticked_ids(), b), False))
             quotes = [i for i in ids if i in self.lib.rentals and self.lib.rentals[i].deletable()]
             if quotes:
                 text = "Delete" if len(quotes) == len(ids) else f"Delete {words.count(len(quotes), 'Quote')}"
-                acts = [("delete", text, lambda: self.delete_many("rentals", self.rental_table.ticked_ids()), True)]
+                acts.append(("delete", text, lambda: self.delete_many("rentals", self.rental_table.ticked_ids()), True))
         was = self.selbar.isVisible()
         self.selbar.show_for(len(ids), acts)
         self._place_selbar()

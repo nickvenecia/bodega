@@ -3,11 +3,11 @@ fold-away groups (kits and rentals), and remembering which groups are open."""
 
 from __future__ import annotations
 
-from PySide6.QtCore import QTimer, Signal
-from PySide6.QtWidgets import QLabel, QPushButton, QWidget
+from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QSizePolicy, QWidget
 
 from bodega.ui.components.panels import SidePanel
-from bodega.ui.components.widgets import Disclosure, hbox, primary_button, vbox
+from bodega.ui.components.widgets import Disclosure, circle_button, hbox, primary_button, vbox
 from bodega.ui.style import theme, tokens
 
 
@@ -24,9 +24,23 @@ class DetailsBase(SidePanel):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(self.TITLE, more=True, pager=True, parent=parent)
         self._loading = False
-        self.more.setToolTip("Duplicate, delete")
-        self.header_buttons: list[QWidget] = [self.more]
-        self.more.hide()
+        self.more.setToolTip("More")
+        # the record's bar (the standard's 4.5, G.17): one capsule of 🖨 and ⋯ (those that apply), then the record's
+        # next step on its own; editing happens in place, so there's no ✎
+        self.capsule = QFrame()
+        self.capsule.setObjectName("HeadGroup")
+        self.capsule.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        cl = hbox(self.capsule, 1, 0)
+        self.print_btn = circle_button("printer", "Print")
+        self.print_btn.hide()
+        actions = self.header.actions
+        actions.removeWidget(self.more)
+        for b in (self.print_btn, self.more):
+            b.setProperty("grouped", True)
+            cl.addWidget(b)
+        actions.insertWidget(0, self.capsule, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.header_buttons: list[QWidget] = [self.capsule]
+        self.capsule.hide()
 
         self.empty = QWidget()
         el = vbox(self.empty, (0, tokens.SPACE_5, 0, 0), tokens.SPACE_3)
@@ -72,14 +86,12 @@ class DetailsBase(SidePanel):
         self._actions = (slot, slot2)
         for b in self.header_buttons:
             b.hide()
-        self.footer.hide()
 
     def show_form(self) -> None:
         self.empty.hide()
         self.form.show()
         for b in self.header_buttons:
             b.show()
-        self.footer.setVisible(self.footer_lay.count() > 0)
 
     def menu_action(self, icon: str, text: str, slot):
         """A command under the header's ⋯ (Duplicate, Delete). Returns its QAction (None for "-")."""
@@ -88,9 +100,23 @@ class DetailsBase(SidePanel):
             return None
         return self.more_menu.addAction(theme.menu_icon(icon), text, lambda: self.later(slot))
 
-    def header_button(self, text: str, primary: bool = False) -> QPushButton:
-        """A button in the panel's header (Agreement…, Rent This), shown only while something is open."""
-        b = primary_button(text) if primary else QPushButton(text)
+    def print_button(self, tip: str):
+        """🖨, first in the header's capsule: what this record prints (its agreement, its kit sheet)."""
+        self.print_btn.setToolTip(tip)
+        self.print_btn.setAccessibleName(tip.rstrip("…"))
+        self.print_btn.show()
+        return self.print_btn
+
+    def next_step(self, text: str, plus: bool = False) -> QPushButton:
+        """The record's next step, on its own after the capsule (Check Out…): a light raised capsule in words; or,
+        where something new is made from the record (`plus`: Rent This), + in the accent. Shown while a record is
+        open (a panel can hide it when it doesn't apply)."""
+        if plus:
+            b = primary_button(text)
+            b.setIcon(theme.icon("plus", theme.ON_ACCENT, tokens.ICON_SM))
+        else:
+            b = QPushButton(text)
+            b.setObjectName("Raised")  # never the accent (only + is)
         self.header.actions.addWidget(b)
         self.header_buttons.append(b)
         b.hide()

@@ -31,7 +31,7 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **197 fixed, 19 partly, 20 not
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **199 fixed, 18 partly, 19 not
 started (larger redesigns), 16 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
@@ -62,7 +62,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 197 · Partly 19 · Open 20 · Waiting on the owner 16 · No longer applies 1.**
+**Of the 253 failures: Fixed 199 · Partly 18 · Open 19 · Waiting on the owner 16 · No longer applies 1.**
 
 ### Partly: what's left
 
@@ -75,7 +75,6 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | AI-18 | S3 | The message box has no attach button, and files can't be dropped on the assistant. |
 | AI-30 | S2 | No test tries each real provider once with a bad key to check its refusal reads in plain words. |
 | C-01 | S2 | The start tiles on an empty library are cards that act as buttons. |
-| C-49 | S2 | A panel's header has ⋯ and ✕ only: no capsule of its main tools (print, edit). |
 | C-65 | S2 | The right-click menu and the panel's ⋯ offer the same commands, but from two lists (see D-04). |
 | C-70 | S3 | No account card at the top of Settings: there's no account service to show yet (accounts.REQUIRED is off). |
 | C-90 | S3 | The profile form is sized by kind; the side panels' fields still stretch to the panel's width. |
@@ -97,7 +96,6 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | C-53 | S2 | The print window has no column ticks or order, no letterhead options, no presets. |
 | C-55 | S3 | The table is drawn straight on the page, not in a card. |
 | C-61 | S2 | The print window has no filter cards (column, from, to). |
-| C-76 | S2 | No batch Check Out / Check In for several rentals. |
 | C-88 | S3 | Tidy Up covers gear names and groups, not renters' names or addresses. |
 | C-108 | S2 | Attached gear sits indented under its piece; the piece doesn't fold them away or sum them up (a table rewrite). |
 | C-120 | S3 | Settings › General is sections, not grouped rows in cards; Profiles is one long form. |
@@ -144,7 +142,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 
 - **A**: A-03, A-05, A-06, A-10, A-11, A-12, A-13
 - **AI**: AI-01, AI-03, AI-07, AI-08, AI-09, AI-14, AI-15, AI-16, AI-17, AI-19, AI-20, AI-23, AI-24, AI-29, AI-31
-- **C**: C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-17, C-19, C-21, C-23, C-24, C-27, C-28, C-29, C-31, C-32, C-34, C-37, C-38, C-39, C-42, C-44, C-45, C-47, C-50, C-51, C-54, C-58, C-59, C-66, C-67, C-69, C-72, C-73, C-82, C-100, C-105, C-106, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
+- **C**: C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-17, C-19, C-21, C-23, C-24, C-27, C-28, C-29, C-31, C-32, C-34, C-37, C-38, C-39, C-42, C-44, C-45, C-47, C-49, C-50, C-51, C-54, C-58, C-59, C-66, C-67, C-69, C-72, C-73, C-76, C-82, C-100, C-105, C-106, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
 - **D**: D-01, D-02, D-03, D-05, D-06, D-07, D-10, D-11, D-12, D-15, D-16, D-18, D-21, D-23, D-24, D-25, D-26, D-31, D-32, D-34, D-42, D-49, D-51
 - **G**: G-02
 - **I**: I-01, I-02, I-03, I-04, I-06, I-07, I-08, I-10, I-11, I-12, I-13, I-14, I-15, I-19, I-20, I-21, I-23, I-24, I-25, I-26, I-29, I-30, I-31

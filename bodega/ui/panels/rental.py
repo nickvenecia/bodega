@@ -37,6 +37,7 @@ from bodega.ui.components.widgets import (
     hbox,
     hint,
     icon_button,
+    menu_item,
     only,
     percent_field,
     picker,
@@ -133,11 +134,11 @@ class LineEditor(QFrame):
         m = QMenu(self.more)
         if line.kind == "item":
             m.addAction(theme.menu_icon("edit"), "Open Gear", lambda: self._later(self.gear_wanted, line.ref))
-        self.act_up = m.addAction(
-            theme.menu_icon("arrow-up"), "Move Up", lambda: self._later(self.move_wanted, self, -1)
+        self.act_up = menu_item(
+            m, theme.menu_icon("arrow-up"), "Move Up", lambda: self._later(self.move_wanted, self, -1)
         )
-        self.act_down = m.addAction(
-            theme.menu_icon("arrow-down"), "Move Down", lambda: self._later(self.move_wanted, self, 1)
+        self.act_down = menu_item(
+            m, theme.menu_icon("arrow-down"), "Move Down", lambda: self._later(self.move_wanted, self, 1)
         )
         m.addSeparator()
         m.addAction(theme.menu_icon("trash"), "Remove", lambda: self._later(self.remove_wanted, self))
@@ -350,9 +351,9 @@ class RentalPanel(DetailsBase):
         self.totals: pricing.Totals | None = None
         self.shorts: list[pricing.Short] = []
         g = self.groups
-        self.check = self.footer_button("Check Out…", "check", primary=False)
+        self.sheet = self.print_button("Agreement…")
+        self.check = self.next_step("Check Out…")  # its next step while it has one: out, then back in
         self.check.clicked.connect(lambda: self.r and self.check_wanted.emit(self.r.id, self.r.is_out()))
-        self.sheet = self.footer_button("Agreement…", "receipt")
         self.menu_action("copy", "Duplicate", lambda: self.r and self.duplicate_wanted.emit(self.r.id))
         self.menu_action("calendar", "Add to Calendar", lambda: self.r and self.calendar_wanted.emit(self.r.id))
         self.menu_action("receipt", "Send to Saldo…", lambda: self.r and self.saldo_wanted.emit(self.r.id))

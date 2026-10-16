@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from bodega.core import pricing, settings, words
+from bodega.core import money, pricing, settings, words
 from bodega.core.log import get_logger
 from bodega.core.model import HOLD_VERBS, Business, Item, Package, PackageLine, Rental, RentalLine, new_id, now_iso
 from bodega.ui.components.widgets import one_stop
@@ -592,6 +592,49 @@ class EditingMixin:
         self.lib.settings["groups"] = groups
 
     # Check out / check in
+    def can_check(self, ids: list[str], back: bool) -> list[Rental]:
+        """Of these rentals, the ones that can take the next step: booked ones go out, ones that are out come back."""
+        rs = [self.lib.rentals[i] for i in ids if i in self.lib.rentals]
+        return [r for r in rs if (r.is_out() if back else r.is_booked())]
+
+    def check_many(self, ids: list[str], back: bool) -> None:
+        """Check Out or Check In for the ticked rentals at once (the standard's 4.17): the ones that can take it,
+        asked once with how many, what they come to and how many stay as they are. Gear that isn't free is asked
+        about for the batch as a whole. Each rental's own Check Out… still has its checklist."""
+        can = self.can_check(ids, back)
+        if not can:
+            return
+        self.flush()
+        n = words.count(len(can), "Rental")
+        verb = "Check In" if back else "Check Out"
+        sums = [(pricing.totals(self.lib, r, self.lib.businesses.get(r.business_id)), self._currency(r)) for r in can]
+        text = f"{'They come back' if back else 'They go out'} now"
+        if len({cur for _t, cur in sums}) == 1:  # (one currency: what they come to)
+            text += f", {money.fmt(sum((t.total for t, _c in sums), money.ZERO), sums[0][1])} in all"
+        text += "."
+        left = len([i for i in ids if i in self.lib.rentals]) - len(can)
+        if left:
+            text += f" {'The other one stays' if left == 1 else f'The other {left:,} stay'} as {'it is' if left == 1 else 'they are'}."
+        short = [] if back else [r for r in can if pricing.shortages(self.lib, r)]
+        if short:
+            text += (
+                f" {len(short):,} of them {'has' if len(short) == 1 else 'have'} gear that "
+                "isn't free on its dates. Go ahead if you're renting more in to cover it."
+            )
+        if not confirm(self, f"{verb} {n}?", text, f"{verb} {n}", danger=False):
+            return
+        for r in can:
+            self.lib.set_status(r, "returned" if back else "out")
+        self.flush()  # (marks it for undo)
+        if self.rentals.r in can:
+            self.rentals.load(self.rentals.r)
+        self.refresh()
+        self.toast_undo(f"{n} {'back' if back else 'out'}.")
+
+    def _currency(self, r: Rental) -> str:
+        b = self.lib.businesses.get(r.business_id) or self.lib.pricing()
+        return (b.currency if b else "$") or "$"
+
     def check_rental(self, rental_id: str, back: bool) -> None:
         """Check Out… / Check In…: tick the gear, note its condition; then mark the rental Out or Returned."""
         from bodega.ui.dialogs.checklist import CheckDialog

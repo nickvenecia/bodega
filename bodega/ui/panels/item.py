@@ -51,6 +51,7 @@ from bodega.ui.components.widgets import (
     hbox,
     hint,
     icon_button,
+    menu_item,
     picker,
     qty_field,
     repolish,
@@ -177,7 +178,7 @@ class ItemPanel(DetailsBase):
         self.menu_action("assistant", "Update with AI…", lambda: self.it and self.ai_wanted.emit(self.it.id))
         self.menu_action("", "-", None)
         self.menu_action("trash", "Delete", lambda: self.it and self.delete_wanted.emit(self.it.id))
-        self.rent = self.footer_button("Rent This", "receipt")
+        self.rent = self.next_step("Rent This", plus=True)  # a new rental with it
         self.rent.clicked.connect(lambda: self.it and self.rent_wanted.emit(self.it.id))
 
         # the head (the standard's 4.5): the photo beside the name, a quiet status line, a line of detail
@@ -192,8 +193,8 @@ class ItemPanel(DetailsBase):
         self.photo = PhotoBox()
         pm = QMenu(self.photo)
         pm.addAction(theme.menu_icon("image"), "Replace…", self.choose_photo)
-        self.act_photo_link = pm.addAction(theme.menu_icon("link"), "From Link", self.photo_from_link)
-        self.act_photo_paste = pm.addAction(theme.menu_icon("clipboard"), "Paste", self.paste_photo)
+        self.act_photo_link = menu_item(pm, theme.menu_icon("link"), "From Link", self.photo_from_link)
+        self.act_photo_paste = menu_item(pm, theme.menu_icon("clipboard"), "Paste", self.paste_photo)
         pm.aboutToShow.connect(self._paste_state)
         pm.addSeparator()
         pm.addAction(theme.menu_icon("trash"), "Remove Photo", self.remove_photo)
@@ -382,8 +383,8 @@ class ItemPanel(DetailsBase):
         self.add_photo = add_chip("Photo")
         am = QMenu(self.add_photo)
         am.addAction(theme.menu_icon("image"), "Choose File…", self.choose_photo)
-        self.act_add_photo_link = am.addAction(theme.menu_icon("link"), "From Link", self.photo_from_link)
-        self.act_add_photo_paste = am.addAction(theme.menu_icon("clipboard"), "Paste", self.paste_photo)
+        self.act_add_photo_link = menu_item(am, theme.menu_icon("link"), "From Link", self.photo_from_link)
+        self.act_add_photo_paste = menu_item(am, theme.menu_icon("clipboard"), "Paste", self.paste_photo)
         am.aboutToShow.connect(self._paste_state)
         self.add_photo.setMenu(am)
         arow.addWidget(self.add_photo)

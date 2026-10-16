@@ -31,3 +31,23 @@ def test_the_stylesheet_names_no_font_family():
     them, which Qt reads as a family called Inherit) makes macOS search every font and warn."""
     text = (ROOT / "ui" / "style" / "theme.py").read_text(encoding="utf-8")
     assert re.findall(r"font-family\s*:", text) == []
+
+
+def test_no_action_made_by_qt_is_kept():
+    """An action that's kept (`self.act_up = …`, `self.acts[k] = …`) is made by widgets.menu_item, never by
+    `menu.addAction(text…)`: Python hears when Qt deletes an action it made itself, never one Qt made. Kept, that
+    one outlived its action when a rental's lines were rebuilt, and the next object Qt made at the same address
+    crashed the Intel Mac (and turned a menu's action into a layout item on Linux)."""
+    kept = []
+    for p in ROOT.rglob("*.py"):
+        for node in ast.walk(ast.parse(p.read_text(encoding="utf-8"))):
+            if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Call):
+                continue
+            f = node.value.func
+            made_by_qt = isinstance(f, ast.Attribute) and f.attr == "addAction" and node.value.args
+            on_self = any(
+                isinstance(t, (ast.Attribute, ast.Subscript)) and "self" in ast.unparse(t) for t in node.targets
+            )
+            if made_by_qt and on_self:
+                kept.append(f"{p.relative_to(ROOT)}:{node.lineno}")
+    assert kept == [], kept

@@ -318,3 +318,31 @@ def test_a_field_takes_the_two_point_ring_without_moving(qapp):
     assert f.height() == tokens.CONTROL_H == rest[0]  # the ring is inside its height…
     assert abs(f.cursorRect().left() - rest[1]) <= 1  # …and the words stay where they were
     host.deleteLater()
+
+
+def test_every_word_button_is_one_control_tall_resting_or_focused(qapp):
+    """G.2: a word capsule is control-h (28), whatever its kind; its focus ring takes none of that height away
+    from what's beside it (a button's edge was once 2 points over, every plain and accent button 30 tall)."""
+    from PySide6.QtWidgets import QPushButton, QWidget
+
+    from bodega.ui.components.widgets import add_chip, hbox, primary_button
+    from bodega.ui.style import tokens
+
+    host = QWidget()
+    lay = hbox(host)
+    buttons = [QPushButton("Plain"), primary_button("Save"), add_chip("Link")]
+    for name in ("Raised", "Ghost", "Danger", "DangerFill"):
+        b = QPushButton(name)
+        b.setObjectName(name)
+        buttons.append(b)
+    for b in buttons:
+        lay.addWidget(b)
+    host.show()
+    qapp.processEvents()
+    assert {b.objectName() or "plain": b.height() for b in buttons} == {
+        b.objectName() or "plain": tokens.CONTROL_H for b in buttons
+    }
+    buttons[0].setFocus()
+    qapp.processEvents()
+    assert buttons[0].height() == tokens.CONTROL_H
+    host.deleteLater()

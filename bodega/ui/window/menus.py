@@ -14,6 +14,7 @@ from bodega import version_label
 from bodega.core import settings
 from bodega.core.fileutil import reveal
 from bodega.core.paths import data_dir, log_dir
+from bodega.ui.components.widgets import menu_item
 from bodega.ui.dialogs.common import about
 from bodega.ui.style import theme, tokens
 from bodega.ui.window.common import PLACES, kind_of
@@ -39,8 +40,7 @@ class MenusMixin:
         bar = self.menuBar()
 
         def act(m: QMenu, text: str, slot, keys=None) -> QAction:
-            a = m.addAction(text)
-            a.triggered.connect(slot)
+            a = menu_item(m, None, text, slot)  # (kept: made here, never by Qt; see widgets.menu_item)
             if keys is not None:
                 a.setShortcut(QKeySequence(keys))
                 self.addAction(a)
@@ -114,9 +114,8 @@ class MenusMixin:
         self.look_actions = {}
         looks = v.addMenu("Appearance")
         for key, label in (("system", "Match System"), ("light", "Light"), ("dark", "Dark")):
-            a = looks.addAction(label)
+            a = menu_item(looks, None, label, lambda _c=False, k=key: self.set_look(k))
             a.setCheckable(True)
-            a.triggered.connect(lambda _c=False, k=key: self.set_look(k))
             self.look_actions[key] = a
         # the open piece's and the open rental's commands, in the menu bar too (not only in their panels)
         gm = bar.addMenu("Gear")

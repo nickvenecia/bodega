@@ -61,6 +61,7 @@ FONT_FAMILY = FONT  # the same Inter as the paper (core/looks.py): one font for 
 # A control's box = border (1px top + bottom) + content. Padding is horizontal only, so every
 # button, dropdown and text field comes out exactly CONTROL_H tall.
 _INNER = CONTROL_H - 2
+_RING_INNER = CONTROL_H - 2 * tokens.FOCUS_RING  # inside a control whose edge is the focus ring's width
 _SMALL_INNER = SMALL_H - 2
 _SEG_INNER = CONTROL_H - 2 - 2 * SEG_INSET  # segmented control: 1px border + inset
 _BAR_INNER = BAR_CTRL_H - 2  # the bar's circles and search field
@@ -108,14 +109,16 @@ QToolTip {{ background: {tokens.RAISED}; color: {tokens.TEXT}; border: 1px solid
 #PanelTitle {{ font-size: {TEXT_LG}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 
 /* ---------- buttons: all CONTROL_H tall */
-QPushButton {{  /* a word capsule (G.2): fill, text; hover fill-3 */
-    background: {tokens.FILL}; border: {tokens.FOCUS_RING}px solid transparent; border-radius: {_INNER // 2}px;
-    padding: 0 {SPACE_4 - 1}px; min-height: {_INNER}px; max-height: {_INNER}px; font-weight: {WEIGHT_MEDIUM};
+QPushButton {{  /* a word capsule (G.2): fill, text; hover fill-3. Its edge is the focus ring's width at rest (clear),
+    so focus moves nothing: inside, CONTROL_H less both edges. A style with another edge sets its own height. */
+    background: {tokens.FILL}; border: {tokens.FOCUS_RING}px solid transparent; border-radius: {CONTROL_H // 2}px;
+    padding: 0 {SPACE_4 - 1}px; min-height: {_RING_INNER}px; max-height: {_RING_INNER}px; font-weight: {WEIGHT_MEDIUM};
 }}
 QPushButton:hover {{ background: {tokens.FILL_3}; }}
 QPushButton:pressed {{ background: {tokens.FILL_3}; }}
 QPushButton:disabled {{ color: {tokens.TEXT_OFF}; background: {tokens.FILL_OFF}; }}
-QPushButton#Raised {{ background: {tokens.RAISED}; border: 1px solid {tokens.GLASS_STROKE}; }}  /* a record's next step */
+QPushButton#Raised {{ background: {tokens.RAISED}; border: 1px solid {tokens.GLASS_STROKE};  /* a record's next step */
+    min-height: {_INNER}px; max-height: {_INNER}px; }}
 QPushButton#Raised:hover, QPushButton#Raised:pressed {{ background: {tokens.RAISED_HOVER}; }}
 QPushButton#Primary {{ background: {tokens.ACCENT_FILL}; color: {tokens.ON_ACCENT}; border-color: {tokens.ACCENT_FILL};
     font-weight: {WEIGHT_SEMIBOLD}; padding: 0 {SPACE_4}px; }}
@@ -124,7 +127,8 @@ QPushButton#Primary:pressed {{ background: {tokens.ACCENT_PRESS}; border-color: 
 QPushButton#Primary:disabled {{ background: {tokens.ACCENT_OFF}; border-color: {tokens.ACCENT_OFF}; color: {tokens.ACCENT_OFF_TEXT}; }}
 QPushButton#Ghost {{ background: transparent; border-color: transparent; color: {tokens.ACCENT_TEXT}; }}  /* quiet */
 QPushButton#Ghost:hover {{ background: {tokens.ACCENT_TINT}; }}
-QPushButton#AddChip {{ background: {tokens.CHIP}; border: 1px solid transparent; color: {tokens.ACCENT_TEXT}; padding: 0 {SPACE_3}px 0 {SPACE_2}px; font-weight: {WEIGHT_SEMIBOLD}; }}
+QPushButton#AddChip {{ background: {tokens.CHIP}; border: 1px solid transparent; color: {tokens.ACCENT_TEXT}; padding: 0 {SPACE_3}px 0 {SPACE_2}px; font-weight: {WEIGHT_SEMIBOLD};
+    min-height: {_INNER}px; max-height: {_INNER}px; }}
 QPushButton#FilterChip {{ background: {tokens.ACCENT_TINT}; border: none; color: {tokens.ACCENT_TEXT}; padding: 0 {SPACE_1_5}px 0 {SPACE_3}px; min-height: {tokens.FILTER_CHIP_H}px; max-height: {tokens.FILTER_CHIP_H}px; border-radius: {tokens.FILTER_CHIP_H // 2}px; font-size: {tokens.TEXT_CALLOUT}px; font-weight: {WEIGHT_MEDIUM}; }}
 QPushButton#ClearFilters {{ background: transparent; border: none; color: {tokens.ACCENT_TEXT}; border-radius: {tokens.FILTER_CHIP_H // 2}px; min-height: {tokens.FILTER_CHIP_H}px; max-height: {tokens.FILTER_CHIP_H}px; padding: 0 {SPACE_2}px; font-size: {tokens.TEXT_CALLOUT}px; font-weight: {WEIGHT_MEDIUM}; }}
 QPushButton#FilterChip:hover {{ background: {tokens.CHIP_HOVER}; }}
@@ -167,7 +171,8 @@ QPushButton:focus, QToolButton:focus, #SegBtn:focus {{ border: {tokens.FOCUS_RIN
 QPushButton#Primary:focus, QToolButton#CirclePrimary:focus {{ border: {tokens.FOCUS_RING}px solid {tokens.ON_ACCENT}; }}
 #Alert {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {RADIUS_LG}px; }}
 #AlertTitle {{ font-size: {TEXT_LG}px; font-weight: {WEIGHT_SEMIBOLD}; }}
-QPushButton#DangerFill {{ background: {tokens.BAD_BUTTON}; border: 1px solid {tokens.BAD_BUTTON}; color: #FFFFFF; font-weight: {WEIGHT_SEMIBOLD}; }}
+QPushButton#DangerFill {{ background: {tokens.BAD_BUTTON}; border: 1px solid {tokens.BAD_BUTTON}; color: #FFFFFF; font-weight: {WEIGHT_SEMIBOLD};
+    min-height: {_INNER}px; max-height: {_INNER}px; }}
 QPushButton#DangerFill:hover {{ background: {tokens.BAD_BUTTON}; border-color: {tokens.BAD_BUTTON}; }}
 QFrame#CheckRow {{ background: {tokens.FILL}; border-radius: {RADIUS_LG}px; }}
 QLabel#Due {{ color: {tokens.MUTED}; }}
@@ -446,7 +451,6 @@ QLineEdit[date="true"]:disabled {{ color: {tokens.TEXT_OFF}; }}
 
 /* ---------- preview panel */
 #PreviewArea {{ background: {tokens.WELL}; }}
-#PanelFoot {{ background: transparent; border: none; }}
 #PanelBottom {{ background: {tokens.PANEL}; border-top: 1px solid {tokens.BORDER}; }}
 
 /* ---------- popups */
