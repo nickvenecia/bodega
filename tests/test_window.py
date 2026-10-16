@@ -1684,10 +1684,16 @@ def test_return_moves_through_a_form_and_command_return_saves(win):
     assert d.focusWidget() is d.company and not saved  # on to the next field, not Save
     d.phone.setFocus()
     QTest.keyClick(d.phone, Qt.Key.Key_Return)
-    assert d.focusWidget() is d.address
-    QTest.keyClick(d.address, Qt.Key.Key_Return)
-    assert not saved  # the address takes a new line
-    QTest.keyClick(d.address, Qt.Key.Key_Return, Qt.KeyboardModifier.ControlModifier)
+    a = d.address
+    assert d.focusWidget() is a.street
+    QTest.keyClick(a.street, Qt.Key.Key_Return)
+    assert not saved and d.focusWidget() is a.street  # the street takes a new line
+    a.city.setFocus()
+    QTest.keyClick(a.city, Qt.Key.Key_Return)
+    assert d.focusWidget() is a.region_pick  # on through the address: City, State, ZIP Code, Country
+    QTest.keyClick(a.region_pick, Qt.Key.Key_Return)
+    assert d.focusWidget() is a.postal
+    QTest.keyClick(a.street, Qt.Key.Key_Return, Qt.KeyboardModifier.ControlModifier)
     assert saved == [True]
     d.settled()  # (closing without asking about what was typed)
     d.done(0)

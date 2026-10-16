@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from bodega.core import dates, money, pricing, words
+from bodega.core import addresses, dates, money, pricing, words
 from bodega.core.model import Business, Item, Package, Rental
 from bodega.core.terms import terms_for
 
@@ -93,7 +93,7 @@ def _contact(b: Business | None) -> list[str]:
         return []
     line = "  ·  ".join(x.strip() for x in (b.email, b.phone, b.website) if x.strip())
     out = [line] if line else []
-    addr = b.address.strip().replace("\n", ", ")
+    addr = ", ".join(addresses.of(b))
     if addr:
         out.append(addr)
     return out
@@ -153,8 +153,7 @@ def build_rental(lib, r: Rental, b: Business | None) -> DocView:
     ]
     c = r.client
     renter = [x for x in (c.name.strip(), c.company.strip()) if x]
-    if c.address.strip():
-        renter.append(c.address.strip())
+    renter.extend(addresses.of(c))
     renter.extend(x for x in (c.email.strip(), c.phone.strip()) if x)
     v.blocks = [("Renter", "\n".join(renter) or "—")]
     if b is not None:

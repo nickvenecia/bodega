@@ -7,6 +7,7 @@ from dataclasses import replace
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.core.model import Client
+from bodega.ui.components.address import AddressFields
 from bodega.ui.components.widgets import Guarded, ReturnMovesOn, Section, TextBox, hbox, primary_button, vbox
 from bodega.ui.style.tokens import DIALOG_W_WIDE, SPACE_2, SPACE_3, SPACE_4, SPACE_5, TEXT_BOX_H
 
@@ -35,11 +36,8 @@ class ClientDialog(Guarded, QDialog):
         self.email = self._line(row, "Email", c.email, "Where the agreement goes")
         self.phone = self._line(row, "Phone", c.phone, "")
         lay.addLayout(row)
-        sec = Section("Address")
-        self.address = TextBox("Street\nCity, State ZIP")
-        self.address.set_text(c.address)
-        sec.add(self.address)
-        lay.addWidget(sec)
+        self.address = AddressFields(c)
+        lay.addWidget(self.address)
         sec = Section("Notes")
         self.notes = TextBox("ID checked, insurance on file until…", TEXT_BOX_H)
         self.notes.set_text(c.notes)
@@ -87,15 +85,16 @@ class ClientDialog(Guarded, QDialog):
         self.save.setEnabled(named and (not self.editing or self.unsaved()))
 
     def _draft(self) -> Client:
-        return replace(
+        c = replace(
             self.client,
             name=self.name.text().strip(),
             company=self.company.text().strip(),
             email=self.email.text().strip(),
             phone=self.phone.text().strip(),
-            address=self.address.text().strip(),
             notes=self.notes.text().strip(),
         )
+        self.address.put_in(c)
+        return c
 
     def _save(self) -> None:
         self.client = self._draft()

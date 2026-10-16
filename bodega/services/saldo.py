@@ -24,7 +24,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from bodega.core import dates, money, pricing
+from bodega.core import addresses, dates, money, pricing
 from bodega.core.model import Business, Rental
 from bodega.core.store import safe_id, write_json
 
@@ -150,7 +150,7 @@ def invoice_for(lib, r: Rental, b: Business | None, profile: dict, taken: list[s
         "id": uuid.uuid4().hex[:12],
         "name": client_name,
         "contact": who.name.strip() if who.company.strip() else "",
-        "address": who.address,
+        "address": "\n".join(addresses.of(who)),
         "email": who.email,
         "code": "",
     }

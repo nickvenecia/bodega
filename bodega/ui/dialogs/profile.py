@@ -23,6 +23,7 @@ from bodega.core.model import WEEK_DAYS, Business
 from bodega.core.paths import logos_dir
 from bodega.core.store import clean_prefix, initials
 from bodega.core.terms import DEFAULT_NOTE, DEFAULT_TERMS
+from bodega.ui.components.address import AddressFields
 from bodega.ui.components.photos import write_picture
 from bodega.ui.components.widgets import (
     Disclosure,
@@ -176,7 +177,8 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         self.email = sized(self._line(c, "Email", b.email, "rentals@example.com"), "name")
         self.phone = sized(self._line(c, "Phone", b.phone, ""), "name")
         self.website = sized(self._line(c, "Website", b.website, ""), "name")
-        self.address = self._box(c, "Address", b.address, "Street\nCity, State ZIP")
+        self.address = AddressFields(b)
+        c.addWidget(self.address)
         lay.addWidget(self.contact)
 
         self.pricing = Disclosure("Pricing", is_open=True)
@@ -336,7 +338,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         b.email = self.email.text().strip()
         b.phone = self.phone.text().strip()
         b.website = self.website.text().strip()
-        b.address = self.address.text().strip()
+        self.address.put_in(b)
         b.rate_pct = self.rate_pct.text().strip()
         b.value_tax = self.value_tax.text().strip()
         b.week_days = int(self.week_days.currentData())

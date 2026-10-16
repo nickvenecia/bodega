@@ -286,7 +286,11 @@ class Client(Record):
     company: str = ""
     email: str = ""
     phone: str = ""
-    address: str = ""
+    address: str = ""  # the street lines (from before the fields below, the whole address: core/addresses.py)
+    city: str = ""
+    region: str = ""  # its code where the country keeps a list ("TX")
+    postal: str = ""
+    country: str = ""  # ISO code; blank: the home country
     notes: str = ""  # ID checked, insurance on file…
     newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
 
@@ -308,7 +312,11 @@ class Business(Record):
     email: str = ""
     phone: str = ""
     website: str = ""
-    address: str = ""
+    address: str = ""  # the street lines, then city, region, postal code and country (as a renter's)
+    city: str = ""
+    region: str = ""
+    postal: str = ""
+    country: str = ""
     logo: str = ""  # file name inside data_dir()/logos
     currency: str = "$"
     prefix: str = ""  # rental numbers: PREFIX-2026-001

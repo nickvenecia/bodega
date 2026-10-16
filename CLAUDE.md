@@ -60,6 +60,10 @@ bodega/
     terms.py       an agreement's words: DEFAULT_TERMS ({owner} = profile name), DEFAULT_NOTE, terms_for()
     errors.py      what went wrong, in plain words: plain(e, "save the PDF"), the computer's reasons by errno,
                    a short reference (logged) for anything unknown
+    addresses.py   an address: street lines, city, region (its code, from the country's own list: REGIONS),
+                   postal code, country (blank: HOME); region_code() refuses a region not on the list,
+                   region_from_postal(), lines() as printed (an old one-box address prints as typed);
+                   countries.py the ISO list
     search.py      folded(): case and accents off, so "cafe" finds "Café"; words(), matches()
     tidy.py        Tidy Up Groups: GROUPS, RULES (by name), RENAMES (by old group); suggest(), changes()
     prices.py      Check Price: fetch a product page, read its price (JSON-LD offers, price meta tags). Stores
@@ -102,7 +106,8 @@ bodega/
     style/         tokens.py (every size, color, timing; DARK/LIGHT swapped by tokens.use(scheme, accent); ACCENTS the accent
                    choices, accent_set() builds one's shades), theme.py (the QSS,
                    icons, theme.font(), theme.qcolor(), plain_tip())
-    components/    photos.py (gear photos: keep() reads and saves every picture again into photos/, scaled to
+    components/    address.py (AddressFields: the one address control, on renters and profiles),
+                   photos.py (gear photos: keep() reads and saves every picture again into photos/, scaled to
                    PHOTO_MAX_PX; from_link() takes a product page's main picture through core.web; a picture
                    pasted (Copy Image in a browser) or dropped: picture_file/image/link, has_picture; thumbnails),
                    panels.py (LeftPanel: every list of places on the left, with NavRow; SidePanel: every

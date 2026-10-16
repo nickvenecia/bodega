@@ -14,7 +14,10 @@ def business() -> Business:
         tagline="Camera · Lighting · Grip",
         email="rentals@juniperlane.example",
         phone="(505) 555-0142",
-        address="1200 Sample Ave\nAlbuquerque, NM 87102",
+        address="1200 Sample Ave",
+        city="Albuquerque",
+        region="NM",
+        postal="87102",
         prefix="JLF",
     )
 
@@ -83,7 +86,10 @@ def fill(lib: Library) -> Library:
             company="Northwind Media",
             email="alex@northwind.example",
             phone="(602) 555-0199",
-            address="88 Example St\nPhoenix, AZ 85004",
+            address="88 Example St",
+            city="Phoenix",
+            region="AZ",
+            postal="85004",
         )
     )
     r = lib.new_rental(b)
