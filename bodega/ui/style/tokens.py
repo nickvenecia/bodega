@@ -585,6 +585,25 @@ def _off() -> None:
     )
 
 
+def _on_soft() -> None:
+    """Words on the accent's wash (the sidebar's chosen place, a chip, a menu's chosen row, a key cap): the accent's
+    words and the muted ones, each taken just far enough toward the main text's side to read at 4.5:1 on the wash over the glass
+    (aimed at SOFT_RATIO: the glass shades itself a touch more than its color says)."""
+    g = globals()
+    wash = _solid(g["CHIP_HOVER"], _solid(g["GLASS"], g["BG"]))  # (the deepest wash words sit on: a chip, hovered)
+    ink = "#000000" if SCHEME == "light" else "#FFFFFF"
+    g.update(
+        {
+            f"SOFT_{k}": _toward(g[src], ink, wash, SOFT_RATIO)
+            for k, src in (("TEXT", "ACCENT_TEXT"), ("MUTED", "MUTED"))
+        }
+    )
+    g.update(SOFT_WARN=_toward(g["WARN"], ink, wash, SOFT_RATIO), SOFT_BAD=_toward(g["BAD"], ink, wash, SOFT_RATIO))
+
+
+SOFT_RATIO = 4.8
+
+
 SCHEME = "dark"
 ACCENT_KEY = APP_ACCENT
 globals().update(DARK)
@@ -626,6 +645,7 @@ def use(scheme: str, accent: str | None = None, contrast: bool = False, opaque: 
     if opaque:
         globals().update(GLASS=_solid(look["GLASS"], look["BG"]), TOAST=_solid(look["TOAST"], look["BG"]))
     _off()
+    _on_soft()
 
 
 # (V-26, the standard's 2.3) The light look's neutrals lean toward the accent you pick: each keeps its lightness and
@@ -725,3 +745,6 @@ def accent_of(key: str, scheme: str | None = None) -> str:
     """A choice's color in the dark or light look (the current one by default)."""
     _name, dark, light = ACCENTS.get(key, ACCENTS[APP_ACCENT])
     return light if (scheme or SCHEME) == "light" else dark
+
+
+_on_soft()  # (the dark look's, until use() picks one)

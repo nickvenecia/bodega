@@ -21,7 +21,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 if sys.platform == "win32":  # the offscreen screen looks for fonts beside Qt, where PySide ships none: Bodega's own
     os.environ.setdefault("QT_QPA_FONTDIR", str(Path(__file__).resolve().parents[1] / "bodega" / "assets" / "fonts"))
 
-_status: dict = {"code": 0}
+_status: dict = {}
 QT_NOISE = ("This plugin does not support",)  # the offscreen screen has no window manager to ask
 QT_SHOWN = 20  # Qt's first warnings in a test are written out…
 QT_FLOOD = 500  # …and this many means it's saying it over and over (a loop): the run stops, naming it
@@ -85,19 +85,6 @@ def pytest_collection_modifyitems(config, items):
     long = [item.nodeid[:120] + "…" for item in items if len(item.nodeid) > MAX_TEST_ID]
     if long:
         raise pytest.UsageError(f"Give these parametrized tests short ids (ids=[…]): {long}")
-
-
-def pytest_sessionfinish(session, exitstatus):
-    _status["code"] = int(exitstatus)
-
-
-@pytest.hookimpl(trylast=True)
-def pytest_unconfigure(config):
-    # BODEGA_PLAIN_EXIT: Python shuts down as it would anywhere, so a crash on the way out shows (CI pins it)
-    if "PySide6.QtWidgets" in sys.modules and not os.environ.get("BODEGA_PLAIN_EXIT"):
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os._exit(_status["code"])
 
 
 @pytest.fixture(autouse=True)

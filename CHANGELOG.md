@@ -329,6 +329,8 @@
   Bodega's own window instead of beside it: the window behind is blurred and dimmed, a ✕ in the corner closes them
   (so does Esc), and a click on the dimmed area closes them too, unless that would lose what you typed or an import
   you're setting up. They fade in, unless Reduce Motion is on. Search Everything blurs the window behind it as well.
+- In the light look, words on a highlighted row are a shade darker so they read easily: the sidebar's chosen place and
+  its count, a chosen row in a menu, the + Add Gear chips, filter chips and the keys in Keyboard Shortcuts.
 - In the light look, Bodega's whites and greys take a hint of your accent color: cool blue-whites with Blue, warm ones
   with Orange or Pink, plain greys with Graphite. Words keep their contrast; the dark look and your printed pages
   don't change.

@@ -30,8 +30,8 @@ Bodega will notice (it becomes the release notes and the update window), so this
     totals row; that's the test screen, not Bodega.
   - A warning from Qt fails the test it came in; the offscreen screen's own ("This plugin does not support …") are
     let through (`tests/conftest.py`). A test that feeds Qt a broken file on purpose is marked `qt_warnings`.
-  - Tests leave with `os._exit` once pytest has its result, because Qt objects can crash while Python shuts down on
-    Windows (T-09, still open).
+  - Tests end as Python ends anywhere: the `os._exit` and CI's "only the shutdown crashed" check are gone (T-09).
+    Pinned on 2026-10-16: with neither, all four machines shut down cleanly (run 71).
   - Every test starts with a fresh AI meter with no per-minute wait (`tests/conftest.py`, `fresh_ai_meter`).
   - Python's cycle collector is off; the app checks for cycles on the window's thread every 50 ms and the tests
     collect between tests (`app._MainThreadGC`, CONTRIBUTING rule 20). Left on, it can free Qt objects mid-restyle

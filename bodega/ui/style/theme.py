@@ -128,9 +128,9 @@ QPushButton#Primary:pressed {{ background: {tokens.ACCENT_PRESS}; border-color: 
 QPushButton#Primary:disabled {{ background: {tokens.ACCENT_OFF}; border-color: {tokens.ACCENT_OFF}; color: {tokens.ACCENT_OFF_TEXT}; }}
 QPushButton#Ghost {{ background: transparent; border-color: transparent; color: {tokens.ACCENT_TEXT}; }}  /* quiet */
 QPushButton#Ghost:hover {{ background: {tokens.ACCENT_TINT}; }}
-QPushButton#AddChip {{ background: {tokens.CHIP}; border: 1px solid transparent; color: {tokens.ACCENT_TEXT}; padding: 0 {SPACE_3}px 0 {SPACE_2}px; font-weight: {WEIGHT_SEMIBOLD};
+QPushButton#AddChip {{ background: {tokens.CHIP}; border: 1px solid transparent; color: {tokens.SOFT_TEXT}; padding: 0 {SPACE_3}px 0 {SPACE_2}px; font-weight: {WEIGHT_SEMIBOLD};
     min-height: {_INNER}px; max-height: {_INNER}px; }}
-QPushButton#FilterChip {{ background: {tokens.ACCENT_TINT}; border: none; color: {tokens.ACCENT_TEXT}; padding: 0 {SPACE_1_5}px 0 {SPACE_3}px; min-height: {tokens.FILTER_CHIP_H}px; max-height: {tokens.FILTER_CHIP_H}px; border-radius: {tokens.FILTER_CHIP_H // 2}px; font-size: {tokens.TEXT_CALLOUT}px; font-weight: {WEIGHT_MEDIUM}; }}
+QPushButton#FilterChip {{ background: {tokens.ACCENT_TINT}; border: none; color: {tokens.SOFT_TEXT}; padding: 0 {SPACE_1_5}px 0 {SPACE_3}px; min-height: {tokens.FILTER_CHIP_H}px; max-height: {tokens.FILTER_CHIP_H}px; border-radius: {tokens.FILTER_CHIP_H // 2}px; font-size: {tokens.TEXT_CALLOUT}px; font-weight: {WEIGHT_MEDIUM}; }}
 QPushButton#ClearFilters {{ background: transparent; border: none; color: {tokens.ACCENT_TEXT}; border-radius: {tokens.FILTER_CHIP_H // 2}px; min-height: {tokens.FILTER_CHIP_H}px; max-height: {tokens.FILTER_CHIP_H}px; padding: 0 {SPACE_2}px; font-size: {tokens.TEXT_CALLOUT}px; font-weight: {WEIGHT_MEDIUM}; }}
 QPushButton#FilterChip:hover {{ background: {tokens.CHIP_HOVER}; }}
 QPushButton#ClearFilters:hover {{ background: {tokens.ACCENT_TINT}; }}
@@ -179,7 +179,7 @@ QFrame#CheckRow {{ background: {tokens.FILL}; border-radius: {RADIUS_LG}px; }}
 QLabel#Due {{ color: {tokens.MUTED}; }}
 QLabel#Due[tone="out"] {{ color: {tokens.WARN}; font-weight: {WEIGHT_SEMIBOLD}; }}
 QLabel#Due[tone="late"] {{ color: {tokens.BAD}; font-weight: {WEIGHT_SEMIBOLD}; }}
-#KeyCap {{ background: {tokens.CHIP}; color: {tokens.MUTED}; border-radius: {RADIUS_SM}px; padding: {tokens.SPACE_0_5}px {SPACE_2}px;
+#KeyCap {{ background: {tokens.CHIP}; color: {tokens.SOFT_MUTED}; border-radius: {RADIUS_SM}px; padding: {tokens.SPACE_0_5}px {SPACE_2}px;
     font-weight: {WEIGHT_MEDIUM}; }}
 #MenuHeading {{ color: {tokens.MUTED}; font-size: {TEXT_XS}px; font-weight: {WEIGHT_SEMIBOLD}; padding: {SPACE_1}px {SPACE_2}px 0 {SPACE_2}px; }}
 
@@ -206,7 +206,7 @@ QComboBoxPrivateContainer {{ background: transparent; border: none; }}
 QComboBox QAbstractItemView, QListView#Suggestions {{
     background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {tokens.LIST_R}px;
     padding: {tokens.LIST_INSET - 1}px; outline: none;
-    selection-background-color: {tokens.ACCENT_TINT}; selection-color: {tokens.ACCENT_TEXT};
+    selection-background-color: {tokens.ACCENT_TINT}; selection-color: {tokens.SOFT_TEXT};
 }}
 QComboBox QAbstractItemView::item, QListView#Suggestions::item {{
     padding: 0 {SPACE_2_5}px; min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px;
@@ -214,7 +214,7 @@ QComboBox QAbstractItemView::item, QListView#Suggestions::item {{
 }}
 QComboBox QAbstractItemView::item:hover, QListView#Suggestions::item:hover {{ background: {tokens.CARD_HOVER}; }}
 QComboBox QAbstractItemView::item:selected, QListView#Suggestions::item:selected {{
-    background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_TEXT};
+    background: {tokens.ACCENT_TINT}; color: {tokens.SOFT_TEXT};
 }}
 QComboBox QAbstractItemView::separator {{ height: 1px; background: {tokens.BORDER_STRONG}; margin: {SPACE_1}px {SPACE_2}px; }}
 
@@ -347,7 +347,7 @@ QListWidget#Picker {{ background: {tokens.CARD}; border: 1px solid {tokens.BORDE
 QListWidget#Picker::item {{ min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px; padding: 0 {SPACE_2}px;
     margin: {tokens.LIST_GAP // 2}px 0; }}
 QListWidget#Picker::item:hover {{ background: {tokens.CARD_HOVER}; }}
-QListWidget#Picker::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_TEXT}; }}
+QListWidget#Picker::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.SOFT_TEXT}; }}
 QListWidget#Picker::indicator {{ width: {INDICATOR}px; height: {INDICATOR}px; border-radius: {RADIUS_XS}px;
     border: 1px solid {tokens.BORDER_CHECK}; background: {tokens.CARD}; }}
 QListWidget#Picker::indicator:checked {{ background: {tokens.ACCENT_FILL}; border-color: {tokens.ACCENT_FILL}; image: url(__CHECK__); }}
@@ -373,10 +373,13 @@ QToolButton#NavArrow {{ background: transparent; border: none; padding: 0; }}
 QToolButton#NavArrow:hover {{ background: {tokens.CARD_HOVER}; border-radius: {RADIUS_XS}px; }}
 #NavHead {{ background: transparent; }}
 #NavHead:hover #SectionLabel {{ color: {tokens.TEXT}; }}
-#Nav[selected="true"] #NavLabel, #Nav[selected="true"] #NavSub {{ color: {tokens.ACCENT_TEXT}; font-weight: {WEIGHT_SEMIBOLD}; }}
+#Nav[selected="true"] #NavLabel, #Nav[selected="true"] #NavSub {{ color: {tokens.SOFT_TEXT}; font-weight: {WEIGHT_SEMIBOLD}; }}
 #NavCount {{ color: {tokens.MUTED}; font-size: {TEXT_XS}px; }}
 #NavCount[tone="out"] {{ color: {tokens.WARN}; font-weight: {WEIGHT_SEMIBOLD}; }}
 #NavCount[tone="late"] {{ color: {tokens.BAD}; font-weight: {WEIGHT_SEMIBOLD}; }}
+#Nav[selected="true"] #NavCount {{ color: {tokens.SOFT_MUTED}; }}
+#Nav[selected="true"] #NavCount[tone="out"] {{ color: {tokens.SOFT_WARN}; }}
+#Nav[selected="true"] #NavCount[tone="late"] {{ color: {tokens.SOFT_BAD}; }}
 #Toolbar {{ border: none; }}
 #CalTitle {{ font-size: {TEXT_XL}px; font-weight: {WEIGHT_SEMIBOLD}; }}
 #PageTitle {{ font-size: {TEXT_TITLE}px; font-weight: {WEIGHT_BOLD}; letter-spacing: {TRACK_TITLE}px; }}
@@ -458,7 +461,7 @@ QMenuBar::item {{ background: transparent; padding: {SPACE_1}px {SPACE_2_5}px; b
 QMenuBar::item:selected, QMenuBar::item:pressed {{ background: {tokens.CARD_HOVER}; }}
 QMenu::item {{ padding: 0 {SPACE_4}px 0 {SPACE_2_5}px; min-height: {tokens.LIST_ROW_H}px; border-radius: {tokens.LIST_ROW_R}px;
     margin: {tokens.LIST_GAP // 2}px 0; }}
-QMenu::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.ACCENT_TEXT}; }}
+QMenu::item:selected {{ background: {tokens.ACCENT_TINT}; color: {tokens.SOFT_TEXT}; }}
 /* a destructive choice (Delete…, Remove…) is red, highlighted or not: app.py makes it the menu's "default" item */
 QMenu::item:default {{ color: {tokens.BAD}; font-weight: {WEIGHT_REGULAR}; }}
 QMenu::item:default:selected {{ background: {tokens.BAD_TINT}; color: {tokens.BAD}; }}
