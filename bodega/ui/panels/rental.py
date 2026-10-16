@@ -22,6 +22,7 @@ from bodega.ui.components.widgets import (
     WHOLE_TYPED,
     ElidedLabel,
     IconLabel,
+    ListSearch,
     MoneyField,
     Section,
     TextBox,
@@ -424,6 +425,8 @@ class RentalPanel(DetailsBase):
         g["rental"].add(row)
 
         # gear
+        self.line_search = ListSearch("Lines")  # (once a rental has more than a screenful)
+        g["gear"].add(self.line_search.box)
         self.lines_box = QWidget()
         self.lines_lay = vbox(self.lines_box, 0, 0)  # rows, with hairlines between
         g["gear"].add(self.lines_box)
@@ -795,6 +798,7 @@ class RentalPanel(DetailsBase):
             if w is not None:
                 w.setParent(None)
         if self.r is None:
+            self.line_search.show_for(self.lines_lay, [])
             return
         self._compute()
         if not self.r.lines:
@@ -809,6 +813,7 @@ class RentalPanel(DetailsBase):
             self.lines_lay.addWidget(e)
             self.editors.append(e)
         rows_done(self.lines_lay)
+        self.line_search.show_for(self.lines_lay, [(e, pricing.line_name(self.lib, e.line)) for e in self.editors])
         for i, e in enumerate(self.editors):
             e.set_position(i, len(self.editors))
             if e.line is (open_line or was_open):

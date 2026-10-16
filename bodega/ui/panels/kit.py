@@ -14,6 +14,7 @@ from bodega.core.model import Package
 from bodega.core.store import Library
 from bodega.ui.components.widgets import (
     ElidedLabel,
+    ListSearch,
     MoneyField,
     Section,
     TextBox,
@@ -71,6 +72,8 @@ class PackagePanel(DetailsBase):
         self.notes = TextBox("What it's good for. Prints on the kit sheet.", tokens.TEXT_BOX_H)
         g["package"].add(self.notes)
 
+        self.line_search = ListSearch("Gear")  # (once a kit has more than a screenful)
+        g["gear"].add(self.line_search.box)
         self.lines_box = QWidget()
         self.lines_lay = vbox(self.lines_box, 0, 0)  # rows, with hairlines between
         g["gear"].add(self.lines_box)
@@ -153,15 +156,20 @@ class PackagePanel(DetailsBase):
             if w is not None:
                 w.setParent(None)
         if self.pkg is None:
+            self.line_search.show_for(self.lines_lay, [])
             return
         if not self.pkg.lines:
             self.lines_lay.addWidget(hint("No gear yet."))
+        rows = []
         for n, line in enumerate(self.pkg.lines):
             it = self.lib.items.get(line.item_id)
             if it is None:
                 continue
-            self.lines_lay.addWidget(self._line_row(n, it, line))
+            row = self._line_row(n, it, line)
+            self.lines_lay.addWidget(row)
+            rows.append((row, " ".join((it.name, it.brand, it.series, it.group))))
         rows_done(self.lines_lay)
+        self.line_search.show_for(self.lines_lay, rows)
         self._sums()
 
     def _line_row(self, n: int, it, line) -> QWidget:

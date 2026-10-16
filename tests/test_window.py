@@ -1991,3 +1991,41 @@ def test_import_remembers_the_columns_you_set_for_a_sheet_laid_out_the_same(qapp
         total is not None
         and len(importer.remember({str(n): {} for n in range(30)}, key, cols)) == importer.LAYOUTS_KEPT
     )
+
+
+def test_a_long_kit_or_rental_has_its_own_search(win):
+    """The standard's rule for every list (LIST_SEARCH_ABOVE): a kit's gear and a rental's lines, once longer
+    than that, get a search that hides what doesn't match, and says so when nothing does."""
+    from bodega.core.model import PackageLine, RentalLine
+    from bodega.ui.style import tokens
+
+    lib = win.lib
+    p = next(iter(lib.packages.values()))
+    win.open("packages", p.id)
+    QApplication.processEvents()
+    assert not win.packages.line_search.box.isVisibleTo(win.packages)  # a short kit: no search
+    ids = list(lib.items)
+    p.lines = [PackageLine(i, 1) for i in ids[: tokens.LIST_SEARCH_ABOVE + 2]]
+    win.packages.build_lines()
+    s = win.packages.line_search
+    assert s.box.isVisibleTo(win.packages)
+    target = lib.items[ids[0]]
+    s.setText(target.name)
+    from bodega.core import search
+
+    shown = [hay for w, hay in s._rows if not w.isHidden()]
+    assert shown and all(search.folded(target.name) in hay for hay in shown) and len(shown) < len(s._rows)
+    s.setText("nothing is called this")
+    assert not any(not w.isHidden() for w, _h in s._rows) and s.none.isVisibleTo(win.packages)
+    s.clear()
+    assert all(not w.isHidden() for w, _h in s._rows)
+
+    r = next(iter(lib.rentals.values()))
+    r.lines = [RentalLine("item", i, 1) for i in ids[: tokens.LIST_SEARCH_ABOVE + 1]]
+    win.open("rentals", r.id)
+    win.rentals.build_lines()
+    QApplication.processEvents()
+    rs = win.rentals.line_search
+    assert rs.box.isVisibleTo(win.rentals)
+    rs.setText(lib.items[ids[1]].name)
+    assert any(not w.isHidden() for w, _h in rs._rows) and any(w.isHidden() for w, _h in rs._rows)

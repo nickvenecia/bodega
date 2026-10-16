@@ -305,9 +305,9 @@ def repolish(w: QWidget) -> None:
 
 
 def rows_done(layout: QLayout) -> None:
-    """A list of rows (each an "ItemBox") is built: the last one has no hairline under it."""
+    """A list of rows (each an "ItemBox") is built, or searched: the last one shown has no hairline under it."""
     rows = [layout.itemAt(n).widget() for n in range(layout.count())]
-    rows = [w for w in rows if w is not None and w.objectName() == "ItemBox"]
+    rows = [w for w in rows if w is not None and w.objectName() == "ItemBox" and not w.isHidden()]
     for w in rows:
         if w.property("last") != (w is rows[-1]):
             w.setProperty("last", w is rows[-1])
@@ -929,6 +929,58 @@ class SearchField(QLineEdit):
                 self.leave_to()
             return
         super().keyPressEvent(e)
+
+
+class ListSearch(SearchField):
+    """The search over a panel's own list (a kit's gear, a rental's lines), for when it's long: shown once there
+    are more than LIST_SEARCH_ABOVE rows (the standard's rule for every list), it hides the rows that don't
+    match what's typed, and says so when none do. Put `.box` above the rows; give it the rows with show_for()
+    each time they're built."""
+
+    def __init__(self, what: str, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setPlaceholderText(f"Search {what}")
+        self.setAccessibleName(f"Search {what}")
+        self.setClearButtonEnabled(True)
+        self.addAction(theme.icon("search", theme.FAINT), QLineEdit.ActionPosition.LeadingPosition)
+        self.box = QWidget()
+        lay = vbox(self.box, (0, 0, 0, tokens.SPACE_2), tokens.SPACE_2)
+        lay.addWidget(self)
+        self.none = hint("")
+        self.none.hide()
+        lay.addWidget(self.none)
+        self.box.hide()
+        self._layout: QLayout | None = None
+        self._rows: list[tuple[QWidget, str]] = []
+        self.textChanged.connect(lambda _t: self._apply())
+
+    def show_for(self, layout: QLayout, rows: list[tuple[QWidget, str]]) -> None:
+        """The rows as built now, each with the words it's found by. Few enough: no search (and none typed)."""
+        from bodega.core import search
+
+        self._layout = layout
+        self._rows = [(w, search.folded(words)) for w, words in rows]
+        long = len(rows) > tokens.LIST_SEARCH_ABOVE
+        self.box.setVisible(long)
+        if not long and self.text():
+            self.blockSignals(True)
+            self.clear()
+            self.blockSignals(False)
+        self._apply()
+
+    def _apply(self) -> None:
+        from bodega.core import search
+
+        wanted = search.words(self.text())
+        shown = 0
+        for w, hay in self._rows:
+            on = search.matches(hay, wanted)
+            w.setVisible(on)
+            shown += on
+        self.none.setText(f"Nothing here matches “{self.text().strip()}”." if wanted and not shown else "")
+        self.none.setVisible(bool(wanted) and not shown)
+        if self._layout is not None:
+            rows_done(self._layout)
 
 
 def set_combo(c: QComboBox, key: str) -> None:
