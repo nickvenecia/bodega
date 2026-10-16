@@ -211,7 +211,7 @@ class Notes(QTextBrowser):
 
     def __init__(self, blocks: list[tuple[str, str]], parent: QWidget | None = None):
         super().__init__(parent)
-        self.blocks = blocks or [("text", "Fixes and improvements.")]
+        self.blocks = blocks or [("text", "No notes came with this version.")]
         self.setObjectName("WhatsNew")
         self.setOpenLinks(False)  # links go through open_url, which only opens https pages
         self.anchorClicked.connect(lambda u: open_url(u.toString()))

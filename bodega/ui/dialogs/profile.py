@@ -22,6 +22,7 @@ from bodega.core.looks import COLORS
 from bodega.core.model import WEEK_DAYS, Business
 from bodega.core.paths import logos_dir
 from bodega.core.store import DEFAULT_NOTE, DEFAULT_TERMS, clean_prefix, initials
+from bodega.ui.components.photos import write_picture
 from bodega.ui.components.widgets import (
     Disclosure,
     Embeddable,
@@ -85,8 +86,10 @@ def import_logo(src: Path) -> str:
             Qt.TransformationMode.SmoothTransformation,
         )
     name = f"{digest}.png"
-    if not img.save(str(folder / name), "PNG"):
-        raise ValueError("Couldn't save the logo. Check that there's free space on this computer.")
+    try:
+        write_picture(img, folder / name, "PNG", -1, "save the logo")
+    except OSError as e:
+        raise ValueError(str(e)) from e  # already in plain words
     return name
 
 
@@ -193,14 +196,12 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         sec.add(self.week_days)
         p.addWidget(sec)
         self.weekend = ToggleRow("Weekend Counts as 1 Day", b.weekend_deal)
-        self.weekend.setToolTip(
-            "Pick up Friday, return Monday: billed as one day. New rentals start with this."
-        )
+        self.weekend.setToolTip("Pick up Friday, return Monday: billed as one day")
         p.addWidget(self.weekend)
         row = hbox(spacing=SPACE_2)
         sec = Section("Rental Sales Tax %")
         self.rental_tax = percent_field(b.rental_tax, "None")
-        self.rental_tax.setToolTip("Sales tax on the rent itself. New rentals start with it.")
+        self.rental_tax.setToolTip("Sales tax on the rent itself")
         sec.add(self.rental_tax)
         row.addWidget(sec, 1)
         sec = Section("Deposit, % of Value")
@@ -216,16 +217,13 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         row = hbox(spacing=SPACE_2)
         sec = Section("Rental Numbers Start With")
         self.prefix = QLineEdit(b.prefix)
-        self.prefix.setToolTip("Numbers look like JLF-2026-001, counting up each year.")
+        self.prefix.setToolTip("Like JLF-2026-001, counting up each year")
         sec.add(self.prefix)
         row.addWidget(sec, 1)
         sec = Section("Next Number")
         self.next_field = QLineEdit()
         self.next_field.setValidator(QIntValidator(1, 999999, self.next_field))
-        self.next_field.setToolTip(
-            "The number this year's next rental gets. Raise it to carry on a series from another system; "
-            "a number already given is never given again."
-        )
+        self.next_field.setToolTip("This year's next rental number, never one already given")
         sec.add(self.next_field)
         sec.setVisible(next_for is not None)
         row.addWidget(sec, 1)
@@ -251,9 +249,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
 
         self.agreement = Disclosure("Agreement Terms")
         self.terms = self._box(self.agreement.lay, "Terms", b.terms or DEFAULT_TERMS, "", TEXT_BOX_TERMS)
-        self.terms.setToolTip(
-            "{owner} becomes your name. One clause per paragraph; the first words print bold."
-        )
+        self.terms.setToolTip("One clause per paragraph: {owner} becomes your name")
         self.note = self._line(self.agreement.lay, "Closing Note", b.note or DEFAULT_NOTE, "")
         lay.addWidget(self.agreement)
         lay.addStretch(1)
@@ -395,8 +391,8 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         example = Item(value="1000")
         rate = pricing.auto_day_rate(example, b)
         self.pricing.setToolTip(
-            f"A piece you paid {b.currency}1,000 for rents for {money.fmt_short(rate, b.currency)} a day "
-            f"and {money.fmt_short(rate * b.week_days, b.currency)} a week."
+            f"Paid {b.currency}1,000: rents for {money.fmt_short(rate, b.currency)} a day, "
+            f"{money.fmt_short(rate * b.week_days, b.currency)} a week"
         )
         self.pricing.set_summary(f"{money.fmt_rate(b.rate_pct)} a day · {b.week_days}-day week")
         ok = self._check_next()
@@ -416,11 +412,11 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         self.logo_thumb.setFixedHeight(LOGO_THUMB)
         self.logo_thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.logo_btn = QPushButton("Choose Logo…")
-        self.logo_btn.setToolTip("A logo or a photo: PNG, JPG or SVG.")
+        self.logo_btn.setToolTip("PNG, JPG or SVG")
         self.logo_btn.clicked.connect(self._choose_logo)
         self.logo_remove = QPushButton("Remove")
         self.logo_remove.setObjectName("Ghost")
-        self.logo_remove.setToolTip("Leave the logo off. Cancel puts it back.")
+        self.logo_remove.setToolTip("Leave the logo off")
         self.logo_remove.clicked.connect(lambda: self._set_logo(""))
         row.addWidget(self.logo_thumb)
         row.addWidget(self.logo_btn)
@@ -483,8 +479,8 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
 
         if confirm(
             self,
-            "Delete This Profile?",
-            f"{self.business.name} will be removed from Bodega. This can't be undone.",
+            f"Delete {self.business.name or 'This Profile'}?",
+            "It goes from your profiles. Edit › Undo brings it back.",
             "Delete Profile",
         ):
             self.deleted = True

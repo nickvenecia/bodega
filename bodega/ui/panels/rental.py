@@ -53,7 +53,7 @@ STATUS_LABELS = {
 STATUS_TIPS = {
     "quote": "Not held yet: the gear can still go to someone else",
     "booked": "The gear is held for these dates",
-    "out": "Picked up. Shows as Out on the gear.",
+    "out": "Picked up: shows as Out on the gear",
     "returned": "Everything's back",
     "cancelled": "Kept for your records; holds nothing",
 }
@@ -150,7 +150,6 @@ class LineEditor(QFrame):
             self.desc.textEdited.connect(lambda t: self._set("name", t))
         row = hbox(spacing=tokens.SPACE_2)
         self.qty = qty_field(line.qty)
-        self.qty.setToolTip("How many")
         times = QLabel("×")
         times.setObjectName("Muted")
         self.rate = MoneyField()
@@ -266,9 +265,7 @@ class LineEditor(QFrame):
         else:
             auto = pricing.line_unit(lib, RentalLine(line.kind, line.ref, line.qty), b)
             self.rate.setPlaceholderText(money.fmt_short(auto, cur))
-            self.rate.setToolTip(
-                "Blank uses the automatic rate (the gear and what's attached). Type your own to override it."
-            )
+            self.rate.setToolTip("Leave blank for the automatic rate")
             gear = pricing.line_gear(lib, line)
             if line.kind == "package":
                 n = sum(u for _i, u, _d in gear)
@@ -414,9 +411,7 @@ class RentalPanel(DetailsBase):
         sec = Section("Billed Days")
         self.billed = only(QLineEdit(), WHOLE_TYPED)
         self.billed.setFixedWidth(tokens.NUM_FIELD_W)
-        self.billed.setToolTip(
-            "Leave blank and Bodega works it out. Lines with their own dates count their own."
-        )
+        self.billed.setToolTip("Leave blank and Bodega works it out")
         sec.add(self.billed)
         row.addWidget(sec)
         self.days_hint = hint("")
@@ -457,7 +452,7 @@ class RentalPanel(DetailsBase):
         drow = hbox(spacing=tokens.SPACE_2)
         self.deposit = MoneyField()
         self.deposit.setPlaceholderText("None")
-        self.deposit.setToolTip("Refundable. Listed on the agreement, not added to the total.")
+        self.deposit.setToolTip("Refundable: on the agreement, not in the total")
         self.suggest = QPushButton("Suggest")
         self.suggest.setObjectName("Ghost")
         drow.addWidget(self.deposit, 1)
@@ -487,9 +482,7 @@ class RentalPanel(DetailsBase):
         g["agreement"].add(self.checks)
         sec = Section("Terms")
         self.terms = TextBox("", tokens.TEXT_BOX_TERMS)
-        self.terms.setToolTip(
-            "One clause per paragraph. Start each with a few words and a period: they print bold."
-        )
+        self.terms.setToolTip("One clause per paragraph: its first words, up to a period, print bold")
         sec.add(self.terms)
         g["agreement"].add(sec)
         sec = Section("Closing Note")

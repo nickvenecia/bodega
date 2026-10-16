@@ -237,7 +237,7 @@ def test_release_text_is_never_read_as_html(qapp):
     page = n.toHtml()
     assert "&lt;b&gt;x&lt;/b&gt;" in page and "bold" in page and "`" not in n.toPlainText()
     assert 'href="https://example.com/a?b=1&amp;c=2"' in page and "file:" not in page
-    assert Notes([]).toPlainText() == "Fixes and improvements."
+    assert Notes([]).toPlainText() == "No notes came with this version."
 
 
 def test_release_notes_are_the_changelog_entries():
@@ -255,7 +255,7 @@ def test_release_notes_are_the_changelog_entries():
     assert "Bodega-mac-apple-silicon.dmg" in body and "Made it." not in body
     assert (
         update.whats_new(rn.notes(log, "3.0.0")) == []
-    )  # no entries: the window says "Fixes and improvements."
+    )  # no entries: the window says "No notes came with this version."
     assert rn.changes(rn.CHANGELOG.read_text(encoding="utf-8"), __version__)  # this version has its entries
 
 

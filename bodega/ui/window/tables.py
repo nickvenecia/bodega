@@ -8,7 +8,7 @@ finds them too. Right-click the column titles to choose the columns.
 
 from __future__ import annotations
 
-from PySide6.QtCore import QPoint, QPointF, QRectF, QSize, Qt, QTimer, Signal
+from PySide6.QtCore import QEvent, QPoint, QPointF, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPen, QPixmap, QRegion
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QStyle,
     QStyledItemDelegate,
     QStyleOptionViewItem,
+    QToolTip,
     QTreeWidget,
     QTreeWidgetItem,
     QWidget,
@@ -384,6 +385,30 @@ class RowPainter(QStyledItemDelegate):
     def paint(self, painter, option, index):
         self.backdrop(painter, option, index)
         super().paint(painter, self.plain(option), index)
+
+    def helpEvent(self, event, view, option, index):
+        """A cell's own tooltip, or else, when the cell cuts its words short, the whole of them."""
+        if (
+            event.type() != QEvent.Type.ToolTip
+            or not index.isValid()
+            or index.data(Qt.ItemDataRole.ToolTipRole)
+        ):
+            return super().helpEvent(event, view, option, index)
+        text = self.cut_short(view, option, index)
+        if text:
+            QToolTip.showText(event.globalPos(), theme.plain_tip(text), view)
+        else:
+            QToolTip.hideText()
+        return True
+
+    @staticmethod
+    def cut_short(view, option, index) -> str:
+        """The cell's whole text if it doesn't fit (so it's shown cut short), else ''."""
+        text = str(index.data(Qt.ItemDataRole.DisplayRole) or "")
+        room = view.visualRect(index).width() - 2 * tokens.SPACE_2  # the cell's padding
+        if index.column() == GEAR_COL["name"] and getattr(view, "thumbs", False):
+            room -= tokens.TABLE_THUMB + tokens.SPACE_2
+        return text if text and option.fontMetrics.horizontalAdvance(text) > room else ""
 
 
 class _GearPainter(RowPainter):

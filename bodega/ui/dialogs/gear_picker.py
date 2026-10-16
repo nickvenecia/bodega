@@ -55,7 +55,7 @@ class GearPicker(QDialog):
         self.list.setObjectName("Picker")
         self.list.setUniformItemSizes(False)
         self.list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.list.setTextElideMode(Qt.TextElideMode.ElideMiddle)
+        self.list.setTextElideMode(Qt.TextElideMode.ElideRight)  # names: cut at the end
         lay.addWidget(self.list, 1)
         row = hbox(spacing=tokens.SPACE_2)
         self.count = QLabel()

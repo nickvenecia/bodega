@@ -173,7 +173,7 @@ class PackagePanel(DetailsBase):
         name.setObjectName("ItemTitle")
         top.addWidget(name, 1)
         qty = qty_field(line.qty)
-        qty.setToolTip(f"How many go in the package (you have {it.qty})")
+        qty.setToolTip(f"You have {it.qty}")
         qty.valueChanged.connect(lambda v, line=line: self._qty(line, v))
         top.addWidget(qty)
         more = icon_button("more", "Open or remove")

@@ -42,9 +42,9 @@ class ServicesMixin:
         d = FeedbackDialog(self)
         if d.exec():
             self.toast(
-                "Thanks! Sent."
+                "Feedback sent."
                 if d.sent_now
-                else "Thanks! It's saved and goes out once sending is switched on.",
+                else "Feedback saved. It goes out once sending is switched on.",
                 "done",
             )
 

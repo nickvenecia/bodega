@@ -577,7 +577,9 @@ def chat(
         c = _change(shown[row["n"]], field, new)
         if c and not any(x.item_id == c.item_id and x.field == c.field for x in out):
             out.append(c)
-    return reply or ("Here's what I'd change." if out else "Done."), Result(out, [])
+    return reply or ("Changes to review." if out else "No answer came back. Try asking another way."), Result(
+        out, []
+    )
 
 
 def inventory_text(items: list[Item], lookup: dict[str, Item], numbered: bool = False) -> str:

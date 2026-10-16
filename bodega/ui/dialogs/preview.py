@@ -133,7 +133,7 @@ class PreviewPanel(QFrame):
         self.btn_show = QPushButton("Show File")
         self.btn_show.clicked.connect(self.show_file.emit)
         self.btn_email = QPushButton("Email Renter")
-        self.btn_email.setToolTip("Opens a new email to the renter, with the PDF shown so you can drag it in")
+        self.btn_email.setToolTip("A new email to the renter, with the PDF to drag in")
         self.btn_email.clicked.connect(self.email_wanted.emit)
         self.btn_sent = QPushButton("Mark as Booked")
         self.btn_sent.setToolTip("Hold the gear for these dates")
@@ -177,9 +177,7 @@ class PreviewPanel(QFrame):
         self.dark = on
         self.btn_dark.setIcon(theme.icon("sun" if on else "moon", theme.MUTED))
         self.btn_dark.setToolTip(
-            "Show the page in white, exactly as it prints"
-            if on
-            else "Dark Page: easier on the eyes while you work. PDFs and prints stay white."
+            "Show the page in white, exactly as it prints" if on else "Dark Page (PDFs and prints stay white)"
         )
 
     def _toggle_dark(self) -> None:

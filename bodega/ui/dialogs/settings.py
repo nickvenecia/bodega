@@ -103,7 +103,10 @@ class SettingsDialog(QDialog):
         self._build_account()
         self._build_shortcuts()
         self._build_data()
-        self.show_pane(pane if pane in self.panes else "general")
+        # Account shows once there's an account service to sign in to (until then nothing could sign in)
+        self.rows["account"].setVisible(account.service().connected or account.current() is not None)
+        shown = pane in self.panes and not self.rows[pane].isHidden()
+        self.show_pane(pane if shown else "general")
 
     # ------------------------------------------------------------------ moving around
     def showEvent(self, e):
@@ -322,7 +325,7 @@ class SettingsDialog(QDialog):
     def _build_data(self) -> None:
         w, lay = self._column()
         where = Section("Saved On This Computer")
-        path = ElidedLabel(str(data_dir()))
+        path = ElidedLabel(str(data_dir()), mode=Qt.TextElideMode.ElideMiddle)
         path.setObjectName("Muted")
         path.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         where.add(path)

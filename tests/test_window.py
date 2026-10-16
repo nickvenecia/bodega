@@ -1063,6 +1063,36 @@ def test_screen_readers_hear_a_name_for_every_icon_button_and_place(win):
     assert rows and all(r.accessibleName() for r in rows)
 
 
+def test_words_cut_short_can_still_be_read_whole(win):
+    """A gear name too long for its column shows whole on hover; a cut label is read out whole."""
+    from PySide6.QtWidgets import QStyleOptionViewItem
+
+    from bodega.ui.components.widgets import ElidedLabel
+    from bodega.ui.window.tables import GEAR_COL, RowPainter
+
+    pieces = list(win.lib.items.values())
+    long, short = pieces[0], min(pieces[1:], key=lambda i: len(i.name))
+    long.name = "Sony FX6 Full-Frame Cinema Camera, the Long Name a Rental House Gives It, Twice Over " * 2
+    long.parent = ""
+    win.refresh()
+    QApplication.processEvents()
+    t = win.gear_table
+    rows = {r.data(0, 256): r for r in t.item_rows()}
+    option = QStyleOptionViewItem()
+    option.fontMetrics = t.fontMetrics()
+
+    def tip(it):
+        return RowPainter.cut_short(t, option, t.indexFromItem(rows[it.id], GEAR_COL["name"]))
+
+    assert tip(long) == long.name and tip(short) == ""
+    label = ElidedLabel("A Very Long Label That Has to Be Cut Short")
+    label.resize(60, 20)
+    label.show()
+    QApplication.processEvents()
+    assert label.text() != label.full_text() and label.accessibleName() == label.full_text()
+    label.deleteLater()
+
+
 def test_measured_to_the_standard(win):
     """The standard's Appendix A, measured in the real window: controls 28, the bar's circles 36, table rows 44,
     sidebar rows 32, figures that line up."""

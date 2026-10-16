@@ -134,9 +134,8 @@ class TransferMixin:
             p = p.with_name(p.name + ".csv")
         try:
             importer.write_csv(self.lib.ordered_items(), self.lib.items, p)
-        except OSError:
-            log.warning("CSV not saved", exc_info=True)
-            self.toast("Couldn't save the CSV.", "problem")
+        except OSError as e:
+            notice(self, "Couldn't Save the CSV", errors.plain(e, "save the CSV"))
             return
         self.last_export = p
         self.toast(f"Saved {p.name}.", "done")
@@ -296,10 +295,8 @@ class TransferMixin:
         path = data_dir() / "calendar" / name
         try:
             write_text(path, text)
-        except OSError:
-            self.toast(
-                "Couldn't write the calendar file. Check that there's free space on this computer.", "problem"
-            )
+        except OSError as e:
+            notice(self, "Couldn't Make the Calendar File", errors.plain(e, "write the calendar file"))
             return
         if QDesktopServices.openUrl(QUrl.fromLocalFile(str(path))):
             self.toast("Opened in your calendar app. For Google Calendar: File › Save Calendar File…", "done")

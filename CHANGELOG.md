@@ -80,6 +80,13 @@
 - The banner for changes that aren't saved names the real reason too.
 - Amounts, percents and billed days take only numbers as you type. Before, a letter was accepted and quietly read
   as nothing.
+- Clearer, shorter words across the app: tooltips are a few words each, the Assistant opens with "Ask About Your
+  Gear", and sending feedback says "Feedback sent."
+- A gear name too long for its column shows in full when you point at it, and screen readers read cut-off names
+  and labels in full. Names in the gear picker and the import list are cut at the end, the data folder's path in
+  the middle.
+- Deleting a profile names it ("Delete Second Unit?") and says Edit › Undo brings it back, which it does.
+- Settings no longer shows an Account page while there's nothing to sign in to.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

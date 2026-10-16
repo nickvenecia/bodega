@@ -190,3 +190,32 @@ def test_discarding_is_never_what_return_does(qapp):
 
     a = Alert(None, "Discard Your Changes?", "", "Discard Changes", "Keep Editing", danger=True, safe=True)
     assert a.go.text() == "Keep Editing" and a.go.isDefault()
+
+
+def test_deleting_a_profile_names_it_and_undo_brings_it_back(win, answers):
+    from bodega.core.model import Business
+    from bodega.ui.dialogs.settings import SettingsDialog
+
+    said, asked = answers
+    second = win.lib.add_business(Business(name="Second Unit")) or next(
+        b for b in win.lib.businesses.values() if b.name == "Second Unit"
+    )
+    from bodega.core.history import History
+
+    win.history = History(win.lib)  # a profile you've had a while (adding then deleting it undoes itself)
+    s = SettingsDialog(win.lib, win, "profiles", profile=second.id)
+    said.append(QDialog.DialogCode.Accepted)
+    s.profile_editor._delete()
+    assert asked == ["Delete Second Unit?"]
+    assert second.id not in win.lib.businesses
+    s.close()
+    win.undo()
+    assert second.id in win.lib.businesses  # the alert's "Edit › Undo brings it back" holds
+
+
+def test_account_settings_wait_for_an_account_service(win):
+    from bodega.ui.dialogs.settings import SettingsDialog
+
+    s = SettingsDialog(win.lib, win, "account")
+    assert s.rows["account"].isHidden() and s.current_pane() == "general"  # nothing to sign in to yet
+    s.close()

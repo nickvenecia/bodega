@@ -67,12 +67,12 @@ class AssistantPanel(SidePanel):
         hl.addStretch(1)
         self.face = QLabel()
         self.face.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        hi = QLabel("Hi! What can I help with?")
+        hi = QLabel("Ask About Your Gear")
         hi.setObjectName("EmptyTitle")
         hi.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub = hint(
-            "Ask about your gear, or ask for a change. Your gear list goes to your AI provider (renters never "
-            "do), and nothing changes until you approve it."
+            "Ask a question, or ask for a change. Your gear list goes to your AI provider, never your renters, "
+            "and nothing changes until you approve it."
         )
         sub.setWordWrap(True)
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)

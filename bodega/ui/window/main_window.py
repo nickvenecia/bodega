@@ -792,11 +792,11 @@ class MainWindow(
             self.flush()
             if not self.lib.unsaved:
                 return True
+            why = (self.lib.why_unsaved or ("Bodega can't write to its folder", ""))[0]
             answer = Alert(
                 self,
                 "Quit Without Saving?",
-                "Bodega couldn't write your latest changes to its folder. Check that there's free space on this "
-                "computer and try again; if you quit now, they're lost.",
+                f"Your latest changes aren't saved: {why}. If you quit now, they're lost.",
                 "Try Again",
                 "Cancel",
                 other="Quit Anyway",

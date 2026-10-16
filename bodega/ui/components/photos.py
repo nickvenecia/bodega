@@ -19,7 +19,7 @@ from pathlib import Path
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QMimeData, QRectF, Qt
 from PySide6.QtGui import QImage, QPainter, QPainterPath, QPixmap
 
-from bodega.core import web
+from bodega.core import errors, web
 from bodega.core.model import PHOTO_NAME
 from bodega.core.paths import photos_dir
 from bodega.ui.style import tokens
@@ -53,12 +53,31 @@ def keep(data: bytes) -> str:
     if not dest.exists():
         if not clear:
             img = img.convertToFormat(QImage.Format.Format_RGB32)
-        tmp = folder / f".{name}.part"
-        if not img.save(str(tmp), "PNG" if clear else "JPEG", -1 if clear else JPEG_QUALITY):
-            tmp.unlink(missing_ok=True)
-            raise OSError("Couldn't save the photo. Check that there's free space on this computer.")
-        tmp.replace(dest)
+        write_picture(img, dest, "PNG" if clear else "JPEG", -1 if clear else JPEG_QUALITY, "save the photo")
     return name
+
+
+def encoded(img: QImage, fmt: str = "PNG", quality: int = -1) -> bytes:
+    """A picture as a file's bytes."""
+    data = QByteArray()
+    buf = QBuffer(data)
+    buf.open(QIODevice.OpenModeFlag.WriteOnly)
+    if not img.save(buf, fmt, quality):
+        raise ValueError("Bodega couldn't make a picture of that. Try another one.")
+    buf.close()
+    return bytes(data)
+
+
+def write_picture(img: QImage, dest: Path, fmt: str, quality: int, doing: str) -> None:
+    """Write a picture whole (a part-written one never takes its place). The computer's reason if it can't,
+    in plain words, as an OSError."""
+    tmp = dest.with_name(f".{dest.name}.part")
+    try:
+        tmp.write_bytes(encoded(img, fmt, quality))
+        tmp.replace(dest)
+    except OSError as e:
+        tmp.unlink(missing_ok=True)
+        raise OSError(errors.plain(e, doing)) from e
 
 
 def _solid(img: QImage) -> bool:
@@ -71,12 +90,7 @@ def _solid(img: QImage) -> bool:
 
 def keep_image(img: QImage) -> str:
     """A picture pasted or dragged in as a picture (Copy Image in a browser, a screenshot), kept like any other."""
-    data = QByteArray()
-    buf = QBuffer(data)
-    buf.open(QIODevice.OpenModeFlag.WriteOnly)
-    img.save(buf, "PNG")
-    buf.close()
-    return keep(bytes(data))
+    return keep(encoded(img))
 
 
 def keep_file(path: Path) -> str:

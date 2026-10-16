@@ -99,11 +99,11 @@ class ImportDialog(QDialog):
         # options
         self.options = Disclosure("Options", is_open=True)
         self.attach = ToggleRow("Attach Gear Made for Other Gear", True)
-        self.attach.setToolTip('"Tilta Cage for Sony FX6" goes on the FX6. You can change any of it after.')
+        self.attach.setToolTip('"Tilta Cage for Sony FX6" goes with the FX6')
         self.attach.toggled.connect(lambda _on: self.reread())
         self.options.add(self.attach)
         self.tidy = ToggleRow("Tidy Up Group Names", True)
-        self.tidy.setToolTip("SD Cards becomes Media, 1000c becomes Lights… You can rename anything after.")
+        self.tidy.setToolTip("SD Cards becomes Media, 1000c becomes Lights")
         self.tidy.toggled.connect(lambda _on: self.reread())
         self.options.add(self.tidy)
         self.use_pricing = ToggleRow(
@@ -117,7 +117,7 @@ class ImportDialog(QDialog):
         self.use_pricing.toggled.connect(lambda _on: self._summary())
         self.options.add(self.use_pricing)
         self.guess = ToggleRow("Fill In the Company From the Name", True)
-        self.guess.setToolTip('"Aputure STORM 80c" gets Aputure. You can change any of it after.')
+        self.guess.setToolTip('"Aputure STORM 80c" gets Aputure')
         self.guess.toggled.connect(lambda _on: self.reread())
         self.options.add(self.guess)
         known_links = {
@@ -129,7 +129,7 @@ class ImportDialog(QDialog):
             f"Add the Sheet's Links to {len(known_links)} Piece{'s' if len(known_links) != 1 else ''} You Have",
             True,
         )
-        self.links.setToolTip("Only where that piece has no link yet: a link you have stays as it is")
+        self.links.setToolTip("Only where a piece has no link yet")
         self.links.setVisible(bool(known_links))
         self.options.add(self.links)
         self.filled = QLabel()  # what the sheet left blank, filled in
@@ -137,7 +137,7 @@ class ImportDialog(QDialog):
         self.filled.setWordWrap(True)
         self.options.add(self.filled)
         self.skip_have = ToggleRow("Skip What's Already in Bodega", True)
-        self.skip_have.setToolTip("Same name in the same department. Turn off to bring in a second copy.")
+        self.skip_have.setToolTip("Same name in the same department")
         self.skip_have.toggled.connect(lambda _on: self.fill())
         self.skip_have.setVisible(bool(have))
         self.options.add(self.skip_have)
@@ -155,7 +155,7 @@ class ImportDialog(QDialog):
         self.list = QListWidget()
         self.list.setObjectName("Picker")
         self.list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.list.setTextElideMode(Qt.TextElideMode.ElideMiddle)
+        self.list.setTextElideMode(Qt.TextElideMode.ElideRight)  # names: cut at the end
         self.list.setMinimumHeight(tokens.IMPORT_LIST_H)
         self.list.itemChanged.connect(self._ticked)
         sec.add(self.list)

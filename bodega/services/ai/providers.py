@@ -229,7 +229,12 @@ def _why(code: int, detail: str) -> str:
         403: "This key isn't allowed to use that model",
         404: "That model or address wasn't found",
         429: "Too many requests, or the account is out of credit. Try again in a minute",
-    }.get(code, f"The provider had a problem (error {code})")
+    }.get(
+        code,
+        "The provider had a problem on its end. Try again in a few minutes"
+        if code >= 500
+        else "The provider didn't accept the request",
+    )
     if 300 <= code < 400:
         plain = "The provider's address redirects somewhere else, so Bodega stopped (your key stays private)"
     return plain + (f": {detail}" if detail and code not in (401,) else ".")
