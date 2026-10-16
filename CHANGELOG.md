@@ -216,6 +216,8 @@
   on Windows and Linux) saves from anywhere. Before, Return saved half-way through.
 - With more than 12 renters, groups or profiles to choose from, their dropdown opens as a list you can search:
   type a few letters, then Return.
+- On a very wide screen the page stops growing at its widest and sits in the middle, instead of stretching rows
+  edge to edge. The Assistant button's tip shows Ctrl+J on Windows and Linux (it said ⌘J everywhere).
 - A page's title, the list under it and the calendar now start at one left edge and end at one right edge, lined
   up with the buttons in the top bar.
 - A deposit of 0% in your profile now means no deposit (it used to suggest 10%), and a sheet's 0% day rate is kept

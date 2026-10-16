@@ -56,6 +56,18 @@ from bodega.ui.window.transfer import TransferMixin
 log = get_logger(__name__)
 
 
+class _Center(QFrame):
+    """The page between the side panels: on a very wide window it stops at PAGE_MAX_W and sits centred, so its two
+    margins match and rows never stretch edge to edge."""
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        side = max(0, (self.width() - tokens.PAGE_MAX_W) // 2)
+        lay = self.layout()
+        if lay is not None and lay.contentsMargins().left() != side:
+            lay.setContentsMargins(side, 0, side, 0)
+
+
 class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, PagesMixin, ServicesMixin, QMainWindow):
     def __init__(self, lib: Library | None = None):
         super().__init__()
@@ -172,7 +184,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
 
     # Building
     def _build_center(self) -> QWidget:
-        center = QFrame()
+        center = _Center()
         center.setObjectName("Center")
         lay = vbox(center, 0, 0)
         bar = QFrame()
@@ -227,7 +239,8 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.btn_ai.setObjectName("Circle")
         self.btn_ai.setIcon(theme.icon("assistant", theme.ACCENT, tokens.ICON_LG))
         self.btn_ai.setIconSize(QSize(tokens.ICON_LG, tokens.ICON_LG))
-        self.btn_ai.setToolTip("AI Assistant (⌘J)")
+        keys = QKeySequence("Ctrl+J").toString(QKeySequence.SequenceFormat.NativeText)  # ⌘J on a Mac, Ctrl+J elsewhere
+        self.btn_ai.setToolTip(f"Assistant ({keys})")
         self.btn_ai.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_ai.setProperty("bar", True)
         self.btn_ai.setCheckable(True)  # on while the assistant is open

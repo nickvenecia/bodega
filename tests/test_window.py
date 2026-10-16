@@ -1046,7 +1046,7 @@ def test_screen_readers_hear_a_name_for_every_icon_button_and_place(win):
         if b.isVisible() and not b.text().strip() and not b.accessibleName() and b.toolTip()
     ]
     assert not unnamed
-    assert win.btn_ai.accessibleName() == "AI Assistant"
+    assert win.btn_ai.accessibleName() == "Assistant"
     rows = [r for r in win.sidebar.findChildren(NavRow) if r.isVisible()]
     assert rows and all(r.accessibleName() for r in rows)
 
@@ -1734,3 +1734,11 @@ def test_a_date_can_be_typed_or_picked_from_its_month(qapp):
     assert d.date() == QDate(2026, 12, 1)  # before the earliest: not taken
     d.close()
     d.deleteLater()
+
+
+def test_a_tooltips_keys_are_written_for_this_computer(win):
+    import sys
+
+    tip = win.btn_ai.toolTip()
+    assert tip.startswith("Assistant (") and ("⌘J" in tip) == (sys.platform == "darwin")
+    assert win.btn_ai.accessibleName() == "Assistant"  # the name, without the keys

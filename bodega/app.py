@@ -126,7 +126,7 @@ def _name_from_tip(b: QAbstractButton) -> None:
     if b.text().strip() or b.property("named_by_hand"):
         return
     tip = " ".join(b.toolTip().split())
-    tip = tip.split(" (")[0] if tip.endswith(")") else tip  # "AI Assistant (⌘J)": the name, not the key
+    tip = tip.split(" (")[0] if tip.endswith(")") else tip  # "Assistant (⌘J)": the name, not the key
     if tip and b.accessibleName() != tip:
         b.setAccessibleName(tip)
 

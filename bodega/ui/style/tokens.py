@@ -201,6 +201,7 @@ PAGER_LIFT = 22  # the record pager floats this far above the panel's foot
 PAGER_TEXT_W = 84  # …and its "12 / 38" is at least this wide
 PAGER_SHADOW = 16  # the blur of its soft shadow (the glass shadow's color)
 PAGE_INSET = 28  # (the large title's inset) a page's title, its list's words and its last button sit this far in
+PAGE_MAX_W = 1880  # (page-max-w) on a very wide window the page stops this wide and sits centred
 SEARCH_W = 280  # (bar-search-w) the bar's search field…
 SEARCH_MIN = 160  # the search box at its narrowest
 PAGE_DIALOG_SIZE = (1100, 1000)  # the agreement / inventory / rate card window
