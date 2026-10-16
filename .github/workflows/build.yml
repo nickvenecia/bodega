@@ -253,10 +253,17 @@ jobs:
         if: runner.os == 'Windows'  # Bodega-windows-setup.exe is a contract (README, update.asset_name): no release without it
         shell: pwsh
         run: |
-          if (-not (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
-          Write-Output "Inno Setup $((Get-Item 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe').VersionInfo.ProductVersion)"
+          $want = "6.7.1"  # the Inno Setup every installer is built with (pinned; change it on purpose, with a test build)
+          $key = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1"
+          $have = (Get-ItemProperty $key -ErrorAction SilentlyContinue).DisplayVersion
+          if ($have -ne $want) { choco install innosetup --version $want -y --no-progress --allow-downgrade --force }
           $v = (python -c "import bodega; print(bodega.__version__)")
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$v packaging\windows\bodega.iss
+          $out = & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$v packaging\windows\bodega.iss
+          $code = $LASTEXITCODE
+          $out
+          if ($code -ne 0) { exit $code }
+          $engine = [regex]::Match(($out -join "`n"), 'Compiler engine version: Inno Setup ([\d.]+)').Groups[1].Value
+          if ($engine -ne $want) { Write-Output "::error title=Inno Setup::built with $engine, not the pinned $want"; exit 1 }
           Copy-Item packaging\windows\Output\Bodega-Setup.exe out\Bodega-windows-setup.exe
 
       - name: Package (Linux .tar.gz)
