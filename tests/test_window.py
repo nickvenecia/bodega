@@ -1023,3 +1023,41 @@ def test_drifting_left_or_up_keeps_the_row_lifted(win):
     t.end_lift(drop=False)
     QApplication.processEvents()
     assert t._fill_later is None
+
+
+def test_ctrl_backspace_while_typing_edits_the_field_and_deletes_nothing(win, monkeypatch):
+    """⌘⌫ / Ctrl+Backspace is Delete… for the table, and the editing key in a text field (a word, or the line)."""
+    from bodega.ui.window import editing
+
+    asked = []
+    monkeypatch.setattr(editing, "confirm", lambda *a, **k: asked.append(a) or False)
+    it = next(iter(win.lib.items.values()))
+    win.open("gear", it.id)
+    win.activateWindow()
+    QTest.qWaitForWindowActive(win)
+    from PySide6.QtWidgets import QLineEdit
+
+    field = next(f for f in win.items.findChildren(QLineEdit) if f.isVisible() and not f.isReadOnly())
+    field.setFocus()
+    field.setText("Aputure Amaran")
+    field.end(False)
+    QTest.keyClick(field, Qt.Key.Key_Backspace, Qt.KeyboardModifier.ControlModifier)
+    assert not asked and it.id in win.lib.items  # no "Delete …?" while typing
+    assert field.text() != "Aputure Amaran"  # the field took the key
+
+
+def test_screen_readers_hear_a_name_for_every_icon_button_and_place(win):
+    from PySide6.QtWidgets import QAbstractButton
+
+    from bodega.ui.components.panels import NavRow
+
+    QApplication.processEvents()
+    unnamed = [
+        b.toolTip() or b.objectName()
+        for b in win.findChildren(QAbstractButton)
+        if b.isVisible() and not b.text().strip() and not b.accessibleName() and b.toolTip()
+    ]
+    assert not unnamed
+    assert win.btn_ai.accessibleName() == "AI Assistant"
+    rows = [r for r in win.sidebar.findChildren(NavRow) if r.isVisible()]
+    assert rows and all(r.accessibleName() for r in rows)

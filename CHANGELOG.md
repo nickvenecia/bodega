@@ -44,6 +44,10 @@
   agreements. Logos you added before are drawn the same safe way.
 - A sheet too big to be a gear list, or one with a cell far too long, now says so in plain words instead of
   failing quietly. A web page that trickles in is given up on after 30 seconds, so Stop never waits on it.
+- ⌘⌫ (Ctrl+Backspace on Windows and Linux) while typing in a field deletes a word or the line, as it should,
+  instead of asking to delete the piece you have open.
+- Screen readers (VoiceOver, Narrator, Orca) now say the name of every round icon button and every place in
+  the sidebar, instead of only "button".
 - Bodega keeps safety copies of your gear, kits, rentals, renters and profiles: one each day you open it (the last
   14 days), and one before each import, Tidy Up Groups, AI change or restore (the last 20).
 - File › Restore from Backup… (also in Settings › Your Data) puts a Back Up zip or a safety copy back. It shows

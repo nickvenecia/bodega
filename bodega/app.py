@@ -18,8 +18,11 @@ from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
     QLabel,
+    QLineEdit,
     QMenu,
+    QPlainTextEdit,
     QScrollBar,
+    QTextEdit,
     QWidget,
 )
 
@@ -102,13 +105,26 @@ def place_menu(menu: QWidget, button: QWidget) -> None:
     menu.move(x, y)
 
 
+def _name_from_tip(b: QAbstractButton) -> None:
+    """A button that's only an icon is named by its tooltip, for screen readers (VoiceOver, Narrator, Orca),
+    which would otherwise say only "button"."""
+    if b.text().strip() or b.property("named_by_hand"):
+        return
+    tip = " ".join(b.toolTip().split())
+    tip = tip.split(" (")[0] if tip.endswith(")") else tip  # "AI Assistant (⌘J)": the name, not the key
+    if tip and b.accessibleName() != tip:
+        b.setAccessibleName(tip)
+
+
 class _RoundPopups(QObject):
     """Qt gives menus and dropdown lists square windows; make them see-through so the
     stylesheet's rounded corners are what you actually see. A button's menu opens just below it, with a
     little air (place_menu); so does a dropdown's list. Also: scrolling never changes a value
     (dropdowns, dates and sliders pass the wheel on to the panel, which scrolls instead), and never moves the
     cursor (Qt gives dropdowns and dates the focus as the wheel goes over them: they take it from a click or Tab
-    only, so the field you're typing in keeps it while you scroll past)."""
+    only, so the field you're typing in keeps it while you scroll past). And a field you're typing in keeps its
+    own editing keys: ⌘⌫ / Ctrl+Backspace deletes a word or a line there, never the piece (Delete…). Buttons that
+    are only an icon take their tooltip as their name, for screen readers."""
 
     @staticmethod
     def _see_through(win: QWidget) -> None:
@@ -118,6 +134,14 @@ class _RoundPopups(QObject):
             win.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
 
     def eventFilter(self, obj, ev):
+        if (
+            ev.type() == QEvent.Type.ShortcutOverride
+            and isinstance(obj, (QLineEdit, QPlainTextEdit, QTextEdit, QAbstractSpinBox))
+            and ev.key() in (Qt.Key.Key_Backspace, Qt.Key.Key_Delete)
+            and not getattr(obj, "isReadOnly", lambda: False)()
+        ):
+            ev.accept()  # the field gets the key; the window's shortcut doesn't fire
+            return False
         wheel_on_control = isinstance(obj, (QComboBox, QAbstractSlider, QAbstractSpinBox)) and not isinstance(
             obj, QScrollBar
         )
@@ -140,6 +164,8 @@ class _RoundPopups(QObject):
                 below = owner.mapToGlobal(QPoint(0, owner.height()))
                 if obj.y() >= below.y() - 1:  # opened below the box: leave the same air
                     obj.move(obj.x(), below.y() + tokens.MENU_GAP)
+        if ev.type() in (QEvent.Type.Polish, QEvent.Type.ToolTipChange) and isinstance(obj, QAbstractButton):
+            _name_from_tip(obj)
         if ev.type() == QEvent.Type.Polish and isinstance(obj, QWidget):
             if obj.focusPolicy() == Qt.FocusPolicy.WheelFocus:
                 obj.setFocusPolicy(Qt.FocusPolicy.StrongFocus)

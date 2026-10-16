@@ -327,7 +327,7 @@ class Sidebar(LeftPanel):
                 r.as_child()
         for k in kits:
             row = self.rows[f"kit:{k.id}"]
-            row.label.setText(k.name or "Untitled Kit")
+            row.set_label(k.name or "Untitled Kit")
         self.rows["gear"].arrow.setVisible(bool(groups))
         self.rows["kits"].arrow.setVisible(bool(kits))
         self.rows["rentals"].arrow.setVisible(True)

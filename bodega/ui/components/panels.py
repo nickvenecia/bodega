@@ -69,6 +69,7 @@ class NavRow(QFrame):
         self.icon.setFixedWidth(tokens.ICON)
         self.label = QLabel(label)
         self.label.setObjectName("NavLabel")
+        self.setAccessibleName(label)  # a screen reader says the place, not "Border"
         self.count = QLabel()
         self.count.setObjectName("NavCount")
         lay.addWidget(self.icon)
@@ -83,6 +84,10 @@ class NavRow(QFrame):
     def set_folded(self, on: bool) -> None:
         self.folded = on
         self.recolor()
+
+    def set_label(self, text: str) -> None:
+        self.label.setText(text)
+        self.setAccessibleName(text)
 
     def as_child(self) -> None:
         """A row under another: its name starts where the row above's icon is."""
