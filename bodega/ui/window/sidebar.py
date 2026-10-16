@@ -16,6 +16,7 @@ from bodega.ui.components.panels import LeftPanel, NavRow
 from bodega.ui.components.widgets import (
     ElidedLabel,
     IconLabel,
+    by_keyboard,
     hbox,
     repolish,
     section_label,
@@ -37,6 +38,8 @@ class SectionHead(QFrame):
         self.setObjectName("NavHead")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)  # Tab reaches it; Return or Space folds it
+        self.setAccessibleName(text)
         self.folded = False
         self.lay = hbox(
             self, (tokens.SPACE_2, tokens.SPACE_1, tokens.SPACE_1, tokens.SPACE_1), tokens.SPACE_1
@@ -54,13 +57,21 @@ class SectionHead(QFrame):
 
     def set_folded(self, on: bool) -> None:
         self.folded = on
+        self.setAccessibleDescription("Collapsed" if on else "Expanded")
         self._draw()
+
+    def _fold(self) -> None:
+        self.set_folded(not self.folded)
+        self.toggled.emit(self.folded)
 
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
-            self.set_folded(not self.folded)
-            self.toggled.emit(self.folded)
+            self._fold()
         super().mousePressEvent(e)
+
+    def keyPressEvent(self, e):
+        if not by_keyboard(self, self._fold, e):
+            super().keyPressEvent(e)
 
 
 class ProfileCard(QFrame):

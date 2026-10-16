@@ -27,6 +27,7 @@ from bodega.ui.components.widgets import (
     TextBox,
     ToggleRow,
     add_chip,
+    by_keyboard,
     combo,
     date_field,
     from_qdate,
@@ -80,7 +81,16 @@ HOLDS = ("booked", "out")  # statuses that hold their gear: picking one over a s
 
 
 class _Head(QFrame):
+    """A line's header: a click, or Return or Space with the keyboard on it, opens or folds the line."""
+
     clicked = Signal()
+
+    def __init__(self, parent=None):
+        from PySide6.QtCore import Qt
+
+        super().__init__(parent)
+        self.setObjectName("LineHead")
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
 
     def mousePressEvent(self, e):
         from PySide6.QtCore import Qt
@@ -88,6 +98,10 @@ class _Head(QFrame):
         if e.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
         super().mousePressEvent(e)
+
+    def keyPressEvent(self, e):
+        if not by_keyboard(self, self.clicked.emit, e):
+            super().keyPressEvent(e)
 
 
 class LineEditor(QFrame):

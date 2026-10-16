@@ -285,7 +285,7 @@ QListWidget#Picker::indicator:checked {{ background: {tokens.ACCENT_FILL}; borde
 #ProfileSub[tone="problem"] {{ color: {tokens.WARN}; font-weight: {WEIGHT_SEMIBOLD}; }}
 #Nav {{ background: transparent; border-radius: {tokens.NAV_R}px; }}
 #Nav:hover {{ background: {tokens.ROW_HOVER}; }}
-#Nav:focus {{ border: 1px solid {tokens.ACCENT}; }}
+#Nav:focus, #NavHead:focus, #ItemBox:focus, #LineHead:focus {{ border: 1px solid {tokens.ACCENT}; }}
 #Nav[selected="true"] {{ background: {tokens.ACCENT_TINT}; }}
 #NavLabel {{ color: {tokens.TEXT}; font-weight: {WEIGHT_MEDIUM}; }}
 #NavSub {{ color: {tokens.TEXT}; }}

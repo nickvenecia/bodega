@@ -43,6 +43,7 @@ from bodega.ui.components.widgets import (
     TitleEdit,
     ToggleRow,
     add_chip,
+    by_keyboard,
     circle_button,
     combo,
     date_field,
@@ -998,11 +999,16 @@ class KidRow(QFrame):
         self.setObjectName("ItemBox")
         self.setProperty("open", False)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)  # Tab reaches it; Return or Space opens it
 
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit(self.item_id)
         super().mousePressEvent(e)
+
+    def keyPressEvent(self, e):
+        if not by_keyboard(self, lambda: self.clicked.emit(self.item_id), e):
+            super().keyPressEvent(e)
 
 
 class PriceCheck(QThread):

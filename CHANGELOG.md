@@ -136,6 +136,9 @@
 - In the gear list, → and ← open and fold a group from the keyboard, and Bodega remembers it as it does a click.
   ⌥-click a group to fold or open them all.
 - In every menu, Home and End go to the first and last choice.
+- More of Bodega works from the keyboard: Tab reaches the sidebar's section headings, each line of a rental and
+  the gear that goes with a piece, and Return or Space opens or folds them. A switch shows a ring when the keyboard
+  is on it.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

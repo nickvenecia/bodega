@@ -808,6 +808,15 @@ class PanelHeader(QFrame):
         return b
 
 
+def by_keyboard(w: QWidget, act, e) -> bool:
+    """For a row that's clickable (a section head, a line's head, a piece that goes with this one): Return or
+    Space does what a click does, once the key is over (a refresh may rebuild the row). True if it was one."""
+    if e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space) and not e.modifiers():
+        QTimer.singleShot(0, w, act)
+        return True
+    return False
+
+
 class ToggleRow(QAbstractButton):
     """An on/off setting: the label on the left, a switch on the right, the whole row clickable.
     Works like a QCheckBox (setChecked, isChecked, toggled, text)."""
@@ -865,6 +874,11 @@ class ToggleRow(QAbstractButton):
             theme.qcolor(tokens.ON_ACCENT if on else tokens.TEXT) if enabled else theme.qcolor(tokens.FAINT)
         )
         p.drawEllipse(QRectF(x, track.top() + tokens.TOGGLE_INSET, knob, knob))
+        if self.hasFocus():  # the keyboard is on it: its ring, around the switch
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.setPen(QPen(theme.qcolor(tokens.ACCENT), tokens.FOCUS_RING))
+            ring = track.adjusted(-tokens.FOCUS_GAP, -tokens.FOCUS_GAP, tokens.FOCUS_GAP, tokens.FOCUS_GAP)
+            p.drawRoundedRect(ring, ring.height() / 2, ring.height() / 2)
         p.end()
 
 

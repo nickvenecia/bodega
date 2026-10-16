@@ -166,3 +166,22 @@ def test_home_and_end_go_to_a_menus_first_and_last_choice(qapp):
     )
     assert m.activeAction().text() == "Apple"
     m.deleteLater()
+
+
+def test_clickable_rows_work_from_the_keyboard(win):
+    from PySide6.QtCore import Qt
+    from PySide6.QtTest import QTest
+    from PySide6.QtWidgets import QApplication
+
+    head = next(iter(win.sidebar.heads.values()))
+    assert head.focusPolicy() == Qt.FocusPolicy.TabFocus and head.accessibleName()
+    was = head.folded
+    QTest.keyClick(head, Qt.Key.Key_Space)
+    QApplication.processEvents()  # (it acts once the key is over)
+    assert head.folded != was and head.accessibleDescription() in ("Collapsed", "Expanded")
+    from PySide6.QtWidgets import QFrame
+
+    r = next(iter(win.lib.rentals.values()))
+    win.open("rentals", r.id)
+    heads = [w for w in win.rentals.findChildren(QFrame) if w.objectName() == "LineHead"]
+    assert heads and all(h.focusPolicy() == Qt.FocusPolicy.TabFocus for h in heads)  # each line's head
