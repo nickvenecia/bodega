@@ -398,8 +398,6 @@ QLineEdit[date="true"]:disabled {{ color: {tokens.TEXT_OFF}; }}
 #PanelBottom {{ background: {tokens.PANEL}; border-top: 1px solid {tokens.BORDER}; }}
 
 /* ---------- popups */
-QTextBrowser#Notes {{ background: {tokens.WELL}; color: {tokens.TEXT}; border: 1px solid {tokens.BORDER}; border-radius: {RADIUS}px;
-    padding: {SPACE_2}px; }}
 QTextBrowser#WhatsNew {{ background: {tokens.FILL}; color: {tokens.TEXT}; border: none; border-radius: {RADIUS_LG}px; }}
 QMenu {{ background: {tokens.RAISED}; border: 1px solid {tokens.BORDER_STRONG}; border-radius: {tokens.LIST_R}px;
     padding: {tokens.LIST_INSET - 1}px; }}
