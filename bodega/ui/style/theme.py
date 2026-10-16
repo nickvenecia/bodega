@@ -23,9 +23,6 @@ from bodega.ui.style.tokens import (
     RADIUS_LG,
     RADIUS_SM,
     RADIUS_XS,
-    SCROLL_INSET,
-    SCROLL_MIN,
-    SCROLL_W,
     SEG_INSET,
     SMALL_H,
     SORT_ARROW,
@@ -239,12 +236,7 @@ QProgressBar::chunk {{ background: {tokens.ACCENT}; border-radius: {BAR_H // 2}p
 
 /* ---------- scrolling */
 QScrollArea {{ background: transparent; border: none; }}
-QScrollArea > QWidget > QWidget {{ background: transparent; }}
-QScrollBar:vertical {{ background: transparent; width: {SCROLL_W}px; margin: {SCROLL_INSET}px; }}
-QScrollBar::handle:vertical {{ background: {tokens.BORDER_STRONG}; border-radius: {(SCROLL_W - 2 * SCROLL_INSET) // 2}px; min-height: {SCROLL_MIN}px; }}
-QScrollBar::handle:vertical:hover {{ background: {tokens.BORDER_HOVER}; }}
-QScrollBar:vertical:disabled, QScrollBar::handle:vertical:disabled {{ background: transparent; }}
-QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::sub-page {{ height: 0; background: none; }}
+QScrollArea > QWidget#qt_scrollarea_viewport > QWidget {{ background: transparent; }}
 
 /* ---------- cards: packages and rentals */
 #Chip[tone="returned"] {{ color: {tokens.GOOD}; border-color: {tokens.GOOD}; }}
@@ -726,7 +718,13 @@ def apply(app, appearance: str, folder: Path, accent: str | None = None) -> str:
     from bodega.ui.components import access
 
     look = system_scheme() if appearance not in ("light", "dark") else appearance
-    tokens.use(look, accent, contrast=access.more_contrast(), opaque=access.less_transparency())
+    tokens.use(
+        look,
+        accent,
+        contrast=access.more_contrast(),
+        opaque=access.less_transparency(),
+        bars_over=not access.always_show_scroll_bars(),
+    )
     _load_colors()
     hints = app.styleHints()
     if appearance in ("light", "dark") and hasattr(hints, "setColorScheme"):  # title bars match

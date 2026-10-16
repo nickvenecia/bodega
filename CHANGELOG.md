@@ -351,6 +351,9 @@
   other programs with the same names come first (Git's, for one), and if copying the new version fails, it stops and
   leaves the version you had, instead of opening a half-copied one. On a Mac, it tries again for a few seconds if the
   Mac is still busy with another disk image.
+- Scroll bars behave as your computer's do: they lie over a list, show while you scroll (or point at one, or for a
+  moment when a list first shows), and fade a second later. If your Mac, Windows or Linux is set to always show
+  scroll bars, Bodega's stay too, with their room kept.
 - The Assistant's answers say which of your gear they drew on ("From your gear: …"). A change your AI is only
   guessing at is marked Not Sure: Review leaves it unticked, and the chat takes you to Review instead of making it.
 - Letters are spaced the way Apple spaces them at each size: a touch tighter in everyday words, a little looser in

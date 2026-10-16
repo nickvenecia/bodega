@@ -9,6 +9,8 @@ who wants them without changing the whole computer.
 - Reduce Motion: nothing slides or rises; the inspector, toasts and a dragged row arrive at once (`duration()`).
 - Increase Contrast: secondary words take the main text's color and every edge is drawn strong (tokens.use).
 - Reduce Transparency: the glass panels are solid (tokens.use).
+- Show Scroll Bars: Always (and Windows' and GNOME's own): scroll bars stay, with room kept for them; otherwise
+  they lie over the content and show only while scrolling (components/scrollbars.py).
 """
 
 from __future__ import annotations
@@ -76,6 +78,48 @@ def less_transparency() -> bool:
     if _transparency is None:
         _transparency = _system_less_transparency()
     return _transparency
+
+
+_always_bars: bool | None = None
+
+
+def always_show_scroll_bars() -> bool:
+    """The system says to show scroll bars all the time: the Mac's Show Scroll Bars: Always, Windows' Always Show
+    Scrollbars, GNOME's overlay scrolling off. Otherwise they're out of sight until scrolling (the standard's §6.2,
+    I-09). Read once; BODEGA_SCROLL_BARS ("always" or "overlay") stands in for the system."""
+    global _always_bars
+    forced = os.environ.get("BODEGA_SCROLL_BARS", "").strip().lower()
+    if forced in ("always", "overlay"):
+        return forced == "always"
+    if _always_bars is None:
+        _always_bars = _system_always_bars()
+    return _always_bars
+
+
+def _system_always_bars() -> bool:
+    try:
+        if sys.platform == "darwin":
+            out = subprocess.run(
+                ["/usr/bin/defaults", "read", "-g", "AppleShowScrollBars"],
+                capture_output=True, text=True, timeout=2, **popen_kwargs(),
+            )  # fmt: skip
+            return out.stdout.strip() == "Always"
+        if sys.platform == "win32":
+            import winreg
+
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Control Panel\Accessibility") as k:
+                value, _kind = winreg.QueryValueEx(k, "DynamicScrollbars")
+            return value == 0
+        if os.environ.get("GTK_OVERLAY_SCROLLING", "").strip() == "0":
+            return True
+        out = subprocess.run(
+            ["gsettings", "get", "org.gnome.desktop.interface", "overlay-scrolling"],
+            capture_output=True, text=True, timeout=2, **popen_kwargs(),
+        )  # fmt: skip
+        return out.stdout.strip() == "false"
+    except (OSError, subprocess.SubprocessError, ValueError):
+        log.debug("couldn't read the scroll bar setting", exc_info=True)
+    return False
 
 
 def _system_less_transparency() -> bool:

@@ -27,7 +27,7 @@ them in the real window.
 | `TOGGLE_ROW_H` · `TOGGLE_W`×`TOGGLE_H` | 44 · 44×26 | An on/off row and its switch (green when on, as Apple's) |
 | `BAR_H` | 6 | Progress bars |
 | `TRACK_H` / `HANDLE` | 4 / 14 | Slider groove / handle |
-| `SCROLL_W` / `SCROLL_MIN` | 10 / 30 | Scrollbar width / shortest handle |
+| `SCROLL_W` / `SCROLL_MIN` | 10 / 30 | Scrollbar width / shortest handle (over the content and shown only while scrolling, unless the system says Always: components/scrollbars.py) |
 
 - A button, a dropdown and a text field side by side must line up exactly. Never set a height on
   a single control; the stylesheet already sets it.

@@ -139,6 +139,8 @@ bodega/
                    shadow while hovered; the app's event filter calls hovered()),
                    rows.py (Group: grouped rows, G.12: a name, a card of rows, a note; value(), control(),
                    switch(), action()),
+                   scrollbars.py (Style: Fusion with the standard's scroll bars: over the content, shown while
+                   scrolling, gone SCROLL_HIDE_MS after; kept, with their room, where the system says Always),
                    datefield.py (DateField: typed or picked from its month popover, the standard's G.22),
                    empty.py (EmptyPage: where a table would be with nothing in it: a title, a line, one button;
                    empty gear takes a dropped spreadsheet),

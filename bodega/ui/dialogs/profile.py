@@ -43,12 +43,12 @@ from bodega.ui.components.widgets import (
     sized,
     vbox,
 )
+from bodega.ui.style import tokens
 from bodega.ui.style.tokens import (
     DIALOG_W_WIDE,
     LOGO_THUMB,
     LOGO_THUMB_MAX_W,
     PROFILE_DIALOG_H,
-    SCROLL_GUTTER,
     SPACE_2,
     SPACE_3,
     SPACE_4,
@@ -168,7 +168,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         outer.addLayout(head)
 
         body = QWidget()
-        lay = self._body_lay = vbox(body, (SPACE_5, 0, SPACE_5 - SCROLL_GUTTER, 0), SPACE_3)
+        lay = self._body_lay = vbox(body, (SPACE_5, 0, SPACE_5 - tokens.SCROLL_GUTTER, 0), SPACE_3)
         b = self.business
         self.name = sized(self._line(lay, "Name", b.name, "Your rental house or company"), "name")
         self.tagline = self._line(lay, "Tagline", b.tagline, "Camera · Lighting · Grip")
@@ -315,7 +315,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         """The room on the left and right (none inside Settings, which has its own)."""
         self._head.setContentsMargins(px, 0, px, 0)
         self._body_lay.setContentsMargins(px, 0, SPACE_3, 0)
-        self._buttons.setContentsMargins(px, SPACE_4, SPACE_3 + SCROLL_GUTTER, 0)  # lines up with the fields
+        self._buttons.setContentsMargins(px, SPACE_4, SPACE_3 + tokens.SCROLL_GUTTER, 0)  # lines up with the fields
 
     def _line(self, lay, label: str, value: str, placeholder: str) -> QLineEdit:
         sec = Section(label)

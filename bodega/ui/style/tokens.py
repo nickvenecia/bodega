@@ -45,7 +45,9 @@ BAR_H = 6  # progress bars
 TRACK_H = 4  # slider groove
 HANDLE = 14  # slider handle
 SCROLL_W = 10  # scrollbar width
-SCROLL_GUTTER = SCROLL_W  # space always kept for it (see widgets.FitScroll)
+SCROLL_GUTTER = SCROLL_W  # room kept for it beside the content (see widgets.FitScroll): none for bars that lie over
+# the content (use(bars_over=True), the standard's I-09); the scroll bar's width where the system always shows them
+SCROLL_HIDE_MS = 1000  # an overlay scroll bar is gone this long after scrolling stops
 SCROLL_MIN = 30  # shortest scrollbar handle
 
 MENU_MIN_W = 210  # (menu-min-w) a menu's narrowest; it grows to its longest row
@@ -231,7 +233,7 @@ FILTER_CHIP_H = 26  # (G.10.6) an active filter's capsule: padding 0 6 0 12, its
 FILTER_CHIP_GAP = 6  # between the capsules (and after Clear All)
 SORT_ARROW = 10  # the sort arrow in a column title
 NAV_H = CHOICE_ROW_H  # one row in the sidebar
-NAV_INSET = SCROLL_GUTTER  # a sidebar row's gap from the glass edge (the scroll bar's room on the right)
+NAV_INSET = SCROLL_W  # a sidebar row's gap from the glass edge (a scroll bar's width)
 NAV_R = GLASS_R - NAV_INSET  # its corners: concentric with the glass (the curves run parallel)
 MENU_GAP = 6  # between a button and the menu it opens
 # Every list of choices looks the same (the standard's G.7): menus, dropdown lists, pickers, suggestions.
@@ -636,12 +638,17 @@ globals().update(DARK)
 _off()
 
 
-def use(scheme: str, accent: str | None = None, contrast: bool = False, opaque: bool = False) -> None:
+def use(
+    scheme: str, accent: str | None = None, contrast: bool = False, opaque: bool = False, bars_over: bool | None = None
+) -> None:
     """Switch every color token to the dark or light set, in the chosen accent (None keeps the current one;
     an unknown or empty one means Bodega's own). `contrast` (Increase Contrast): secondary words take the
     main text's color, faint ones the secondary's, and every edge is strong. `opaque` (Reduce Transparency):
-    the glass is solid."""
-    global SCHEME, ACCENT_KEY
+    the glass is solid. `bars_over`: scroll bars lie over the content, so no room is kept for them (None keeps
+    it as it was)."""
+    global SCHEME, ACCENT_KEY, SCROLL_GUTTER
+    if bars_over is not None:
+        SCROLL_GUTTER = 0 if bars_over else SCROLL_W
     SCHEME = "light" if scheme == "light" else "dark"
     if accent is not None:
         ACCENT_KEY = accent if accent in ACCENTS else APP_ACCENT

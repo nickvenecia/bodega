@@ -345,7 +345,10 @@ def setup_app(app: QApplication) -> None:
     app.setApplicationDisplayName(APP_NAME)
     app.setOrganizationName("Bodega")
     app.setApplicationVersion(__version__)
-    app.setStyle("Fusion")
+    from bodega.ui.components import scrollbars
+
+    app._style = scrollbars.Style("Fusion")  # Fusion everywhere, with the standard's scroll bars
+    app.setStyle(app._style)
     icon_path = ASSETS / "icon.png"
     if icon_path.exists():
         app.setWindowIcon(QIcon(str(icon_path)))
