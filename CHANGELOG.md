@@ -200,6 +200,8 @@
   approve.
 - When the computer can't do something you asked (read a file, use a photo, sign out, check for updates), the
   message stays at the bottom of the window until you click it away, instead of fading before you've read it.
+- Check Out and Check In keep each tick, note and photo the moment you make it: closing the window never loses
+  them, and Done (where Save and Cancel were) leaves them for later.
 - Undo says what it takes back ("Undo Delete Sony FX6", "Undo Change to JLF-2026-001") and shows you the piece,
   kit or rental it brought back.
 - File › Export Kits as CSV… and Export Rentals as CSV… (also in Settings › Your Data): each kit with its prices and

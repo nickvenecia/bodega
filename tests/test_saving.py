@@ -147,20 +147,49 @@ def test_a_renter_form_asks_before_dropping_typing(qapp, answers):
     assert not d.isVisible() and asked == ["Discard Your Changes?"]
 
 
-def test_check_out_asks_before_dropping_ticks(qapp, data_folder, answers):
+def test_check_out_keeps_each_tick_as_its_made(qapp, data_folder, answers):
+    """The standard's K-09: a tick, a note or a photo is kept the moment it's made, so closing (Esc, Done, the
+    window's close button) never drops one, and there's nothing to ask about."""
     from bodega.ui.dialogs.checklist import CheckDialog
 
-    said, asked = answers
+    _said, asked = answers
     lib = sample.fill(Library(data_folder).load())
     r = next(iter(lib.rentals.values()))
     d = CheckDialog(lib, r, back=False)
+    got = []
+    d.edited.connect(got.append)
     d.show()
-    next(iter(d.widgets.values())).tick.setChecked(True)
+    row = next(iter(d.widgets.values()))
+    row.tick.setChecked(True)
+    assert got and got[-1][0].out
+    row.note.setText("Scuff on the top handle")
+    row.note.textEdited.emit("Scuff on the top handle")
+    assert got[-1][0].note == "Scuff on the top handle"
     d.reject()
-    assert d.isVisible() and asked == ["Discard Your Changes?"]
-    said.append(QDialog.DialogCode.Accepted)  # Discard Changes
-    d.reject()
-    assert not d.isVisible()
+    assert not d.isVisible() and asked == []
+
+
+def test_a_tick_is_saved_before_the_check_out_window_closes(qapp, data_folder, monkeypatch):
+    from bodega.ui.dialogs import checklist
+    from bodega.ui.window.main_window import MainWindow
+
+    win = MainWindow(sample.fill(Library(data_folder).load()))
+    win.show()
+    r = next(iter(win.lib.rentals.values()))
+    r.status = "booked"
+    on_disk = []
+
+    def tick_one_and_close(self):
+        next(iter(self.widgets.values())).tick.setChecked(True)
+        win.flush()  # (the window's save timer, while the checklist is still open)
+        on_disk.append(Library(data_folder).load().rentals[r.id].checks)
+        return QDialog.DialogCode.Rejected
+
+    monkeypatch.setattr(checklist.CheckDialog, "exec", tick_one_and_close)
+    win.check_rental(r.id, back=False)
+    assert on_disk and any(c.out for c in on_disk[0])
+    assert win.lib.rentals[r.id].is_booked()  # kept, and not marked out
+    win.close()
 
 
 def test_settings_asks_before_another_profile_replaces_typing(win, answers):

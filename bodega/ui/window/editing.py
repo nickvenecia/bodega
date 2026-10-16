@@ -572,8 +572,13 @@ class EditingMixin:
             self.toast("Add gear to the rental first.", "problem")
             return
         d = CheckDialog(self.lib, r, back, self)
-        if d.exec() != CheckDialog.DialogCode.Accepted:
-            return
+
+        def keep(rows: list) -> None:  # each tick, note and photo, kept on the rental as it's made
+            r.checks = [replace(c, photos=list(c.photos)) for c in rows]
+            self._rental_edited(r)
+
+        d.edited.connect(keep)
+        d.exec()
         r.checks = d.rows
         if d.mark and (back or r.is_out() or self.may_hold(r, "out")):
             self.lib.set_status(r, "returned" if back else "out")
