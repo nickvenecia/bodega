@@ -307,14 +307,16 @@ jobs:
           cp -a dist/Bodega "$ROOT/Bodega"
           touch "$ROOT/Bodega/from-before-the-update"
           "$ROOT/Bodega/Bodega" cli update-from out/Bodega-linux-x64.tar.gz
-          for _ in $(seq 240); do pgrep -f "$ROOT/Bodega/Bodega" >/dev/null && break; sleep 0.5; done
+          swapped() { [ ! -e "$ROOT/Bodega/from-before-the-update" ] && [ -x "$ROOT/Bodega/Bodega" ] && [ -z "$(ls -d "$ROOT"/Bodega.old.* 2>/dev/null)" ]; }
+          for _ in $(seq 240); do swapped && pgrep -f "$ROOT/Bodega/Bodega" >/dev/null && break; sleep 0.5; done
           test ! -e "$ROOT/Bodega/from-before-the-update" || { echo "::error::the folder wasn't replaced"; exit 1; }
           test -z "$(ls -d "$ROOT"/Bodega.old.* 2>/dev/null)" || { echo "::error::the old folder was left"; exit 1; }
           "$ROOT/Bodega/Bodega" cli update-check
           cp out/Bodega-linux-x64.AppImage "$ROOT/app/Bodega.AppImage"
           touch -d 2000-01-01 "$ROOT/app/Bodega.AppImage"
           "$ROOT/app/Bodega.AppImage" cli update-from out/Bodega-linux-x64.AppImage
-          for _ in $(seq 240); do pgrep -f "$ROOT/app/Bodega.AppImage" >/dev/null && break; sleep 0.5; done
+          # (the old copy's own clean-up can still be running under its name: wait for the swap itself)
+          for _ in $(seq 240); do [ "$(stat -c %Y "$ROOT/app/Bodega.AppImage")" -gt 946771200 ] && [ ! -e "$ROOT/app/Bodega.AppImage.new" ] && break; sleep 0.5; done
           [ "$(stat -c %Y "$ROOT/app/Bodega.AppImage")" -gt 946771200 ] || { echo "::error::the AppImage wasn't replaced"; exit 1; }
           test ! -e "$ROOT/app/Bodega.AppImage.new" || { echo "::error::the new AppImage was left beside it"; exit 1; }
           "$ROOT/app/Bodega.AppImage" cli update-check
@@ -330,7 +332,9 @@ jobs:
           ditto dist/Bodega.app "$ROOT/Bodega.app"
           touch "$ROOT/Bodega.app/Contents/from-before-the-update"
           "$ROOT/Bodega.app/Contents/MacOS/Bodega" cli update-from "out/Bodega-${{ matrix.name }}.dmg"
-          for _ in $(seq 240); do pgrep -f "$ROOT/Bodega.app/Contents/MacOS/Bodega" >/dev/null && break; sleep 0.5; done
+          swapped() { [ ! -e "$ROOT/Bodega.app/Contents/from-before-the-update" ] && [ -x "$ROOT/Bodega.app/Contents/MacOS/Bodega" ] && [ -z "$(ls -d "$ROOT"/Bodega.app.old.* "$ROOT"/Bodega.app.new.* 2>/dev/null)" ]; }
+          for _ in $(seq 240); do swapped && pgrep -f "$ROOT/Bodega.app/Contents/MacOS/Bodega" >/dev/null && break; sleep 0.5; done
+          swapped || cat /tmp/bodega-update-*/finish-update.log "$TMPDIR"/bodega-update-*/finish-update.log 2>/dev/null || true
           test ! -e "$ROOT/Bodega.app/Contents/from-before-the-update" || { echo "::error::the app wasn't replaced"; exit 1; }
           test -z "$(ls -d "$ROOT"/Bodega.app.old.* "$ROOT"/Bodega.app.new.* 2>/dev/null)" || { echo "::error::a copy was left"; exit 1; }
           "$ROOT/Bodega.app/Contents/MacOS/Bodega" cli update-check
@@ -360,8 +364,15 @@ jobs:
             Start-Sleep -Milliseconds 500
             $opened = Get-Process -Name Bodega -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $exe }
           }
-          if (-not $opened) { throw "the updated copy wasn't opened" }
-          if (Test-Path $marker) { throw "the installed copy wasn't replaced" }
+          if (-not $opened -or (Test-Path $marker)) {
+            # what the helper did (its script and log stay where it was left when it stops)
+            Get-ChildItem $env:TEMP -Directory -Filter "bodega-update-*" | ForEach-Object {
+              Get-ChildItem $_.FullName -File -Filter "finish-update.*" | ForEach-Object { "--- $($_.Name)"; Get-Content $_.FullName }
+            }
+            Get-Process -Name Bodega -ErrorAction SilentlyContinue | Format-Table Id, Path
+            if (-not $opened) { throw "the updated copy wasn't opened" }
+            throw "the installed copy wasn't replaced"
+          }
           $opened | Stop-Process -Force
           $p = Start-Process -FilePath $exe -ArgumentList "cli","update-check" -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "the updated copy doesn't run: $($p.ExitCode)" }
@@ -391,7 +402,12 @@ jobs:
             Start-Sleep -Milliseconds 500
             $opened = Get-Process -Name Bodega -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $exe }
           }
-          if (-not $opened) { throw "the updated copy wasn't opened" }
+          if (-not $opened) {
+            Get-ChildItem $env:TEMP -Directory -Filter "bodega-update-*" | ForEach-Object {
+              Get-ChildItem $_.FullName -File -Filter "finish-update.*" | ForEach-Object { "--- $($_.Name)"; Get-Content $_.FullName }
+            }
+            throw "the updated copy wasn't opened"
+          }
           $opened | Stop-Process -Force
           if ((Get-FileHash $installed).Hash -ne (Get-FileHash $shipped.FullName).Hash) { throw "the installer didn't put the new version in" }
           $p = Start-Process -FilePath $exe -ArgumentList "cli","update-check" -Wait -PassThru

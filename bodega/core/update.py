@@ -270,6 +270,7 @@ def _overlaps(a: Path, b: Path) -> bool:
 
 
 # Download + install
+ROBOCOPY_FAILED = 8  # robocopy's exit codes: under 8, copied (the installer's: anything but 0 is a failure)
 DOWNLOAD_FROM = f"https://github.com/{REPO}/releases/download/"
 DOWNLOAD_HOSTS = ("github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com")
 
@@ -349,8 +350,8 @@ def prepare(kind: str, file: Path, pid: int | None = None) -> Plan:
         )
     if kind == "windows-portable":
         new = _unpack_zip(file, work)
-        swap = [f'robocopy "{new}" "{t}" /MIR /R:3 /W:1 /NFL /NDL /NJH /NJS >NUL']
-        return _windows_script(work, pid, swap, t / "Bodega.exe")
+        swap = [f'robocopy "{new}" "{t}" /MIR /R:3 /W:1 /NFL /NDL /NJH /NJS']
+        return _windows_script(work, pid, swap, t / "Bodega.exe", ROBOCOPY_FAILED)
     if kind == "mac-app":
         return _posix_script(
             work,
@@ -446,14 +447,22 @@ def _posix_script(
     return Plan(["/bin/bash", str(script)], script)
 
 
-def _windows_script(work: Path, pid: int, lines: list[str], exe: Path) -> Plan:
+def _windows_script(work: Path, pid: int, lines: list[str], exe: Path, fails_at: int = 1) -> Plan:
+    """The Windows helper. Windows' own find.exe is named in full (where Git's tools come first on the PATH, a bare
+    `find` is another program and the wait would end at once), and it waits with ping, which needs no console (a
+    helper started on its own has none, and timeout won't run without one). Each step's output goes to
+    finish-update.log beside it; a step that ends at `fails_at` or above stops it there, with the old version left
+    as it was."""
     script = work / "finish-update.cmd"
+    log_ = f'"{work / "finish-update.log"}"'
     body = [
         "@echo off",
         "rem Written by Bodega: waits for Bodega to quit, installs the new version, opens it.",
         ":wait",
-        f'tasklist /FI "PID eq {pid}" 2>NUL | find "{pid}" >NUL && (timeout /t 1 /nobreak >NUL & goto wait)',
-        *lines,
+        f'tasklist /FI "PID eq {pid}" 2>NUL | "%SystemRoot%\\System32\\find.exe" "{pid}" >NUL'
+        f" && (ping -n 2 127.0.0.1 >NUL & goto wait)",
+        *(f"{line} >>{log_} 2>&1" for line in lines),
+        f"if errorlevel {fails_at} exit /b 1",
         f'start "" "{exe}"',
         f'rmdir /s /q "{work}"',
     ]

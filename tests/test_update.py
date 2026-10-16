@@ -13,6 +13,7 @@ import sys
 import tarfile
 import threading
 import time
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -193,6 +194,14 @@ def test_mac_and_windows_helpers(tmp_path: Path, monkeypatch):
     setup.write_bytes(b"exe")
     win = update.prepare("windows-installed", setup, pid=4242).script.read_text(encoding="utf-8")
     assert "/VERYSILENT" in win and "PID eq 4242" in win and "Bodega.exe" in win
+    # (a bare `find` or `timeout` is Git's own where its tools come first on the PATH, and timeout needs a console)
+    assert "System32\\find.exe" in win and "ping -n" in win and "timeout" not in win
+    assert win.index("if errorlevel 1 exit") < win.index('start ""')  # a failed install doesn't open anything
+    zipped = tmp_path / "Bodega-windows-portable.zip"
+    with zipfile.ZipFile(zipped, "w") as z:
+        z.writestr("Bodega/Bodega.exe", b"exe")
+    portable = update.prepare("windows-portable", zipped, pid=4242).script.read_text(encoding="utf-8")
+    assert "robocopy" in portable and "if errorlevel 8 exit" in portable and "finish-update.log" in portable
 
 
 def test_the_update_window_shows_the_release_and_how_to_get_it(monkeypatch):

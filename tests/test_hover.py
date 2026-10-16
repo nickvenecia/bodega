@@ -11,7 +11,6 @@ from PySide6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QWidget
 
 from bodega.ui.components import hover
 from bodega.ui.components.widgets import primary_button
-from bodega.ui.style import tokens
 
 
 def _enter(w):
@@ -22,6 +21,15 @@ def _leave(w):
     QApplication.sendEvent(w, QEvent(QEvent.Type.Leave))
 
 
+def _until(ok, ms: int = 2000) -> bool:
+    """Wait for `ok()` (a slow computer takes longer than the animation's own time), up to `ms`."""
+    for _ in range(ms // 20):
+        if ok():
+            return True
+        QTest.qWait(20)
+    return ok()
+
+
 def test_the_accent_button_lifts_and_settles(qapp, monkeypatch):
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "0")
     holder = QWidget()
@@ -30,12 +38,10 @@ def test_the_accent_button_lifts_and_settles(qapp, monkeypatch):
     _enter(b)
     effect = b.graphicsEffect()
     assert isinstance(effect, hover.LiftEffect)
-    QTest.qWait(tokens.LIFT_MS + 80)
-    assert effect.amount == 1.0
+    assert _until(lambda: effect.amount == 1.0)  # (over LIFT_MS)
     assert b.grab().size() == b.size()  # (it still draws: through the effect)
     _leave(b)
-    QTest.qWait(tokens.LIFT_MS + 80)
-    assert b.graphicsEffect() is None  # at rest: drawn as itself
+    assert _until(lambda: b.graphicsEffect() is None)  # at rest: drawn as itself
     holder.close()
 
 
