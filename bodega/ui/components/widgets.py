@@ -898,17 +898,35 @@ class ReturnMovesOn(QObject):
 
 
 class SearchField(QLineEdit):
-    """The toolbar's search: asks for SEARCH_W, gives way down to SEARCH_MIN on a narrow window. ↓ goes on into
-    the list it searches (`down_wanted`)."""
+    """Every search: asks for SEARCH_W, gives way down to SEARCH_MIN on a narrow window. ↓ goes on into the list
+    it searches (`down_wanted`). Esc is one layer at a time, here for every search: its words go first; then,
+    with `leave_to` set, the focus goes there (the list it searches); otherwise Esc goes on to the window (a
+    dialog closes)."""
 
     down_wanted = Signal()
+    leave_to = None  # () -> None: where an Esc in an empty search takes the focus
 
     def sizeHint(self) -> QSize:
         return QSize(tokens.SEARCH_W, super().sizeHint().height())
 
+    def _esc_is_mine(self) -> bool:
+        return bool(self.text()) or self.leave_to is not None
+
+    def event(self, e):
+        if e.type() == QEvent.Type.ShortcutOverride and e.key() == Qt.Key.Key_Escape and self._esc_is_mine():
+            e.accept()  # the window's own Esc waits: this layer goes first
+            return True
+        return super().event(e)
+
     def keyPressEvent(self, e):
         if e.key() == Qt.Key.Key_Down and not e.modifiers():
             self.down_wanted.emit()
+            return
+        if e.key() == Qt.Key.Key_Escape and not e.modifiers() and self._esc_is_mine():
+            if self.text():
+                self.clear()
+            else:
+                self.leave_to()
             return
         super().keyPressEvent(e)
 

@@ -200,6 +200,7 @@
 - The gear jobs (Update from Links…, Find Missing Links…, Tidy Up Names…, Organize Groups…, and Update with AI… on
   a piece) are written the same way everywhere, each with "…": each ends in Review, and nothing changes until you
   approve.
+- Esc in any search, including the gear picker's, clears what you typed first, before it closes anything.
 - Import remembers which column is which: once you've set the columns for a sheet, the next sheet with the same
   headings comes in the same way.
 - The filter button beside the search is the same size as the other round buttons in the bar.

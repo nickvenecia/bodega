@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QListWidget, QListWidg
 from bodega.core import money, pricing, search, words
 from bodega.core.model import Business
 from bodega.core.store import Library
-from bodega.ui.components.widgets import hbox, hint, primary_button, vbox
+from bodega.ui.components.widgets import SearchField, hbox, hint, primary_button, vbox
 from bodega.ui.style import theme, tokens
 
 KIND = Qt.ItemDataRole.UserRole
@@ -46,7 +46,7 @@ class GearPicker(QDialog):
         lay.addWidget(t)
         if note:
             lay.addWidget(hint(note))
-        self.search = QLineEdit()
+        self.search = SearchField()  # (Esc: its words first, then the picker closes)
         self.search.setPlaceholderText("Search")
         self.search.setClearButtonEnabled(True)
         self.search.addAction(theme.icon("search", theme.FAINT), QLineEdit.ActionPosition.LeadingPosition)

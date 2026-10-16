@@ -51,12 +51,29 @@ def test_esc_closes_one_layer_at_a_time(win):
     QTest.qWaitForWindowActive(win)
     win.search.setFocus()
     win.search.setText("sony")
-    win.escape()
+    QTest.keyClick(win.search, Qt.Key.Key_Escape)  # the real key: the search's own layers come first
     assert win.search.text() == "" and win.dock.opened  # first the words
-    win.escape()
-    assert not win.search.hasFocus() and win.dock.opened  # then the search itself
-    win.escape()
+    QTest.keyClick(win.search, Qt.Key.Key_Escape)
+    assert win.focusWidget() is not win.search and win.dock.opened  # then the search itself
+    QTest.keyClick(win.focusWidget() or win, Qt.Key.Key_Escape)
     assert not win.dock.opened or win.items.it is None  # then the panel
+
+
+def test_every_search_clears_its_words_before_esc_closes_its_window(qapp, data_folder):
+    """A-13: the layers are the search field's own (widgets.SearchField), so a picker's search does it too."""
+    from PySide6.QtWidgets import QDialog
+
+    from bodega.ui.components.widgets import SearchField
+
+    d = QDialog()
+    f = SearchField(d)
+    d.show()
+    f.setFocus()
+    f.setText("lens")
+    QTest.keyClick(f, Qt.Key.Key_Escape)
+    assert f.text() == "" and d.isVisible()  # the words, not the window
+    QTest.keyClick(f, Qt.Key.Key_Escape)
+    assert not d.isVisible()  # an empty search with nowhere to go: Esc is the window's
 
 
 def test_fields_are_known_by_their_labels(win):

@@ -217,6 +217,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.search.textChanged.connect(lambda _t: self._apply_search())
         self.search.returnPressed.connect(self._scanned)  # a label's QR code, read by a scanner (else: open)
         self.search.down_wanted.connect(self._into_list)
+        self.search.leave_to = lambda: (self._table() or self.pages).setFocus()  # Esc, once its words are gone
         mid.addWidget(self.search)
         # how the list is divided and what it shows, behind one icon (the accent while a filter hides gear)
         self.view_menu = FilterButton(self.lib.brands)
@@ -664,14 +665,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         not the Assistant while a change waits for Accept or Decline)."""
         if self.assistant_showing() and self.assistant.pending is not None:
             return
-        if self.search.hasFocus():
-            if self.search.text():
-                self.search.clear()
-            else:
-                t = self._table()
-                (t or self.pages).setFocus()
-            return
-        self.deselect()
+        self.deselect()  # (Esc in the search is the search's own: widgets.SearchField)
 
     def deselect(self) -> None:
         """Esc, or a click on empty space: nothing picked, the panel slides away (and a new piece you didn't
