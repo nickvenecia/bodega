@@ -69,11 +69,12 @@ def measured(tmp_path_factory) -> dict:
     screen = folder / "screen.json"
     screen.write_text(json.dumps({"screens": [{"name": "test", "x": 0, "y": 0, "width": 2560, "height": 1440,
                                                "logicalDpi": 96, "logicalBaseDpi": 96, "dpr": 1}]}), encoding="utf-8")  # fmt: skip
-    env = {**os.environ, "QT_QPA_PLATFORM": f"offscreen:configfile={screen}"}
+    # the screen file by its name, run beside it: Qt reads "offscreen:configfile=C:\…" as stopping at the colon
+    env = {**os.environ, "QT_QPA_PLATFORM": f"offscreen:configfile={screen.name}"}
     root = Path(__file__).resolve().parents[1]
     env["PYTHONPATH"] = str(root) + os.pathsep + env.get("PYTHONPATH", "")
     done = subprocess.run(
-        [sys.executable, "-c", SCRIPT], capture_output=True, text=True, timeout=120, env=env, cwd=root
+        [sys.executable, "-c", SCRIPT], capture_output=True, text=True, timeout=120, env=env, cwd=folder
     )
     assert done.returncode == 0, done.stderr[-2000:]
     return json.loads(done.stdout.strip().splitlines()[-1])
