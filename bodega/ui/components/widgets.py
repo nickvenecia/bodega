@@ -405,7 +405,8 @@ class AccentPicker(QWidget):
 
 
 class Segmented(QFrame):
-    """A row of mutually exclusive buttons."""
+    """A row of mutually exclusive buttons. The highlight under the choice slides to the new one (it jumps
+    with Reduce Motion)."""
 
     changed = Signal(str)
 
@@ -417,8 +418,16 @@ class Segmented(QFrame):
         lay = QHBoxLayout(self)
         lay.setContentsMargins(*(tokens.SEG_INSET,) * 4)
         lay.setSpacing(tokens.SEG_INSET)
+        self.thumb = QFrame(self)  # the highlight, under the buttons
+        self.thumb.setObjectName("SegThumb")
+        self.thumb.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.thumb.hide()
+        self._slide = QVariantAnimation(self)
+        self._slide.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self._slide.valueChanged.connect(self.thumb.setGeometry)
         self.group = QButtonGroup(self)
         self.group.setExclusive(True)
+        self.group.buttonToggled.connect(lambda _b, on: on and self._move(animate=self.isVisible()))
         self.buttons: dict[str, QPushButton] = {}
         for key, label in items:
             b = QPushButton(label)
@@ -440,6 +449,32 @@ class Segmented(QFrame):
     def set_value(self, key: str) -> None:
         if key in self.buttons:
             self.buttons[key].setChecked(True)
+
+    def _move(self, animate: bool) -> None:
+        """The highlight to the picked button: sliding there, or straight there."""
+        b = self.group.checkedButton()
+        if b is None:
+            self.thumb.hide()
+            return
+        ms = access.duration(tokens.SEG_SLIDE_MS) if animate and self.thumb.isVisible() else 0
+        self._slide.stop()
+        if ms:
+            self._slide.setDuration(ms)
+            self._slide.setStartValue(self.thumb.geometry())
+            self._slide.setEndValue(b.geometry())
+            self._slide.start()
+        else:
+            self.thumb.setGeometry(b.geometry())
+        self.thumb.show()
+        self.thumb.lower()
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self._move(animate=False)
+
+    def showEvent(self, e):
+        super().showEvent(e)
+        QTimer.singleShot(0, self, lambda: self._move(animate=False))
 
     def value(self) -> str:
         for k, b in self.buttons.items():

@@ -236,3 +236,26 @@ def test_every_page_names_what_the_keyboard_can_reach(win):
                 assert not unnamed(), (look, kind, unnamed())
     finally:
         set_appearance(qapp, "dark", "")
+
+
+def test_a_segmented_controls_highlight_slides_unless_motion_is_reduced(qapp, monkeypatch):
+    from PySide6.QtCore import QAbstractAnimation
+    from PySide6.QtTest import QTest
+
+    from bodega.ui.components.widgets import Segmented
+
+    s = Segmented([("month", "Month"), ("timeline", "Timeline")], compact=True)
+    s.set_value("month")
+    s.show()
+    QTest.qWait(50)
+    assert s.thumb.geometry() == s.buttons["month"].geometry()
+    monkeypatch.setenv("BODEGA_REDUCE_MOTION", "0")
+    s.buttons["timeline"].click()
+    assert s._slide.state() == QAbstractAnimation.State.Running  # on its way…
+    QTest.qWait(400)
+    assert s.thumb.geometry() == s.buttons["timeline"].geometry()  # …and there
+    monkeypatch.setenv("BODEGA_REDUCE_MOTION", "1")
+    s.buttons["month"].click()
+    assert s._slide.state() != QAbstractAnimation.State.Running
+    assert s.thumb.geometry() == s.buttons["month"].geometry()  # straight there
+    s.deleteLater()

@@ -211,7 +211,8 @@ QComboBox QAbstractItemView::separator {{ height: 1px; background: {tokens.BORDE
 #SegBtn {{ background: transparent; border: 1px solid transparent; border-radius: {_SEG_INNER // 2}px; padding: 0 {SPACE_3}px;
     min-height: {_SEG_INNER}px; max-height: {_SEG_INNER}px; color: {tokens.TEXT}; font-weight: {WEIGHT_MEDIUM}; }}
 #SegBtn:hover {{ background: {tokens.FILL_2}; }}
-#SegBtn:checked {{ background: {tokens.RAISED}; border-color: {tokens.GLASS_STROKE}; font-weight: {WEIGHT_SEMIBOLD}; }}
+#SegBtn:checked, #SegBtn:checked:hover {{ background: transparent; font-weight: {WEIGHT_SEMIBOLD}; }}
+#SegThumb {{ background: {tokens.RAISED}; border: 1px solid {tokens.GLASS_STROKE}; border-radius: {_SEG_INNER // 2}px; }}  /* the choice's highlight: it slides */
 
 /* ---------- checkboxes, sliders, progress */
 QCheckBox {{ spacing: {SPACE_2}px; min-height: {SMALL_H}px; }}
