@@ -299,7 +299,7 @@ class EditingMixin:
         if t is not self.gear_table:
             return
         picked = len(self.gear_table.chosen_ids()) if len(self.gear_table.selectedItems()) > 1 else 0
-        shown = sum(1 for r in self.gear_table.item_rows() if not r.isHidden())
+        shown = sum(1 for r in self.gear_table.record_rows() if not r.isHidden())
         self.count.set_full_text(f"{picked} selected" if picked > 1 else (f"{shown:,}" if shown else ""))
 
     def attach_to(self, item_id: str) -> None:

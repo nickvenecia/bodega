@@ -461,16 +461,9 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         }[kind_of(self.view_key)]
 
     def _in_table(self, obj_id: str) -> bool:
+        """It has a row in this list that a search or filter doesn't hide (a folded divider can open to it)."""
         t = self._table()
-        if t is None:
-            return False
-        stack = [t.topLevelItem(i) for i in range(t.topLevelItemCount())]
-        while stack:
-            r = stack.pop()
-            if r.data(0, ID) == obj_id and not r.isHidden():
-                return True
-            stack.extend(r.child(i) for i in range(r.childCount()))
-        return False
+        return t is not None and any(r.data(0, ID) == obj_id and not r.isHidden() for r in t.record_rows())
 
     def refresh(self) -> None:
         """Fill the table for where you are (and the sidebar's counts): one pass over everything."""

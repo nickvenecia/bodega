@@ -1802,3 +1802,18 @@ def test_a_pieces_head_has_its_photo_beside_a_quiet_status_line(win):
     free = next(i for i in win.lib.items.values() if not list(pricing.rentals_with(win.lib, i)) and i.status == "ready")
     win.open("gear", free.id)
     assert p.where.text() == "In" and not p.where.property("link")  # nothing to open: just the word
+
+
+def test_the_group_youre_in_has_its_commands_in_the_gear_menu(win, monkeypatch):
+    from bodega.ui.dialogs import common as dialogs
+
+    group = win.lib.groups()[1]
+    win.go(f"grp:{group}")
+    win._record_menu_state()
+    assert all(a.isEnabled() for a in win.group_acts)
+    monkeypatch.setattr(dialogs, "ask_name", lambda *a, **k: group + " Kit")
+    next(a for a in win.group_acts if a.text() == "Rename Group…").trigger()
+    assert group + " Kit" in win.lib.groups() and group not in win.lib.groups()
+    win.go("gear")
+    win._record_menu_state()
+    assert not any(a.isEnabled() for a in win.group_acts)  # not in a group: off

@@ -115,6 +115,13 @@ class MenusMixin:
             act(gm, "Update with AI", lambda: self._with_open_piece(self.ai_this_piece)),
             act(gm, "Make It Its Own Piece", lambda: self._with_open_piece(self.detach)),
         ]
+        gm.addSeparator()  # the group you're in (not only from its right-click menu)
+        self.group_acts = [
+            act(gm, "Rename Group…", lambda: self._with_group(self.rename_group)),
+            act(gm, "Move Group Up", lambda: self._with_group(lambda g: self._step_group(g, -1))),
+            act(gm, "Move Group Down", lambda: self._with_group(lambda g: self._step_group(g, 1))),
+            act(gm, "Remove Group…", lambda: self._with_group(self._remove_group)),
+        ]
         gm.aboutToShow.connect(self._record_menu_state)
         rm = bar.addMenu("Rental")
         self.rental_acts = {
@@ -265,6 +272,11 @@ class MenusMixin:
         if kind_of(self.view_key) == "rentals" and self.rentals.r is not None and self.dock.opened:
             do(self.rentals.r.id)
 
+    def _with_group(self, do) -> None:
+        """A group command on the group you're in."""
+        if self.view_key.startswith("grp:"):
+            do(self.view_key[4:])
+
     def _record_menu_state(self) -> None:
         """The Gear and Rental menus work on what's open: off while nothing is."""
         it = self.items.it if kind_of(self.view_key) == "gear" and self.dock.opened else None
@@ -272,6 +284,8 @@ class MenusMixin:
             a.setEnabled(it is not None)
         if it is not None:
             self.gear_acts[2].setEnabled(bool(it.parent))
+        for a in self.group_acts:
+            a.setEnabled(self.view_key.startswith("grp:"))
         r = self.rentals.r if kind_of(self.view_key) == "rentals" and self.dock.opened else None
         for a in self.rental_acts.values():
             a.setEnabled(r is not None)

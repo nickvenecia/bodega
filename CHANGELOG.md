@@ -194,6 +194,8 @@
 - The words follow Bodega's own: the inventory list and rate card say Gear where they said Item, the Import button
   counts rows ("Import 12 Rows"), and a few labels are shorter (Choose File…, From Link, Use Sheet Pricing, Gear
   Discount, Own Day Rate, a group of None). In AI Settings, what's sent and what it costs now sit under the form.
+- While you're in a group, the Gear menu has Rename Group…, Move Group Up, Move Group Down and Remove Group… (they
+  were only in its right-click menu).
 - Typing a name in a list jumps to it, as in the Finder, and typing in an open menu jumps to the choice it starts.
   A screen reader hears each place's count in the sidebar.
 - With no internet, Get Photos from Links and Update from Links stop after a few tries and say so, instead of

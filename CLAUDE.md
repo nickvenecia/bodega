@@ -216,6 +216,10 @@ CI attaches Bodega-mac-apple-silicon.dmg, Bodega-mac-intel.dmg, Bodega-windows-s
 Bodega-linux-x64.AppImage, Bodega-linux-x64.tar.gz. **These names are a contract** (README links + update.asset_name).
 update.REPO = "nickvenecia/bodega"; the repo must stay public.
 
+## Questions waiting for the owner
+Listed, with what each one decides, in docs/STANDARD_AUDIT.md ("Questions for the owner"; answered ones move to
+docs/PROJECT_ADDENDUM.md with who and when) and docs/SESSION_LOG.md. Don't decide them in code: ask.
+
 ## Ideas not done yet
 - Live Google Calendar sync (needs a Google Cloud project, OAuth, and Google's app review); today it's an .ics file
 - Purchase date and depreciation for taxes

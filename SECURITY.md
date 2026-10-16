@@ -65,3 +65,8 @@ What leaves your computer, and only when you use the feature:
   remove it from GitHub's Secrets, issue a new one, and publish a release signed with the new one. A Mac copy only
   takes an update signed by the same developer, so say in the release notes how to download it by hand.
 - **A security report.** Reply within a week, fix it in a release, and credit the reporter if they'd like.
+- **Lost or broken files.** Every change is saved within a few seconds (at most SAVE_MAX_MS, 3 seconds), so a crash
+  loses at most the last few seconds of typing. A safety copy is kept every day and before each big change, so
+  File › Restore… can put things back as they were that morning or just before the change (at most a day's work
+  to redo if the folder itself is lost and only an older copy is left). Restoring takes under a minute. Keeping a
+  copy off this computer (Back Up… to a drive or a cloud folder) is up to you.

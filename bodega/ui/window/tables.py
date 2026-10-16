@@ -283,6 +283,18 @@ class Table(QTreeWidget):
                 self.scrollToItem(r)
                 return
 
+    def record_rows(self):
+        """Every row that is a record (not a divider), folded away or not, top to bottom."""
+
+        def walk(row):
+            for i in range(row.childCount()):
+                r = row.child(i)
+                if r.data(0, ID):
+                    yield r
+                yield from walk(r)
+
+        yield from walk(self.invisibleRootItem())
+
     def showing_rows(self):
         """Rows you can see: not hidden, not inside a folded divider."""
 
