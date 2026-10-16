@@ -494,6 +494,23 @@ class EditingMixin:
         if self.lib.unsaved:
             self.toast("Still not saved.", "problem")
 
+    def tidy_renters(self) -> None:
+        """Tidy Up Renters: names, companies and addresses in proper case, after a look (core/tidy_renters.py)."""
+        from bodega.core import tidy_renters
+        from bodega.ui.dialogs.common import tidy_renters_preview
+
+        self.flush()
+        found = tidy_renters.changes(self.lib.clients)
+        if not found:
+            self.toast("Your renters are already tidy.")
+            return
+        names = {c.id: c.name or c.company or "Renter" for c in self.lib.clients.values()}
+        if not tidy_renters_preview(self, found, names):
+            return
+        n = self.lib.tidy_clients(found)
+        self.refresh()
+        self.toast(f"Tidied {words.count(n, 'renter')}.", "done")
+
     def edit_client(self, new: bool, assign: bool = True) -> None:
         r = self.rentals.r if kind_of(self.view_key) == "rentals" else None
         current = None

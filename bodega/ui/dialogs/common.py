@@ -323,6 +323,39 @@ def tidy_preview(parent: QWidget, moves: list) -> bool:
     return d.exec() == QDialog.DialogCode.Accepted
 
 
+def tidy_renters_preview(parent: QWidget, changes: list, names: dict[str, str]) -> bool:
+    """Show what Tidy Up Renters would change (each renter's before → after) and ask before doing it."""
+    from PySide6.QtWidgets import QListWidget
+
+    d = QDialog(parent)
+    sheet.prepare(d)
+    d.setWindowTitle("Tidy Up Renters")
+    d.setMinimumWidth(tokens.DIALOG_W_WIDE)
+    lay = vbox(d, SPACE_5, SPACE_3)
+    t = QLabel("Tidy Up Renters")
+    t.setObjectName("DialogTitle")
+    lay.addWidget(t)
+    renters = len({c.client_id for c in changes})
+    lay.addWidget(hint(f"Names, companies and addresses in proper case, for {words.count(renters, 'renter')}."))
+    box = QListWidget()
+    box.setObjectName("Picker")
+    for c in changes:  # (renters' own words: plain text)
+        before, after = c.old.replace("\n", ", "), c.new.replace("\n", ", ")
+        box.addItem(f"{names.get(c.client_id, '?')} · {c.label}: {before}  →  {after}")
+    box.setMinimumHeight(PICKER_LIST_H)
+    lay.addWidget(box)
+    row = button_row()
+    cancel = QPushButton("Cancel")
+    cancel.clicked.connect(d.reject)
+    go = primary_button("Tidy Up")
+    go.setDefault(True)
+    go.clicked.connect(d.accept)
+    row.addWidget(cancel)
+    row.addWidget(go)
+    lay.addLayout(row)
+    return d.exec() == QDialog.DialogCode.Accepted
+
+
 def about(parent: QWidget, version: str, data_folder: str) -> None:
     d = QDialog(parent)
     sheet.prepare(d)

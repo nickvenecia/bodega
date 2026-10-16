@@ -186,6 +186,7 @@ class MenusMixin:
         act(b, "Edit Profile…", lambda: self.edit_business(False))
         act(b, "Add Profile…", lambda: self.edit_business(True))
         act(b, "New Renter…", lambda: self.edit_client(True, assign=False))
+        act(b, "Tidy Up Renters…", self.tidy_renters)
         ai = bar.addMenu("AI")
         self.act_assistant = act(ai, "Show Assistant", self.toggle_assistant, "Ctrl+J")
         ai.aboutToShow.connect(

@@ -329,6 +329,9 @@
   Bodega's own window instead of beside it: the window behind is blurred and dimmed, a ✕ in the corner closes them
   (so does Esc), and a click on the dimmed area closes them too, unless that would lose what you typed or an import
   you're setting up. They fade in, unless Reduce Motion is on. Search Everything blurs the window behind it as well.
+- Profile › Tidy Up Renters… puts your renters' names, companies and addresses in proper case ("ALEX RIVERA" becomes
+  "Alex Rivera"), keeping a business's own words (LLC, P.O. Box, NE, 1st), and shows every change first. Bookings
+  and quotes follow, as they do when you edit a renter; a safety copy is kept first.
 - The Assistant's answers say which of your gear they drew on ("From your gear: …"). A change your AI is only
   guessing at is marked Not Sure: Review leaves it unticked, and the chat takes you to Review instead of making it.
 - Letters are spaced the way Apple spaces them at each size: a touch tighter in everyday words, a little looser in

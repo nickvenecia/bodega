@@ -706,6 +706,24 @@ class Library:
                 self.save_rental(r)
         return c
 
+    def tidy_clients(self, changes: list) -> int:
+        """Tidy Up Renters (core/tidy_renters.py): the approved changes, after a safety copy; each renter saved as a
+        renter edit is, so rentals not out the door yet follow. Returns how many renters changed."""
+        if not changes:
+            return 0
+        self.snapshot("before-tidy-renters")
+        by_client: dict[str, dict[str, str]] = {}
+        for ch in changes:
+            c = self.clients.get(ch.client_id)
+            if c is not None and getattr(c, ch.field) == ch.old:  # (edited since: that edit stays)
+                by_client.setdefault(c.id, {})[ch.field] = ch.new
+        for c_id, fields in by_client.items():
+            c = replace(self.clients[c_id])
+            for name, value in fields.items():
+                setattr(c, name, value)
+            self.save_client(c)
+        return len(by_client)
+
     def delete_client(self, c_id: str) -> None:
         self.clients.pop(c_id, None)
         self.save_clients()

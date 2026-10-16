@@ -68,6 +68,8 @@ bodega/
                    region_from_postal(), lines() as printed (an old one-box address prints as typed);
                    countries.py the ISO list
     search.py      folded(): case and accents off, so "cafe" finds "Café"; words(), matches()
+    tidy_renters.py  Tidy Up Renters: proper() case by rule (business words kept), changes() shown first;
+                   Library.tidy_clients() applies them (a safety copy, bookings follow)
     tidy.py        Tidy Up Groups: GROUPS, RULES (by name), RENAMES (by old group); suggest(), changes()
     prices.py      Check Price: fetch a product page, read its price (JSON-LD offers, price meta tags). Stores
                    may block it; that's web.Refused, with a plain message
