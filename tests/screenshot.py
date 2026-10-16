@@ -124,7 +124,7 @@ def main(out: Path, sheet: Path | None = None) -> int:
         w.import_file(sheet, ask=False)
     fx6 = next((i for i in lib.items.values() if "FX6" in i.name and not i.parent), None)
     if fx6 is not None:
-        w.gear_table.opened.add(fx6.id)
+        w.gear_table.open_pieces.add(fx6.id)  # (open, to show the gear under it)
         w.refresh()
         w.open("gear", fx6.id)
     shot(w, out / "2-gear.png")
