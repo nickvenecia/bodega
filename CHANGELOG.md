@@ -194,6 +194,8 @@
 - The words follow Bodega's own: the inventory list and rate card say Gear where they said Item, the Import button
   counts rows ("Import 12 Rows"), and a few labels are shorter (Choose File…, From Link, Use Sheet Pricing, Gear
   Discount, Own Day Rate, a group of None). In AI Settings, what's sent and what it costs now sit under the form.
+- File › Export Kits as CSV… and Export Rentals as CSV… (also in Settings › Your Data): each kit with its prices and
+  gear, each rental with its renter, dates, status and money, for what the list shows.
 - While you're in a group, the Gear menu has Rename Group…, Move Group Up, Move Group Down and Remove Group… (they
   were only in its right-click menu).
 - Typing a name in a list jumps to it, as in the Finder, and typing in an open menu jumps to the choice it starts.

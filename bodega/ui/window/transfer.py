@@ -194,6 +194,56 @@ class TransferMixin:
         n = len(showing) if showing is not None else len(self.lib.items)
         self.toast(f"Saved {p.name}: {n:,} piece{'s' if n != 1 else ''}{' showing' if showing else ''}.", "done")
 
+    def _ask_csv_path(self, title: str, name: str) -> Path | None:
+        default = self._export_folder() / f"{name} {dates.iso(dates.today())}.csv"
+        path, _ = QFileDialog.getSaveFileName(self, title, str(default), "CSV (*.csv)")
+        if not path:
+            return None
+        p = Path(path)
+        return p if p.suffix.lower() == ".csv" else p.with_name(p.name + ".csv")
+
+    def _listed_now(self, kind: str, everything: dict) -> list:
+        """What the list of this kind shows now (its search, its place), or all of them from elsewhere."""
+        t = {"packages": self.kit_table, "rentals": self.rental_table}[kind]
+        if kind_of(self.view_key) != kind or self.view_key == "calendar":
+            return list(everything.values())
+        return [everything[r.data(0, ID)] for r in t.showing_rows() if r.data(0, ID) in everything]
+
+    def export_kits_csv(self) -> None:
+        """Export Kits as CSV: each kit's pieces, prices and gear (what the Kits list shows, or all)."""
+        kits = self._listed_now("packages", self.lib.packages)
+        if not kits:
+            self.toast("No kits to export yet.")
+            return
+        p = self._ask_csv_path("Export Kits as CSV", "Bodega Kits")
+        if p is None:
+            return
+        try:
+            importer.write_kits_csv(self.lib, kits, self.lib.pricing(), p)
+        except OSError as e:
+            notice(self, "Couldn't Save the CSV", errors.plain(e, "save the CSV"))
+            return
+        self.last_export = p
+        self.toast(f"Saved {p.name}: {words.count(len(kits), 'kit')}.", "done")
+
+    def export_rentals_csv(self) -> None:
+        """Export Rentals as CSV: who, when, status and money (what the Rentals list shows, or all)."""
+        self.flush()
+        rentals = self._listed_now("rentals", self.lib.rentals)
+        if not rentals:
+            self.toast("No rentals to export yet.")
+            return
+        p = self._ask_csv_path("Export Rentals as CSV", "Bodega Rentals")
+        if p is None:
+            return
+        try:
+            importer.write_rentals_csv(self.lib, rentals, p)
+        except OSError as e:
+            notice(self, "Couldn't Save the CSV", errors.plain(e, "save the CSV"))
+            return
+        self.last_export = p
+        self.toast(f"Saved {p.name}: {words.count(len(rentals), 'rental')}.", "done")
+
     def open_data_folder(self) -> None:
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(data_dir())))
 

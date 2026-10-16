@@ -48,6 +48,8 @@ class MenusMixin:
         act(f, "Import Spreadsheet…", self.import_sheet, "Ctrl+Shift+I")
         act(f, "Import from Google Sheets…", self.import_google)
         act(f, "Export Gear as CSV…", self.export_csv, "Ctrl+Shift+E")
+        act(f, "Export Kits as CSV…", self.export_kits_csv)
+        act(f, "Export Rentals as CSV…", self.export_rentals_csv)
         act(f, "Get Photos from Links…", self.get_photos_from_links)
         f.addSeparator()
         act(f, "Add Rentals to Calendar", lambda: self.add_to_calendar())

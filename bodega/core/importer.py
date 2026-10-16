@@ -721,6 +721,19 @@ CSV_COLUMNS = [
 
 def write_csv(items: list[Item], lookup: dict[str, Item], path: Path) -> Path:
     """Every item as one row; reads back in with read()."""
+    rows = []
+    for it in items:
+        parent = lookup.get(it.parent)
+        rows.append([
+            it.department, it.group, it.name, it.brand, it.series, it.qty, "; ".join(it.serial_list()), it.value,
+            it.day_rate, "Yes" if it.rentable else "No", parent.name if parent else "",
+            {"ready": "", "repair": "In Repair", "retired": "Retired"}[it.status], it.link, it.notes,
+        ])  # fmt: skip
+    return write_rows(CSV_COLUMNS, rows, path)
+
+
+def write_rows(header: list[str], rows: list[list], path: Path) -> Path:
+    """A CSV, written whole or not at all, every cell made safe for a spreadsheet (no formulas)."""
     import os
     import tempfile
 
@@ -729,18 +742,51 @@ def write_csv(items: list[Item], lookup: dict[str, Item], path: Path) -> Path:
     try:
         with os.fdopen(fd, "w", encoding="utf-8-sig", newline="") as f:
             w = csv.writer(f)
-            w.writerow(CSV_COLUMNS)
-            for it in items:
-                parent = lookup.get(it.parent)
-                w.writerow(
-                    safe_cell(c) for c in [
-                        it.department, it.group, it.name, it.brand, it.series, it.qty, "; ".join(it.serial_list()), it.value,
-                        it.day_rate, "Yes" if it.rentable else "No", parent.name if parent else "",
-                        {"ready": "", "repair": "In Repair", "retired": "Retired"}[it.status], it.link, it.notes,
-                    ]
-                )  # fmt: skip
+            w.writerow(header)
+            for row in rows:
+                w.writerow(safe_cell(c) for c in row)
         os.replace(tmp, path)
     except BaseException:
         Path(tmp).unlink(missing_ok=True)
         raise
     return path
+
+
+KIT_COLUMNS = ["Name", "Pieces", "Day Rate", "Week", "Value", "Gear", "Notes"]
+RENTAL_COLUMNS = [
+    "Rental", "Status", "Renter", "Company", "Email", "Production", "Pickup", "Return", "Gear", "Fees",
+    "Discount", "Tax", "Total", "Deposit",
+]  # fmt: skip
+
+
+def write_kits_csv(lib, kits: list, b, path: Path) -> Path:
+    """Each kit as a row: its pieces, prices (as its list shows them) and what's in it."""
+    from bodega.core import pricing
+
+    wd = b.week_days if b else 7
+    rows = []
+    for p in kits:
+        gear = pricing.package_gear(lib, p)
+        rate = pricing.package_rate(lib, p, b)
+        rows.append([
+            p.name, sum(u for _i, u, _d in gear), str(rate), str(rate * wd), str(pricing.package_value(lib, p, b)),
+            "; ".join(f"{u} × {it.name}" for it, u, _d in gear), p.notes,
+        ])  # fmt: skip
+    return write_rows(KIT_COLUMNS, rows, path)
+
+
+def write_rentals_csv(lib, rentals: list, path: Path) -> Path:
+    """Each rental as a row: who, when, its status and its money (each by its own profile's pricing)."""
+    from bodega.core import dates, pricing
+    from bodega.core.model import RENTAL_WORDS
+
+    rows = []
+    for r in rentals:
+        t = pricing.totals(lib, r, lib.businesses.get(r.business_id))
+        a, z = pricing.span_of(r)
+        rows.append([
+            r.number, RENTAL_WORDS.get(r.status, r.status), r.client.name, r.client.company, r.client.email, r.project,
+            dates.iso(a) if a else "", dates.iso(z) if z else "", str(t.gear), str(t.fees), str(t.discount),
+            str(t.tax), str(t.total), str(t.deposit),
+        ])  # fmt: skip
+    return write_rows(RENTAL_COLUMNS, rows, path)

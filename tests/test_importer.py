@@ -183,3 +183,22 @@ def test_the_sheets_own_total_checks_what_was_read():
     said = importer.total_check(importer.parse_rows(rows))
     assert "$9,000.00" in said and "$1,652.00 less" in said
     assert importer.total_check(importer.parse_rows(rows[:-1])) == ""  # no total row: nothing to check
+
+
+def test_kits_and_rentals_export_as_csv_with_their_prices(tmp_path, data_folder):
+    import csv
+
+    from bodega.core import pricing, sample
+    from bodega.core.store import Library
+
+    lib = sample.fill(Library(data_folder).load())
+    b = lib.pricing()
+    kits = importer.write_kits_csv(lib, list(lib.packages.values()), b, tmp_path / "kits.csv")
+    rows = list(csv.DictReader(kits.open(encoding="utf-8-sig")))
+    p = next(iter(lib.packages.values()))
+    assert rows[0]["Name"] == p.name and rows[0]["Day Rate"] == str(pricing.package_rate(lib, p, b))
+    rentals = importer.write_rentals_csv(lib, list(lib.rentals.values()), tmp_path / "rentals.csv")
+    got = list(csv.DictReader(rentals.open(encoding="utf-8-sig")))
+    r = next(iter(lib.rentals.values()))
+    assert got[0]["Rental"] == r.number
+    assert got[0]["Total"] == str(pricing.totals(lib, r, lib.businesses.get(r.business_id)).total)

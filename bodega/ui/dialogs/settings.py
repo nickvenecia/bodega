@@ -389,17 +389,21 @@ class SettingsDialog(QDialog):
         where.add(row)
         lay.addWidget(where)
         moving = Section("Import && Export")
-        row = hbox(spacing=tokens.SPACE_2)
-        for label, run in (
-            ("Import Spreadsheet…", self.win.import_sheet),
-            ("Import from Google Sheets…", self.win.import_google),
-            ("Export Gear as CSV…", self.win.export_csv),
+        for group in (
+            (("Import Spreadsheet…", self.win.import_sheet), ("Import from Google Sheets…", self.win.import_google)),
+            (
+                ("Export Gear as CSV…", self.win.export_csv),
+                ("Export Kits as CSV…", self.win.export_kits_csv),
+                ("Export Rentals as CSV…", self.win.export_rentals_csv),
+            ),
         ):
-            b = QPushButton(label)
-            b.clicked.connect(lambda _c=False, run=run: self._then(run))
-            row.addWidget(b)
-        row.addStretch(1)
-        moving.add(row)
+            row = hbox(spacing=tokens.SPACE_2)
+            for label, run in group:
+                b = QPushButton(label)
+                b.clicked.connect(lambda _c=False, run=run: self._then(run))
+                row.addWidget(b)
+            row.addStretch(1)
+            moving.add(row)
         lay.addWidget(moving)
         safety = Section("Safety Copies")
         safety.add(
