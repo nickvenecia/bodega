@@ -318,7 +318,7 @@ class RentalPanel(DetailsBase):
     duplicate_wanted = Signal(str)
     calendar_wanted = Signal(str)  # its pickup and return in your calendar app
     check_wanted = Signal(str, bool)  # rental id, back in (else out)
-    cobro_wanted = Signal(str)  # send it to Cobro as an invoice
+    saldo_wanted = Signal(str)  # send it to Saldo as an invoice
     sheet_wanted = Signal(str)
 
     def __init__(self, lib: Library, parent: QWidget | None = None):
@@ -340,7 +340,7 @@ class RentalPanel(DetailsBase):
         )
         self.menu_action("check", "Check Out…", lambda: self.r and self.check_wanted.emit(self.r.id, False))
         self.menu_action("check", "Check In…", lambda: self.r and self.check_wanted.emit(self.r.id, True))
-        self.menu_action("receipt", "Send to Cobro…", lambda: self.r and self.cobro_wanted.emit(self.r.id))
+        self.menu_action("receipt", "Send to Saldo…", lambda: self.r and self.saldo_wanted.emit(self.r.id))
         self.menu_action("", "-", None)
         self.menu_action("trash", "Delete Rental…", lambda: self.r and self.delete_wanted.emit(self.r.id))
         self.sheet.clicked.connect(lambda: self.r and self.sheet_wanted.emit(self.r.id))

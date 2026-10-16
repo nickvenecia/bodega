@@ -88,7 +88,7 @@ ask the owner for it.
 ## Integrations (§8.11)
 | System | Direction | What it owns | Credentials |
 |---|---|---|---|
-| Cobro, now **Saldo** (the owner's invoicing app) | Out: a rental becomes a draft invoice, written into that app's data folder in its format (`services/cobro.py`) | The invoice, its number and payment | None (a local folder) |
+| **Saldo**, once Cobro (the owner's invoicing app) | Out: a rental becomes a draft invoice, written into Saldo's `invoices/` in its format (`services/saldo.py`); the rental remembers it, and sending again updates the draft | The invoice, its number and payment | None (a local folder) |
 | Google Sheets | In: a sheet shared by link is downloaded as .xlsx and imported | The sheet | None (a public share link) |
 | GitHub Releases | In: the update check and download | Bodega's releases | None |
 | AI providers (Anthropic, OpenAI, Gemini, Kimi, OpenRouter, DeepSeek, Mistral, xAI, Groq, or a custom address) | Out: the gear asked about, in | Nothing; answers are proposals | The person's own key, in the system keychain |

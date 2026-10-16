@@ -282,6 +282,7 @@ class Business(Record):
     deposit_pct: str = ""  # security deposit, as a percent of the replacement value
     terms: str = ""  # the agreement's standard terms, one clause per paragraph
     note: str = ""  # a short closing line on every agreement
+    saldo_profile: str = ""  # Send to Saldo: the Saldo profile (its id) this one sends invoices as
     newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
 
     @classmethod
@@ -367,6 +368,8 @@ class Rental(Record):
     )  # Check Out / Check In: each piece ticked, notes, photos
     checked_out: str = ""  # when it was checked out (ISO time)
     checked_in: str = ""  # when it was checked back in
+    saldo_invoice: str = ""  # Send to Saldo: the invoice (its id in Saldo) this rental became
+    saldo_number: str = ""  # …and its number
     created: str = field(default_factory=now_iso)
     updated: str = field(default_factory=now_iso)
     newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record

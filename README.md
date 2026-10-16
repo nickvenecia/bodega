@@ -54,8 +54,8 @@ USB scanner), note its condition, add photos. **Check In…** does the same when
 **Looking after it.** A maintenance log for every piece, with service reminders (Every 3 Months, say) and a
 **Needs Service** filter.
 
-**Cobro and your calendar.** **Send to Cobro…** turns a rental into a draft invoice in Cobro, the invoice
-app. **Add to Calendar** puts pickups and returns in Apple Calendar; Google Calendar can import the same file.
+**Saldo and your calendar.** **Send to Saldo…** turns a rental into a draft invoice in Saldo (once called Cobro),
+the invoicing app; sending it again updates that draft. **Add to Calendar** puts pickups and returns in Apple Calendar; Google Calendar can import the same file.
 
 **Gear that belongs to other gear.** A cage that only fits the FX6 belongs to the FX6. Attach it (**Belongs To**, or
 **Attach Gear…** on the camera) and it folds under the camera in the list, goes wherever the camera goes, and shows up

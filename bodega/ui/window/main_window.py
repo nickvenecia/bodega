@@ -321,7 +321,7 @@ class MainWindow(
         r.delete_wanted.connect(lambda i: self.delete("rentals", i))
         r.calendar_wanted.connect(self.add_to_calendar)
         r.check_wanted.connect(self.check_rental)
-        r.cobro_wanted.connect(self.send_to_cobro)
+        r.saldo_wanted.connect(self.send_to_saldo)
         r.sheet_wanted.connect(lambda i: self.show_pages(("rental", i)))
         for panel in (self.items, self.packages, self.rentals):
             panel.groups_changed.connect(self._groups_changed)

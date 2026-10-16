@@ -104,6 +104,7 @@ QUIT_WAIT_MS = 1500  # how long quitting waits for a price or update check to fi
 SAVE_DELAY_MS = 400  # save this long after the last keystroke
 SAVE_RETRY_MS = 20000  # after a save failed: try again this often while it lasts
 AI_ASK_ABOVE = 5  # an AI job that may ask this many questions or more says so first
+SALDO_CHECK_MS = 300  # how long to wait for Saldo to answer "are you open?"
 TABLE_DELAY_MS = 350  # refresh the table this long after an edit
 UPDATE_CHECK_DELAY_MS = 1500  # the automatic update check, just after the window is up (every launch)
 UPDATE_WAIT_MS = 1500  # a found update waits this long between looks while another window is open

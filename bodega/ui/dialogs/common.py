@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.ui.components.widgets import button_row, hbox, hint, suggestions, vbox
+from bodega.ui.components.widgets import button_row, combo, hbox, hint, suggestions, vbox
 from bodega.ui.style import tokens
 from bodega.ui.style.tokens import DIALOG_W, SPACE_3, SPACE_5
 from bodega.ui.style.tokens import IMPORT_LIST_H as PICKER_LIST_H
@@ -169,6 +169,36 @@ def ask_name(
     if d.exec() != QDialog.DialogCode.Accepted:
         return None
     return field.text().strip() or None
+
+
+def ask_choice(
+    parent: QWidget, title: str, text: str, choices: list[tuple[str, str]], action: str
+) -> str | None:
+    """One of a few choices ((key, words) each), picked from a dropdown. The key, or None if cancelled."""
+    d = QDialog(parent)
+    d.setWindowTitle(title)
+    d.setMinimumWidth(DIALOG_W)
+    lay = vbox(d, SPACE_5, SPACE_3)
+    t = QLabel(title)
+    t.setObjectName("DialogTitle")
+    lay.addWidget(t)
+    if text:
+        lay.addWidget(hint(text))
+    pick = combo([(key, words, "") for key, words in choices], choices[0][0] if choices else "")
+    lay.addWidget(pick)
+    row = button_row()
+    cancel = QPushButton("Cancel")
+    cancel.clicked.connect(d.reject)
+    go = QPushButton(action)
+    go.setObjectName("Primary")
+    go.setDefault(True)
+    go.clicked.connect(d.accept)
+    row.addWidget(cancel)
+    row.addWidget(go)
+    lay.addLayout(row)
+    if d.exec() != QDialog.DialogCode.Accepted:
+        return None
+    return pick.currentData()
 
 
 def tidy_preview(parent: QWidget, moves: list) -> bool:

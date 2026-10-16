@@ -24,6 +24,11 @@
 - AI Settings and the Assistant now say plainly what's sent to your AI provider: the gear you ask about, with
   what you paid for it, never renters or rentals. They also say that your provider bills each question and may
   keep what's sent, and that you can set a spending limit there.
+- Send to Cobro is now Send to Saldo, Cobro's new name, and the draft lands in Saldo's own folder (drafts sent
+  after the move to Saldo went where Saldo never looks). Sending a rental again updates its draft instead of
+  making a second invoice; once Saldo has sent it, a new draft goes beside it. With more than one profile in
+  Saldo, Bodega asks once which one each of your profiles sends as. If Saldo is open, it asks you to quit it
+  first, so Saldo never gives two invoices the same number.
 - Bodega keeps safety copies of your gear, kits, rentals, renters and profiles: one each day you open it (the last
   14 days), and one before each import, Tidy Up Groups, AI change or restore (the last 20).
 - File › Restore from Backup… (also in Settings › Your Data) puts a Back Up zip or a safety copy back. It shows

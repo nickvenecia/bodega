@@ -81,8 +81,10 @@ bodega/
                    find_links (every link fetched and matched before it's suggested: _checked_pages), tidy_names,
                    organize_groups, chat (an answer, plus changes asked for: group/name/brand/series only); Change/Result; clean_text/clean_price validate everything; apply() (snapshot first)
     account.py     AccountService (sign_in / sign_out / reset_password) + REQUIRED; plug a real service in with use()
-    cobro.py       Send to Cobro: a rental as a draft invoice written into Cobro's data folder in Cobro's format
-                   (numbering ported from cobro/core/numbering.py; never sets Cobro's files aside)
+    saldo.py       Send to Saldo (once Cobro): a rental as a draft invoice written into Saldo's invoices/ in its
+                   format (numbering ported from saldo/core/numbering.py; never sets Saldo's files aside, never
+                   writes before Saldo has opened once or into Cobro's old folder); Rental.saldo_invoice: sent
+                   again, it updates that draft; Business.saldo_profile: asked once; the window asks to quit Saldo
     feedback.py    Feedback, an outbox in the data folder until a FeedbackSender (or ADDRESS) is connected
   ui/
     style/         tokens.py (every size, color, timing; DARK/LIGHT swapped by tokens.use(scheme, accent); ACCENTS the accent

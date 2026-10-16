@@ -16,6 +16,7 @@ from bodega.core.log import get_logger
 from bodega.core.model import Item
 from bodega.core.paths import data_dir, documents_dir
 from bodega.ui.dialogs.common import notice
+from bodega.ui.style import tokens
 
 log = get_logger(__name__)
 
@@ -335,11 +336,12 @@ class TransferMixin:
             return
         self.toast("Saved. In Google Calendar: Settings › Import & Export › Import.", "done")
 
-    # ------------------------------------------------------------------ Cobro
-    def send_to_cobro(self, rental_id: str) -> None:
-        """Send to Cobro…: the rental as a draft invoice in Cobro (your profile, the renter, every line)."""
-        from bodega.services import cobro
-        from bodega.ui.dialogs.common import confirm
+    # ------------------------------------------------------------------ Saldo
+    def send_to_saldo(self, rental_id: str) -> None:
+        """Send to Saldo…: the rental as a draft invoice in Saldo (the renter, every line, the totals). Sent
+        again, it updates that draft while it's still one."""
+        from bodega.services import saldo
+        from bodega.ui.dialogs.common import ask_choice, confirm
 
         r = self.lib.rentals.get(rental_id)
         if r is None:
@@ -348,23 +350,110 @@ class TransferMixin:
         if not r.lines:
             self.toast("Add gear to the rental first.", "problem")
             return
-        if not cobro.installed():
+        if saldo.waiting_for_cobro():
             notice(
                 self,
-                "Cobro isn't set up here",
-                "Send to Cobro makes the invoice in Cobro, the invoice app. Open Cobro once "
-                "on this computer and add your profile, then try again.",
+                "Open Saldo Once First",
+                "Cobro is now called Saldo. The first time Saldo opens, it brings over everything Cobro had. "
+                "Open Saldo once, quit it, then send this again.",
             )
             return
-        who = r.client.company or r.client.name or "the renter"
-        if not confirm(
-            self, f"Send {r.number} to Cobro?", f"Cobro gets a draft invoice for {who}.", "Send", danger=False
-        ):
+        if not saldo.installed():
+            notice(
+                self,
+                "Saldo Isn't Set Up Here",
+                "Send to Saldo makes the invoice in Saldo, the invoicing app. Open Saldo once on this computer "
+                "and add your profile, then try again.",
+            )
+            return
+        if saldo_is_open():
+            notice(
+                self,
+                "Quit Saldo First",
+                "Saldo reads new invoices when it opens, and numbers them from the ones it has open. Quit Saldo, "
+                "send this again, then open Saldo.",
+            )
             return
         b = self.lib.businesses.get(r.business_id) or self.business()
-        try:
-            number = cobro.send(self.lib, r, b)
-        except OSError as e:
-            notice(self, "Couldn't send it to Cobro", str(e))
+        found = saldo.profiles()
+        if not found:
+            notice(self, "Saldo Has No Profile Yet", "Open Saldo and add your profile there, then try again.")
             return
-        self.toast(f"Cobro has draft invoice {number}. Open Cobro to send it.", "done")
+        profile = saldo.profile_for(found, b)
+        if profile is None:
+            names = [(str(d["id"]), str(d.get("name") or "Untitled Profile")) for d in found]
+            pick = ask_choice(
+                self,
+                "Which Saldo Profile Sends It?",
+                f"Invoices from {b.name if b else 'this profile'} go out as this profile in Saldo. "
+                "Bodega remembers it.",
+                names,
+                "Use This Profile",
+            )
+            if pick is None:
+                return
+            profile = next(d for d in found if str(d["id"]) == pick)
+        if b is not None and b.saldo_profile != str(profile["id"]):
+            b.saldo_profile = str(profile["id"])
+            self.lib.save_businesses()
+        who = r.client.company or r.client.name or "the renter"
+        old = saldo.draft_of(r)
+        if old is not None and old.get("status") == "draft":
+            asked = confirm(
+                self,
+                f"Update Draft {old.get('number', '')} in Saldo?",
+                "It gets this rental's renter, lines and totals as they are now. What you changed on it in Saldo "
+                "otherwise stays.",
+                "Update",
+                danger=False,
+            )
+        elif old is not None:
+            asked = confirm(
+                self,
+                f"Make a New Draft for {r.number}?",
+                f"Saldo already {saldo.said(old)} for this rental. A new draft invoice for {who} goes beside it.",
+                "Make Draft",
+                danger=False,
+            )
+        else:
+            asked = confirm(
+                self,
+                f"Send {r.number} to Saldo?",
+                f"Saldo gets a draft invoice for {who}.",
+                "Send",
+                danger=False,
+            )
+        if not asked:
+            return
+        try:
+            number, updated = saldo.send(self.lib, r, b, profile)
+        except OSError as e:
+            notice(self, "Couldn't Send It to Saldo", str(e))
+            return
+        self._dirty_rentals.add(r.id)
+        self.flush()
+        self.toast(
+            f"Updated draft invoice {number} in Saldo."
+            if updated
+            else f"Saldo has draft invoice {number}. Open Saldo to send it.",
+            "done",
+        )
+
+
+def saldo_is_open() -> bool:
+    """Saldo is open on this computer (it answers on its own local socket; nothing is said to it, so its
+    window stays where it is)."""
+    import getpass
+
+    from PySide6.QtNetwork import QLocalSocket
+
+    try:
+        user = getpass.getuser()
+    except Exception:
+        user = "user"
+    sock = QLocalSocket()
+    sock.connectToServer(f"saldo-{user}")
+    if not sock.waitForConnected(tokens.SALDO_CHECK_MS):
+        return False
+    sock.disconnectFromServer()
+    return True
