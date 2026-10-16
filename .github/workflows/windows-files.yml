@@ -1,0 +1,78 @@
+name: Windows tests, a file a machine
+
+# Diagnosis: each test file on its own Windows machine, so one that stops a machine names itself while the others
+# report. Runs when this file changes on the work branch (re-run it from its run). Not part of the build; removed
+# once the Windows runs pass.
+on:
+  push:
+    branches: [claude/awesome-bohr-9d9eva]
+    paths: [.github/workflows/windows-files.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  file:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        file:
+          - test_accent.py
+          - test_access.py
+          - test_addresses.py
+          - test_ai.py
+          - test_ai_window.py
+          - test_backups.py
+          - test_checks.py
+          - test_code_rules.py
+          - test_dates.py
+          - test_documents.py
+          - test_earnings.py
+          - test_errors.py
+          - test_figures.py
+          - test_fixes.py
+          - test_history.py
+          - test_icons.py
+          - test_ics.py
+          - test_importer.py
+          - test_keys.py
+          - test_maintenance.py
+          - test_memory.py
+          - test_photos.py
+          - test_prices.py
+          - test_pricing.py
+          - test_reading.py
+          - test_records.py
+          - test_saldo.py
+          - test_saving.py
+          - test_scale.py
+          - test_search.py
+          - test_security.py
+          - test_settings.py
+          - test_sizes.py
+          - test_store.py
+          - test_threads.py
+          - test_ticks.py
+          - test_untrusted.py
+          - test_update.py
+          - test_web.py
+          - test_window.py
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version-file: .python-version
+      - name: Install Python packages, from the lock
+        run: |
+          python -m pip install "pip==25.2"
+          pip install --require-hashes --only-binary :all: --no-deps -r requirements.lock
+      - name: The file's tests
+        shell: bash
+        timeout-minutes: 10
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m pytest -v -p no:cacheprovider "tests/${{ matrix.file }}" 2>&1 | head -c 20000000
