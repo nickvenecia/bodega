@@ -10,14 +10,15 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 
-from PySide6.QtCore import QTimer, Signal
+from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtWidgets import QFrame, QLabel, QLineEdit, QMenu, QPushButton, QToolButton, QWidget
 
-from bodega.core import dates, money, pricing, words
+from bodega.core import dates, figures, money, pricing, words
 from bodega.core.model import HOLDING, RENTAL_STATUSES, RENTAL_WORDS, Client, Rental, RentalLine
 from bodega.core.store import Library
 from bodega.core.terms import terms_for
 from bodega.services import saldo
+from bodega.ui.components.figures import FigureStrip
 from bodega.ui.components.widgets import (
     WHOLE_TYPED,
     ElidedLabel,
@@ -26,6 +27,7 @@ from bodega.ui.components.widgets import (
     MoneyField,
     Section,
     TextBox,
+    TitleEdit,
     ToggleRow,
     add_chip,
     by_keyboard,
@@ -359,6 +361,36 @@ class RentalPanel(DetailsBase):
             "trash", "Delete Rental", lambda: self.r and self.delete_wanted.emit(self.r.id)
         )  # a booked one: Mark as Cancelled… (it's never deleted)
         self.sheet.clicked.connect(lambda: self.r and self.sheet_wanted.emit(self.r.id))
+
+        # the head (the standard's 4.5, G.17): who it's for as its name, its number and status, what and when, figures
+        head = QWidget()
+        gap = self.form_lay.spacing()  # (the form's own gap is part of the space below)
+        hl = vbox(head, (TitleEdit.INSET, 0, 0, tokens.HEAD_BELOW - gap), 0)  # (lined up with the other records' names)
+        self.head_name = QLabel()
+        self.head_name.setObjectName("RecordName")
+        self.head_name.setWordWrap(True)
+        hl.addWidget(self.head_name)
+        hl.addSpacing(tokens.SPACE_1_5)
+        line = hbox(spacing=tokens.SPACE_3)
+        self.head_number = QLabel()
+        self.head_number.setObjectName("RecordNumber")
+        theme.use_tabular(self.head_number)
+        self.head_state = QPushButton()  # a dot and a word, in its tone (not a button: a flat label with an icon)
+        self.head_state.setObjectName("RecordStatus")
+        self.head_state.setIconSize(QSize(tokens.STATUS_DOT, tokens.STATUS_DOT))
+        self.head_state.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.head_state.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        line.addWidget(self.head_number)
+        line.addWidget(self.head_state)
+        line.addStretch(1)
+        hl.addLayout(line)
+        hl.addSpacing(tokens.SPACE_1)
+        self.head_detail = hint("")  # "Desert Doc · Oct 20 – 25"
+        hl.addWidget(self.head_detail)
+        hl.addSpacing(tokens.STRIP_ABOVE)
+        self.strip = FigureStrip()  # its total, its days, its pieces (and the deposit, when there's one)
+        hl.addWidget(self.strip)
+        self.form_lay.insertWidget(0, head)
 
         # who
         sec = Section("From")
@@ -732,6 +764,29 @@ class RentalPanel(DetailsBase):
         self.recalc()
 
     # Loading
+    def _head(self, t: pricing.Totals, b) -> None:
+        """The head's lines: the renter, the number and status (late before anything else), the production and the
+        dates; then the strip."""
+        from bodega.ui.window.tables import STATUS_COLORS
+
+        r = self.r
+        if r is None:
+            return
+        who = r.client.company or r.client.name
+        self.head_name.setText(who or "No Renter Yet")
+        self.head_name.setProperty("empty", not who)
+        repolish(self.head_name)
+        self.head_number.setText(r.number)
+        tone = "late" if pricing.late(r) else r.status
+        self.head_state.setText("Late" if tone == "late" else RENTAL_WORDS[r.status])
+        self.head_state.setIcon(theme.dot(getattr(tokens, STATUS_COLORS[tone])))
+        if self.head_state.property("tone") != STATUS_COLORS[tone]:
+            self.head_state.setProperty("tone", STATUS_COLORS[tone])
+            repolish(self.head_state)
+        when = dates.span(*pricing.span_of(r))
+        self.head_detail.setText(" · ".join(x for x in (r.project, when) if x))
+        self.strip.show_for(figures.rental(self.lib, r, t, b))
+
     def load(self, r: Rental) -> None:
         self._loading = True
         self.r = r
@@ -902,6 +957,7 @@ class RentalPanel(DetailsBase):
             f"{money.fmt_rate(pricing.deposit_pct(b))} of the replacement value"
             + (" (your profile)" if b and b.deposit_pct.strip() else "")
         )
+        self._head(t, b)
         g = self.groups
         g["who"].set_summary(r.client.company or r.client.name or "No renter yet")
         g["rental"].set_summary(f"{RENTAL_WORDS[r.status]} · {dates.span(*pricing.span_of(r))}")

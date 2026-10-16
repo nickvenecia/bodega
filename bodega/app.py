@@ -310,7 +310,9 @@ class _MainThreadGC(QObject):
     """Python's cycle collector runs here, on the window's thread, between events. Left to itself it runs whenever
     enough has been made, on whatever thread is running (a background job's too) and in the middle of Qt's own work
     (restyling every window, say); freeing a Qt object there crashes Bodega, a known trap of Qt from Python. Plain
-    reference counting still frees almost everything at once; only cycles wait, a couple of seconds at most."""
+    reference counting still frees almost everything at once. Cycles are checked for every GC_MS, as often as Python
+    itself would collect them: one left waiting can hold a Python stand-in for a Qt object Qt has already deleted,
+    and a new object made at the same address then gets the old stand-in (the test machines crashed on that)."""
 
     def __init__(self, app: QApplication):
         super().__init__(app)

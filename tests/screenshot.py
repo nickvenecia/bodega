@@ -126,6 +126,8 @@ def main(out: Path, sheet: Path | None = None) -> int:
         w.open("packages", next(iter(lib.packages)))  # (its panel: the name, the strip, the gear)
     shot(w, out / "4-kits.png")
     w.go("rentals")
+    if lib.rentals:
+        w.open("rentals", next(iter(lib.rentals)))  # (its panel: the head, the strip, a line open)
     for e in w.rentals.editors[1:2]:
         w.rentals._open_editor(e)
     shot(w, out / "5-rental.png")

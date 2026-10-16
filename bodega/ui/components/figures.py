@@ -5,7 +5,7 @@ on; pressed again, it lets go."""
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QLabel, QWidget
+from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QLabel, QLayout, QSizePolicy, QWidget
 
 from bodega.core.figures import Figure
 from bodega.ui.components.widgets import by_keyboard, hbox, repolish, vbox
@@ -87,23 +87,25 @@ class FigureRow(QWidget):
 
 class FigureStrip(QWidget):
     """A record's figures under its head (the standard's 4.5, G.17): side by side, divided by hairlines, never as
-    tiles; the value in Title 2 Semibold, its name under it. Shows only the figures that apply."""
+    tiles; the value in Title 2 Semibold, its name under it. Shows only the figures that apply, most important
+    first: in a narrow panel the space around the hairlines narrows (to STRIP_PAD_MIN), then the last ones go."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setObjectName("FigureStrip")
         self.lay = hbox(self, 0, 0)
         self.lay.addStretch(1)
-        self.cells: list[
-            tuple[QFrame, QWidget, QLabel, QLabel]
-        ] = []  # (the hairline before it, the cell, value, label)
+        self.lay.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)  # its width is its panel's, never wider:
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)  # what doesn't fit is left out
+        self.cells: list[tuple[QFrame, QWidget, QLabel, QLabel]] = []  # (the hairline before it, cell, value, label)
+        self._count = 0  # figures to show (as many as fit of them show)
 
     def _cell(self) -> tuple[QFrame, QWidget, QLabel, QLabel]:
         line = QFrame()
         line.setObjectName("StripLine")
         line.setFixedWidth(1)
         cell = QWidget()
-        cl = vbox(cell, (tokens.STRIP_PAD, 0, tokens.STRIP_PAD, 0), tokens.SPACE_0_5)
+        cl = vbox(cell, 0, tokens.SPACE_0_5)
         value = QLabel()
         value.setObjectName("StripValue")
         theme.use_tabular(value)  # (its size and weight: the style's #StripValue)
@@ -119,19 +121,40 @@ class FigureStrip(QWidget):
     def show_for(self, figures: list[Figure]) -> None:
         while len(self.cells) < len(figures):
             self.cells.append(self._cell())
-        for n, (line, cell, value, label) in enumerate(self.cells):
-            on = n < len(figures)
-            line.setVisible(on and n > 0)  # between figures only
-            cell.setVisible(on)
-            if not on:
-                continue
-            f = figures[n]
+        for (_line, cell, value, label), f in zip(self.cells, figures, strict=False):
             value.setText(f.value)
             label.setText(f.label)
             if value.property("tone") != f.tone:
                 value.setProperty("tone", f.tone)
                 repolish(value)
-            cell.layout().setContentsMargins(0 if n == 0 else tokens.STRIP_PAD, 0, tokens.STRIP_PAD, 0)  # first: 0
             cell.setAccessibleName(f"{f.label}: {f.value}")
             cell.setToolTip(theme.plain_tip(f.tip) if f.tip else "")
+        self._count = len(figures)
         self.setVisible(bool(figures))
+        self._fit()
+
+    def resizeEvent(self, e) -> None:
+        super().resizeEvent(e)
+        self._fit()
+
+    def _fit(self) -> None:
+        """As many figures as fit the width, each STRIP_PAD from its hairlines, or less, down to STRIP_PAD_MIN."""
+        m = self.contentsMargins()
+        room = self.width() - m.left() - m.right()
+        widths = []
+        for _line, _cell, value, label in self.cells[: self._count]:
+            widths.append(max(value.sizeHint().width(), label.sizeHint().width()))
+        n = len(widths)
+        while n > 1:
+            gaps = n - 1  # each: a hairline, with a pad either side
+            pad = (room - sum(widths[:n]) - gaps) // (2 * gaps)
+            if pad >= tokens.STRIP_PAD_MIN:
+                break
+            n -= 1
+        pad = tokens.STRIP_PAD if n <= 1 else min(tokens.STRIP_PAD, pad)
+        for k, (line, cell, _value, _label) in enumerate(self.cells):
+            on = k < n
+            line.setVisible(on and k > 0)  # between figures only
+            cell.setVisible(on)
+            if on:
+                cell.layout().setContentsMargins(0 if k == 0 else pad, 0, pad if k < n - 1 else 0, 0)  # the ends: 0

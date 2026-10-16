@@ -108,6 +108,8 @@
 - A piece's panel has a strip of figures under its name: its day rate (for all of them, with what goes with it),
   what it has earned and on how many rentals, and how much of what it cost that is. A kit's has its day rate, a
   week of it and its pieces. The Value & Rate and Price cards no longer repeat them.
+- A rental's panel starts with a head like a piece's: the renter as its name, its number and status (Late in red
+  when it's late), the production and dates, then its total, days, pieces and deposit.
 - Single-key shortcuts, outside text fields: N makes something new (a piece, a kit or a rental, wherever you are),
   E puts the cursor in the open record (or opens the one you've marked), D deletes it (with Undo), / goes to the
   search, ? shows the keyboard shortcuts and A opens the assistant. They never act while you type in a field or

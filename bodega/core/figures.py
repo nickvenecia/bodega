@@ -115,3 +115,20 @@ def kit(lib, p, b) -> list[Figure]:
         Figure("week", "Week", money.fmt_short(rate * wd, cur), tip=f"A week is {wd} billed days (your profile)"),
         Figure("pieces", "Pieces", f"{pieces:,}"),
     ]
+
+
+def rental(lib, r, t: pricing.Totals, b) -> list[Figure]:
+    """A rental's strip, under its head: what it comes to, the days billed (or, with lines on their own dates, the
+    periods), and the pieces going out."""
+    cur = (b.currency if b else "$") or "$"
+    pieces = sum(u for line in r.lines for _it, u, _d in pricing.line_gear(lib, line))
+    days = (
+        Figure("days", "Periods", f"{len(pricing.periods(r)):,}", tip="Lines with dates of their own")
+        if t.mixed
+        else Figure("days", "Billed Days", f"{t.days.billed:,}")
+    )
+    total = Figure("total", "Total", money.fmt_short(t.total, cur), tip=money.fmt(t.total, cur))  # (cents on hover)
+    out = [total, days, Figure("pieces", "Pieces", f"{pieces:,}")]
+    if t.deposit:
+        out.append(Figure("deposit", "Deposit", money.fmt_short(t.deposit, cur), tip="Refundable"))
+    return out

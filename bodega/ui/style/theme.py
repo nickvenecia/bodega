@@ -394,6 +394,17 @@ QHeaderView::down-arrow {{ image: url(__CHEVRON__); width: {SORT_ARROW}px; heigh
 QPushButton#StatusLine {{ background: transparent; border: none; padding: 0; text-align: left; color: {tokens.TEXT};
     min-height: {tokens.SMALL_H}px; max-height: {tokens.SMALL_H}px; }}
 QPushButton#StatusLine[link="true"]:hover {{ color: {tokens.ACCENT_TEXT}; }}
+/* a record's head that isn't typed into (a rental's): G.17 */
+QLabel#RecordName {{ font-size: {TEXT_RECORD}px; font-weight: {WEIGHT_BOLD}; color: {tokens.TEXT}; }}
+QLabel#RecordName[empty="true"] {{ color: {tokens.MUTED}; }}
+QLabel#RecordNumber {{ color: {tokens.MUTED}; font-weight: {WEIGHT_MEDIUM}; }}
+QPushButton#RecordStatus {{ background: transparent; border: none; padding: 0; text-align: left;
+    font-weight: {WEIGHT_SEMIBOLD}; min-height: 0; }}
+QPushButton#RecordStatus[tone="MUTED"] {{ color: {tokens.MUTED}; }}
+QPushButton#RecordStatus[tone="INFO"] {{ color: {tokens.INFO}; }}
+QPushButton#RecordStatus[tone="WARN"] {{ color: {tokens.WARN}; }}
+QPushButton#RecordStatus[tone="BAD"] {{ color: {tokens.BAD}; }}
+QPushButton#RecordStatus[tone="GOOD"] {{ color: {tokens.GOOD}; }}
 
 /* ---------- the gear overview */
 

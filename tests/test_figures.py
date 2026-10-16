@@ -161,3 +161,36 @@ def test_the_strips_sit_under_the_heads_divided_by_hairlines(win):
     win.open("packages", kit_id)
     labels = [c[3].text() for c in win.packages.strip.cells if c[1].isVisibleTo(win.packages.strip)]
     assert labels == ["Day Rate", "Week", "Pieces"]
+
+
+def test_a_rental_has_a_head_its_renter_number_status_and_strip(win):
+    lib = win.lib
+    r = next(iter(lib.rentals.values()))
+    win.go("rentals")
+    win.open("rentals", r.id)
+    p = win.rentals
+    who = r.client.company or r.client.name
+    assert p.head_name.text() == who and p.head_number.text() == r.number
+    assert p.head_state.text() in ("Quote", "Booked", "Out", "Late", "Returned", "Cancelled")
+    assert r.project in p.head_detail.text()
+    labels = [c[3].text() for c in p.strip.cells if c[1].isVisibleTo(p.strip)]
+    assert labels[0] == "Total" and "Pieces" in labels
+    assert p.head_name.geometry().top() < p.strip.geometry().top()
+
+
+def test_a_narrow_strip_narrows_its_gaps_then_leaves_the_last_figures_out(qapp):
+    from bodega.core.figures import Figure
+    from bodega.ui.components.figures import FigureStrip
+    from bodega.ui.style import tokens
+
+    s = FigureStrip()
+    s.show_for([Figure(k, f"Label {k}", "$12,345") for k in "abcd"])
+    s.resize(2000, 60)
+    s.show()
+    shown = lambda: [c for c in s.cells if not c[1].isHidden()]
+    assert len(shown()) == 4 and shown()[1][1].layout().contentsMargins().left() == tokens.STRIP_PAD
+    s.resize(300, 60)  # (four don't fit at the narrowest gap)
+    assert 1 <= len(shown()) < 4 and shown()[0][3].text() == "Label a"  # the first, most important, stays
+    for _line, cell, _value, _label in shown()[1:]:
+        assert cell.layout().contentsMargins().left() >= tokens.STRIP_PAD_MIN
+    s.deleteLater()

@@ -33,9 +33,16 @@ Bodega will notice (it becomes the release notes and the update window), so this
   - Tests leave with `os._exit` once pytest has its result, because Qt objects can crash while Python shuts down on
     Windows (T-09, still open).
   - Every test starts with a fresh AI meter with no per-minute wait (`tests/conftest.py`, `fresh_ai_meter`).
-  - Python's cycle collector is off; the app collects on the window's thread every 2 seconds and the tests between
-    tests (`app._MainThreadGC`, CONTRIBUTING rule 20). Left on, it can free Qt objects mid-restyle or on a job's
-    thread: the likeliest cause of the Intel Mac's random crashes in the tests (watch the next runs).
+  - Python's cycle collector is off; the app checks for cycles on the window's thread every 50 ms and the tests
+    collect between tests (`app._MainThreadGC`, CONTRIBUTING rule 20). Left on, it can free Qt objects mid-restyle
+    or on a job's thread. Checked only every 2 seconds (as it first was), cycles waited long enough for Qt to reuse
+    the address of an object it had deleted while Python still held a stand-in for it: CI crashed building a
+    rental's lines (a menu action came back as a layout item).
+  - Every thread is a `components.worker.Background`: Qt stops the whole app if a running thread is destroyed, and a
+    window takes its threads with it. When the window goes first, its thread is let go of and ends on its own
+    (`tests/test_threads.py`, which also fails on any plain `QThread`).
+  - A test that makes Qt warn 500 times stops the run, naming the test and the warning; a fatal Qt message is written
+    out before Qt ends the run (`tests/conftest.py`). CI cuts a test run's output off at 50 MB.
   - Undo notes where things stand once the moment is over (`MainWindow.mark_soon`): a test that counts undo steps
     lets the event loop run first (`QApplication.processEvents()`).
   - The speed limits in `tests/test_scale.py` stretch by how much slower the computer is than a laptop
@@ -127,5 +134,16 @@ menu (D-04). 26 wait on the owner (questions 8 to 30, and the departures propose
   (`.status == "out"`) keeps §8.2's "rules live in one module" true after the refactor.
 - **Rate limits when the person pays.** §14.6's 20 requests a minute is written for a server; for a desktop app on
   the person's own key it mostly slows big jobs. The standard could say whether it applies to bring-your-own-key.
+- **Background work belongs to the app, not the window.** Qt ends the whole program if a thread is destroyed while
+  it runs, and a window takes its threads with it: closing Settings while it loaded a list was enough. §12 could
+  say a job outlives the screen that started it (told to stop, then let finish) and that its answer goes nowhere
+  once the screen is gone.
+- **Collect cycles promptly, on the UI thread.** With a toolkit whose objects have stand-ins in the language
+  (Qt and Python), a collector left on runs on any thread mid-draw; one switched off and run rarely keeps dead
+  stand-ins long enough for a new object to arrive at the same address. The middle way (often, between events) is
+  worth a line in §7 or §17.
+- **A test that floods its log can take the build machine with it.** A warning repeated in a loop fills the disk
+  and memory before any time limit ends the run, and the run's log is lost with the machine. §17 could ask for a
+  cap on repeated warnings and on a run's output.
 - **A wall calendar's today.** G.22 sets today in the date picker (accent words, Semibold); a month or week view of
   bookings isn't specified, and Apple's Calendar uses a filled circle. Worth a row.
