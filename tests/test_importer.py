@@ -138,7 +138,15 @@ def test_a_google_sheet_is_read_as_a_spreadsheet_with_its_links(tmp_path, monkey
     with pytest.raises(OSError, match="Anyone with the link"):
         importer.download_google_sheet(url, tmp_path)
     answer.update(data=buf.getvalue(), kind="application/vnd.openxmlformats")
-    path = importer.download_google_sheet(url, tmp_path)
+    heard = []
+    path = importer.download_google_sheet(url, tmp_path, lambda n, total: heard.append((n, total)))
+    assert heard and heard[-1] == (len(buf.getvalue()), 0)  # how much has come, Google not saying how much
+    import threading
+
+    stopped = threading.Event()
+    stopped.set()
+    assert importer.download_google_sheet(url, tmp_path / "stopped", cancel=stopped) is None
+    assert not (tmp_path / "stopped").exists()
     got = importer.read(path)
     handle = next(i for i in got.items if i.name == "Tilta Top Handle for Sony FX6")
     assert handle.link == "https://www.example.com/handle"

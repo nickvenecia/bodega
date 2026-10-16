@@ -150,6 +150,10 @@ TOAST_IN_MS = 220  # it rises and fades in…
 TOAST_OUT_MS = 180  # …and fades away
 TOAST_RISE = 10  # how far it rises as it comes in
 TOAST_LIFT = SPACE_4  # its gap above the bottom of the page
+SPINNER_SM = 16  # (G.27) the small spinner: a ring this wide…
+SPINNER_RING_SM = 2  # …this thick
+SPINNER_TURN_MS = 800  # a turn in this long…
+SPINNER_TURN_SLOW_MS = 2400  # …or this, under Reduce Motion
 NAV_GAP = 2  # between rows in the sidebar
 ROW_INSET = 2  # a table row's rounded highlight sits this far inside the row
 LINE_STROKE = 1.8  # drawn chevrons
@@ -315,6 +319,8 @@ DARK = {
     "TOAST_TEXT": "#F5F5F7",
     "TOAST_EDGE": "rgba(255, 255, 255, 0.12)",
     "TOAST_SHADOW": "rgba(0, 0, 0, 0.60)",
+    "TOAST_TRACK": "rgba(255, 255, 255, 0.18)",  # a job's progress track (and its spinner's) on the toast
+    "TOAST_BUTTON": "rgba(255, 255, 255, 0.14)",  # a job's Stop, a capsule on the toast
     "SCRIM": "rgba(0, 0, 0, 0.40)",  # (scrim) the window, dimmed under a palette
     "TOAST_DONE": "#30D158",  # its icon: it worked
     "TOAST_PROBLEM": "#FFB340",  # …it didn't (amber: red means late or delete)
@@ -392,6 +398,8 @@ LIGHT = {
     "TOAST_TEXT": "#F5F5F7",
     "TOAST_EDGE": "rgba(255, 255, 255, 0.10)",
     "TOAST_SHADOW": "rgba(0, 0, 0, 0.30)",
+    "TOAST_TRACK": "rgba(255, 255, 255, 0.18)",
+    "TOAST_BUTTON": "rgba(255, 255, 255, 0.14)",
     "SCRIM": "rgba(0, 0, 0, 0.20)",
     "TOAST_DONE": "#30D158",  # (the dark look's: these sit on the dark toast)
     "TOAST_PROBLEM": "#FFB340",

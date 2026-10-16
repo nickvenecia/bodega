@@ -273,8 +273,9 @@ NOT_SHARED = (
 )
 
 
-def download_google_sheet(link: str, folder: Path) -> Path:
-    """Download a Google Sheet as .xlsx into `folder`. Raises OSError with a plain message."""
+def download_google_sheet(link: str, folder: Path, progress=None, cancel=None) -> Path | None:
+    """Download a Google Sheet as .xlsx into `folder`. Raises OSError with a plain message. `progress(bytes,
+    total)` hears it come in (total 0: Google didn't say); None if `cancel` was set before it was all here."""
     import urllib.request
 
     from bodega.core.net import ssl_context
@@ -286,7 +287,18 @@ def download_google_sheet(link: str, folder: Path) -> Path:
     try:
         with urllib.request.urlopen(req, timeout=30, context=ssl_context()) as resp:
             kind = (resp.headers.get("Content-Type") or "").lower()
-            data = resp.read(MAX_FILE_BYTES + 1)
+            size = resp.headers.get("Content-Length") or ""
+            total = int(size) if size.isdigit() else 0
+            data = b""
+            while len(data) <= MAX_FILE_BYTES:
+                if cancel is not None and cancel.is_set():
+                    return None
+                part = resp.read(DOWNLOAD_PART)
+                if not part:
+                    break
+                data += part
+                if progress is not None:
+                    progress(len(data), total)
     except Exception as e:  # urllib raises many kinds
         code = getattr(e, "code", None)
         if code in (401, 403, 404):
@@ -303,6 +315,7 @@ def download_google_sheet(link: str, folder: Path) -> Path:
 
 
 MAX_FILE_BYTES = 50_000_000  # a gear list is kilobytes; anything this big isn't one
+DOWNLOAD_PART = 64 * 1024  # a download comes in this much at a time (so it can say how far, and stop)
 MAX_UNPACKED_BYTES = 200_000_000  # an .xlsx is a zip: what it unpacks to, at most
 MAX_ROWS = 50_000  # rows in all of a sheet's tabs: a gear list has hundreds
 MAX_COLUMNS = 500

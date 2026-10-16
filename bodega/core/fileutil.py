@@ -34,20 +34,34 @@ def reveal(path: str | Path) -> None:
         log.warning("couldn't show %s", os.path.basename(path), exc_info=True)
 
 
-def zip_folder(folder: Path, dest: Path, skip: tuple[str, ...] = ()) -> int:
+def zip_folder(folder: Path, dest: Path, skip: tuple[str, ...] = (), progress=None, cancel=None) -> int | None:
     """Copy everything in `folder` into the zip file `dest` (written beside it first, then swapped in).
-    Top-level names in `skip` are left out. Returns how many files went in."""
+    Top-level names in `skip` are left out. Returns how many files went in, or None if `cancel` was set first
+    (then nothing is left behind). `progress(done, total)` hears each file."""
     import zipfile
 
     folder, dest = Path(folder), Path(dest)
     tmp = dest.with_name(dest.name + ".part")
-    n = 0
-    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
-        for path in sorted(folder.rglob("*")):
-            rel = path.relative_to(folder)
-            if not path.is_file() or rel.parts[0] in skip or path in (tmp, dest):
-                continue
-            z.write(path, Path(folder.name) / rel)
-            n += 1
-    os.replace(tmp, dest)
-    return n
+    chosen = [
+        path
+        for path in sorted(folder.rglob("*"))
+        if path.is_file() and path.relative_to(folder).parts[0] not in skip and path not in (tmp, dest)
+    ]
+    try:
+        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
+            for n, path in enumerate(chosen):
+                if cancel is not None and cancel.is_set():
+                    break
+                if progress is not None:
+                    progress(n, len(chosen))
+                z.write(path, Path(folder.name) / path.relative_to(folder))
+            else:
+                n = len(chosen)
+        if cancel is not None and cancel.is_set():
+            tmp.unlink(missing_ok=True)
+            return None
+        os.replace(tmp, dest)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
+    return len(chosen)

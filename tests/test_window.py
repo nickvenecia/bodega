@@ -1236,12 +1236,33 @@ def test_back_up_runs_without_freezing_the_window(win, monkeypatch, tmp_path):
 
     target = tmp_path / "Backup.zip"
     monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *_a, **_k: (str(target), ""))
-    said = []
+    said, working = [], []
     monkeypatch.setattr(win, "toast", lambda text, tone="": said.append(text))
+    real_job = win.toast_job
+    monkeypatch.setattr(win, "toast_job", lambda text, *a, **k: (working.append(text), real_job(text, *a, **k)))
     win.back_up()
-    assert said == ["Backing up…"]  # the window carries on while the zip is made
-    wait_for(lambda: len(said) == 2)
-    assert target.exists() and said[1].startswith("Backed up.")
+    assert working[0] == "Backing up…" and not said  # the window carries on while the zip is made…
+    assert win.toaster._stop == win._stop_transfer  # …with Stop
+    wait_for(lambda: len(said) == 1)
+    assert target.exists() and said[0].startswith("Backed up.")
+    assert any(w.startswith("Backing up: 1 of") for w in working)  # how far, as it goes
+
+
+def test_slow_work_says_how_far_it_is_and_offers_stop(win):
+    """The standard's progress (4.10, G.27): a bar when how much is known, a spinner while it isn't, Stop."""
+    t = win.toaster
+    stopped = []
+    win.toast_job("Getting the sheet from Google…", stop=lambda: stopped.append(1))
+    assert t.isVisible() and t.lasts() and t._frac is None and t._turn.state() == t._turn.State.Running
+    win.toast_job("Backing up: 3 of 10 files", 2, 10, lambda: stopped.append(1))
+    assert t._frac == pytest.approx(0.2) and t._turn.state() != t._turn.State.Running
+    QApplication.processEvents()
+    t.repaint()
+    assert not t._stop_rect.isEmpty() and t._pill.contains(t._stop_rect)
+    QTest.mouseClick(t, Qt.MouseButton.LeftButton, pos=t._stop_rect.center().toPoint())
+    assert stopped == [1] and t.text == "Stopping…" and t._stop is None
+    win.toast("Stopped. Nothing was saved.")  # the job's own last word takes its place, and goes by itself
+    assert not t.lasts() and t._t.isActive()
 
 
 def test_the_totals_say_how_many_pieces_have_no_price(win):

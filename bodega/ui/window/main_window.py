@@ -864,6 +864,12 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.toaster.show_message(text, tone)
         self._clear_of_toast()
 
+    def toast_job(self, text: str, done: int = 0, total: int = 0, stop=None) -> None:
+        """Slow work under way, over the page: its words, how far (a bar, or a spinner while that's not known)
+        and Stop. It stays until the job's own last toast."""
+        self.toaster.show_job(text, done, total, stop)
+        self._clear_of_toast()
+
     def _clear_of_toast(self) -> None:
         """A toast never hides the row you're on: the table scrolls it clear (the toast floats at the bottom)."""
         t = self._table()

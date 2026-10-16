@@ -198,6 +198,9 @@
 - The gear jobs (Update from Links…, Find Missing Links…, Tidy Up Names…, Organize Groups…, and Update with AI… on
   a piece) are written the same way everywhere, each with "…": each ends in Review, and nothing changes until you
   approve.
+- Back Up, Import from Google Sheets and getting photos from links say how far they've got (a bar, or a turning
+  ring while Google hasn't said how big the sheet is) and have a Stop button. A backup you stop leaves no half-made
+  file behind; photos found before you stopped are kept.
 - When the computer can't do something you asked (read a file, use a photo, sign out, check for updates), the
   message stays at the bottom of the window until you click it away, instead of fading before you've read it.
 - Check Out and Check In keep each tick, note and photo the moment you make it: closing the window never loses

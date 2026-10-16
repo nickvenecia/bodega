@@ -111,3 +111,10 @@ def test_the_page_window_says_which_page_is_in_view(qapp, lib):
     p.set_pages(pages[:1])
     assert p.page_of.isHidden()  # one page: nothing to count
     p.deleteLater()
+
+
+def test_a_files_size_reads_as_finder_says_it():
+    from bodega.core import words
+
+    said = [words.size(n) for n in (1, 999, 1000, 820_000, 999_999, 1_449_000, 999_960_000, 2_500_000_000)]
+    assert said == ["1 byte", "999 bytes", "1 KB", "820 KB", "1.0 MB", "1.4 MB", "1.0 GB", "2.5 GB"]

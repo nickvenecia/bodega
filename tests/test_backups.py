@@ -142,3 +142,22 @@ def test_restore_from_the_window(qapp, data_folder, tmp_path, monkeypatch):
     assert Library(data_folder).load().items[it.id].name == was
     assert not w.history.undos  # undo starts again from what came back
     w.close()
+
+
+def test_a_back_up_stopped_part_way_leaves_nothing_behind(data_folder, tmp_path):
+    import threading
+
+    lib = sample.fill(Library(data_folder).load())
+    dest = tmp_path / "Bodega Backup.zip"
+    cancel = threading.Event()
+    heard = []
+
+    def progress(n, total):
+        heard.append((n, total))
+        if n == 1:
+            cancel.set()  # Stop, while the second file goes in
+
+    assert zip_folder(lib.root, dest, progress=progress, cancel=cancel) is None
+    assert heard[0][0] == 0 and heard[0][1] > 2
+    assert not dest.exists() and not list(tmp_path.glob("*.part"))
+    assert zip_folder(lib.root, dest, progress=lambda *_a: None) == heard[0][1]  # and done again, all of it

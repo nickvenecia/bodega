@@ -59,8 +59,12 @@ class TransferMixin:
             return
         folder = Path(tempfile.mkdtemp(prefix="bodega-sheet-"))  # gone once it's read
 
-        def got(path: Path) -> None:
+        def got(path: Path | None) -> None:
             try:
+                if path is None:
+                    self.toast("Stopped getting the sheet.")
+                    return
+                self.toaster.dismiss()
                 self.lib.settings["google_sheet"] = link
                 self.import_file(path)
             finally:
@@ -68,10 +72,21 @@ class TransferMixin:
 
         def failed(message: str) -> None:
             shutil.rmtree(folder, ignore_errors=True)
+            self.toaster.dismiss()
             notice(self, "Couldn't Open the Sheet", message)
 
-        self.toast("Getting the sheet from Google…")
-        self._run_transfer(lambda _p, _c: importer.download_google_sheet(link, folder), got, failed, "open the sheet")
+        def came(n: int, total: int) -> None:
+            how_much = f"{words.size(n)} of {words.size(total)}" if total else words.size(n)
+            self.toast_job(f"Getting the sheet from Google… {how_much}", n, total, self._stop_transfer)
+
+        self.toast_job("Getting the sheet from Google…", stop=self._stop_transfer)
+        self._run_transfer(
+            lambda progress, cancel: importer.download_google_sheet(link, folder, progress, cancel),
+            got,
+            failed,
+            "open the sheet",
+            came,
+        )
 
     def _transfer_free(self) -> bool:
         """One download or backup at a time."""
@@ -81,17 +96,24 @@ class TransferMixin:
             return False
         return True
 
-    def _run_transfer(self, job, done, failed, doing: str) -> None:
+    def _run_transfer(self, job, done, failed, doing: str, progress=None) -> None:
         """Slow file work (a download, a zip) off the window's thread, so the window never freezes."""
         from bodega.ui.components.worker import Worker
 
         w = Worker(job, self, doing)
+        if progress is not None:
+            w.progress.connect(progress)
         w.done.connect(done)
         w.failed.connect(failed)
         w.finished.connect(w.deleteLater)
         w.finished.connect(lambda: setattr(self, "_transfer_job", None))
         self._transfer_job = w
         w.start()
+
+    def _stop_transfer(self) -> None:
+        job = getattr(self, "_transfer_job", None)
+        if job is not None:
+            job.stop()
 
     def import_file(self, path: Path, ask: bool = True) -> int:
         """Read a spreadsheet. With `ask`, the Import window shows what's in it and lets you choose what
@@ -256,12 +278,26 @@ class TransferMixin:
         path, _ = QFileDialog.getSaveFileName(self, "Back Up", str(documents_dir() / name), "Zip Files (*.zip)")
         if not path or not self._transfer_free():
             return
-        self.toast("Backing up…")
+
+        def done(n: int | None) -> None:
+            if n is None:
+                self.toast("Stopped. Nothing was saved.")
+            else:
+                self.toast("Backed up. It holds your renters' details, so keep it somewhere private.", "done")
+
+        def failed(message: str) -> None:
+            self.toaster.dismiss()
+            notice(self, "Couldn't Back Up", message)
+
+        self.toast_job("Backing up…", stop=self._stop_transfer)
         self._run_transfer(
-            lambda _p, _c: zip_folder(data_dir(), Path(path), skip=("ui",)),
-            lambda _r: self.toast("Backed up. It holds your renters' details, so keep it somewhere private.", "done"),
-            lambda message: notice(self, "Couldn't Back Up", message),
+            lambda progress, cancel: zip_folder(data_dir(), Path(path), ("ui",), progress, cancel),
+            done,
+            failed,
             "save the backup",
+            lambda n, total: self.toast_job(
+                f"Backing up: {n + 1:,} of {words.count(total, 'file')}", n, total, self._stop_transfer
+            ),
         )
 
     def restore(self) -> None:
@@ -356,7 +392,7 @@ class TransferMixin:
             return found
 
         w = Worker(job, self)
-        w.progress.connect(lambda i, total: self.toast(f"Getting photos… {i + 1} of {total}"))
+        w.progress.connect(lambda i, total: self.toast_job(f"Getting photos: {i + 1} of {total}", i, total, w.stop))
         w.done.connect(self._photos_came)
         w.failed.connect(lambda e: self.toast(e, "error"))
         w.finished.connect(lambda: (setattr(self, "_photo_worker", None), w.deleteLater()))
