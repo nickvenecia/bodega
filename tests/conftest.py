@@ -17,7 +17,7 @@ import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-_status = {"code": 0}
+_status: dict = {"code": 0}
 QT_NOISE = ("This plugin does not support",)  # the offscreen screen has no window manager to ask
 _qt_said: list[str] = []
 
@@ -35,6 +35,21 @@ def pytest_configure(config):
     from PySide6.QtCore import qInstallMessageHandler
 
     qInstallMessageHandler(_qt_message)
+    _status["config"] = config
+
+
+def pytest_runtest_logreport(report):
+    """A failure is written out as it happens, not only in the summary at the end: if Qt crashes later in the run
+    (it can, on a Mac or on Windows), the log still says what failed and why."""
+    if not report.failed:
+        return
+    tr = _status["config"].pluginmanager.get_plugin("terminalreporter")
+    if tr is not None:
+        tr.write_line(f"\n--- FAILED {report.nodeid} ({report.when}) ---")
+        tr.write_line(report.longreprtext[-4000:])
+        for name, text in report.sections:  # what it printed, Qt's own messages among them
+            if "stderr" in name or "stdout" in name:
+                tr.write_line(f"[{name}] {text[-1500:]}")
 
 
 def pytest_sessionfinish(session, exitstatus):
