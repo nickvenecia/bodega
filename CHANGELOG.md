@@ -177,6 +177,9 @@
   ("Northwind Media Inc.") no longer gets a second one.
 - The ways to start on an empty page show their whole names ("Import Spreadsheet…" was cut off at both ends), with
   their icons on their own. A switch's knob is white whether it's on or off, as on a Mac.
+- The share button shows once there's gear to print, and File › Print Inventory List…, Print Rate Card… and Print
+  Labels… are off until then. A button that's off says why when you point at it (Rent This, Check Price, the
+  Assistant's jobs).
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

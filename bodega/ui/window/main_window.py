@@ -407,7 +407,7 @@ class MainWindow(
         self.sidebar.select(view)
         self.title.setText(self._grp() or TITLES.get(view, ""))
         kind = kind_of(view)
-        self.btn_export.setVisible(kind == "gear")
+        self.btn_export.setVisible(kind == "gear" and bool(self.lib.items))  # nothing to print yet: no share
         self.btn_new.setToolTip(
             {"gear": "New Gear or Group", "packages": "New Kit", "rentals": "New Rental"}[kind]
         )
@@ -480,6 +480,7 @@ class MainWindow(
             self.gear_table.fill(lib, b, self._grp(), self._divide_for(view))
             self.items.earned = self.gear_table.earned  # worked out once a refresh, for the piece's panel too
             page = self.gear_table if lib.items else self._empty_page("gear")
+            self.btn_export.setVisible(bool(lib.items))  # the share button: once there's gear to print
         elif kind == "packages":
             self.kit_table.fill(lib, b)
             page = self.kit_table if lib.packages else self._empty_page("packages")

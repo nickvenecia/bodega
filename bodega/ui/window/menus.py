@@ -55,14 +55,17 @@ class MenusMixin:
         act(f, "Back Up…", self.back_up)
         act(f, "Restore from Backup…", self.restore)
         f.addSeparator()
-        act(
-            f,
-            "Print Inventory List…",
-            lambda: self.show_pages(("gear", self._grp()), "inventory"),
-            QKeySequence.StandardKey.Print,
-        )
-        act(f, "Rate Card…", lambda: self.show_pages(("gear", ""), "ratecard"))
-        act(f, "Print Labels…", lambda: self.show_pages(("gear", self._grp()), "labels"))
+        self.print_acts = [  # (off until there's gear to print)
+            act(
+                f,
+                "Print Inventory List…",
+                lambda: self.show_pages(("gear", self._grp()), "inventory"),
+                QKeySequence.StandardKey.Print,
+            ),
+            act(f, "Print Rate Card…", lambda: self.show_pages(("gear", ""), "ratecard")),
+            act(f, "Print Labels…", lambda: self.show_pages(("gear", self._grp()), "labels")),
+        ]
+        f.aboutToShow.connect(lambda: [a.setEnabled(bool(self.lib.items)) for a in self.print_acts])
         f.addSeparator()
         prefs = act(f, "Settings…", self.open_settings, QKeySequence.StandardKey.Preferences)
         prefs.setMenuRole(QAction.MenuRole.PreferencesRole)  # the Mac puts it under Bodega, ⌘,

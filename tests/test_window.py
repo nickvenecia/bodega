@@ -1514,3 +1514,22 @@ def test_every_start_tile_says_its_whole_name(qapp, data_folder):
         name = next(lbl for lbl in tile.findChildren(QLabel) if lbl.objectName() == "StartTitle")
         assert name.fontMetrics().horizontalAdvance(name.text()) <= name.width(), name.text()
     w.close()
+
+
+def test_with_no_gear_there_is_nothing_to_share_and_off_buttons_say_why(qapp, data_folder):
+    from bodega.ui.window.main_window import MainWindow
+
+    w = MainWindow(Library(data_folder).load())
+    w.show()
+    w.go("gear")
+    assert not w.btn_export.isVisibleTo(w)  # nothing to print yet
+    w.close()
+    win = MainWindow(sample.fill(Library(data_folder).load()))
+    win.show()
+    win.go("gear")
+    assert win.btn_export.isVisibleTo(win)
+    it = next(i for i in win.lib.items.values() if not i.parent)
+    it.rentable = False
+    win.open("gear", it.id)
+    assert not win.items.rent.isEnabled() and win.items.rent.toolTip() == "Not for rent"
+    win.close()

@@ -526,7 +526,15 @@ class ItemPanel(DetailsBase):
 
     def _link_state(self) -> None:
         """Check Price works once there's a link, one check at a time."""
-        self.check_price.setEnabled(bool(self.link.text().strip()) and self._price_thread is None)
+        has_link, free = bool(self.link.text().strip()), self._price_thread is None
+        self.check_price.setEnabled(has_link and free)
+        self.check_price.setToolTip(
+            "Check Price: read the price on this page"
+            if has_link and free
+            else "Checking…"
+            if has_link
+            else "Add a link first"
+        )
 
     def _show_price(self, text: str = "", use: bool = False) -> None:
         self.price_found.setText(text)
@@ -926,6 +934,13 @@ class ItemPanel(DetailsBase):
             self.where.show()
             self._where_id = r.id
         self.rent.setEnabled(it.rentable and it.status != "retired")
+        self.rent.setToolTip(  # off, it says why
+            ""
+            if self.rent.isEnabled()
+            else "Retired: it can't go on a rental"
+            if it.status == "retired"
+            else "Not for rent"
+        )
 
     def _sums(self, b, cur: str) -> None:
         """A gear sheet's math: tax, each with tax, the total for all of them, the day rate."""

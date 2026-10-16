@@ -109,6 +109,7 @@ class AssistantPanel(SidePanel):
         for n, (key, label, tip) in enumerate(JOBS):
             b = QPushButton(label)
             b.setToolTip(tip)
+            b.setProperty("tip", tip)
             b.clicked.connect(lambda _c=False, k=key: self.job_wanted.emit(k))
             self.job_buttons[key] = b
             grid.addWidget(b, n // 2, n % 2)
@@ -139,8 +140,16 @@ class AssistantPanel(SidePanel):
         self.who.setVisible(ready)
         self.connect_btn.setVisible(not ready)
         self.scope.setText(scope)
-        for b in self.job_buttons.values():
-            b.setEnabled(ready and not self.running())
+        busy = self.running()
+        for b in self.job_buttons.values():  # off, it says why
+            b.setEnabled(ready and not busy)
+            b.setToolTip(
+                b.property("tip")
+                if ready and not busy
+                else "Add an API key first"
+                if not ready
+                else "One job at a time"
+            )
         self.ask_btn.setEnabled(ready and not self.running())
         self.question.setEnabled(ready)
 
