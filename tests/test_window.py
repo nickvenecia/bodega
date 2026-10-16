@@ -1489,3 +1489,12 @@ def test_menus_and_words_are_measured_to_the_standard(win):
     QApplication.processEvents()
     sizes = {lbl.font().pixelSize() for lbl in win.findChildren(QLabel) if lbl.isVisible() and lbl.text()}
     assert all(s == -1 or s >= smallest for s in sizes), sizes
+
+
+def test_a_name_with_its_own_full_stop_gets_one_and_problems_stay_longer(win):
+    from bodega.ui.style import tokens
+
+    win.toast("Saved Northwind Media Inc..", "done")
+    assert win.toaster.text == "Saved Northwind Media Inc."
+    win.toast("Couldn't save.", "problem")
+    assert win.toaster._ms >= tokens.TOAST_WARN_MS

@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from bodega.core import words
-from bodega.ui.components.widgets import button_row, combo, hbox, hint, suggestions, vbox
+from bodega.ui.components.widgets import button_row, combo, hbox, hint, one_stop, suggestions, vbox
 from bodega.ui.style import tokens
 from bodega.ui.style.tokens import DIALOG_W, SPACE_3, SPACE_5
 from bodega.ui.style.tokens import IMPORT_LIST_H as PICKER_LIST_H
@@ -63,7 +63,7 @@ class Alert(QDialog):
         t.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(t)
         if text:
-            body = hint(text)
+            body = hint(one_stop(text))
             body.setAlignment(Qt.AlignmentFlag.AlignCenter)
             lay.addWidget(body)
         lay.addSpacing(tokens.SPACE_3)

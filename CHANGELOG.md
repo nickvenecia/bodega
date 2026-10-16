@@ -171,6 +171,10 @@
   "2 pieces", "a day" rather than "/day", Select All, Match System, Add Profile…, All Gear and All Companies in the
   filter, and an ellipsis only where a command asks for more before it acts (Rent This acts at once; Add Gear…
   opens a list). The AI menu says Show Assistant or Hide Assistant.
+- Fewer words in the way: shorter tooltips and labels, no line of explanation under Send Feedback's title, and a
+  rental's second card is called Dates & Status (not Rental again, under Rental).
+- A message about a problem stays up longer than good news; a sentence that ends in a name with its own full stop
+  ("Northwind Media Inc.") no longer gets a second one.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.

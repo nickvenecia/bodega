@@ -98,7 +98,7 @@ class ImportDialog(QDialog):
 
         # options
         self.options = Disclosure("Options", is_open=True)
-        self.attach = ToggleRow("Attach Gear Made for Other Gear", True)
+        self.attach = ToggleRow("Attach Gear to What It's For", True)
         self.attach.setToolTip('"Tilta Cage for Sony FX6" goes with the FX6')
         self.attach.toggled.connect(lambda _on: self.reread())
         self.options.add(self.attach)
@@ -116,7 +116,7 @@ class ImportDialog(QDialog):
         )
         self.use_pricing.toggled.connect(lambda _on: self._summary())
         self.options.add(self.use_pricing)
-        self.guess = ToggleRow("Fill In the Company From the Name", True)
+        self.guess = ToggleRow("Guess Companies From Names", True)
         self.guess.setToolTip('"Aputure STORM 80c" gets Aputure')
         self.guess.toggled.connect(lambda _on: self.reread())
         self.options.add(self.guess)

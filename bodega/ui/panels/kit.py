@@ -241,4 +241,3 @@ class PackagePanel(DetailsBase):
         pieces = sum(u for _i, u, _d in pricing.package_gear(self.lib, p))
         self.groups["gear"].set_summary(f"{pieces} piece{'s' if pieces != 1 else ''}")
         self.groups["price"].set_summary(f"{money.fmt_short(rate, cur)} a day")
-        self.groups["package"].set_summary(p.name)

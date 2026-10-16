@@ -32,7 +32,7 @@ JOBS = [
     (
         "links",
         "Update from Links",
-        "Today's prices from each piece's link (or another page about it, when a store won't open), and cleaner names",
+        "Prices and names from each piece's link",
     ),
     ("find", "Find Missing Links", "Product pages for gear without a link, each one checked"),
     ("names", "Tidy Up Names", "Names like the maker writes them, with Company and Series"),

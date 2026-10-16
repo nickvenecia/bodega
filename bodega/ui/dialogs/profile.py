@@ -186,9 +186,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         row.addWidget(sec, 1)
         sec = Section("Sales Tax on Gear %")
         self.value_tax = percent_field(b.value_tax, "None")
-        self.value_tax.setToolTip(
-            "Added to what you paid, so replacement value is what it really costs to replace"
-        )
+        self.value_tax.setToolTip("Added to what you paid: the replacement value")
         sec.add(self.value_tax)
         row.addWidget(sec, 1)
         p.addLayout(row)

@@ -139,6 +139,7 @@ TABLE_DELAY_MS = 350  # refresh the table this long after an edit
 UPDATE_CHECK_DELAY_MS = 1500  # the automatic update check, just after the window is up (every launch)
 UPDATE_WAIT_MS = 1500  # a found update waits this long between looks while another window is open
 TOAST_MS = 3500  # how long a toast stays up
+TOAST_WARN_MS = 6000  # …a problem, longer (the standard's toast-warning)
 TOAST_MS_PER_CHAR = 60  # …or longer, for a long one: time to read it
 TOAST_MAX_W = 520
 TOAST_IN_MS = 220  # it rises and fades in…

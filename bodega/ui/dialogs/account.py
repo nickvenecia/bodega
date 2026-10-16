@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.core import errors
 from bodega.services import account
-from bodega.ui.components.widgets import Embeddable, Section, button_row, hint, status_line, vbox
+from bodega.ui.components.widgets import Embeddable, Section, button_row, status_line, vbox
 from bodega.ui.style import theme, tokens
 
 
@@ -24,8 +24,6 @@ class SignInDialog(Embeddable, QDialog):
         self.title_label = QLabel("Sign In")
         self.title_label.setObjectName("DialogTitle")
         lay.addWidget(self.title_label)
-        if not account.service().connected:
-            lay.addWidget(hint("Accounts are coming soon. Everything works without one."))
 
         sec = Section("Email")
         self.email = QLineEdit()

@@ -226,7 +226,7 @@ class ItemPanel(DetailsBase):
         self.status = combo([(k, STATUS_LABELS[k], "") for k in ITEM_STATUSES], "ready")
         self.status.setItemData(1, "Not available to rent until it's back", Qt.ItemDataRole.ToolTipRole)
         self.status.setItemData(
-            2, "Sold, lost or broken for good. Left off the inventory.", Qt.ItemDataRole.ToolTipRole
+            2, "Sold, lost or broken for good: left off the inventory", Qt.ItemDataRole.ToolTipRole
         )
         sec.add(self.status)
         row.addWidget(sec, 1)

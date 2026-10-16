@@ -299,6 +299,11 @@ def status_line(text: str = "", hinted: bool = True) -> StatusLabel:
     return lbl
 
 
+def one_stop(text: str) -> str:
+    """A sentence that ends in a name with its own full stop ("Saved Northwind Inc..") ends with one."""
+    return text[:-1] if text.endswith("..") and not text.endswith("...") else text
+
+
 def repolish(w: QWidget) -> None:
     w.style().unpolish(w)
     w.style().polish(w)
@@ -509,8 +514,11 @@ class Toast(QWidget):
         self._t.timeout.connect(self._time_up)
         self.hide()
 
-    def show_message(self, text: str, tone: str = "", ms: int = tokens.TOAST_MS) -> None:
+    def show_message(self, text: str, tone: str = "", ms: int = 0) -> None:
+        """`ms`: how long it stays (0: news and done 3.5 s, a problem longer, as the standard has it)."""
+        text = one_stop(text)
         self.text, self.tone = text, tone if tone in self.TONES else ""
+        ms = ms or (tokens.TOAST_WARN_MS if self.tone == "problem" else tokens.TOAST_MS)
         self._ms = max(ms, len(text) * tokens.TOAST_MS_PER_CHAR)
         self.place()
         self.raise_()

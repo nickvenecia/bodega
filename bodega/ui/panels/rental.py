@@ -324,7 +324,7 @@ class RentalPanel(DetailsBase):
     KEY = "rentals"
     GROUPS = {
         "who": ("From && Renter", True),
-        "rental": ("Rental", True),
+        "rental": ("Dates && Status", True),  # (not "Rental" again, under the panel's own title)
         "gear": ("Gear", True),
         "money": ("Money", True),
         "agreement": ("Agreement", False),

@@ -590,12 +590,7 @@ class MainWindow(
         # the totals are short by whatever has no price: say how many, so they aren't read as everything
         unpriced = sum(1 for i in shown if i in self.lib.items and not money.parse(self.lib.items[i].value))
         self.total_labels["paid"].setText(f"Paid · {unpriced:,} not priced" if unpriced else "Paid")
-        self.total_labels["paid"].setToolTip(
-            f"{unpriced:,} piece{'s' if unpriced != 1 else ''} showing {'have' if unpriced != 1 else 'has'} no "
-            "price, so the totals leave them out"
-            if unpriced
-            else ""
-        )
+        self.total_labels["paid"].setToolTip("Left out of the totals: no price yet" if unpriced else "")
         self.total_values["tax"].setText(money.fmt(total.tax, cur))
         self.total_labels["tax"].setText(f"Tax {money.fmt_rate(tax)}")
         self.total_values["value"].setText(money.fmt(total.value, cur))
@@ -610,7 +605,7 @@ class MainWindow(
                         "table",
                         "Import Spreadsheet…",
                         "Excel or CSV",
-                        "Or drop a spreadsheet on this page.",
+                        "Or drop a spreadsheet on this page",
                         self.import_sheet,
                     ),
                     ("link", "Google Sheets…", "From a share link", "", self.import_google),
