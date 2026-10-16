@@ -342,10 +342,11 @@ def test_dividers_totals_and_attached(win):
     assert fx6.id in shown and cage.id in shown  # every piece has its own row
     fx6_row = next(r for r in t.item_rows() if r.data(0, 256) == fx6.id)
     assert fx6_row.text(2) == f"+{len(pricing.children(win.lib, fx6.id))}"
-    from bodega.ui.window.tables import WITH
+    from bodega.ui.window.tables import GEAR_COL, WITH
 
     cage_row = next(r for r in t.item_rows() if r.data(0, 256) == cage.id)
-    assert cage_row.data(0, WITH) == fx6.name  # says what it goes with
+    assert cage_row.data(0, WITH) == fx6.name  # says what it goes with, in its own column
+    assert cage_row.text(GEAR_COL["with"]) == fx6.name and not t.isColumnHidden(GEAR_COL["with"])
     b = win.lib.pricing()
     everything = pricing.Stock()
     for it in win.lib.items.values():
@@ -1621,3 +1622,13 @@ def test_a_saved_calendar_file_offers_the_way_into_google_calendar(win, tmp_path
     win.save_calendar()
     assert out.read_text().startswith("BEGIN:VCALENDAR")
     assert asked == ["Calendar File Saved"] and opened == [transfer.GOOGLE_CALENDAR_IMPORT]
+
+
+def test_goes_with_stays_away_while_nothing_is_attached(win):
+    from bodega.ui.window.tables import GEAR_COL
+
+    for it in win.lib.items.values():
+        it.parent = ""
+    win.refresh()
+    win.go("gear")
+    assert win.gear_table.isColumnHidden(GEAR_COL["with"])

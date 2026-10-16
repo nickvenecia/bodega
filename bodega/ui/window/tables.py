@@ -448,7 +448,7 @@ class RowPainter(QStyledItemDelegate):
 
 
 class _GearPainter(RowPainter):
-    """…plus the divider's chevron, the grip you drag a row by, and "with Sony FX6" after linked gear."""
+    """…plus the divider's chevron, the grip you drag a row by, and a piece's photo before its name."""
 
     def paint(self, painter, option, index):
         row0 = index.siblingAtColumn(0)
@@ -460,12 +460,8 @@ class _GearPainter(RowPainter):
             elif row0.data(ID):
                 self._grip(painter, option.rect)
             return
-        with_ = row0.data(WITH)
         if index.column() == GEAR_COL["name"] and not divider and getattr(self.parent(), "thumbs", False):
             option = self._thumb(painter, option, row0.data(PHOTO) or "")
-        if with_ and index.column() == GEAR_COL["name"]:
-            self._name_with(painter, option, index, with_)
-            return
         if not self.dotted(painter, option, index):
             QStyledItemDelegate.paint(self, painter, option, index)
 
@@ -489,34 +485,6 @@ class _GearPainter(RowPainter):
         opt = QStyleOptionViewItem(option)
         opt.rect = r.adjusted(size + tokens.SPACE_2, 0, 0, 0)
         return opt
-
-    def _name_with(self, painter, option, index, parent_name: str) -> None:
-        """A piece that goes with another: its name, then "with Sony FX6" in grey."""
-        opt = QStyleOptionViewItem(option)
-        self.initStyleOption(opt, index)
-        name, opt.text = opt.text, ""
-        w = opt.widget
-        style = w.style() if w else QApplication.style()
-        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, opt, painter, w)
-        # where Qt puts a cell's text, so these names line up with the others
-        rect = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, opt, w)
-        margin = style.pixelMetric(QStyle.PixelMetric.PM_FocusFrameHMargin, None, w) + 1
-        rect = rect.adjusted(margin, 0, -margin, 0)
-        fm = opt.fontMetrics
-        suffix = f"  with {parent_name}"
-        room = rect.width()
-        if fm.horizontalAdvance(name + suffix) > room:
-            keep = max(room // 2, room - fm.horizontalAdvance(suffix))
-            name = fm.elidedText(name, Qt.TextElideMode.ElideRight, keep)
-        name_w = fm.horizontalAdvance(name)
-        suffix = fm.elidedText(suffix, Qt.TextElideMode.ElideRight, max(0, room - name_w))
-        painter.save()
-        align = int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
-        painter.setPen(theme.qcolor(tokens.TEXT))
-        painter.drawText(rect, align, name)
-        painter.setPen(theme.qcolor(tokens.MUTED))
-        painter.drawText(rect.adjusted(name_w, 0, 0, 0), align, suffix)
-        painter.restore()
 
     @staticmethod
     def _chevron(painter, rect, open_: bool) -> None:
@@ -562,6 +530,7 @@ GEAR_COLUMNS = [
     ("grip", "", tokens.GRIP_W, None),
     ("name", "Name", 0, None),
     ("kids", "", tokens.COL_W["kids"], None),
+    ("with", "Goes With", tokens.COL_W["with"], None),  # the piece it's attached to
     ("brand", "Company", tokens.COL_W["company"], None),
     ("series", "Series", tokens.COL_W["series"], None),
     ("group", "Group", tokens.COL_W["group"], None),
@@ -575,7 +544,7 @@ GEAR_COLUMNS = [
 GEAR_COL = {key: n for n, (key, *_rest) in enumerate(GEAR_COLUMNS)}
 HIDDEN_AT_FIRST = ["series", "paid", "earned"]
 # on a narrow window these columns step aside first (Name always keeps NAME_MIN)
-GIVE_WAY = ["earned", "series", "paid", "status", "brand", "group", "kids", "qty", "day"]
+GIVE_WAY = ["earned", "series", "paid", "with", "status", "brand", "group", "kids", "qty", "day"]
 DIVIDES = [  # how the gear table is divided
     ("group", "By Group", ""),
     ("brand", "By Company", ""),
@@ -605,6 +574,7 @@ class GearTable(Table):
         h = self.headerItem()
         h.setToolTip(GEAR_COL["grip"], "Your order")
         h.setToolTip(GEAR_COL["kids"], "Gear that goes with it")
+        h.setToolTip(GEAR_COL["with"], "The piece it's attached to")
         h.setToolTip(GEAR_COL["paid"], "What it cost, before tax (what goes with it included)")
         h.setToolTip(GEAR_COL["value"], "Replacement value: paid plus sales tax")
         h.setToolTip(GEAR_COL["earned"], "An estimate: each rental's gear total, shared out by each piece's day rate")
@@ -615,6 +585,7 @@ class GearTable(Table):
         self.opened: set[str] = set()  # kept for older settings files
         self.hidden_cols: set[str] = set(HIDDEN_AT_FIRST)
         self._squeezed: set[str] = set()  # stepped aside because the window is narrow
+        self.any_with = False  # some piece is attached to another (else Goes With stays away)
         self._dragging = False
         self._queued: list = []
         self.divide = "group"
@@ -640,7 +611,7 @@ class GearTable(Table):
         for key, title, _w, _a in GEAR_COLUMNS:
             if key in ("grip", "name"):
                 continue
-            a = m.addAction(title or "Goes With (+3)")
+            a = m.addAction(title or "Gear With It (+3)")
             a.setCheckable(True)
             a.setChecked(key not in self.hidden_cols)
             a.toggled.connect(lambda on, k=key: self._toggle_column(k, on))
@@ -657,6 +628,8 @@ class GearTable(Table):
             auto.add("group")
         if self.divide == "brand":
             auto.add("brand")
+        if not self.any_with:  # nothing's attached to anything: no empty column
+            auto.add("with")
         off = self.hidden_cols | auto
         # make room for Name: the least needed columns step aside on a narrow window
         room = self.viewport().width() - tokens.NAME_MIN
@@ -932,6 +905,7 @@ class GearTable(Table):
             self._fill_later = (lib, b, group, divide)
             return
         self.thumbs = any(it.photo for it in lib.items.values())  # once one has a photo, every row has room
+        self.any_with = any(it.parent in lib.items for it in lib.items.values())
         # worked out only while the Earned column shows (the piece's panel works out its own otherwise)
         self.earned = earnings.earnings(lib) if "earned" not in self.hidden_cols else None
         self.group = group
@@ -1009,6 +983,7 @@ class GearTable(Table):
                 ("", pos),
                 (it.name or "Untitled Piece", it.name.casefold()),
                 (f"+{kids}" if kids else "", kids),
+                (on, (on or "~").casefold()),
                 (it.brand, (it.brand or "~").casefold()),
                 (it.series, (it.series or "~").casefold()),
                 (it.group, (it.group or "~").casefold()),
@@ -1026,7 +1001,7 @@ class GearTable(Table):
         )
         row.setData(GEAR_COL["status"], DOT, color)
         row.setForeground(GEAR_COL["kids"], theme.qcolor(tokens.MUTED))  # a count, not a button
-        for k in ("brand", "series"):
+        for k in ("with", "brand", "series"):
             row.setForeground(GEAR_COL[k], theme.qcolor(tokens.MUTED))
         if kids:
             row.setToolTip(GEAR_COL["kids"], f"{kids} go with it")

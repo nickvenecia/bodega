@@ -268,10 +268,10 @@ you click a row and slides out on Esc, a click on empty space or its ✕. The se
 
 ```
 ╭ bodega. ──────────╮  All Gear 18   (⌕ Search                ) (≡)    (⇪) (+) (☺)  ╭ Gear          (⋯)(✕) ╮
-│ Inventory ˅    (+)│  Name                       Company   Qty  Status  With Tax  Rate │ Out · Northwind · Oct 25 │
+│ Inventory ˅    (+)│  Name         Goes With     Company   Qty  Status  With Tax  Rate │ Out · Northwind · Oct 25 │
 │ ▸ All Gear      18│  ▾ Body                               4           $6,992  $280│ photo                    │
 │ ▾ Kits           1│  ⋮ Sony FX6 Cinema Camera  +3 Sony     1  In       $6,493  $260│ Sony FX6 Cinema Camera   │
-│     FX6 Run & Gun │  ⋮ Tilta Cage …  with Sony FX6 Tilta   1  In         $302   $12│ ╭ Details ────────────╮  │
+│     FX6 Run & Gun │  ⋮ Tilta Cage    Sony FX6     Tilta   1  In         $302   $12│ ╭ Details ────────────╮  │
 │ Rentals ˅      (+)│  …                                                             │ ╭ Value & Rate ───────╮  │
 │ ▸ All Rentals    1│                                                                │ + Photo  + Link  + Notes │
 │   Calendar        │                                                                │                          │
@@ -301,8 +301,9 @@ rentals are the plus underneath.
   Cmd-click) and Move To…, or drag them onto a divider or a department in the sidebar. Attached gear comes along.
 - **Picking many.** Cmd+A picks everything showing (not hidden or folded rows); Shift and Cmd-click work too. Delete
   (or Backspace) deletes them after a warning that names them and counts the attached gear that goes with them.
-- **Every piece has its own row.** Gear that goes with another piece says so in grey after its name ("with Sony
-  FX6"); the piece shows "+3". Each row's numbers are that piece alone, so the dividers and the totals add up.
+- **Every piece has its own row.** Gear that goes with another piece names it in the Goes With column (there only
+  while something is attached); the piece shows "+3". Each row's numbers are that piece alone, so the dividers and
+  the totals add up.
 - **Moves wait for the drag to end** (`GearTable.after_drag`): refilling the table mid-drag blanked it on the Mac.
 - **Money fields read as money** (`widgets.MoneyField`): "$5,998.00" until clicked, then the plain number.
 - **A totals bar under the gear table**: pieces, paid, tax, with tax, day rate, for what's showing.
