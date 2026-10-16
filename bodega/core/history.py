@@ -35,6 +35,19 @@ def state_of(lib) -> State:
     }
 
 
+def shared(new: State, old: State) -> State:
+    """`new`, with every record that's the same as it was in `old` swapped for old's own copy: undo steps share
+    what didn't change, so a hundred of them cost little more than one (at 3,000 pieces: about 3 MB a step
+    otherwise)."""
+    out = dict(new)
+    for key in ("items", "packages", "clients", "businesses"):
+        before = {d.get("id"): d for d in old.get(key) or []}
+        out[key] = [before[d.get("id")] if before.get(d.get("id")) == d else d for d in new[key]]
+    before = old.get("rentals") or {}
+    out["rentals"] = {rid: before[rid] if before.get(rid) == d else d for rid, d in new["rentals"].items()}
+    return out
+
+
 PARTS = [  # (key, a few words for a toast)
     ("items", "gear"),
     ("packages", "kits"),
@@ -75,7 +88,7 @@ class History:
         self.undos.append(self.last)
         del self.undos[:-LIMIT]
         self.redos.clear()
-        self.last = now
+        self.last = shared(now, self.last)
         return True
 
     def can_undo(self) -> bool:
@@ -140,4 +153,4 @@ class History:
         lib.save_clients()
         lib.save_businesses()
         lib.save_settings()
-        self.last = state_of(lib)
+        self.last = shared(state_of(lib), s)

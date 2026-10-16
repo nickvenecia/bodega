@@ -64,3 +64,17 @@ def test_undo_says_what_it_would_change_back(qapp, data_folder):
     win._edit_menu_state()
     assert win.act_redo.text() == "Redo Change to Gear"
     win.close()
+
+
+def test_undo_steps_share_what_didnt_change(data_folder):
+    lib = sample.fill(Library(data_folder).load())
+    h = History(lib)
+    first, second = list(lib.items.values())[:2]
+    first.name = "Changed Once"
+    h.mark()
+    second.name = "Changed Twice"
+    h.mark()
+    a, b = h.undos[-1]["items"], h.last["items"]
+    same = [x for x in a if x["id"] not in (first.id, second.id)]
+    assert same and all(any(x is y for y in b) for x in same)  # one copy of each unchanged piece, shared
+    assert h.undo() and lib.items[second.id].name != "Changed Twice"
