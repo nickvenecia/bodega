@@ -1289,3 +1289,37 @@ def test_gear_moves_up_and_down_from_the_keyboard(win):
     win.toast = lambda text, tone="": said.append(text)
     win.step_gear(-1, [b])  # b is first in its group now
     assert said and "first in its group" in said[0]
+
+
+def test_export_csv_exports_what_the_list_shows(win, monkeypatch, tmp_path):
+    import csv
+
+    from PySide6.QtWidgets import QFileDialog
+
+    target = tmp_path / "gear.csv"
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *_a, **_k: (str(target), ""))
+    win.go("gear")
+    win.export_csv()
+    every = len(list(csv.reader(target.open(encoding="utf-8-sig"))))
+    win.search.setText("sony")
+    win.export_csv()
+    rows = list(csv.reader(target.open(encoding="utf-8-sig")))
+    assert 1 < len(rows) < every and all("sony" in " ".join(r).casefold() for r in rows[1:] if r)
+
+
+def test_folding_by_keyboard_is_remembered_and_option_click_folds_every_group(win, monkeypatch):
+    from bodega.ui.window.tables import GearTable
+
+    win.go("gear")
+    t = win.gear_table
+    dividers = t._dividers()
+    assert len(dividers) > 1 and all(d.isExpanded() for d in dividers)
+    t.setCurrentItem(dividers[0])
+    t.setFocus()
+    QTest.keyClick(t, Qt.Key.Key_Left)
+    assert not dividers[0].isExpanded() and win.lib.settings["folded"]  # kept, as a click would be
+    monkeypatch.setattr(
+        QApplication, "keyboardModifiers", staticmethod(lambda: Qt.KeyboardModifier.AltModifier)
+    )
+    GearTable._divider_clicked(t, dividers[1], 0)  # ⌥-click on an open one folds them all
+    assert not any(d.isExpanded() for d in t._dividers())

@@ -148,3 +148,21 @@ def test_a_status_line_is_heard_as_it_changes(qapp, monkeypatch):
     line.setText("$5,998 at B&H")
     assert heard == ["Checking…", "$5,998 at B&H"]
     line.deleteLater()
+
+
+def test_home_and_end_go_to_a_menus_first_and_last_choice(qapp):
+    from PySide6.QtCore import QEvent
+    from PySide6.QtGui import QKeyEvent
+    from PySide6.QtWidgets import QApplication, QMenu
+
+    m = QMenu()  # (the qapp fixture set Bodega's app up, with its event filter)
+    for name in ("Apple", "Banana", "Cherry"):
+        m.addAction(name)
+    m.addSeparator()
+    QApplication.sendEvent(m, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_End, Qt.KeyboardModifier.NoModifier))
+    assert m.activeAction().text() == "Cherry"
+    QApplication.sendEvent(
+        m, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Home, Qt.KeyboardModifier.NoModifier)
+    )
+    assert m.activeAction().text() == "Apple"
+    m.deleteLater()

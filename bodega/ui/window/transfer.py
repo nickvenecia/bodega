@@ -17,6 +17,8 @@ from bodega.core.model import Item
 from bodega.core.paths import data_dir, documents_dir
 from bodega.ui.dialogs.common import notice
 from bodega.ui.style import tokens
+from bodega.ui.window.common import kind_of
+from bodega.ui.window.tables import ID
 
 log = get_logger(__name__)
 
@@ -148,9 +150,25 @@ class TransferMixin:
                 n += 1
         return n
 
+    def _gear_showing(self) -> list[Item] | None:
+        """The gear the list shows, in its order, when a place, a search or a filter narrows it (None: all)."""
+        if kind_of(self.view_key) != "gear":
+            return None
+        if not (
+            self.view_key.startswith("grp:") or self.search.text().strip() or self.view_menu.filter.active()
+        ):
+            return None
+        ids = [r.data(0, ID) for r in self.gear_table.item_rows() if not r.isHidden()]
+        return [self.lib.items[i] for i in ids if i in self.lib.items]
+
     def export_csv(self) -> None:
+        """Export Gear as CSV: what the list shows (a group, a search, a filter), or all of it."""
         if not self.lib.items:
             self.toast("No gear to export yet.")
+            return
+        showing = self._gear_showing()
+        if showing is not None and not showing:
+            self.toast("Nothing showing to export. Clear the search or filters first.")
             return
         default = self._export_folder() / f"Bodega Gear {dates.iso(dates.today())}.csv"
         path, _ = QFileDialog.getSaveFileName(self, "Export Gear as CSV", str(default), "CSV (*.csv)")
@@ -160,12 +178,17 @@ class TransferMixin:
         if p.suffix.lower() != ".csv":
             p = p.with_name(p.name + ".csv")
         try:
-            importer.write_csv(self.lib.ordered_items(), self.lib.items, p)
+            importer.write_csv(
+                showing if showing is not None else self.lib.ordered_items(), self.lib.items, p
+            )
         except OSError as e:
             notice(self, "Couldn't Save the CSV", errors.plain(e, "save the CSV"))
             return
         self.last_export = p
-        self.toast(f"Saved {p.name}.", "done")
+        n = len(showing) if showing is not None else len(self.lib.items)
+        self.toast(
+            f"Saved {p.name}: {n:,} piece{'s' if n != 1 else ''}{' showing' if showing else ''}.", "done"
+        )
 
     def open_data_folder(self) -> None:
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(data_dir())))

@@ -150,6 +150,16 @@ class _RoundPopups(QObject):
 
     def eventFilter(self, obj, ev):
         if (
+            ev.type() == QEvent.Type.KeyPress
+            and isinstance(obj, QMenu)
+            and ev.key() in (Qt.Key.Key_Home, Qt.Key.Key_End, Qt.Key.Key_PageUp, Qt.Key.Key_PageDown)
+        ):  # Home / End (and Page Up / Down) go to a menu's first or last choice, as the Mac's menus do
+            choices = [a for a in obj.actions() if a.isVisible() and a.isEnabled() and not a.isSeparator()]
+            if choices:
+                first = ev.key() in (Qt.Key.Key_Home, Qt.Key.Key_PageUp)
+                obj.setActiveAction(choices[0] if first else choices[-1])
+            return True
+        if (
             ev.type() == QEvent.Type.ShortcutOverride
             and isinstance(obj, (QLineEdit, QPlainTextEdit, QTextEdit, QAbstractSpinBox))
             and ev.key() in (Qt.Key.Key_Backspace, Qt.Key.Key_Delete)

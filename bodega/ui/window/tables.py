@@ -561,6 +561,7 @@ class GearTable(Table):
     branded = Signal(list, str)  # gear ids dropped onto a company divider
     reordered = Signal(list, str, bool)  # gear ids, the row they were dropped on, after it?
     columns_changed = Signal(list)  # the column keys you hid
+    folds_changed = Signal()  # a divider folded or opened, by a click or the keyboard (kept in settings)
 
     COLUMNS = [(title, w, align) for _k, title, w, align in GEAR_COLUMNS]
 
@@ -858,12 +859,44 @@ class GearTable(Table):
         super()._menu(pos)
 
     def _divider_clicked(self, row, _col) -> None:
-        key = row.data(0, HEAD + 10)
-        if key is None:
+        """A click opens or folds a divider; ⌥-click does it to every divider (as the Finder does)."""
+        if row.data(0, HEAD + 10) is None:
             return
-        row.setExpanded(not row.isExpanded())
-        row.setData(0, OPEN, row.isExpanded())
-        (self.folded.discard if row.isExpanded() else self.folded.add)(key)
+        opening = not row.isExpanded()
+        every = bool(QApplication.keyboardModifiers() & Qt.KeyboardModifier.AltModifier)
+        for d in self._dividers() if every else [row]:
+            self._fold(d, opening)
+        self.folds_changed.emit()
+
+    def _dividers(self) -> list:
+        root = self.invisibleRootItem()
+        return [
+            root.child(i) for i in range(root.childCount()) if root.child(i).data(0, HEAD + 10) is not None
+        ]
+
+    def _fold(self, row, opening: bool) -> None:
+        row.setExpanded(opening)
+        row.setData(0, OPEN, opening)
+        (self.folded.discard if opening else self.folded.add)(row.data(0, HEAD + 10))
+
+    def keyPressEvent(self, e):
+        """On a divider, → opens it and ← folds it (remembered, as a click is); Space or Return does either."""
+        row = self.currentItem()
+        k = e.key()
+        if (
+            row is not None
+            and row.data(0, HEAD + 10) is not None
+            and not e.modifiers() & ~Qt.KeyboardModifier.KeypadModifier
+        ):
+            if k in (Qt.Key.Key_Right, Qt.Key.Key_Left) and row.isExpanded() != (k == Qt.Key.Key_Right):
+                self._fold(row, k == Qt.Key.Key_Right)
+                self.folds_changed.emit()
+                return
+            if k in (Qt.Key.Key_Space, Qt.Key.Key_Return, Qt.Key.Key_Enter):
+                self._fold(row, not row.isExpanded())
+                self.folds_changed.emit()
+                return
+        super().keyPressEvent(e)
 
     def your_order(self) -> bool:
         return self.sortColumn() == GEAR_COL["grip"]

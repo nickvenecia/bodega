@@ -308,7 +308,7 @@ class MainWindow(
         self.gear_table.menu_wanted.connect(lambda i, pos: self._row_menu("gear", i, pos))
         self.kit_table.menu_wanted.connect(lambda i, pos: self._row_menu("packages", i, pos))
         self.rental_table.menu_wanted.connect(lambda i, pos: self._row_menu("rentals", i, pos))
-        self.gear_table.itemClicked.connect(lambda _r, _c: self._remember_folds())
+        self.gear_table.folds_changed.connect(self._remember_folds)
         self.gear_table.divider_menu.connect(self._divider_menu)
         self.gear_table.dropped.connect(self.move_gear)
         self.gear_table.delete_wanted.connect(self.delete_gear)

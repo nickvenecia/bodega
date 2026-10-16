@@ -131,6 +131,11 @@
 - A rental sent to Saldo says where its invoice stands, under History: a draft not sent yet, sent, or paid. If a
   send doesn't work, its history says so too.
 - Each tick in Check Out and Check In keeps the time it was made (point at a piece to see it).
+- Export Gear as CSV exports what the list shows: a group, or what a search or filter left. With nothing narrowing
+  it, it's all your gear, as before.
+- In the gear list, → and ← open and fold a group from the keyboard, and Bodega remembers it as it does a click.
+  ⌥-click a group to fold or open them all.
+- In every menu, Home and End go to the first and last choice.
 - Fixed a crash when saving your profile. Adding your profile, or saving a change to it, in Settings › Profiles
   could close Bodega, every time on a Mac.
 - Fixed a crash when renaming or removing a group from its right-click menu in the sidebar.
