@@ -48,7 +48,6 @@ from bodega.ui.style.tokens import (
     TEXT_XS,
     TRACK_BRAND,
     TRACK_H,
-    TRACK_TITLE,
     TRACK_TITLEBAR,
     WEIGHT_BOLD,
     WEIGHT_MEDIUM,
@@ -382,7 +381,7 @@ QToolButton#NavArrow:hover {{ background: {tokens.CARD_HOVER}; border-radius: {R
 #Nav[selected="true"] #NavCount[tone="late"] {{ color: {tokens.SOFT_BAD}; }}
 #Toolbar {{ border: none; }}
 #CalTitle {{ font-size: {TEXT_XL}px; font-weight: {WEIGHT_SEMIBOLD}; }}
-#PageTitle {{ font-size: {TEXT_TITLE}px; font-weight: {WEIGHT_BOLD}; letter-spacing: {TRACK_TITLE}px; }}
+#PageTitle {{ font-size: {TEXT_TITLE}px; font-weight: {WEIGHT_BOLD}; }}
 #PageCount {{ color: {tokens.MUTED}; font-size: {TEXT_LG}px; }}
 #Center {{ background: transparent; }}
 QTreeWidget#Table {{ background: transparent; border: none; outline: none; font-size: {TEXT_MD}px; }}
@@ -667,13 +666,28 @@ def stylesheet(folder: Path) -> str:
     updown = folder / f"updown-{look}.svg"
     updown.write_text(svg_markup("updown", tokens.FAINT), encoding="utf-8")
     return (
-        _sheet()
+        tracked(_sheet())
         .replace("__UPDOWN__", updown.as_posix())
         .replace("__CHEVRON_RIGHT__", right.as_posix())
         .replace("__CHEVRON_UP__", up.as_posix())
         .replace("__CHEVRON__", chevron.as_posix())
         .replace("__CHECK__", check.as_posix())
     )
+
+
+def tracked(css: str) -> str:
+    """Every rule that sets a font size gets Apple's letter spacing for that size (tokens.tracking), unless it sets
+    its own (the wordmark's): a size set in the stylesheet otherwise drops the spacing."""
+    import re
+
+    def rule(m: re.Match) -> str:
+        body = m.group(1)
+        size = re.search(r"font-size:\s*(\d+(?:\.\d+)?)px", body)
+        if size is None or "letter-spacing" in body:
+            return m.group(0)
+        return "{" + body.rstrip().rstrip(";") + f"; letter-spacing: {tokens.tracking(float(size.group(1)))}px; }}"
+
+    return re.sub(r"\{([^{}]*)\}", rule, css)
 
 
 def wordmark() -> str:
@@ -719,6 +733,7 @@ def font(size: int = TEXT_MD, weight: int = WEIGHT_REGULAR, tabular: bool = Fals
     f = QFont(QApplication.font())
     f.setPixelSize(size)
     f.setWeight(QFont.Weight(weight))
+    f.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, tokens.tracking(size))  # (Apple's, for its size)
     if tabular:
         tabular_figures(f)
     return f

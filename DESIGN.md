@@ -58,7 +58,7 @@ Use these names, never the numbers.
 **Fonts:** one family (Inter, `looks.FONT`, shared with the paper), loaded once in `app.py`. Every size is a
 `TEXT_*` token in pixels and every weight a `WEIGHT_*` token; in code, make a font with `theme.font(size, weight)`,
 never `QFont()` or `setBold`. Figures that line up (tables, totals) are tabular: `theme.font(..., tabular=True)` or
-`theme.use_tabular(widget)`. Nothing sets letter spacing by hand except the wordmark.
+`theme.use_tabular(widget)`. Letter spacing is Apple's per size (`tokens.tracking`, its table in `TRACKING`): the stylesheet adds it to every rule with a font size (`theme.tracked`), and `theme.font()` sets it; only the wordmark has its own.
 
 ---
 

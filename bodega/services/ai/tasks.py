@@ -21,6 +21,7 @@ STORE_PAUSE_S apart.
 
 from __future__ import annotations
 
+import dataclasses
 import re
 import threading
 import unicodedata
@@ -61,6 +62,7 @@ class Change:
     old: str
     new: str
     why: str = ""  # where it came from ("bhphotovideo.com")
+    unsure: bool = False  # the AI said it was guessing: Review flags it and leaves it unticked
 
     @property
     def label(self) -> str:
@@ -71,6 +73,7 @@ class Change:
 class Result:
     changes: list[Change]
     problems: list[str]  # pieces that couldn't be done, in plain words
+    sources: list[str] = dataclasses.field(default_factory=list)  # the pieces a chat answer drew on, by name
 
 
 Progress = Callable[[int, int], None]
@@ -169,16 +172,19 @@ def _same(a: str, b: str) -> bool:
 
 
 AI_SAID = "AI suggestion"  # Review's From column, for a change no page backs up (a guess to check)
+# (the standard's 14.8) every suggestion can say it's a guess, and Review flags it
+UNSURE = ' Add "unsure": true to an entry that is a guess you aren\'t confident of.'
+SOURCES_MAX = 12  # the pieces an answer names as what it drew on
 
 
-def _change(it: Item, field: str, new: str, why: str = "") -> Change | None:
+def _change(it: Item, field: str, new: str, why: str = "", unsure: bool = False) -> Change | None:
     old = getattr(it, field)
     if field == "value":
         if not new or money.parse(old) == money.parse(new):
             return None
     elif not new or _same(old, new):
         return None
-    return Change(it.id, field, str(old), new, why)
+    return Change(it.id, field, str(old), new, why, unsure)
 
 
 def model_words(name: str) -> list[str]:
@@ -476,7 +482,8 @@ def tidy_names(
                 + NAMING
                 + " If a name is already good, give it back unchanged. "
                 + GEAR_SAFETY
-                + ' Reply as [{"n": 0, "name": "...", "brand": "...", "series": "..."}, ...] with one entry per piece.',
+                + ' Reply as [{"n": 0, "name": "...", "brand": "...", "series": "..."}, ...] with one entry per piece.'
+                + UNSURE,
                 f"<gear>\n{listing}\n</gear>",
             )
         except AIError as e:
@@ -490,7 +497,7 @@ def tidy_names(
                 new = clean_text(row.get(field, ""), LIMITS[field])
                 if field != "name" and getattr(it, field) and not new:
                     continue  # never blank out something you typed
-                c = _change(it, field, new, AI_SAID)
+                c = _change(it, field, new, AI_SAID, row.get("unsure") is True)
                 if c:
                     out.append(c)
     progress(len(todo), len(todo))
@@ -528,7 +535,8 @@ def organize_groups(
                 "the existing groups when it fits. Only make a new group when it would hold several pieces. "
                 "Group names are short and plain, in Title Case. "
                 + GEAR_SAFETY
-                + ' Reply as [{"n": 0, "group": "..."}, ...] with one entry per piece.',
+                + ' Reply as [{"n": 0, "group": "..."}, ...] with one entry per piece.'
+                + UNSURE,
                 f"<gear>\nExisting groups: {', '.join(known) or '(none yet)'}\n\n{listing}\n</gear>",
             )
         except AIError as e:
@@ -539,7 +547,7 @@ def organize_groups(
                 continue
             it = batch[row["n"]]
             new = clean_text(row.get("group", ""), LIMITS["group"])
-            c = _change(it, "group", new, AI_SAID)
+            c = _change(it, "group", new, AI_SAID, row.get("unsure") is True)
             if c:
                 out.append(c)
                 if new not in known:
@@ -565,11 +573,12 @@ def chat(
         "Answer questions briefly and plainly from it; if the answer isn't there, say so. "
         "When asked to change gear, you may only change these fields: group (move pieces into an existing or a "
         "new group), name, brand (the company), series. Change only what was asked. "
-        'Always reply as JSON: {"reply": "what you say to the person", "changes": [{"n": 3, "field": "group", '
-        '"value": "Aputure"}], "rules": []}, with empty lists when nothing should change. To change every piece '
+        'Always reply as JSON: {"reply": "what you say to the person", "used": [3, 7], "changes": [{"n": 3, '
+        '"field": "group", "value": "Aputure"}], "rules": []}, with empty lists when nothing should change. '
+        '"used" lists the numbers of the pieces your reply is about or drew on. To change every piece '
         "that shares a company, group or series (also ones not listed here), give a rule instead of listing "
         'each: {"where": {"brand": "Aputure"}, "field": "group", "value": "Aputure"}; a rule may pick by brand, '
-        "group or series and change group, brand or series.",
+        "group or series and change group, brand or series." + UNSURE,
         f"Groups: {', '.join(groups) or '(none)'}\n<inventory>\n{inventory_text(shown, lookup, numbered=True)}\n"
         f"</inventory>\n\nMessage: {q}",
     )
@@ -586,13 +595,22 @@ def chat(
         if field not in CHAT_FIELDS:
             continue  # nothing else can be changed from the chat
         new = clean_text(row.get("value", ""), LIMITS[field])
-        c = _change(shown[row["n"]], field, new, AI_SAID)
+        c = _change(shown[row["n"]], field, new, AI_SAID, row.get("unsure") is True)
         if c and not any(x.item_id == c.item_id and x.field == c.field for x in out):
             out.append(c)
     for c in _by_rules(got.get("rules"), items):
         if not any(x.item_id == c.item_id and x.field == c.field for x in out):
             out.append(c)
-    return reply or ("Changes to review." if out else "No answer came back. Try asking another way."), Result(out, [])
+    used = got.get("used")
+    sources = list(
+        dict.fromkeys(
+            shown[n].name
+            for n in (used if isinstance(used, list) else [])
+            if isinstance(n, int) and not isinstance(n, bool) and 0 <= n < len(shown) and shown[n].name.strip()
+        )
+    )[:SOURCES_MAX]
+    reply = reply or ("Changes to review." if out else "No answer came back. Try asking another way.")
+    return reply, Result(out, [], sources)
 
 
 def _by_rules(rules, items: list[Item]) -> list[Change]:

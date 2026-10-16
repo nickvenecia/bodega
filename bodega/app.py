@@ -345,6 +345,7 @@ def setup_app(app: QApplication) -> None:
     family = theme.load_fonts()
     f = QFont(family or app.font().family())
     f.setPixelSize(tokens.TEXT_MD)  # every size is in pixels (the stylesheet's too), so they match
+    f.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, tokens.tracking(tokens.TEXT_MD))
     f.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
     app.setFont(f)
     set_appearance(app, *saved_look())

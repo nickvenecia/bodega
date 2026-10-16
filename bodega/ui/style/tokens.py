@@ -6,6 +6,8 @@ that isn't here, add a token (and document it in DESIGN.md) instead of typing a 
 
 from __future__ import annotations
 
+from itertools import pairwise
+
 # Spacing (4-pt grid)
 SPACE_1 = 4  # tight: a label and its control, an icon and its text
 SPACE_2 = 8  # related items: buttons in a row, cards in the list, options in a stack
@@ -186,9 +188,23 @@ PAGE_DIALOG_MIN_H = 600
 LOGO_THUMB_MAX_W = 160
 DAY_W_MIN = 22  # one day on the calendar, at its narrowest
 CAL_BAR_INSET = SPACE_2  # a rental's bar sits this far inside its calendar row
-TRACK_BRAND = -0.5  # letter spacing (px): the wordmark
+TRACK_BRAND = -0.5  # letter spacing (px): the wordmark (a mark, not words)
 TRACK_TITLEBAR = -0.3
-TRACK_TITLE = 0  # page titles: the font's own spacing (nothing is tracked by hand but the wordmark)
+# (the standard's 2.7 and A.4) Every other text's letter spacing, by its size: Apple's table for San Francisco (Inter
+# has no optical sizes of its own), a little looser below 12, none at 12, tighter from 13 to 23, looser from 24 up.
+TRACKING = ((10, 0.12), (11, 0.06), (12, 0.0), (13, -0.08), (17, -0.43), (22, -0.26), (26, 0.22), (28, 0.38), (34, 0.4))
+
+
+def tracking(size: float) -> float:
+    """The letter spacing (px) for text `size` px tall: the table's, in a straight line between its sizes."""
+    if size <= TRACKING[0][0]:
+        return TRACKING[0][1]
+    for (s0, t0), (s1, t1) in pairwise(TRACKING):
+        if size <= s1:
+            return round(t0 + (t1 - t0) * (size - s0) / (s1 - s0), 3)
+    return TRACKING[-1][1]
+
+
 REVIEW_COL_W = (180, 64, 150, 0, 130)  # the AI Review window's columns (0: takes the room)
 REVIEW_W = 900
 # the tables' fixed column widths

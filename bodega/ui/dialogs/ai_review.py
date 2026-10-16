@@ -29,9 +29,17 @@ class ReviewDialog(QDialog):
         t.setObjectName("DialogTitle")
         lay.addWidget(t)
         n = len(result.changes)
+        unsure = sum(1 for c in result.changes if c.unsure)
+        guess = (
+            f" The {unsure} your AI wasn't sure of are left unticked."
+            if unsure > 1
+            else (" The one your AI wasn't sure of is left unticked." if unsure else "")
+        )
         lay.addWidget(
             hint(
-                f"{n} suggestion{'s' if n != 1 else ''}. Untick any you don't want." if n else "No changes to suggest."
+                f"{n} suggestion{'s' if n != 1 else ''}. Untick any you don't want.{guess}"
+                if n
+                else "No changes to suggest."
             )
         )
 
@@ -45,8 +53,11 @@ class ReviewDialog(QDialog):
         self.list.setSelectionMode(QTreeWidget.SelectionMode.NoSelection)
         self.rows: list[tuple[QTreeWidgetItem, Change]] = []
         for c in result.changes:
-            row = QTreeWidgetItem([names.get(c.item_id, "?"), c.label, c.old or "—", c.new, c.why])
-            row.setCheckState(0, Qt.CheckState.Checked)
+            source = f"{c.why} · Not Sure" if c.unsure else c.why  # (the standard's 14.8: a guess says so)
+            row = QTreeWidgetItem([names.get(c.item_id, "?"), c.label, c.old or "—", c.new, source])
+            row.setCheckState(0, Qt.CheckState.Unchecked if c.unsure else Qt.CheckState.Checked)
+            if c.unsure:
+                row.setForeground(4, theme.qcolor(tokens.WARN))
             row.setSizeHint(0, QSize(0, tokens.TABLE_ROW_H))
             for col in range(5):
                 row.setToolTip(col, theme.plain_tip(row.text(col)))

@@ -80,6 +80,9 @@ def _quiet(icon: str, tip: str) -> QToolButton:
     return b
 
 
+SOURCES_SHOWN = 3  # an answer names this many of the pieces it drew on, then "and N more"
+
+
 class Message(QWidget):
     """One thing said: `kind` "mine" (an accent bubble on the right), "answer" (plain words on the panel) or
     "note" (a quiet rounded note, `tone` "problem", "done" or "" for news). Always plain text: nothing in an
@@ -88,7 +91,9 @@ class Message(QWidget):
     edit_wanted = Signal(str)
     again_wanted = Signal(str)
 
-    def __init__(self, kind: str, text: str, tone: str = "", parent: QWidget | None = None):
+    def __init__(
+        self, kind: str, text: str, tone: str = "", parent: QWidget | None = None, sources: list[str] | None = None
+    ):
         super().__init__(parent)
         self.kind, self.text_ = kind, text
         lay = vbox(self, 0, tokens.SPACE_0_5)
@@ -115,6 +120,15 @@ class Message(QWidget):
             self.bubble = None
             self.body.setObjectName("Answer")
             lay.addWidget(self.body)
+            if sources:  # (the standard's 14.8: what the answer drew on)
+                shown = ", ".join(sources[:SOURCES_SHOWN])
+                more = len(sources) - SOURCES_SHOWN
+                self.sources = hint(f"From your gear: {shown}" + (f" and {more} more" if more > 0 else ""))
+                self.sources.setObjectName("AnswerSources")
+                self.sources.setWordWrap(True)
+                if more > 0:
+                    self.sources.setToolTip(theme.plain_tip("\n".join(sources)))
+                lay.addWidget(self.sources)
         acts = hbox(spacing=tokens.SPACE_0_5)
         if kind == "mine":
             acts.addStretch(1)
@@ -247,17 +261,20 @@ class ChangeCard(QFrame):
             two = vbox(one, 0, 0)
             name = ElidedLabel(name_of(c.item_id))
             name.setObjectName("ItemTitle")
-            what = ElidedLabel(f"{c.label}: {c.old or '—'} → {c.new}")
+            what = ElidedLabel(f"{c.label}: {c.old or '—'} → {c.new}" + (" · Not Sure" if c.unsure else ""))
             what.setObjectName("Meta")
             two.addWidget(name)
             two.addWidget(what)
             self.rows.addWidget(one)
         if len(changes) > self.SHOWN:
             self.rows.addWidget(hint(f"and {len(changes) - self.SHOWN:,} more"))
+        self.unsure = sum(1 for c in changes if c.unsure)  # guesses: the way on is Review, where they're unticked
+        if self.unsure:
+            self.meta.setText(self.meta.text() + f" · {self.unsure:,} not sure")
         self.foot = QWidget()
         fl = hbox(self.foot, 0, tokens.SPACE_2)
         self.decline = QPushButton("Decline")
-        self.go = primary_button(f"Change {words.count(pieces, 'Piece')}")
+        self.go = primary_button("Review…" if self.unsure else f"Change {words.count(pieces, 'Piece')}")
         fl.addWidget(self.decline, 1)  # two equal columns
         fl.addWidget(self.go, 1)
         lay.addWidget(self.foot)
@@ -728,11 +745,12 @@ class AssistantPanel(SidePanel):
             self.hello.hide()
             self.chat.show()
 
-    def say(self, who: str, text: str, tone: str = "") -> None:
-        """Add to the conversation: "You" a bubble, "AI" an answer, anything else ("Bodega") a note."""
+    def say(self, who: str, text: str, tone: str = "", sources: list[str] | None = None) -> None:
+        """Add to the conversation: "You" a bubble, "AI" an answer (and the pieces it drew on), anything else
+        ("Bodega") a note."""
         self._open_chat()
         kind = {"You": "mine", "AI": "answer"}.get(who, "note")
-        m = Message(kind, text, tone)
+        m = Message(kind, text, tone, sources=sources)
         if kind == "mine":
             m.edit_wanted.connect(self._suggest)
             m.again_wanted.connect(self._again)
@@ -757,12 +775,13 @@ class AssistantPanel(SidePanel):
 
     def _answered(self, got) -> None:
         reply, result = got
-        self.say("AI", reply)
+        self.say("AI", reply, sources=result.sources)
         if result.changes:
             self.pending = result
             self.card = ChangeCard(result.changes, self.name_of)
             self.card.decline.clicked.connect(lambda: self._decide("decline"))
-            self.card.go.clicked.connect(lambda: self._decide("change"))
+            # (with a guess among them, the way on is Review, where it's flagged and left unticked)
+            self.card.go.clicked.connect(lambda: self._decide("review" if self.card.unsure else "change"))
             self.card.review.clicked.connect(lambda: self._decide("review"))
             self.chat.add(self.card)
             self._waiting(True)

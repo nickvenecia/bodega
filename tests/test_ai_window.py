@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 
 import pytest
-from PySide6.QtWidgets import QLabel
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QLabel
 
 from bodega.core import sample, web
 from bodega.core.store import Library
@@ -121,6 +122,45 @@ def test_question_is_answered_as_plain_text(win, monkeypatch):
     _wait(win.assistant.worker)
     shown = win.assistant.log.toPlainText()
     assert "<b>Two</b> lenses" in shown  # shown as typed, not as bold
+
+
+def test_an_answer_names_its_sources_and_a_guess_goes_to_review(win, monkeypatch):
+    """(AI-11) Under the answer, the pieces it drew on; a change it guessed at sends you to Review, where it waits
+    unticked, never straight into your gear."""
+    providers.save_key("anthropic", "sk-test")
+    Setup("anthropic", "test-model").to_settings(win.lib.settings)
+    answer = {
+        "reply": "Your lenses are both Cine Primes.",
+        "used": [0, 1, 2, 3],
+        "changes": [{"n": 0, "field": "group", "value": "Glass", "unsure": True}],
+    }
+    monkeypatch.setattr(
+        web,
+        "open_no_redirect",
+        lambda req, timeout, **_k: FakeResponse(json.dumps(anthropic_reply(json.dumps(answer))).encode()),
+    )
+    win.open_ai_assistant()
+    a = win.assistant
+    a.question.setText("what lenses do I have?")
+    a._ask()
+    _wait(a.worker)
+    shown = [lb.text() for lb in a.findChildren(QLabel) if lb.objectName() == "AnswerSources"]
+    assert shown and shown[-1].startswith("From your gear: ") and shown[-1].endswith(" and 1 more")
+    assert a.card is not None and a.card.go.text() == "Review…" and "1 not sure" in a.card.meta.text()
+    from bodega.ui.dialogs import ai_review
+
+    reviewed = []
+
+    def looked(self):
+        reviewed.append([(row.checkState(0), c.unsure) for row, c in self.rows])
+        return 0  # (closed without applying)
+
+    monkeypatch.setattr(ai_review.ReviewDialog, "exec", looked)
+    applied = []
+    a.apply_wanted.connect(applied.append)
+    a.card.go.click()
+    QApplication.processEvents()
+    assert reviewed == [[(Qt.CheckState.Unchecked, True)]] and not applied  # to Review, unticked; never applied
 
 
 def test_sign_in_says_accounts_arent_on_yet(win):

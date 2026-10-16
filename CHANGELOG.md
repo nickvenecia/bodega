@@ -329,6 +329,10 @@
   Bodega's own window instead of beside it: the window behind is blurred and dimmed, a ✕ in the corner closes them
   (so does Esc), and a click on the dimmed area closes them too, unless that would lose what you typed or an import
   you're setting up. They fade in, unless Reduce Motion is on. Search Everything blurs the window behind it as well.
+- The Assistant's answers say which of your gear they drew on ("From your gear: …"). A change your AI is only
+  guessing at is marked Not Sure: Review leaves it unticked, and the chat takes you to Review instead of making it.
+- Letters are spaced the way Apple spaces them at each size: a touch tighter in everyday words, a little looser in
+  page titles and the smallest labels.
 - In the light look, words on a highlighted row are a shade darker so they read easily: the sidebar's chosen place and
   its count, a chosen row in a menu, the + Add Gear chips, filter chips and the keys in Keyboard Shortcuts.
 - In the light look, Bodega's whites and greys take a hint of your accent color: cool blue-whites with Blue, warm ones

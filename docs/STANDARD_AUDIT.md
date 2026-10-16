@@ -31,7 +31,7 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **210 fixed, 13 partly, 13 not
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **212 fixed, 11 partly, 13 not
 started (larger redesigns), 16 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
@@ -62,14 +62,13 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 210 · Partly 13 · Open 13 · Waiting on the owner 16 · No longer applies 1.**
+**Of the 253 failures: Fixed 212 · Partly 11 · Open 13 · Waiting on the owner 16 · No longer applies 1.**
 
 ### Partly: what's left
 
 | Check | Sev | What's left |
 |---|---|---|
 | A-07 | S2 | Text sizes are fixed, so the system's text size and Bold Text aren't followed (with V-16). |
-| AI-11 | S2 | A chat answer doesn't name the pieces it drew on, and no single suggestion is marked as uncertain. |
 | AI-13 | S1 | Tested with a fake provider only: no set of real naming and grouping tasks run against real models. |
 | AI-18 | S3 | The message box has no attach button, and files can't be dropped on the assistant. |
 | AI-30 | S2 | No test tries each real provider once with a bad key to check its refusal reads in plain words. |
@@ -80,7 +79,6 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 | T-04 | S2 | Tests still reach some controls through private names (about 48 in test_window.py). |
 | T-15 | S2 | Packaged builds check for their own update file, but none downloads and swaps in an update. |
 | T-18 | S2 | Pointer-size measurements exist; the full G.28 check list isn't run in both light and dark. |
-| V-35 | S3 | Inter has no optical sizes, and no style sets Apple's tracking per size. |
 
 ### Not started: the larger redesigns
 
@@ -130,7 +128,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 ### Fixed
 
 - **A**: A-01, A-03, A-05, A-06, A-10, A-11, A-12, A-13
-- **AI**: AI-01, AI-03, AI-07, AI-08, AI-09, AI-14, AI-15, AI-16, AI-17, AI-19, AI-20, AI-23, AI-24, AI-29, AI-31
+- **AI**: AI-01, AI-03, AI-07, AI-08, AI-09, AI-11, AI-14, AI-15, AI-16, AI-17, AI-19, AI-20, AI-23, AI-24, AI-29, AI-31
 - **C**: C-01, C-03, C-04, C-06, C-08, C-11, C-12, C-13, C-16, C-17, C-19, C-21, C-23, C-24, C-26, C-27, C-28, C-29, C-31, C-32, C-34, C-37, C-38, C-39, C-42, C-44, C-45, C-47, C-49, C-50, C-51, C-54, C-58, C-59, C-65, C-66, C-67, C-69, C-72, C-73, C-76, C-82, C-100, C-105, C-106, C-108, C-111, C-114, C-117, C-119, C-138, C-144, C-160, C-163, C-164, C-167, C-168
 - **D**: D-01, D-02, D-03, D-05, D-06, D-07, D-10, D-11, D-12, D-15, D-16, D-18, D-21, D-23, D-24, D-25, D-26, D-31, D-32, D-34, D-42, D-49, D-51
 - **G**: G-01, G-02
@@ -142,7 +140,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 - **R**: R-01, R-05
 - **S**: S-17, S-21, S-25
 - **T**: T-01, T-03, T-05, T-06, T-09, T-11, T-12, T-14, T-16
-- **V**: V-04, V-08, V-09, V-11, V-13, V-14, V-15, V-17, V-18, V-19, V-23, V-24, V-25, V-26, V-32, V-33, V-36, V-37, V-40, V-41
+- **V**: V-04, V-08, V-09, V-11, V-13, V-14, V-15, V-17, V-18, V-19, V-23, V-24, V-25, V-26, V-32, V-33, V-35, V-36, V-37, V-40, V-41
 - **W**: W-02, W-03, W-04, W-06, W-09, W-10, W-11, W-12, W-14, W-15, W-16, W-17, W-18, W-19, W-20, W-21, W-22
 - **X**: X-01, X-06, X-08
 

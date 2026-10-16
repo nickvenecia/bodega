@@ -403,6 +403,47 @@ def test_chat_requests_become_changes_but_only_allowed_ones(provider):
     ]
 
 
+def test_an_answer_names_what_it_drew_on_and_a_guess_says_so(provider):
+    """(The standard's 14.8, AI-11) A chat answer names the pieces it drew on; a change the AI is guessing at says
+    so, and Review leaves it unticked."""
+    _seen, replies = provider
+    a, b, c = Item(name="Aputure 600d"), Item(name="C-Stand"), Item(name="Sony FX6")
+    replies.append(
+        anthropic_reply(
+            json.dumps(
+                {
+                    "reply": "You have one light and a stand.",
+                    "used": [0, 1, 0, 7, True, "2"],  # (a repeat, one that isn't there, and not numbers: dropped)
+                    "changes": [
+                        {"n": 0, "field": "group", "value": "Lights"},
+                        {"n": 1, "field": "group", "value": "Grip", "unsure": True},
+                        {"n": 2, "field": "brand", "value": "Sony", "unsure": "yes"},  # (only true is a yes)
+                    ],
+                }
+            )
+        )
+    )
+    _reply, got = tasks.chat(Setup("anthropic", "m"), "what lights do I have?", [a, b, c], {}, [])
+    assert got.sources == ["Aputure 600d", "C-Stand"]
+    assert [(ch.item_id, ch.unsure) for ch in got.changes] == [(a.id, False), (b.id, True), (c.id, False)]
+    assert "unsure" in _seen[-1].data.decode()  # (it was asked to say so)
+
+
+def test_review_flags_a_guess_and_leaves_it_unticked(qapp):
+    from PySide6.QtCore import Qt
+
+    from bodega.ui.dialogs.ai_review import ReviewDialog
+
+    a, b = Item(name="Aputure 600d"), Item(name="C-Stand")
+    sure = tasks.Change(a.id, "group", "", "Lights", tasks.AI_SAID)
+    guess = tasks.Change(b.id, "group", "", "Grip", tasks.AI_SAID, unsure=True)
+    d = ReviewDialog("Review", tasks.Result([sure, guess], []), {a.id: a.name, b.id: b.name})
+    (row_a, _), (row_b, _) = d.rows
+    assert row_a.checkState(0) == Qt.CheckState.Checked and row_b.checkState(0) == Qt.CheckState.Unchecked
+    assert row_b.text(4).endswith("Not Sure") and d.chosen() == [sure]
+    d.deleteLater()
+
+
 # What a job may cost
 def test_every_provider_caps_the_answers_length(provider):
     seen, replies = provider
