@@ -29,6 +29,7 @@ from bodega.ui.components.widgets import (
     Embeddable,
     FitScroll,
     Guarded,
+    ReturnMovesOn,
     Section,
     TextBox,
     ToggleRow,
@@ -270,6 +271,7 @@ class ProfileDialog(Guarded, Embeddable, QDialog):
         self.save = primary_button("Save")
         self.save.setDefault(True)
         self.save.clicked.connect(self._save)
+        ReturnMovesOn(self, self.save)
         buttons.addWidget(cancel)
         buttons.addWidget(self.save)
         outer.addLayout(buttons)

@@ -7,7 +7,7 @@ from dataclasses import replace
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
 
 from bodega.core.model import Client
-from bodega.ui.components.widgets import Guarded, Section, TextBox, hbox, primary_button, vbox
+from bodega.ui.components.widgets import Guarded, ReturnMovesOn, Section, TextBox, hbox, primary_button, vbox
 from bodega.ui.style.tokens import DIALOG_W_WIDE, SPACE_2, SPACE_3, SPACE_4, SPACE_5, TEXT_BOX_H
 
 
@@ -60,6 +60,7 @@ class ClientDialog(Guarded, QDialog):
         self.save = primary_button("Save")
         self.save.setDefault(True)
         self.save.clicked.connect(self._save)
+        ReturnMovesOn(self, self.save)
         buttons.addWidget(cancel)
         buttons.addWidget(self.save)
         lay.addLayout(buttons)

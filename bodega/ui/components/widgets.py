@@ -9,6 +9,7 @@ from PySide6.QtCore import (
     QDate,
     QEasingCurve,
     QEvent,
+    QObject,
     QPoint,
     QPointF,
     QRect,
@@ -677,6 +678,49 @@ class Guarded:
     def reject(self) -> None:  # Cancel, Esc and the window's close button all come here
         if self.may_leave():
             super().reject()
+
+
+class ReturnMovesOn(QObject):
+    """In a form, Return moves to the next field as Tab does, and on the last one presses `confirm`; ⌘Return
+    (Ctrl+Return) presses it from any field. A multi-line box keeps Return for a new line."""
+
+    FIELDS = (QLineEdit, QComboBox, QAbstractSpinBox, QPlainTextEdit)
+
+    def __init__(self, form: QWidget, confirm: QPushButton):
+        super().__init__(form)
+        self.form, self.confirm = form, confirm
+        form.installEventFilter(self)  # (fields added later: their Return comes up to the form)
+        for f in form.findChildren(QWidget):
+            if isinstance(f, self.FIELDS):  # a multi-line box keeps ⌘Return to itself otherwise
+                f.installEventFilter(self)
+
+    def eventFilter(self, obj, e) -> bool:
+        if e.type() != QEvent.Type.KeyPress or e.key() not in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            return False
+        here = obj if isinstance(obj, self.FIELDS) else self.form.focusWidget()
+        if not isinstance(here, self.FIELDS) or not self.form.isAncestorOf(here):
+            return False
+        if e.modifiers() & Qt.KeyboardModifier.ControlModifier:  # ⌘Return on a Mac
+            self.confirm.click()
+            return True
+        if isinstance(here, QPlainTextEdit):
+            return False
+        w = here.nextInFocusChain()
+        while w is not here and w is not self.confirm:
+            if isinstance(w, self.FIELDS) and self._reachable(w):
+                w.setFocus(Qt.FocusReason.TabFocusReason)
+                return True
+            w = w.nextInFocusChain()
+        self.confirm.click()  # the last field
+        return True
+
+    def _reachable(self, w: QWidget) -> bool:
+        return (
+            self.form.isAncestorOf(w)
+            and w.isVisibleTo(self.form)
+            and w.isEnabled()
+            and bool(w.focusPolicy() & Qt.FocusPolicy.TabFocus)
+        )
 
 
 class SearchField(QLineEdit):

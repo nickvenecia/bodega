@@ -189,6 +189,8 @@
 - The Assistant's header has Clear Chat, to start over, and a ⋯ with AI Settings…. Before the first question it
   offers a few to try: click one and it's in the box, ready to send.
 - Anything that's off (a button, a field, a switch, a menu item) is dimmed the same way everywhere, as on a Mac.
+- In the renter and profile forms, Return moves to the next field, and on the last one saves; ⌘Return (Ctrl+Enter
+  on Windows and Linux) saves from anywhere. Before, Return saved half-way through.
 - With more than 12 renters, groups or profiles to choose from, their dropdown opens as a list you can search:
   type a few letters, then Return.
 - A page's title, the list under it and the calendar now start at one left edge and end at one right edge, lined

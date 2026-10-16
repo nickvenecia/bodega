@@ -1580,3 +1580,27 @@ def test_a_long_list_of_renters_opens_as_a_list_you_can_search(win, monkeypatch)
     QApplication.processEvents()
     assert asked[0][0] == "Renter" and asked[0][1] > tokens.LIST_SEARCH_ABOVE
     assert win.lib.rentals[r.id].client.name == "Renter 07"  # picked, as if from the dropdown
+
+
+def test_return_moves_through_a_form_and_command_return_saves(win):
+    from bodega.ui.dialogs.client import ClientDialog
+
+    d = ClientDialog(None, False, win)
+    saved = []
+    d.save.clicked.disconnect()
+    d.save.clicked.connect(lambda: saved.append(True))
+    d.show()
+    d.activateWindow()
+    d.name.setFocus()
+    QTest.keyClicks(d.name, "Ada Okafor")  # (Save waits for a name)
+    QTest.keyClick(d.name, Qt.Key.Key_Return)
+    assert d.focusWidget() is d.company and not saved  # on to the next field, not Save
+    d.phone.setFocus()
+    QTest.keyClick(d.phone, Qt.Key.Key_Return)
+    assert d.focusWidget() is d.address
+    QTest.keyClick(d.address, Qt.Key.Key_Return)
+    assert not saved  # the address takes a new line
+    QTest.keyClick(d.address, Qt.Key.Key_Return, Qt.KeyboardModifier.ControlModifier)
+    assert saved == [True]
+    d.settled()  # (closing without asking about what was typed)
+    d.done(0)
