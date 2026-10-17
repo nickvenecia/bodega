@@ -117,7 +117,7 @@ def test_the_window_stays_quick_at_a_rental_houses_size(qapp, big):
     w.close()
 
 
-def test_the_big_jobs_stay_quick_at_a_rental_houses_size(big, tmp_path):
+def test_the_big_jobs_stay_quick_at_a_rental_houses_size(big, tmp_path, monkeypatch):
     """Tidy Up Groups, an import of every piece, approving many changes and deleting many at once (last: they
     change the library)."""
     from bodega.core import importer, tidy
@@ -132,5 +132,16 @@ def test_the_big_jobs_stay_quick_at_a_rental_houses_size(big, tmp_path):
     changes += [tasks.Change(i.id, "group", i.group, "Grip") for i in pieces[200:300]]
     assert timed(lambda: tasks.apply(big, changes)) < limit("apply 300 changes")  # (Review's Change 300 Pieces)
     ids = [i.id for i in pieces[300:600]]
+    # Deleting is timed without the disk, which is checked by count instead: each rental that changed is written
+    # once (side by side, store.WRITERS), with the gear and kits. How long a disk takes to keep a file varies from
+    # one machine to the next (and from run to run on a CI machine) far more than the speed_check above can say.
+    from bodega.core import store
+
+    held = {r.id for r in big.rentals.values() if any(ln.kind == "item" and ln.ref in ids for ln in r.lines)}
+    written: list[str] = []
+    monkeypatch.setattr(store, "write_json", lambda path, _data: written.append(path.stem))
     assert timed(lambda: big.delete_items(ids)) < limit("delete 300")
     assert not any(i in big.items for i in ids)
+    rentals = [w for w in written if w in big.rentals]
+    assert len(rentals) == len(set(rentals)) and held <= set(rentals)  # each changed rental once, none twice
+    assert set(written) - set(big.rentals) == {"gear", "packages"}  # and the gear and kits, once each
