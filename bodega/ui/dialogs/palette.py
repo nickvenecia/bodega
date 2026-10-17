@@ -1,9 +1,10 @@
-"""Search Everything (⌘K / Ctrl+K, or the sidebar's Search): places, gear, kits and rentals, and every command in the
-menus, from one field (the standard's §4.8 and G.23). Results come in groups, places first, then records, then
-commands; ↓ ↑ move and wrap, Home and End jump, Return runs, Esc closes; the pointer moves the highlight.
+"""Search Everything (⌘K / Ctrl+K, or the sidebar's Search): places, gear, kits, rentals and renters, and every
+command in the menus, from one field (the standard's §4.8 and G.23). Results come in groups, places first, then
+records, then commands; ↓ ↑ move and wrap, Home and End jump, Return runs, Esc closes; the pointer moves the
+highlight.
 
-What it finds a record by is the list's own (core/search: gear_hay, kit_hay, rental_hay), so the palette and the
-lists always agree. Commands are read from the menu bar itself, so every command (the menu bar is hidden on Windows
+What it finds a record by is the list's own (core/search: gear_hay, kit_hay, rental_hay, renter_hay), so the palette
+and the lists always agree. Commands are read from the menu bar itself, so every command (the menu bar is hidden on Windows
 and Linux) has a way in, and the palette is never out of date. It runs the choice once it has closed.
 """
 
@@ -39,7 +40,7 @@ ROLE = Qt.ItemDataRole.UserRole  # a row's Hit (None on a group heading)
 
 @dataclass
 class Hit:
-    group: str  # "Go To", "Gear", "Kits", "Rentals", "Commands"
+    group: str  # "Go To", "Gear", "Kits", "Rentals", "Renters", "Commands"
     title: str
     detail: str
     icon: str
@@ -107,7 +108,12 @@ def hits(window, typed: str) -> list[Hit]:
                 "receipt", search.rental_hay(r), lambda i=r.id: window.open("rentals", i))
             for r in sorted(lib.rentals.values(), key=lambda r: pricing.span_of(r)[0] or date.min, reverse=True)
         ]  # fmt: skip
-        for kind in (gear, kits, rentals):
+        renters = [
+            Hit("Renters", c.name or c.company or "Unnamed Renter", c.company if c.name else "", "user",
+                search.renter_hay(c), lambda i=c.id: window.open("renters", i))
+            for c in sorted(lib.clients.values(), key=lambda c: (c.name or c.company).casefold())
+        ]  # fmt: skip
+        for kind in (gear, kits, rentals, renters):
             found += [h for h in kind if search.matches(h.hay, wanted)][:GROUP_SHOWN]
     found += _menu_commands(window)
     return [h for h in found if search.matches(h.hay, wanted)]

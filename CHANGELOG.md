@@ -377,7 +377,7 @@
   Save Changes and their rentals under it (click one to open it). A rental's Edit… beside its renter opens them
   there. Nothing you type is kept until Save Changes, and going elsewhere first asks. A new renter (the + button, or
   Profile › New Renter…) is still a short form over the window. Deleting a renter happens at once, with Undo; their
-  rentals keep their details.
+  rentals keep their details. Search Everything finds renters too, by name, company, email or phone.
 - The Assistant's answers say which of your gear they drew on ("From your gear: …"). A change your AI is only
   guessing at is marked Not Sure: Review leaves it unticked, and the chat takes you to Review instead of making it.
 - Letters are spaced the way Apple spaces them at each size: a touch tighter in everyday words, a little looser in

@@ -1910,12 +1910,13 @@ def test_search_everything_finds_places_records_and_commands(win, monkeypatch):
     assert got == {"Go To", "Commands"}  # nothing typed: places and commands
     found = palette.hits(win, lens.name.split()[0].lower() + " " + lens.name.split()[-1])
     assert any(h.group == "Gear" and h.title == lens.name for h in found)  # found as the gear list finds it
-    rank = {"Go To": 0, "Gear": 1, "Kits": 2, "Rentals": 3, "Commands": 4}
+    rank = {"Go To": 0, "Gear": 1, "Kits": 2, "Rentals": 3, "Renters": 4, "Commands": 5}
     order = [rank[h.group] for h in palette.hits(win, "s")]
-    assert order == sorted(order) and 4 in order  # places, then records, then commands
+    assert order == sorted(order) and 5 in order  # places, then records, then commands
     assert any(h.title == "New Rental" for h in palette.hits(win, "new rental"))
     r = next(iter(win.lib.rentals.values()))
     assert any(h.group == "Rentals" for h in palette.hits(win, r.client.company or r.client.name))
+    assert any(h.group == "Renters" and h.title == r.client.name for h in palette.hits(win, r.client.email))
 
     d = palette.CommandPalette(win)
     d.show()
