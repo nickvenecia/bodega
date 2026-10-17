@@ -8,22 +8,22 @@ Bodega will notice (it becomes the release notes and the update window), so this
 
 - **State**: version 1.3.0, on this work's branch, not merged yet (main is 1.2.1). Merging it releases 1.3.0: CI
   tags it and publishes the six downloads (and the software bill of materials, `Bodega-sbom.cdx.json`). CI runs on
-  the branch by hand ("Build Bodega", Run workflow) or on its pull request: Linux and the Apple silicon Mac are
-  green; the Intel Mac crashed at random in the tests (see Quirks) and the Windows tests ran past every limit, so
-  read the latest run before merging.
+  the branch by hand ("Build Bodega", Run workflow) or on its pull request; each build also updates an installed
+  copy of itself from its own download (Linux folder and AppImage, Mac, Windows portable and installed). Read the
+  latest run before merging.
 - **Checks, with what they should say**:
   - `ruff format . && ruff check . && mypy && python -m pytest -q`: no changes, no problems, "Success: no issues
-    found", every test passes (about 570; the run ends without pytest's summary line by design, so read its exit
+    found", every test passes (about 690; the run ends without pytest's summary line by design, so read its exit
     code).
   - `python scripts/lock.py --check`: "The locks match requirements*.txt." (needs uv; after changing a
     requirements file, `python scripts/lock.py` writes the locks again).
-  - `QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR`: 22 pictures of every screen (add `BODEGA_LOOK=dark`,
+  - `QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR`: 26 pictures of every screen (add `BODEGA_LOOK=dark`,
     `BODEGA_ACCENT=yellow`, `BODEGA_SIZE=1280x700`; for 1280 or wider, give Qt a big test screen:
     `QT_QPA_PLATFORM="offscreen:configfile=screen.json"`, as `tests/test_sizes.py` does).
   - `python -m bodega cli update-check`: says which release this copy would update to, offline.
-- **Next**: the owner's answers (the questions still open in [STANDARD_AUDIT.md](STANDARD_AUDIT.md)), then what's
-  left in its "After the fixes": 20 partly done, 23 larger redesigns (ticks and a selection bar on every list, C-73
-  and C-37, come first).
+- **Next**: the owner's answers (the questions still open in [STANDARD_AUDIT.md](STANDARD_AUDIT.md), and the
+  departures proposed in PROJECT_ADDENDUM.md). Its "After the fixes" has every check fixed or waiting on the owner
+  but the tests' own two (T-04, T-13: tests reach controls through private names, not roles and visible words).
 - **Quirks**:
   - Qt's offscreen test screen is only 800 points wide, under Bodega's 1280 minimum: anything measured wider runs in
     its own process with a configured screen (`tests/test_sizes.py`). A screenshot narrower than 1280 cuts the
@@ -59,6 +59,52 @@ Bodega will notice (it becomes the release notes and the update window), so this
 - **What only the owner can supply**: an Apple Developer ID and a Windows code-signing certificate (S-23, wanted
   later); branch protection on main (O-01: GitHub › Settings › Branches, require the four builds to pass); the
   answers to the questions left in the audit; a yes or no on each proposed departure in PROJECT_ADDENDUM.md.
+
+## 2026-10-17: the rest of the audit
+
+**Changed** (CHANGELOG 1.3.0 has what people will notice):
+
+- **Every record has its page**: Renters joined the sidebar (a list, and each renter edited in place with Cancel and
+  Save Changes, its rentals under it; a new renter is still a sheet). Import and Review became pages beside the
+  sidebar instead of wide windows (`sheet.py`'s `SHEET_KIND = "page"`, placed by `MainWindow.page_area()`).
+- **Look**: overlay scroll bars that show while scrolling; lists in rounded cards; Settings in grouped rows, AI
+  settings kept as they're made; fields sized by what they hold; the accent buttons lift under the pointer; Text Size
+  up to 200% (Settings, or the computer's), with a narrow window folding the sidebar; the page window's options
+  (paper, letterhead, a note, a list's columns and filters).
+- **Who did it**: rental history and Check Out ticks keep who did them, once accounts exist.
+- **Updating**: CI now updates an installed copy of each build from its own download. That found the Windows
+  updater broken: its script waited on a `tasklist | find` pipe that never ended once Bodega had quit, so an
+  installed or portable Windows copy likely never finished updating. It's a PowerShell script now, waiting on
+  Bodega's own process, checking each step and logging it; both Windows checks pass.
+- **Speed**: many rentals are saved side by side (a big delete was slow on Windows); the scale test counts writes
+  instead of timing the disk.
+- **Bugs found on the way**: Review had lost its ticks and piece names when every list got a tick column (the
+  shared row painter draws column 0 only as a tick); the renter form's City was squeezed by the State list in a
+  narrow panel; an OpenRouter key was "checked" against a list anyone can read.
+
+**Decided**: none by the owner this round. As the standard has it: Import and Review are pages; Settings sections
+keep each change as made (Profiles still waits on question 31).
+
+**Open**: T-04 and T-13 (tests by role and visible words); everything waiting on the owner (20 checks: the
+questions still open in STANDARD_AUDIT.md, and the proposed departures).
+
+**For the Standard** (general lessons):
+
+- **Test the update itself.** The Windows updater had never run end to end, and was broken for real people. §17
+  could ask every release to update an installed copy of the previous build from the new download, on each
+  platform, in CI.
+- **A test machine's screen is not a person's.** A Mac fills the screen when it opens; Qt's test screen is 800
+  points wide, so the window was narrow and folded its sidebar only on the Mac runners. Open test windows at a set
+  size, never the platform's default.
+- **Put back what a test changes in the environment.** A test that set the text scale left it set for every test
+  after it; pytest's `monkeypatch.delenv` of a missing variable records nothing to put back.
+- **Time the code, count the disk.** A wall-clock limit on a delete failed on a slow Windows disk; counting writes
+  (each changed rental once) tests the promise and runs anywhere.
+- **A shared painter can quietly break a list it was never meant for.** When every list got a tick column, the one
+  list with Qt's own check boxes lost them. A screenshot of every screen, read after each shared change, would have
+  shown it the day it happened.
+- **A stylesheet rule for a scroll area's children reaches its scroll bars.** `QScrollArea > QWidget > QWidget`
+  matched them; the overlay bars only drew right once the rule named the viewport.
 
 ## 2026-10-16: the standard, applied
 

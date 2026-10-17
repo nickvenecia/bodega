@@ -12,7 +12,7 @@ a new line; Send sits inside the field and becomes Stop while it works.
 A change asked for in the chat waits in a card in the conversation: Decline, or Change N Pieces (Review… to pick
 some); while it waits the field reads "Accept or Decline Above", and after the choice the card says what happened.
 The jobs (Update from Links, Find Missing Links, Tidy Up Names, Organize Groups) are buttons; they run in the
-background and what they find opens in the Review window. Nothing changes until you say so.
+background and what they find opens on the Review page. Nothing changes until you say so.
 """
 
 from __future__ import annotations
@@ -234,7 +234,7 @@ class Thinking(QLabel):
 class ChangeCard(QFrame):
     """A change asked for in the chat, in the conversation: its title, a line saying how many, what would change
     (old → new, the first few), then Decline and Change N Pieces sharing its foot. Review… opens them in the
-    Review window to pick some. After the choice it says what happened, in its color."""
+    Review page to pick some. After the choice it says what happened, in its color."""
 
     SHOWN = 5
 
@@ -714,7 +714,7 @@ class AssistantPanel(SidePanel):
             self.question.setFocus()
 
     def _decide(self, how: str, quiet: bool = False) -> None:
-        """The card's answer: "change" all, "decline", or "review" them in the Review window."""
+        """The card's answer: "change" all, "decline", or "review" them on the Review page."""
         result, self.pending = self.pending, None
         self._waiting(False)
         if result is None:

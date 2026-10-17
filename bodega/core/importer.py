@@ -160,7 +160,7 @@ class Imported:
     rate_pct: str = ""  # found in the sheet ("4")
     value_tax: str = ""  # found in the sheet ("8.25")
     skipped: int = 0
-    # what the sheet didn't say, filled in (the Import window shows it): no quantity counts as 1, nothing
+    # what the sheet didn't say, filled in (the Import page shows it): no quantity counts as 1, nothing
     # under Rent? means for rent, and a company guessed from the name
     assumed_qty: int = 0
     assumed_rent: int = 0
@@ -456,7 +456,7 @@ def read(path: Path) -> Imported:
     return out
 
 
-# what each of our fields is called in the Import window, in the order shown there
+# what each of our fields is called on the Import page, in the order shown there
 FIELDS = [
     ("name", "Name"),
     ("brand", "Company"),

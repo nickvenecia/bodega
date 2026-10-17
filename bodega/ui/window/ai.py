@@ -1,4 +1,4 @@
-"""The AI helpers in the window: the assistant, its jobs, the Review window and applying what you approve.
+"""The AI helpers in the window: the assistant, its jobs, the Review page and applying what you approve.
 
 A part of MainWindow (see main_window.py); it uses the window's widgets and the library."""
 

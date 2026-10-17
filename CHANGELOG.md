@@ -39,7 +39,7 @@
 - Booking or marking out a rental whose gear is already promised (or in repair) asks first, and says what's short,
   instead of only showing a hint. Go ahead if you're renting more in to cover it.
 - Importing a sheet no longer replaces your profile's pricing unless you turn on Use the Sheet's Pricing (it starts
-  off once you have a profile). The Import window now says what it filled in where the sheet was blank (a quantity
+  off once you have a profile). The Import page now says what it filled in where the sheet was blank (a quantity
   of 1, for rent, a company from the name), lets you turn off the company guess, and asks before adding the
   sheet's links to gear you already have (only where it has none).
 - SVG logos are kept as their drawing only: a logo can no longer pull a picture from your computer onto your
@@ -220,7 +220,7 @@
   it.
 - Importing a sheet with blanks lets you choose what they mean: a blank Rent? can mean for rent or not, and pieces
   with no quantity can come in as 1 or be left out. (The usual choices stay as before.)
-- When a sheet has its own Equipment Total row, the Import window checks it against what was read and says whether
+- When a sheet has its own Equipment Total row, the Import page checks it against what was read and says whether
   it matches, or by how much it's off.
 - A piece you renamed after importing it isn't brought in a second time when you import the same sheet again:
   Bodega remembers the name the sheet gave it.
@@ -397,7 +397,7 @@
   FX6 to show it. This takes the place of the "+3" beside the piece; a Goes With column appears only where being
   under the piece doesn't already say it (gear on gear that goes with a piece).
 - Saving a calendar file offers Open Google Calendar, which goes straight to where Google takes the file in, instead
-  of a list of menus to find. When the Import window finds no gear, it opens Columns, where you pick the names.
+  of a list of menus to find. When the Import page finds no gear, it opens Columns, where you pick the names.
 - In the renter and profile forms, Return moves to the next field, and on the last one saves; ⌘Return (Ctrl+Enter
   on Windows and Linux) saves from anywhere. Before, Return saved half-way through.
 - With more than 12 renters, groups or profiles to choose from, their dropdown opens as a list you can search:

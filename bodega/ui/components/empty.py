@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QLabel, QPushButton, QWidget
 from bodega.ui.components.widgets import hint, primary_button, vbox
 from bodega.ui.style import theme, tokens
 
-SHEETS = (".xlsx", ".xlsm", ".csv")  # what the Import window reads
+SHEETS = (".xlsx", ".xlsm", ".csv")  # what the Import page reads
 
 
 def sheet_in(mime) -> Path | None:
@@ -106,7 +106,7 @@ class EmptyPage(QWidget):
             e.ignore()
             return
         e.acceptProposedAction()
-        QTimer.singleShot(0, self, lambda: self.dropped.emit(path))  # after the drag ends: the Import window waits
+        QTimer.singleShot(0, self, lambda: self.dropped.emit(path))  # after the drag ends: the Import page waits
 
 
 class NoResults(QWidget):

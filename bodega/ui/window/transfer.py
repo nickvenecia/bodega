@@ -116,7 +116,7 @@ class TransferMixin:
             job.stop()
 
     def import_file(self, path: Path, ask: bool = True) -> int:
-        """Read a spreadsheet. With `ask`, the Import window shows what's in it and lets you choose what
+        """Read a spreadsheet. With `ask`, the Import page shows what's in it and lets you choose what
         comes in; without (tests, scripts), everything new comes in as Bodega reads it."""
         try:
             rows = importer.load_rows(path)

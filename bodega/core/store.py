@@ -497,7 +497,7 @@ class Library:
         return n
 
     def departments(self) -> list[str]:
-        """A sheet's departments (Camera, G&E…) as imported: used by the Import window only."""
+        """A sheet's departments (Camera, G&E…) as imported: used by the Import page only."""
         order = self.settings.get("departments")
         seen = [d for d in order if isinstance(d, str) and d] if isinstance(order, list) else []
         for it in self.items.values():

@@ -34,7 +34,7 @@ sidebar).
 ## What it does
 
 **Bring in the list you already keep.** Bodega starts empty. **Import Spreadsheet…** (under the + above the list, or File) opens an Excel (.xlsx) or
-.csv gear list in the Import window, where you see every piece before it comes in, untick departments or single
+.csv gear list on the Import page, where you see every piece before it comes in, untick departments or single
 pieces, fix which column is which, and choose whether to attach gear and use the sheet's pricing. It reads lists laid
 out by hand: it finds the Qty / Equipment / Cost / Rent? columns, turns headings like *Camera*, *G&E*, *Audio* into
 departments and *Lenses*, *Steel*, *1000c* into groups, and even picks up the day-rate percent and sales tax from
@@ -121,7 +121,7 @@ Google Gemini, Kimi (Moonshot AI), OpenRouter, DeepSeek, Mistral, xAI, Groq, or 
 service, including a model running on your own computer. Models are listed live from the provider. Then the
 **AI Assistant** (the ✦ button, or ⌘J) can **Update from Links** (today's prices, cleaner names), **Find Missing
 Links** (every link it suggests is opened and checked first), **Tidy Up Names** and **Organize Groups** (new groups where
-they help), answer questions about your gear, or do what you ask ("put the Aputure lights in a group called Aputure"). Nothing changes until you approve it in the Review window, and a copy of your gear is kept first.
+they help), answer questions about your gear, or do what you ask ("put the Aputure lights in a group called Aputure"). Nothing changes until you approve it on the Review page, and a copy of your gear is kept first.
 
 **Settings** (⌘,): light or dark, your profile and pricing, AI, your account, updates, and **Back Up…** (everything
 in one zip file). **Send Feedback…** (Help, or ⋯) is ready for when feedback is switched on; until then messages
