@@ -18,9 +18,12 @@ from bodega.core.store import Library
 
 @pytest.fixture
 def win(qapp, data_folder):
+    from bodega.ui.style import tokens
     from bodega.ui.window.main_window import MainWindow
 
     w = MainWindow(sample.fill(Library(data_folder).load()))
+    w._restored = True  # at its usual smallest: on a Mac it would fill Qt's test screen, 800 wide, and fold its sidebar
+    w.resize(*tokens.WINDOW_MIN)
     w.show()
     yield w
     w.close()

@@ -119,7 +119,8 @@ def test_the_chosen_size_is_drawn_from_the_next_start(data_folder, monkeypatch):
 
     data_folder.mkdir(parents=True, exist_ok=True)
     (data_folder / "settings.json").write_text(js.dumps({"text_size": 150}), encoding="utf-8")
-    monkeypatch.delenv("QT_SCALE_FACTOR", raising=False)
+    monkeypatch.setenv("QT_SCALE_FACTOR", "1")  # (so it's put back as it was afterwards, set or not)
+    monkeypatch.delenv("QT_SCALE_FACTOR")
     assert app.use_text_size() == 1.5 and os.environ["QT_SCALE_FACTOR"] == "1.5"
     monkeypatch.setenv("QT_SCALE_FACTOR", "1.25")  # one already asked for is kept
     app.use_text_size()

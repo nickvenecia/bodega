@@ -15,6 +15,7 @@ If any piece is missing (older Qt, the AppKit call fails), the normal title bar 
 from __future__ import annotations
 
 import sys
+import warnings
 
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QLabel, QMainWindow, QWidget
@@ -32,7 +33,9 @@ def install(window: QMainWindow) -> TitleBar | None:
     """Turn on Bodega's own title bar for this window (Mac only). Returns the bar to put on top."""
     if not supported():
         return None
-    window.setWindowFlag(Qt.WindowType.ExpandedClientAreaHint, True)
+    with warnings.catch_warnings():  # (PySide warns under the old name it shares a value with: not deprecated)
+        warnings.simplefilter("ignore", DeprecationWarning)
+        window.setWindowFlag(Qt.WindowType.ExpandedClientAreaHint, True)
     if hasattr(Qt.WindowType, "NoTitleBarBackgroundHint"):
         window.setWindowFlag(Qt.WindowType.NoTitleBarBackgroundHint, True)
     ignore_safe_area(window)
