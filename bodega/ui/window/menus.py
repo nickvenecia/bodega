@@ -299,7 +299,7 @@ class MenusMixin:
         return False
 
     def undo(self) -> None:
-        """⌘Z: in a text box, its typing; otherwise the last change to your gear, kits, rentals or groups."""
+        """⌘Z: in a text box, its typing; otherwise the last change to your gear, kits, rentals, renters or groups."""
         if self._text_can_undo():
             self._text_do("undo")
             return
@@ -371,6 +371,7 @@ class MenusMixin:
             (self.items, "it", self.lib.items),
             (self.packages, "pkg", self.lib.packages),
             (self.rentals, "r", self.lib.rentals),
+            (self.renters, "c", self.lib.clients),
         ):
             cur = getattr(panel, attr)
             if cur is None:

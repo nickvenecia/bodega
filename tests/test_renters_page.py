@@ -90,7 +90,9 @@ def test_delete_renter_at_once_with_undo(win, qapp):
     assert sam.id not in win.lib.clients and win.renters.c is None
     assert [r.text(1) for r in win.renter_table.record_rows()] == ["Alex Rivera"]
     win.undo()
-    assert sam.id in win.lib.clients
+    qapp.processEvents()  # (what came back opens once the undo is over)
+    assert sam.id in win.lib.clients and win.renters.current_id() == sam.id
+    assert win.renters.c is win.lib.clients[sam.id]  # the copy undo put back, not the one deleted
 
 
 def test_a_rentals_renter_opens_on_the_renters_page(win, qapp):

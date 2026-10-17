@@ -52,7 +52,7 @@ KINDS = [  # (key, kind as the window opens it, one, many, its name in a record)
     ("items", "gear", "piece", "pieces", lambda d: d.get("name") or "Untitled Piece"),
     ("rentals", "rentals", "rental", "rentals", lambda d: d.get("number") or "Rental"),
     ("packages", "packages", "kit", "kits", lambda d: d.get("name") or "Untitled Kit"),
-    ("clients", "", "renter", "renters", lambda d: d.get("company") or d.get("name") or "Renter"),
+    ("clients", "renters", "renter", "renters", lambda d: d.get("company") or d.get("name") or "Renter"),
     ("businesses", "", "profile", "profiles", lambda d: d.get("name") or "Profile"),
 ]
 NAME_MAX = 32  # a record's name in Undo's menu item is cut to this
