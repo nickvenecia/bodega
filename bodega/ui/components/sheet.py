@@ -13,6 +13,9 @@ attributes:
 
     SHEET = False            a window of its own (the page window), or one that draws its own (Search Everything)
     SHEET_KIND = "window"    the window over the app (Settings): wider padding, a stronger blur, glass corners
+    SHEET_KIND = "page"      a page (the standard's 4.9: what would make a dialog wider than about 640): it takes the
+                             place of the page beside the sidebar (the window's page_area()), on the window's own
+                             background, with no scrim, panel or ✕: its title and buttons are the page's
     SHEET_OUTSIDE = False    a click outside doesn't close it (it would lose work: an import being set up)
     SHEET_CLOSE = False      no ✕ (an alert: Cancel is its way out)
     SHEET_PANEL = False      it draws its own card (an alert)
@@ -48,7 +51,7 @@ from PySide6.QtWidgets import (
 )
 
 from bodega.ui.components import access
-from bodega.ui.components.glass import paint_shadow
+from bodega.ui.components.glass import paint_backdrop, paint_shadow
 from bodega.ui.components.widgets import circle_button
 from bodega.ui.style import theme, tokens
 
@@ -115,6 +118,12 @@ class _Backdrop(QWidget):
         s = self.sheet
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        if s.kind == "page" and s.win is not None and not s.alone:  # the window's own background, where it is
+            at = s.area.topLeft()
+            p.translate(-at.x(), -at.y())
+            paint_backdrop(p, QRectF(s.area), s.win.size())
+            p.end()
+            return
         if s.picture is not None:
             p.drawPixmap(self.rect(), s.picture)
         if not s.alone:
@@ -151,7 +160,8 @@ class Sheet(QObject):
         self.d = d
         self.kind = getattr(d, "SHEET_KIND", "sheet")
         self.radius = tokens.GLASS_R if self.kind == "window" else tokens.RADIUS_XL
-        self.panel_drawn = getattr(d, "SHEET_PANEL", True)
+        self.panel_drawn = getattr(d, "SHEET_PANEL", True) and self.kind != "page"
+        self.area = QRect()  # a page: where it sits in its window
         self.picture: QPixmap | None = None
         self.panel = QRect()
         self.want = QSize()
@@ -165,7 +175,7 @@ class Sheet(QObject):
         self.backdrop = _Backdrop(self)
         self.backdrop.hide()
         self.close_btn = None
-        if getattr(d, "SHEET_CLOSE", True):
+        if getattr(d, "SHEET_CLOSE", True) and self.kind != "page":
             self.close_btn = circle_button("x", "Close")
             self.close_btn.setParent(d)
             self.close_btn.setAccessibleName("Close")
@@ -177,6 +187,12 @@ class Sheet(QObject):
     def _window(self) -> QWidget | None:
         parent = self.d.parentWidget()
         return parent.window() if parent is not None else None
+
+    def _over(self, win: QWidget) -> QRect:
+        """Where it goes, on the screen: over the whole window, or a page over the window's page_area()."""
+        area = getattr(win, "page_area", None) if self.kind == "page" else None
+        self.area = area() if callable(area) else win.rect()
+        return QRect(win.mapToGlobal(self.area.topLeft()), self.area.size())
 
     def open(self) -> None:
         d, win = self.d, self._window()
@@ -206,11 +222,14 @@ class Sheet(QObject):
             d.setGeometry(
                 QRect(QPoint(0, 0), self.want).translated(screen.center() - QRect(QPoint(), self.want).center())
             )
+        elif self.kind == "page":
+            self.picture = None
+            d.setGeometry(self._over(win))
         else:
             over_sheet = bool(win.property("sheet"))
             blur = 0 if over_sheet else tokens.WINDOW_BLUR if self.kind == "window" else tokens.SHEET_BLUR
             self.picture = still(win, blur)  # (over another sheet: dimmed, never blurred twice)
-            d.setGeometry(QRect(win.mapToGlobal(QPoint(0, 0)), win.size()))
+            d.setGeometry(self._over(win))
         self.backdrop.show()
         self.backdrop.lower()
         if self.close_btn is not None:
@@ -227,10 +246,12 @@ class Sheet(QObject):
         try:
             W, H = d.width(), d.height()
             o, now = self.margins, lay.contentsMargins()
-            if self.alone:
+            if self.alone or self.kind == "page":
                 self.panel = QRect(0, 0, W, H)
-                if now != o:
-                    lay.setContentsMargins(o)
+                side = max(0, (W - tokens.PAGE_MAX_W) // 2) if self.kind == "page" and not self.alone else 0
+                m = QMargins(o.left() + side, o.top(), o.right() + side, o.bottom())  # (a page stops at its widest)
+                if now != m:
+                    lay.setContentsMargins(m)
                 self.backdrop.setGeometry(d.rect())
                 self._place_close()
                 return
@@ -280,6 +301,8 @@ class Sheet(QObject):
             a.stop()
         self._anims = []
         fade, rise = access.duration(tokens.SHEET_FADE_MS), access.duration(tokens.SHEET_RISE_MS)
+        if self.kind == "page":
+            rise = 0  # (a page comes in where it stays)
         if not fade:
             self.d.setWindowOpacity(1.0)
             self.lift = 0.0
@@ -288,13 +311,15 @@ class Sheet(QObject):
         a.setStartValue(0.0)
         a.setEndValue(1.0)
         a.setDuration(fade)
-        b = QVariantAnimation(self, startValue=float(tokens.SHEET_RISE), endValue=0.0, duration=rise)
-        b.setEasingCurve(QEasingCurve.Type.OutCubic)
-        b.valueChanged.connect(self._rise)
-        self.lift = float(tokens.SHEET_RISE)
-        self._anims = [a, b]
+        self._anims = [a]
         a.start()
-        b.start()
+        if rise:
+            b = QVariantAnimation(self, startValue=float(tokens.SHEET_RISE), endValue=0.0, duration=rise)
+            b.setEasingCurve(QEasingCurve.Type.OutCubic)
+            b.valueChanged.connect(self._rise)
+            self.lift = float(tokens.SHEET_RISE)
+            self._anims.append(b)
+            b.start()
 
     def _rise(self, v) -> None:
         self.lift = float(v)
@@ -318,7 +343,7 @@ class Sheet(QObject):
     def eventFilter(self, obj, e):
         if obj is self.win and self.d.isVisible() and not self.alone:
             if e.type() in (QEvent.Type.Move, QEvent.Type.Resize):  # the window moved: so does all of it
-                self.d.setGeometry(QRect(obj.mapToGlobal(QPoint(0, 0)), obj.size()))
+                self.d.setGeometry(self._over(obj))
             return False
         if obj is self.d:
             t = e.type()

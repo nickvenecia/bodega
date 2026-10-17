@@ -368,6 +368,10 @@
   Company, Group, Day Rate and Status can join) and their gear, with filters (a group, a company, a status, or what
   it cost, its day rate or how many from one amount to another). Bodega keeps your last choice for each kind of
   page, and Use as This Profile's Default keeps it for your profile.
+- Import and the Assistant's Review are pages now, in place of the list beside the sidebar, instead of wide
+  windows over everything: their title, Cancel and Import (or Apply) are across the top, as on every page.
+- In Review, a change is ticked as rows are in every list: click its row (or press Space) to tick or untick it.
+  Select All and Select None sit above the list.
 - Renters have their own page, under Calendar in the sidebar: everyone you rent to, with their company, email,
   phone, how many rentals they've had and the last one's date. Pick one to edit them on the right, with Cancel and
   Save Changes and their rentals under it (click one to open it). A rental's Edit… beside its renter opens them

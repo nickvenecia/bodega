@@ -154,6 +154,16 @@ def main(out: Path, sheet: Path | None = None) -> int:
     d.show()
     shot(d, out / "15-check-in.png")
     d.close()
+    from bodega.core import importer
+    from bodega.ui.dialogs.import_sheet import ImportDialog
+
+    csv = out / "Gear List.csv"  # (the sample's own gear, as a sheet: the Import page, in place of the list)
+    importer.write_csv(lib.ordered_items(), lib.items, csv)
+    d = ImportDialog(csv, importer.load_rows(csv), set(), w)
+    d.show()
+    shot(d, out / "14-import.png")
+    d.reject()
+    csv.unlink()
     w.calendar.set_mode("timeline")
     shot(w, out / "6b-timeline.png")
     w.calendar.set_mode("month")

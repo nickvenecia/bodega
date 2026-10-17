@@ -1,4 +1,6 @@
-"""The Import window: look over a spreadsheet before any of it goes into Bodega, and choose what comes in.
+"""The Import page: look over a spreadsheet before any of it goes into Bodega, and choose what comes in. It takes the
+place of the page beside the sidebar (the standard's 4.9: too much for a dialog), its title, how much comes in,
+Cancel and Import across its top as a page's are.
 
 Bodega starts empty for everyone. A sheet only ever goes into the copy on this computer, and only after
 Import is clicked. Here you can:
@@ -18,13 +20,23 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QLabel, QListWidget, QListWidgetItem, QPushButton, QWidget
+from PySide6.QtWidgets import (
+    QDialog,
+    QFrame,
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QSizePolicy,
+    QWidget,
+)
 
 from bodega.core import importer, money, words
 from bodega.core.model import Item
 from bodega.ui.components import sheet
 from bodega.ui.components.widgets import (
     Disclosure,
+    ElidedLabel,
     FitScroll,
     Section,
     ToggleRow,
@@ -47,6 +59,7 @@ class ImportDialog(QDialog):
     the columns you set for sheets laid out before (settings "import_columns"): a sheet laid out the same way
     starts with them."""
 
+    SHEET_KIND = "page"  # (components/sheet.py: in place of the page beside the sidebar)
     SHEET_OUTSIDE = False  # (a click beside it never drops the columns you set)
 
     def __init__(
@@ -80,17 +93,27 @@ class ImportDialog(QDialog):
         self.dep_toggles: dict[str, ToggleRow] = {}
 
         self.setWindowTitle(f"Import {path.name}")
-        self.resize(*tokens.IMPORT_SIZE)
-        outer = vbox(self, (0, tokens.SPACE_5, 0, tokens.SPACE_5), tokens.SPACE_3)
-        head = vbox(spacing=tokens.SPACE_2)
-        head.setContentsMargins(tokens.SPACE_5, 0, tokens.SPACE_5, 0)
-        t = QLabel(f"Import {path.name}")
-        t.setObjectName("DialogTitle")
+        self.resize(*tokens.IMPORT_SIZE)  # (where it can't be a page, a window of its own: this size)
+        outer = vbox(self, 0, 0)
+        bar = QFrame()  # a page's top: its title and how much comes in, then Cancel and Import
+        bar.setObjectName("Toolbar")
+        bar.setFixedHeight(tokens.TOOLBAR_H)
+        head = hbox(bar, (tokens.PAGE_INSET, 0, tokens.PAGE_INSET, 0), tokens.SPACE_2)
+        t = ElidedLabel(f"Import {path.name}")  # (a long file name gives way to the buttons)
+        t.setObjectName("PageTitle")
+        t.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         head.addWidget(t)
-        outer.addLayout(head)
+        self.count = QLabel()
+        self.count.setObjectName("Muted")
+        head.addSpacing(tokens.SPACE_2)
+        head.addWidget(self.count)
+        head.addStretch(1)
+        outer.addWidget(bar)
 
         body = QWidget()
-        lay = vbox(body, (tokens.SPACE_5, 0, tokens.SPACE_5 - tokens.SCROLL_GUTTER, 0), tokens.SPACE_3)
+        lay = vbox(
+            body, (tokens.PAGE_INSET, 0, tokens.PAGE_INSET - tokens.SCROLL_GUTTER, tokens.SPACE_5), tokens.SPACE_3
+        )
 
         # which column is which
         self.columns = Disclosure("Columns", is_open=False, first=True)
@@ -204,20 +227,13 @@ class ImportDialog(QDialog):
         scroll = FitScroll()
         scroll.setWidget(body)
         outer.addWidget(scroll, 1)
-
-        buttons = hbox(spacing=tokens.SPACE_2)
-        buttons.setContentsMargins(tokens.SPACE_5, tokens.SPACE_4, tokens.SPACE_5, 0)
-        self.count = QLabel()
-        self.count.setObjectName("Muted")
-        buttons.addWidget(self.count, 1)
-        cancel = QPushButton("Cancel")
+        cancel = QPushButton("Cancel")  # (made last: the page's own rows come first as you Tab, and take the focus)
         cancel.clicked.connect(self.reject)
         self.go = primary_button("Import")
         self.go.setDefault(True)
         self.go.clicked.connect(self._done)
-        buttons.addWidget(cancel)
-        buttons.addWidget(self.go)
-        outer.addLayout(buttons)
+        head.addWidget(cancel)
+        head.addWidget(self.go)
         self.reread()
 
     def columns_to_keep(self) -> tuple[str, dict[str, int]] | None:

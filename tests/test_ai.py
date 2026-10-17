@@ -448,8 +448,6 @@ def test_an_answer_names_what_it_drew_on_and_a_guess_says_so(provider):
 
 
 def test_review_flags_a_guess_and_leaves_it_unticked(qapp):
-    from PySide6.QtCore import Qt
-
     from bodega.ui.dialogs.ai_review import ReviewDialog
 
     a, b = Item(name="Aputure 600d"), Item(name="C-Stand")
@@ -457,8 +455,9 @@ def test_review_flags_a_guess_and_leaves_it_unticked(qapp):
     guess = tasks.Change(b.id, "group", "", "Grip", tasks.AI_SAID, unsure=True)
     d = ReviewDialog("Review", tasks.Result([sure, guess], []), {a.id: a.name, b.id: b.name})
     (row_a, _), (row_b, _) = d.rows
-    assert row_a.checkState(0) == Qt.CheckState.Checked and row_b.checkState(0) == Qt.CheckState.Unchecked
-    assert row_b.text(4).endswith("Not Sure") and d.chosen() == [sure]
+    assert row_a.isSelected() and not row_b.isSelected()  # (ticked is chosen, as in every list)
+    assert row_b.text(5).endswith("Not Sure") and d.chosen() == [sure]
+    assert row_a.text(1) == "Aputure 600d"
     d.deleteLater()
 
 

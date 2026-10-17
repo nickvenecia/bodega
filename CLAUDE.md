@@ -134,7 +134,9 @@ bodega/
                    makes room through the row's right margin, a Table slides as two pictures: freeze/thaw),
                    sheet.py (every dialog shows over its window: prepare() as it's made; the window blurred and
                    dimmed behind, a ✕ level with its title, a click outside closes it unless SHEET_OUTSIDE = False;
-                   Settings is SHEET_KIND = "window"; still() the blurred picture), access.py (the system's Reduce
+                   Settings is SHEET_KIND = "window"; Import and Review are SHEET_KIND = "page": in place of the
+                   page beside the sidebar (MainWindow.page_area()), its title and buttons across its top; still()
+                   the blurred picture), access.py (the system's Reduce
                    Motion, Increase Contrast, Reduce Transparency: every
                    animation asks duration()/reduce_motion(); tokens.use(contrast=, opaque=)),
                    hover.py (hover's lift on the accent-filled controls: LiftEffect, a touch larger over a soft
@@ -237,8 +239,8 @@ tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTD
 - **Act once the click is over.** A tile, a sidebar row or a line item a refresh can rebuild never opens a window or
   a menu inside its own click (CONTRIBUTING rule 16): the window can throw it away mid-click, which crashes Bodega.
   A part of a window thrown away while the window stays open is hidden first (rule 17).
-- One popup at a time: a window never opens another on top (Settings edits in place; Review and alerts are
-  the exceptions, and close before anything else opens).
+- One popup at a time: a window never opens another on top (Settings edits in place; the Review page and alerts
+  are the exceptions, and close before anything else opens).
 - Every number in the UI is a token; every font comes from theme.font(); dialogs end with widgets.button_row().
 - Every list of choices (menus, dropdowns, pickers, suggestions) uses the LIST_* tokens (the standard's G.7:
   corners 14, inset 6, rows 32 with corners 8); the sidebar and Settings' sections are the same rows in the glass

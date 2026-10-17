@@ -118,7 +118,8 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.sidebar = glass(Sidebar(self.lib))
         root.float(self.sidebar)
         body.addWidget(self.sidebar)
-        body.addWidget(self._build_center(), 1)
+        self.center = self._build_center()
+        body.addWidget(self.center, 1)
         self.items = ItemPanel(self.lib)
         self.packages = PackagePanel(self.lib)
         self.rentals = RentalPanel(self.lib)
@@ -1148,6 +1149,16 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             super().show()
         else:
             self.showMaximized()
+
+    def page_area(self) -> QRect:
+        """Where a page goes (Import, Review: components/sheet.py's "page"): the page beside the sidebar, the
+        right-hand panel's room with it."""
+        c = self.center
+        at = c.mapTo(self, QPoint(0, 0))
+        right = at.x() + c.width()
+        if self.dock.isVisible():  # (the panel on the right is under the page too)
+            right = max(right, self.dock.mapTo(self, QPoint(self.dock.width(), 0)).x())
+        return QRect(at.x(), at.y(), right - at.x(), c.height())
 
     def _fits_after(self, geo: str) -> bool:
         """Put the window back where it was; True if that lands wholly on a screen."""

@@ -124,8 +124,8 @@ SHEET_CLOSE_INSET = 18  # (G.18) a sheet's ✕: its trailing edge this far in fr
 ALERT_ICON = 56  # the app icon at the top of it
 PROFILE_DIALOG_H = 680  # the profile dialog: name, logo and contact show without scrolling
 PICKER_SIZE = (560, 620)  # the Add Gear window
-IMPORT_SIZE = (760, 800)  # the Import window
-IMPORT_LIST_H = 320  # the list of pieces in the Import window
+IMPORT_SIZE = (760, 800)  # the Import page, where it has to be a window of its own (Wayland)
+IMPORT_LIST_H = 320  # the list of pieces on the Import page
 WINDOW_SIZE = (1600, 1000)
 FILLED_SLACK = 4  # a window this close to the screen's size counts as filling it
 TEXT_SLACK = 2  # room a label keeps past its words, so they never cut at the last pixel
@@ -219,8 +219,8 @@ def tracking(size: float) -> float:
     return TRACKING[-1][1]
 
 
-REVIEW_COL_W = (180, 64, 150, 0, 130)  # the AI Review window's columns (0: takes the room)
-REVIEW_W = 900
+REVIEW_COL_W = (180, 64, 150, 0, 130)  # the Review page's columns after its ticks (0: takes the room)
+REVIEW_W = 900  # the Review page, where it has to be a window of its own (Wayland)
 # the tables' fixed column widths
 COL_W = {
     "company": 130, "series": 110, "group": 140, "qty": 48, "status": 88, "paid": 100,
