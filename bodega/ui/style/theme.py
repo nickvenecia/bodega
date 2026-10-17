@@ -340,6 +340,10 @@ QPushButton#RowAction {{ background: transparent; border: none; border-radius: {
 QPushButton#RowAction:pressed {{ background: {tokens.ROW_HOVER}; }}
 QPushButton#RowAction[danger="true"] {{ color: {tokens.BAD}; }}
 QPushButton#RowAction:focus {{ border: {tokens.FOCUS_RING}px solid {tokens.ACCENT}; }}
+/* a row in a card that opens something (a renter's rentals): words, a tint under the pointer */
+QPushButton#LineRow {{ background: transparent; border: none; border-radius: {RADIUS_SM}px; color: {tokens.TEXT};
+    text-align: left; padding: 0 {SPACE_2}px; min-height: {tokens.CONTROL_H}px; max-height: {tokens.CONTROL_H}px; }}
+QPushButton#LineRow:hover {{ background: {tokens.ROW_HOVER}; color: {tokens.ACCENT_TEXT}; }}
 QPlainTextEdit#BigName {{ font-size: {TEXT_RECORD}px; font-weight: {WEIGHT_BOLD}; color: {tokens.TEXT};
     background: transparent; border: 1px solid transparent; border-radius: {RADIUS}px; padding: 0 {SPACE_1}px;
     selection-background-color: {tokens.ACCENT_FILL}; selection-color: {tokens.ON_ACCENT}; }}

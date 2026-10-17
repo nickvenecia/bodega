@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from bodega.core import backups, dates, document, figures, money, pricing, settings, update, words
+from bodega.core import backups, dates, document, errors, figures, money, pricing, settings, update, words
 from bodega.core.history import History
 from bodega.core.log import get_logger
 from bodega.core.model import Business
@@ -42,6 +42,7 @@ from bodega.ui.dialogs.preview import PageDialog
 from bodega.ui.panels.item import ItemPanel
 from bodega.ui.panels.kit import PackagePanel
 from bodega.ui.panels.rental import RentalPanel
+from bodega.ui.panels.renter import RenterPanel
 from bodega.ui.style import theme, tokens
 from bodega.ui.window.ai import AIMixin
 from bodega.ui.window.calendar_view import CalendarPage
@@ -53,7 +54,17 @@ from bodega.ui.window.menus import MenusMixin
 from bodega.ui.window.pages import PagesMixin
 from bodega.ui.window.services import ServicesMixin
 from bodega.ui.window.sidebar import Sidebar
-from bodega.ui.window.tables import DIVIDES, ID, GearTable, KitTable, ListCard, RentalTable, menu, words_inset
+from bodega.ui.window.tables import (
+    DIVIDES,
+    ID,
+    GearTable,
+    KitTable,
+    ListCard,
+    RentalTable,
+    RenterTable,
+    menu,
+    words_inset,
+)
 from bodega.ui.window.transfer import TransferMixin
 
 log = get_logger(__name__)
@@ -112,9 +123,10 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.packages = PackagePanel(self.lib)
         self.rentals = RentalPanel(self.lib)
         self.rentals.may_hold = self.may_hold
+        self.renters = RenterPanel(self.lib)  # (N-18) a renter, edited in place on the Renters page
         self.assistant = self._build_assistant()
         self.inspector = glass(QStackedWidget())  # the glass panel on the right…
-        for w in (self.items, self.packages, self.rentals, self.assistant):
+        for w in (self.items, self.packages, self.rentals, self.renters, self.assistant):
             self.inspector.addWidget(w)
         self.dock = Dock(self.inspector, root, self.sidebar, body)  # …which slides in when something's picked
         self.dock.toggled.connect(lambda _on: self._mark_assistant())
@@ -300,6 +312,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.gear_table = GearTable()
         self.kit_table = KitTable()
         self.rental_table = RentalTable()
+        self.renter_table = RenterTable()
         self.calendar = CalendarPage()  # Month or Timeline
         self.calendar.set_mode(settings.value(self.lib.settings, "calendar_mode"), quiet=True)
         self.calendar.mode_changed.connect(lambda m: self.lib.settings.__setitem__("calendar_mode", m))
@@ -310,7 +323,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.no_results = NoResults()  # over a table when a search or the filters hide every row
         self.no_results.clear_wanted.connect(self._clear_hiding)
         # each list in its card (G.10.1); the stack shows a card, the calendar or the empty page
-        self.cards = {t: ListCard(t) for t in (self.gear_table, self.kit_table, self.rental_table)}
+        self.cards = {t: ListCard(t) for t in (self.gear_table, self.kit_table, self.rental_table, self.renter_table)}
         for w in (*self.cards.values(), cal_scroll, self.empty):
             self.pages.addWidget(w)
         # one left edge and one right edge: a list's words line up with the title and the bar's last button
@@ -364,18 +377,20 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.kit_table.picked.connect(lambda i: self.open("packages", i))
         self.rental_table.picked.connect(lambda i: self.open("rentals", i))
         self.calendar.picked.connect(lambda i: self.open("rentals", i))
+        self.renter_table.picked.connect(lambda i: self.open("renters", i))
+        self.renter_table.menu_wanted.connect(lambda i, pos: self._row_menu("renters", i, pos))
         self.gear_table.menu_wanted.connect(lambda i, pos: self._row_menu("gear", i, pos))
         self.kit_table.menu_wanted.connect(lambda i, pos: self._row_menu("packages", i, pos))
         self.rental_table.menu_wanted.connect(lambda i, pos: self._row_menu("rentals", i, pos))
         self.gear_table.folds_changed.connect(self._remember_folds)
-        for panel in (self.items, self.packages, self.rentals):  # after the click is over (rule 16)
+        for panel in (self.items, self.packages, self.rentals, self.renters):  # after the click is over (rule 16)
             panel.pager.step.connect(lambda d: QTimer.singleShot(0, self, lambda: self._step_record(d)))
-        for t in (self.gear_table, self.kit_table, self.rental_table):
+        for t in (self.gear_table, self.kit_table, self.rental_table, self.renter_table):
             t.header().sortIndicatorChanged.connect(lambda _c, _o: QTimer.singleShot(0, self, self._pager_update))
         self.gear_table.divider_menu.connect(self._divider_menu)
         self.gear_table.dropped.connect(self.move_gear)
         self.gear_table.delete_wanted.connect(self.delete_gear)
-        for t in (self.gear_table, self.kit_table, self.rental_table):
+        for t in (self.gear_table, self.kit_table, self.rental_table, self.renter_table):
             t.cleared.connect(self.deselect)
         self.gear_table.reordered.connect(self._reordered)
         self.gear_table.branded.connect(self._branded)
@@ -385,7 +400,8 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.rental_table.delete_wanted.connect(
             lambda ids: self.delete_many("rentals", ids) if len(ids) > 1 else self.delete("rentals", ids[0])
         )  # (one: a booked one is cancelled, after asking; several: the quotes among them go)
-        for t in (self.gear_table, self.kit_table, self.rental_table):
+        self.renter_table.delete_wanted.connect(self.delete_renters)
+        for t in (self.gear_table, self.kit_table, self.rental_table, self.renter_table):
             t.ticks_changed.connect(self._ticks_changed)
         sb.menu_wanted.connect(self._sidebar_menu)
         sb.dropped.connect(self._sidebar_dropped)
@@ -398,8 +414,11 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         it.open_item.connect(lambda i: self.open("gear", i))
         it.attach_wanted.connect(self.attach_to)
         it.detach_wanted.connect(self.detach)
-        for panel in (self.items, self.packages, self.rentals):
+        for panel in (self.items, self.packages, self.rentals, self.renters):
             panel.close_wanted.connect(self.deselect)  # the round ✕
+        self.renters.saved.connect(self._renter_saved)
+        self.renters.delete_wanted.connect(lambda i: self.delete_renters([i]))
+        self.renters.open_rental.connect(lambda i: self.open("rentals", i))
         it.rent_wanted.connect(lambda _i: self.rent_this())
         for panel, kind in ((self.items, "gear"), (self.packages, "packages"), (self.rentals, "rentals")):
             panel.acts = lambda obj_id, k=kind: self.record_acts(k, obj_id)  # (its ⋯: the row's own list)
@@ -468,7 +487,9 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.title.setText(self._grp() or TITLES.get(view, ""))
         kind = kind_of(view)
         self.btn_export.setVisible(kind == "gear" and bool(self.lib.items))  # nothing to print yet: no share
-        self.btn_new.setToolTip({"gear": "New Gear or Group", "packages": "New Kit", "rentals": "New Rental"}[kind])
+        self.btn_new.setToolTip(
+            {"gear": "New Gear or Group", "packages": "New Kit", "rentals": "New Rental", "renters": "New Renter"}[kind]
+        )
         gear_page = kind == "gear"  # on gear pages the + asks: a piece, or a group
         self.btn_new.setMenu(self.new_menu if gear_page else None)
         self.btn_new.setPopupMode(
@@ -484,10 +505,10 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             self.refresh()
             self._ai_state()
             return
-        self.inspector.setCurrentWidget({"gear": self.items, "packages": self.packages, "rentals": self.rentals}[kind])
+        self.inspector.setCurrentWidget(self._panel(kind))
         self.refresh()
         # keep what's open if it's still here; otherwise nothing is picked and the panel slides away
-        cur = {"gear": self.items.it, "packages": self.packages.pkg, "rentals": self.rentals.r}[kind]
+        cur = self._current(kind)
         table = self._table()
         if cur is not None and table is not None and self._in_table(cur.id) and self.dock.opened:
             table.select_id(cur.id)
@@ -500,7 +521,25 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             "gear": self.gear_table,
             "packages": self.kit_table,
             "rentals": None if self.view_key == "calendar" else self.rental_table,
+            "renters": self.renter_table,
         }[kind_of(self.view_key)]
+
+    def _panel(self, kind: str):
+        """The panel on the right that shows this kind of record."""
+        return {"gear": self.items, "packages": self.packages, "rentals": self.rentals, "renters": self.renters}[kind]
+
+    def _current(self, kind: str):
+        """The record of this kind open on the right (or None)."""
+        return {
+            "gear": self.items.it,
+            "packages": self.packages.pkg,
+            "rentals": self.rentals.r,
+            "renters": self.renters.c,
+        }[kind]
+
+    def _records(self, kind: str) -> dict:
+        lib = self.lib
+        return {"gear": lib.items, "packages": lib.packages, "rentals": lib.rentals, "renters": lib.clients}[kind]
 
     def _in_table(self, obj_id: str) -> bool:
         """It has a row in this list that a search or filter doesn't hide (a folded divider can open to it)."""
@@ -533,6 +572,9 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         elif kind == "packages":
             self.kit_table.fill(lib, b)
             page = self.kit_table if lib.packages else self._empty_page("packages")
+        elif kind == "renters":
+            self.renter_table.fill(lib)
+            page = self.renter_table if lib.clients else self._empty_page("renters")
         elif view == "calendar":
             self.calendar.fill(lib)
             page = self.cal_scroll
@@ -552,7 +594,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
     def _show_figures(self, empty: bool) -> None:
         """The figure row for this list (none on the calendar or an empty page); the slice showing is marked on."""
         view, kind = self.view_key, kind_of(self.view_key)
-        if empty or view == "calendar":
+        if empty or view in ("calendar", "renters"):
             self.figure_row.show_for([])
         elif kind == "gear":
             self.figure_row.show_for(figures.gear(self.lib, self._grp()), self.view_menu.filter.show)
@@ -714,6 +756,13 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             self.empty.show_for(
                 "No Kits Yet", "Gear that rents together, at one price.", "New Kit", lambda: self.new("packages")
             )
+        elif which == "renters":
+            self.empty.show_for(
+                "No Renters Yet",
+                "Who you rent to: saved once, then picked on every rental.",
+                "New Renter…",
+                lambda: self.new("renters"),
+            )
         elif which == "out":
             self.empty.show_for("Nothing Out Now", "A rental shows here while its gear is out.", "New Rental", rental)
         elif which == "upcoming":
@@ -725,7 +774,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         return self.empty
 
     def _inspector_empty(self, kind: str) -> None:
-        panel = {"gear": self.items, "packages": self.packages, "rentals": self.rentals}[kind]
+        panel = self._panel(kind)
 
         def blank() -> None:
             if kind == "rentals" and not self.lib.businesses:
@@ -741,6 +790,8 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             self.packages.pkg = None
             if self.view_key == "kits":
                 self.sidebar.select("kits")
+        elif kind == "renters":
+            self.renters.c = None
         else:
             self.rentals.r = None
         self.dock.set_open(False)
@@ -762,6 +813,8 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
     def deselect(self) -> None:
         """Esc, or a click on empty space: nothing picked, the panel slides away (and a new piece you didn't
         fill in goes away)."""
+        if not self.renter_may_go():
+            return
         self.flush()
         self._drop_fresh()
         t = self._table()
@@ -779,14 +832,16 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
 
     # Opening
     def open(self, kind: str, obj_id: str) -> None:
-        """Open a piece of gear, a kit or a rental on the right (moving to its place if needed)."""
-        where = {"gear": self.lib.items, "packages": self.lib.packages, "rentals": self.lib.rentals}[kind]
+        """Open a piece of gear, a kit, a rental or a renter on the right (moving to its place if needed)."""
+        if not (kind == "renters" and self.renters.current_id() == obj_id) and not self.renter_may_go():
+            return  # (a renter's typing not saved: kept unless you discard it)
+        where = self._records(kind)
         if obj_id not in where:  # deleted since (a rental line can still name gear that's gone)
             self.toast("That's been deleted.")
             return
         if kind != kind_of(self.view_key):
             self.flush()
-            target = {"gear": "gear", "packages": "kits", "rentals": "rentals"}[kind]
+            target = {"gear": "gear", "packages": "kits", "rentals": "rentals", "renters": "renters"}[kind]
             if kind == "gear":
                 it = self.lib.items.get(obj_id)
                 self.go(target)
@@ -823,6 +878,11 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             if p is not None and (self.packages.pkg is not p or not self.packages.form.isVisible()):
                 self.packages.load(p)
                 self.packages.to_top()
+        elif kind == "renters":
+            c = self.lib.clients.get(obj_id)
+            if c is not None and (self.renters.c is not c or not self.renters.form.isVisible()):
+                self.renters.load(c)
+                self.renters.to_top()
         else:
             r = self.lib.rentals.get(obj_id)
             if r is not None:
@@ -831,7 +891,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
                 if self.rentals.r is not r or not self.rentals.form.isVisible():
                     self.rentals.load(r)
                     self.rentals.to_top()
-        self.inspector.setCurrentWidget({"gear": self.items, "packages": self.packages}.get(kind, self.rentals))
+        self.inspector.setCurrentWidget(self._panel(kind))
         if kind == "packages" and self.view_key == "kits":  # the kit's own row in the sidebar
             self.sidebar.select(f"kit:{obj_id}" if f"kit:{obj_id}" in self.sidebar.rows else "kits")
         self.dock.set_open(True)
@@ -849,6 +909,8 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             return "packages", self.packages.pkg.id
         if w is self.rentals and self.rentals.r is not None:
             return "rentals", self.rentals.r.id
+        if w is self.renters and self.renters.c is not None:
+            return "renters", self.renters.c.id
         return "", ""
 
     def _listed(self, kind: str) -> list[str]:
@@ -861,7 +923,12 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
     def _pager_update(self) -> None:
         kind, obj_id = self._open_record()
         ids = self._listed(kind)
-        for kind_, panel in (("gear", self.items), ("packages", self.packages), ("rentals", self.rentals)):
+        for kind_, panel in (
+            ("gear", self.items),
+            ("packages", self.packages),
+            ("rentals", self.rentals),
+            ("renters", self.renters),
+        ):
             here = kind_ == kind and obj_id in ids
             panel.set_pager(ids.index(obj_id) + 1 if here else 0, len(ids) if here else 0)
 
@@ -985,6 +1052,8 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             ]
         elif ids and kind == "packages":
             acts = [("delete", "Delete", lambda: self.delete_many("packages", self.kit_table.ticked_ids()), True)]
+        elif ids and kind == "renters":
+            acts = [("delete", "Delete", lambda: self.delete_renters(self.renter_table.ticked_ids()), True)]
         elif ids:  # rentals: their next step for the ones that can take it; only the quotes can go
             for name, back, verb in (("out", False, "Check Out"), ("in", True, "Check In")):
                 can = self.can_check(ids, back)
@@ -1000,6 +1069,41 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self._place_selbar()
         if self.toaster.isVisible() and was != self.selbar.isVisible():
             self.toaster.place()
+
+    # Renters (N-18): edited in place, saved only on purpose
+    def renter_may_go(self) -> bool:
+        """Before the open renter gives way to something else: typing you haven't saved asks first."""
+        return self.inspector.currentWidget() is not self.renters or not self.dock.opened or self.renters.may_leave()
+
+    def _renter_saved(self, c) -> None:
+        """Save Changes: kept (rentals not out the door yet follow), and the list shows it."""
+        self.flush()
+        try:
+            c = self.lib.save_client(c)
+        except OSError as e:
+            self.toast(errors.plain(e, "save the renter"), "problem")
+            return
+        self.rentals.refresh_clients()
+        self.refresh()
+        self.renters.load(c)
+        self.toast(f"Saved {c.name or c.company or 'the renter'}.", "done")
+
+    def delete_renters(self, ids: list[str]) -> None:
+        """Gone at once, with Undo: their rentals keep their own copy of who they were for."""
+        gone = [self.lib.clients[i] for i in ids if i in self.lib.clients]
+        if not gone:
+            return
+        self.flush()
+        for c in gone:
+            self.lib.delete_client(c.id)
+        if self.renters.c is not None and self.renters.c.id in ids:
+            self._inspector_empty("renters")
+        self.untick()
+        self.rentals.refresh_clients()
+        self.refresh()
+        first = gone[0].name or gone[0].company or "the renter"
+        what = first if len(gone) == 1 else words.count(len(gone), "renter")
+        self.toast_undo(f"Deleted {what}. Rentals keep their details.")
 
     def _place_selbar(self) -> None:
         """Centred over the list, SELBAR_LIFT above its foot (G.10.7), never wider than the list less its air."""

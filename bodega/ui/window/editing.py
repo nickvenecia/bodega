@@ -8,7 +8,18 @@ from dataclasses import replace
 
 from bodega.core import money, pricing, settings, words
 from bodega.core.log import get_logger
-from bodega.core.model import HOLD_VERBS, Business, Item, Package, PackageLine, Rental, RentalLine, new_id, now_iso
+from bodega.core.model import (
+    HOLD_VERBS,
+    Business,
+    Client,
+    Item,
+    Package,
+    PackageLine,
+    Rental,
+    RentalLine,
+    new_id,
+    now_iso,
+)
 from bodega.ui.components.panels import Act
 from bodega.ui.components.widgets import one_stop
 from bodega.ui.dialogs.client import ClientDialog
@@ -50,6 +61,10 @@ class EditingMixin:
             self.open("packages", p.id)
             self.packages.name.setFocus()
             self._fresh = ("packages", p.id, _blank(p))
+        elif kind == "renters":
+            c = self.edit_client(True, assign=False)  # (a new renter is a sheet: kept only once you save it)
+            if c is not None and kind_of(self.view_key) == "renters":
+                self.open("renters", c.id)
         else:
             b = self.business()
             if b is None:
@@ -65,7 +80,8 @@ class EditingMixin:
             self._fresh = ("rentals", r.id, _blank(r))
 
     def new_here(self) -> None:
-        """N (and ⌘N): this page's new thing (a piece on gear pages, a kit on Kits, a rental on rentals)."""
+        """N (and ⌘N): this page's new thing (a piece on gear pages, a kit on Kits, a rental on rentals, a renter
+        on Renters)."""
         self.new(kind_of(self.view_key))
 
     def edit_open(self) -> None:
@@ -76,6 +92,7 @@ class EditingMixin:
             "gear": (self.items, "it"),
             "packages": (self.packages, "pkg"),
             "rentals": (self.rentals, "r"),
+            "renters": (self.renters, "c"),
         }[kind]
         if getattr(panel, field) is None or not self.dock.opened or self.assistant_showing():
             t = self._table()
@@ -83,8 +100,11 @@ class EditingMixin:
             if row is None or row not in list(t.showing_rows()):
                 return
             self.open(kind, row.data(0, ID))
-        first = {"gear": self.items.name, "packages": self.packages.name, "rentals": self.rentals.client}[kind]
-        if first.isEnabled():
+        if kind == "renters":
+            first = self.renters.editor.name if self.renters.editor is not None else None
+        else:
+            first = {"gear": self.items.name, "packages": self.packages.name, "rentals": self.rentals.client}[kind]
+        if first is not None and first.isEnabled():
             first.setFocus()
 
     def _drop_fresh(self, keep: str = "") -> None:
@@ -118,8 +138,8 @@ class EditingMixin:
 
     def _duplicate_current(self) -> None:
         kind = kind_of(self.view_key)
-        cur = {"gear": self.items.it, "packages": self.packages.pkg, "rentals": self.rentals.r}[kind]
-        if cur is not None:
+        cur = {"gear": self.items.it, "packages": self.packages.pkg, "rentals": self.rentals.r}.get(kind)
+        if cur is not None:  # (a renter isn't copied: two of the same person would only confuse)
             self.duplicate(kind, cur.id)
 
     def duplicate(self, kind: str, obj_id: str) -> None:
@@ -161,6 +181,9 @@ class EditingMixin:
         if kind == "gear":
             self.delete_gear([obj_id])
             return
+        if kind == "renters":
+            self.delete_renters([obj_id])
+            return
         # deleted at once, with Undo (the standard's 4.19: never ask about what can be taken back)
         if kind == "packages":
             p = self.lib.packages.get(obj_id)
@@ -188,6 +211,9 @@ class EditingMixin:
         deleted, so those stay as they are), at once, with one Undo."""
         if kind == "gear":
             self.delete_gear(ids)
+            return
+        if kind == "renters":
+            self.delete_renters(ids)
             return
         self.flush()
         if kind == "packages":
@@ -511,22 +537,20 @@ class EditingMixin:
         self.refresh()
         self.toast(f"Tidied {words.count(n, 'renter')}.", "done")
 
-    def edit_client(self, new: bool, assign: bool = True) -> None:
+    def edit_client(self, new: bool, assign: bool = True) -> Client | None:
+        """A renter: a new one fills in a sheet; one you've saved opens on the Renters page, edited in place.
+        Returns the renter saved from the sheet (None if it was closed)."""
         r = self.rentals.r if kind_of(self.view_key) == "rentals" else None
         current = None
         if not new and r is not None and not r.client.is_blank():
-            saved = self.lib.clients.get(r.client.id)
-            current = replace(saved) if saved else replace(r.client)
-        d = ClientDialog(current, current is not None and current.id in self.lib.clients, parent=self)
+            if r.client.id in self.lib.clients:
+                self.open("renters", r.client.id)
+                return None
+            current = replace(r.client)  # (one this rental only has: kept as a renter once you save it)
+        d = ClientDialog(current, False, parent=self)
         if d.exec() != ClientDialog.DialogCode.Accepted:
-            return
+            return None
         self.flush()
-        if d.deleted:
-            self.lib.delete_client(d.client.id)
-            self.rentals.refresh_clients()
-            self.refresh()
-            self.toast_undo(f"Deleted {d.client.name or d.client.company or 'the renter'}. Rentals keep their details.")
-            return
         c = self.lib.save_client(d.client)
         if r is not None and assign:
             self.rentals.use_client(c)
@@ -534,6 +558,7 @@ class EditingMixin:
             self.toast(f"Saved {c.name or c.company}.", "done")
             self.rentals.refresh_clients()
         self.refresh()
+        return c
 
     def _on_rental(self) -> bool:
         return self.rentals.r is not None and kind_of(self.view_key) == "rentals" and self.dock.opened
@@ -629,6 +654,10 @@ class EditingMixin:
                 Act("", "-"),
                 Act("trash", "Delete", lambda: self.delete("gear", obj_id)),
             ]
+        if kind == "renters":
+            if obj_id not in self.lib.clients:
+                return []
+            return [Act("trash", "Delete", lambda: self.delete_renters([obj_id]))]
         if kind == "packages":
             if obj_id not in self.lib.packages:
                 return []

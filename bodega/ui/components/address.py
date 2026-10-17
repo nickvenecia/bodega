@@ -41,6 +41,8 @@ class AddressFields(QWidget):
         row.addWidget(city, 1)
         self.region_sec = Section(addresses.REGION_WORD.get(self._country, "Region"))
         self.region_pick = QComboBox()
+        self.region_pick.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.region_pick.setMinimumContentsLength(1)  # (its longest name never squeezes the city in a narrow panel)
         self.region_text = QLineEdit()
         self.region_sec.add(self.region_pick)
         self.region_sec.add(self.region_text)

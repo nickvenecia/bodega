@@ -34,6 +34,11 @@ def kit_hay(p) -> str:
     return folded(p.name + " " + p.notes)
 
 
+def renter_hay(c) -> str:
+    """What a renter is found by: the person, the company, their email, phone and town."""
+    return folded(" ".join((c.name, c.company, c.email, c.phone, c.city)))
+
+
 def rental_hay(r) -> str:
     """What a rental is found by: its number, the renter (person and company) and the production."""
     return folded(" ".join((r.number, r.client.name, r.client.company, r.project)))

@@ -142,6 +142,10 @@ def main(out: Path, sheet: Path | None = None) -> int:
     for e in w.rentals.editors[1:2]:
         w.rentals._open_editor(e)
     shot(w, out / "5-rental.png")
+    w.go("renters")
+    if lib.clients:
+        w.open("renters", next(iter(lib.clients)))  # (its form, Save Changes, its rentals)
+    shot(w, out / "5b-renters.png")
     w.go("calendar")
     shot(w, out / "6-calendar.png")
     from bodega.ui.dialogs.checklist import CheckDialog

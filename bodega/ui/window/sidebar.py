@@ -185,6 +185,7 @@ class Sidebar(LeftPanel):
             if p.under == "rentals":
                 self._place(p.key, under).as_child()
         self._place("calendar", rent)  # a different view (a timeline), so its own row
+        self._place("renters", rent)  # who you rent to: each edits in place
         self.lay.addStretch(1)
         folded = settings.value(lib.settings, "sidebar_folded")
         folded = list(FOLDED_AT_FIRST) if folded is None else folded

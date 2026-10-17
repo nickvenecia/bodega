@@ -155,10 +155,10 @@ bodega/
                    (and SINGLE_KEYS: N E D / ? A), groups.py, editing.py, transfer.py (import, export, back up),
                    pages.py (the page window), services.py (settings, account, feedback, updates, light/dark), ai.py
                    (assistant, jobs, review, apply); common.py (kind_of, TITLES); sidebar.py (Inventory: All Gear with
-                   its groups, Kits with each kit; Rentals: All Rentals with Out Now and Coming Up, then Calendar; rows
-                   fold, kept in settings "sidebar_folded"; a folded All Rentals still shows out/late; at the bottom:
+                   its groups, Kits with each kit; Rentals: All Rentals with Out Now and Coming Up, then Calendar, then Renters;
+                   rows fold, kept in settings "sidebar_folded"; a folded All Rentals still shows out/late; at the bottom:
                    your profile card (its menu: your profiles, Send Feedback, Check for Updates, Settings)); tables.py
-                   (GearTable, KitTable, RentalTable, each in its ListCard (G.10.1); a tick column first (TICK: the ticks are the selection, a click
+                   (GearTable, KitTable, RentalTable, RenterTable, each in its ListCard (G.10.1); a tick column first (TICK: the ticks are the selection, a click
                    opens, chosen_ids() what's ticked), the gear grip last; COL_W widths; never per-row widgets; gear
                    that goes with a piece is one level under it (G.11): open_pieces, kept in settings "gear_open",
                    family ticks, listed_rows() for ticks and showing_rows() for what you see); lift.py
@@ -168,7 +168,9 @@ bodega/
                    bars, or Timeline; settings "calendar_mode")
     panels/        base.py (DetailsBase: header ⋯, footer_button(text, icon), Cards), item.py (gear: the head
                    (photo beside the TitleEdit name, the status line, company · group), Details / Value & Rate / added parts; Check Price; Update with AI),
-                   kit.py (TitleEdit name, About, Gear, Price), rental.py (LineEditor per line…), assistant.py
+                   kit.py (TitleEdit name, About, Gear, Price), rental.py (LineEditor per line…), renter.py
+                   (RenterPanel: the Renters page's right side, the renter's form (dialogs/client.py, embedded,
+                   Save Changes) and their rentals; a new renter is still the sheet), assistant.py
                    (AssistantPanel: the AI chat and jobs, in the right-hand panel; toggled by its button or ⌘J)
     dialogs/       common.py (Alert: confirm and notice, Return says yes; ask_name, tidy_preview, about),
                    palette.py (Search Everything, ⌘K: places, records by core/search's *_hay, the menus' commands),
@@ -207,7 +209,8 @@ tests/screenshot.py    QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTD
   (both guard against loops). Attaching copies the parent's department and group.
 - Rental lines are compared by identity (`rental_panel._index`), never `==` (two lines can be equal).
 - A line has its own dates only when `Rental.own_dates(line)`; blank dates mean the rental's.
-- Renters are saved only on purpose (the renter dialog). Rentals keep their own copy; quotes and bookings follow edits.
+- Renters are saved only on purpose (the renter's form: its sheet, or on the Renters page with Save Changes).
+  Rentals keep their own copy; quotes and bookings follow edits.
 - New model fields need defaults that mean "off"/empty: old files are read through `from_dict()`. A change to a
   file's shape (a renamed field) raises `store.FORMAT`, with a step in `store.UPGRADES` and a test for it.
 - Personal details and real gear lists never go in the code or the repo (it's public). Use core/sample.py.

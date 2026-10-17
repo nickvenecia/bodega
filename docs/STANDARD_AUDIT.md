@@ -31,7 +31,7 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **228 fixed, 2 partly, 2 not
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **229 fixed, 1 partly, 2 not
 started (larger redesigns), 20 waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
@@ -62,13 +62,12 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 228 · Partly 2 · Open 2 · Waiting on the owner 20 · No longer applies 1.**
+**Of the 253 failures: Fixed 229 · Partly 1 · Open 2 · Waiting on the owner 20 · No longer applies 1.**
 
 ### Partly: what's left
 
 | Check | Sev | What's left |
 |---|---|---|
-| N-18 | S2 | A renter opens in a sheet over the window now; editing one in place needs a Renters page of its own (a list and a panel), not built yet. |
 | T-04 | S2 | Tests still reach some controls through private names (about 48 in test_window.py). |
 
 ### Not started: the larger redesigns
@@ -118,7 +117,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 - **G**: G-01, G-02
 - **I**: I-01, I-02, I-03, I-04, I-06, I-07, I-08, I-09, I-10, I-11, I-12, I-13, I-14, I-15, I-18, I-19, I-20, I-21, I-23, I-24, I-25, I-26, I-29, I-30, I-31
 - **K**: K-02, K-03, K-04, K-06, K-07, K-09, K-10, K-12
-- **N**: N-01, N-02, N-03, N-04, N-05, N-06, N-15, N-17
+- **N**: N-01, N-02, N-03, N-04, N-05, N-06, N-15, N-17, N-18
 - **O**: O-04, O-05, O-07, O-09, O-11
 - **P**: P-01, P-02, P-03, P-04, P-09, P-13, P-15, P-16
 - **R**: R-01, R-05

@@ -188,7 +188,7 @@ class MenusMixin:
         b = bar.addMenu("Profile")
         act(b, "Edit Profile…", lambda: self.edit_business(False))
         act(b, "Add Profile…", lambda: self.edit_business(True))
-        act(b, "New Renter…", lambda: self.edit_client(True, assign=False))
+        act(b, "New Renter…", lambda: self.new("renters"))
         act(b, "Tidy Up Renters…", self.tidy_renters)
         ai = bar.addMenu("AI")
         self.act_assistant = act(ai, "Show Assistant", self.toggle_assistant, "Ctrl+J")
@@ -429,11 +429,12 @@ class MenusMixin:
             if ids:
                 self.delete_gear(ids)
             return
-        ticked = (self.kit_table if kind == "packages" else self.rental_table).ticked_ids()
+        table = {"packages": self.kit_table, "renters": self.renter_table}.get(kind, self.rental_table)
+        ticked = table.ticked_ids()
         if ticked and self.view_key != "calendar":
             self.delete_many(kind, ticked)
             return
-        cur = self.packages.pkg if kind == "packages" else self.rentals.r
+        cur = {"packages": self.packages.pkg, "renters": self.renters.c}.get(kind, self.rentals.r)
         if cur is not None and self.dock.opened:
             self.delete(kind, cur.id)
 

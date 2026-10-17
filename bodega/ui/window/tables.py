@@ -1809,6 +1809,46 @@ class RentalTable(Table):
         self._fill_end(keep, col, order)
 
 
+class RenterTable(Table):
+    """The Renters page (N-18): everyone you rent to, with how many rentals and the last one's dates."""
+
+    COLUMNS = [
+        ("", tokens.TICK_W, None),
+        ("Name", 0, None),
+        ("Company", tokens.COL_W["company"], None),
+        ("Email", tokens.COL_W["email"], None),
+        ("Phone", tokens.COL_W["phone"], None),
+        ("Rentals", tokens.COL_W["rentals"], CENTER),
+        ("Last Rental", tokens.COL_W["last"], None),
+    ]
+    STEP_ASIDE = (4, 3, 6)  # Phone, then Email, then the last rental's dates
+    WIDE_MIN = tokens.RENTER_MIN
+
+    def fill(self, lib: Library) -> None:
+        keep, col, order = self._fill_start()
+        theirs: dict[str, list] = {}
+        for r in lib.rentals.values():
+            theirs.setdefault(r.client.id, []).append(r)
+        for c in lib.clients.values():
+            mine = theirs.get(c.id, [])
+            last = max((dates.parse(r.pickup) for r in mine if dates.parse(r.pickup)), default=None)
+            name = c.name or c.company or "Unnamed Renter"
+            row = self.make(
+                c.id,
+                [
+                    ("", None),  # its tick
+                    (name, name.casefold()),
+                    (c.company if c.name else "", c.company.casefold()),
+                    (c.email, c.email.casefold()),
+                    (c.phone, c.phone),
+                    (str(len(mine)), len(mine)),
+                    (dates.fmt(last) if last else "", dates.iso(last) if last else ""),
+                ],
+            )
+            row.setData(0, HAY, search.renter_hay(c))
+        self._fill_end(keep, col, order)
+
+
 def menu(parent: QWidget, items: list[tuple[str, str, object]]) -> QMenu:
     m = QMenu(parent)
     for icon, text, slot in items:

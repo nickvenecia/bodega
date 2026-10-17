@@ -38,6 +38,7 @@ PLACES = (  # in the sidebar's order (each group's own places, like Lenses, come
     Place("out", "Out Now", under="rentals"),
     Place("upcoming", "Coming Up", under="rentals"),
     Place("calendar", "Calendar", "calendar", menu="Calendar"),
+    Place("renters", "Renters", "user", menu="Renters"),  # (N-18: a renter edits in place, on its own page)
 )
 PLACE = {p.key: p for p in PLACES}
 TITLES = {p.key: p.title for p in PLACES}
@@ -79,9 +80,11 @@ PAGES = {  # what the page window shows, by what it was opened for
 
 
 def kind_of(view: str) -> str:
-    """What a sidebar place shows: gear, kits or rentals."""
+    """What a sidebar place shows: gear, kits, rentals or renters."""
     if view == "gear" or view.startswith("grp:"):
         return "gear"
     if view == "kits":
         return "packages"
+    if view == "renters":
+        return "renters"
     return "rentals"

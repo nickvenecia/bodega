@@ -226,6 +226,7 @@ COL_W = {
     "company": 130, "series": 110, "group": 140, "qty": 48, "status": 88, "paid": 100,
     "with_tax": 104, "day": 88, "pieces": 90, "rate": 110, "value": 120, "rental": 140, "production": 200,
     "dates": 190, "rental_status": 100, "total": 120, "earned": 96, "with": 170,
+    "email": 220, "phone": 140, "rentals": 90, "last": 130,
 }  # fmt: skip
 ROW_R = RADIUS_SM  # a table row's rounded highlight
 TABLE_THUMB = 24  # a piece's photo before its name in the gear list

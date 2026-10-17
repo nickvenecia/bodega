@@ -1,4 +1,6 @@
-"""A saved renter: who you rent to. Filled in once, then picked on every rental after that."""
+"""A saved renter: who you rent to. Filled in once, then picked on every rental after that. A new one is made in a
+sheet; one you have is edited in place, on the Renters page (panels/renter.py embeds this same form there, with
+Cancel and Save Changes under it)."""
 
 from __future__ import annotations
 
@@ -9,11 +11,21 @@ from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QWidget
 from bodega.core.model import Client
 from bodega.ui.components import sheet
 from bodega.ui.components.address import AddressFields
-from bodega.ui.components.widgets import Guarded, ReturnMovesOn, Section, TextBox, hbox, primary_button, sized, vbox
+from bodega.ui.components.widgets import (
+    Embeddable,
+    Guarded,
+    ReturnMovesOn,
+    Section,
+    TextBox,
+    hbox,
+    primary_button,
+    sized,
+    vbox,
+)
 from bodega.ui.style.tokens import DIALOG_W_WIDE, SPACE_2, SPACE_3, SPACE_4, SPACE_5, TEXT_BOX_H
 
 
-class ClientDialog(Guarded, QDialog):
+class ClientDialog(Guarded, Embeddable, QDialog):
     """Add or edit a renter. After Save, `.client` holds the result; `.deleted` if Delete was chosen."""
 
     def __init__(self, client: Client | None, can_delete: bool, parent: QWidget | None = None):
@@ -26,7 +38,7 @@ class ClientDialog(Guarded, QDialog):
         self.setWindowTitle(title_text)
         self.setMinimumWidth(DIALOG_W_WIDE)
         lay = vbox(self, SPACE_5, SPACE_3)
-        title = QLabel(title_text)
+        self.title_label = title = QLabel(title_text)
         title.setObjectName("DialogTitle")
         lay.addWidget(title)
         c = self.client
@@ -70,6 +82,13 @@ class ClientDialog(Guarded, QDialog):
             box.edited.connect(self._check)
         self.settled()
         self._check()
+
+    def embed(self) -> None:
+        """In the Renters page's panel: no title of its own (the panel's is), Cancel and Save Changes stay."""
+        super().embed()
+        self.setMinimumWidth(0)  # (the panel's width)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.save.setText("Save Changes")
 
     def form_values(self) -> object:
         return self._draft()
