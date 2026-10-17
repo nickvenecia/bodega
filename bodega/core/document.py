@@ -9,8 +9,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from bodega.core import addresses, dates, money, pricing, words
-from bodega.core.model import Business, Item, Package, Rental
+from bodega.core import addresses, dates, money, pageopts, pricing, words
+from bodega.core.model import ITEM_WORDS, Business, Item, Package, Rental
 from bodega.core.terms import terms_for
 
 
@@ -86,6 +86,7 @@ class DocView:
     note: str = ""
     footer: str = ""
     labels: list[Label] = field(default_factory=list)  # a sheet of stickers instead of a page (kind "labels")
+    letterhead: bool = True  # your logo, name and contact at the top (core/pageopts.py)
 
 
 def _contact(b: Business | None) -> list[str]:
@@ -288,9 +289,27 @@ def _grouped(lib, items: list[Item]):
     return sections
 
 
-def build_inventory(lib, items: list[Item], b: Business | None, title: str = "Equipment Inventory") -> DocView:
+def _cols(kind: str, o: pageopts.PageOptions) -> tuple[list[str], Table]:
+    """The list's columns as chosen (core/pageopts.py), each its share of the width out of what's shown."""
+    known = pageopts.COLUMNS[kind][0]
+    keys = pageopts.columns(kind, o)
+    whole = sum(known[k][1] for k in keys) or 1
+    cols = [Col(known[k][0], known[k][1] / whole, known[k][2], mono=k == "serials") for k in keys]
+    return keys, Table(cols, name_col=keys.index(pageopts.NAME_COLUMN))
+
+
+def build_inventory(
+    lib,
+    items: list[Item],
+    b: Business | None,
+    title: str = "Equipment Inventory",
+    o: pageopts.PageOptions | None = None,
+) -> DocView:
+    """The inventory: every piece with what it's worth. `o`: its columns, in order, and the filters that pick
+    its gear (core/pageopts.py); none: its own five columns and all the gear."""
+    o = o or pageopts.PageOptions()
     cur = _cur(b)
-    items = [i for i in items if not i.is_retired()]
+    items = pageopts.kept(lib, [i for i in items if not i.is_retired()], o, b)
     v = DocView(kind="inventory", title=title)
     v.business = b.name if b else ""
     v.tagline = b.tagline if b else ""
@@ -307,15 +326,26 @@ def build_inventory(lib, items: list[Item], b: Business | None, title: str = "Eq
             groups.append(i.group or "Other")
     v.strip = [("As Of", dates.fmt(dates.today())), ("Gear", f"{len(items):,}"), ("Pieces", f"{pieces:,}")]
     v.strip.append(("Groups", f"{len(groups):,}"))
-    table = Table(
-        [
-            Col("Qty", 0.07, "center"),
-            Col("Gear", 0.47),
-            Col("Serial Numbers", 0.18, mono=True),
-            Col("Unit Value", 0.13, "right"),
-            Col("Total", 0.15, "right"),
-        ]
-    )
+    keys, table = _cols("inventory", o)
+
+    def cells(it: Item) -> list[str]:
+        each = pricing.replacement(it, b)
+        got = {
+            "qty": _qty(it.qty),
+            "gear": it.name + ("  (In Repair)" if it.in_repair() else ""),
+            "serials": ", ".join(it.serial_list()),
+            "value": money.fmt(each, cur),
+            "total": money.fmt(each * it.qty, cur),
+            "company": it.brand,
+            "group": it.group,
+            "day": money.fmt_short(pricing.item_rate(lib, it, b), cur),
+            "status": ITEM_WORDS.get(it.status, ""),
+        }
+        return [got[k] for k in keys]
+
+    def heading(words_: str, figure: str = "") -> list[str]:
+        return [words_ if k == pageopts.NAME_COLUMN else (figure if k == "total" else "") for k in keys]
+
     last_dep = None
     for dep, group, rows in _grouped(lib, items):
         if dep != last_dep:
@@ -323,22 +353,12 @@ def build_inventory(lib, items: list[Item], b: Business | None, title: str = "Eq
                 (pricing.replacement(i, b) * i.qty for i in items if (i.group or "Other") == dep),
                 money.ZERO,
             )
-            table.rows.append(Row(["", dep, "", "", money.fmt(dep_total, cur)], "heading"))
+            table.rows.append(Row(heading(dep, money.fmt(dep_total, cur)), "heading"))
             last_dep = dep
         if group:
-            table.rows.append(Row(["", group, "", "", ""], "subheading"))
+            table.rows.append(Row(heading(group), "subheading"))
         for it, depth in rows:
-            each = pricing.replacement(it, b)
-            name = it.name + ("  (In Repair)" if it.in_repair() else "")
-            serial = ", ".join(it.serial_list())
-            table.rows.append(
-                Row(
-                    [_qty(it.qty), name, serial, money.fmt(each, cur), money.fmt(each * it.qty, cur)],
-                    "sub" if depth else "item",
-                    depth,
-                    photo=it.photo,
-                )
-            )
+            table.rows.append(Row(cells(it), "sub" if depth else "item", depth, photo=it.photo))
     table.photos = any(r.photo for r in table.rows)
     v.table = table
     v.totals = [("Gear", f"{len(items):,}", False), ("Pieces", f"{pieces:,}", False)]
@@ -346,11 +366,26 @@ def build_inventory(lib, items: list[Item], b: Business | None, title: str = "Eq
     if b is not None and money.parse(b.value_tax):
         v.note = f"Replacement value is what each piece cost plus {money.fmt_rate(b.value_tax)} sales tax."
     v.footer = b.name if b else ""
+    return with_options(v, o)
+
+
+def with_options(v: DocView, o: pageopts.PageOptions | None) -> DocView:
+    """A page with your letterhead or without it, and your note at its foot (core/pageopts.py)."""
+    if o is None:
+        return v
+    v.letterhead = o.letterhead
+    note = " ".join(o.note.split())
+    if note:
+        v.note = f"{v.note}\n\n{note}" if v.note else note
     return v
 
 
-# The rate card
-def build_ratecard(lib, items: list[Item], packages: list[Package], b: Business | None) -> DocView:
+def build_ratecard(
+    lib, items: list[Item], packages: list[Package], b: Business | None, o: pageopts.PageOptions | None = None
+) -> DocView:
+    """The rate card: kits, then gear, at a day's and a week's rate. `o`: its columns, in order, and the filters
+    that pick its gear (core/pageopts.py)."""
+    o = o or pageopts.PageOptions()
     cur = _cur(b)
     wd = b.week_days if b else 7
     v = DocView(kind="ratecard", title="Rate Card")
@@ -361,25 +396,40 @@ def build_ratecard(lib, items: list[Item], packages: list[Package], b: Business 
     v.big_label = "A Week Bills As"
     v.big_value = f"{wd} Days"
     v.big_sub = "Friday to Monday bills as 1 day" if (b and b.weekend_deal) else ""
-    table = Table([Col("Gear", 0.68), Col("Day", 0.16, "right"), Col("Week", 0.16, "right")], name_col=0)
+    keys, table = _cols("ratecard", o)
+
+    def row(name: str, day, week, company: str = "", value=None) -> list[str]:
+        got = {
+            "gear": name,
+            "day": day,
+            "week": week,
+            "company": company,
+            "value": money.fmt_short(value, cur) if value is not None else "",
+        }
+        return [got[k] for k in keys]
+
+    def heading(words_: str) -> list[str]:
+        return [words_ if k == pageopts.NAME_COLUMN else "" for k in keys]
+
     pk = [p for p in packages if p.lines]
-    if pk:
-        table.rows.append(Row(["Kits", "", ""], "heading"))
+    if pk and not o.filters:  # (a filtered card is about the gear it keeps)
+        table.rows.append(Row(heading("Kits"), "heading"))
         for p in sorted(pk, key=lambda p: p.name.casefold()):
             rate = pricing.package_rate(lib, p, b)
             gear = pricing.package_gear(lib, p)
             names = "Includes " + ", ".join(it.name for it, _u, d in gear if d == 0)
-            table.rows.append(
-                Row([p.name or "Kit", money.fmt_short(rate, cur), money.fmt_short(rate * wd, cur)], "package", 0, names)
-            )  # fmt: skip
+            cells = row(p.name or "Kit", money.fmt_short(rate, cur), money.fmt_short(rate * wd, cur),
+                        value=pricing.package_value(lib, p, b))  # fmt: skip
+            table.rows.append(Row(cells, "package", 0, names))
     shown = [i for i in items if i.can_rent() and not (i.parent and i.parent in lib.items)]
+    shown = pageopts.kept(lib, shown, o, b)
     last_dep = None
     for dep, group, rows in _grouped(lib, shown):
         if dep != last_dep:
-            table.rows.append(Row([dep, "", ""], "heading"))
+            table.rows.append(Row(heading(dep), "heading"))
             last_dep = dep
         if group:
-            table.rows.append(Row([group, "", ""], "subheading"))
+            table.rows.append(Row(heading(group), "subheading"))
         for it, depth in rows:
             if depth:
                 continue
@@ -393,12 +443,13 @@ def build_ratecard(lib, items: list[Item], packages: list[Package], b: Business 
             name = it.name + (f"  (×{it.qty})" if it.qty > 1 else "")
             day = money.fmt_short(rate, cur) if rate else "Free"
             week = money.fmt_short(rate * wd, cur) if rate else ""
-            table.rows.append(Row([name, day, week], "item", 0, note, photo=it.photo))
+            cells = row(name, day, week, it.brand, pricing.replacement(it, b))
+            table.rows.append(Row(cells, "item", 0, note, photo=it.photo))
     table.photos = any(r.photo for r in table.rows)
     v.table = table
     v.note = "Rates are per day, for one of each, and include the gear listed with it."
     v.footer = b.name if b else ""
-    return v
+    return with_options(v, o)
 
 
 # One package

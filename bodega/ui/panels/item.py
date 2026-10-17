@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
 
 from bodega.core import dates, earnings, errors, figures, maintenance, money, prices, pricing, web
 from bodega.core.log import get_logger
-from bodega.core.model import ITEM_STATUSES, Item, LogEntry
+from bodega.core.model import ITEM_STATUSES, ITEM_WORDS, Item, LogEntry
 from bodega.core.store import Library
 from bodega.ui.components import photos
 from bodega.ui.components.figures import FigureStrip
@@ -70,7 +70,7 @@ from bodega.ui.style import theme, tokens
 log = get_logger(__name__)
 
 PASTE_INSTEAD = "In your browser, right-click the photo, choose Copy Image, then paste it here."
-STATUS_LABELS = {"ready": "Ready", "repair": "In Repair", "retired": "Retired"}
+STATUS_LABELS = ITEM_WORDS  # (the one table: core/model.py)
 NEW = "\x00new"  # the "New Department…" / "New Group…" row
 EXTRAS = [
     ("works", "Works With"),

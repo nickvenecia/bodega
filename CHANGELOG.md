@@ -362,6 +362,12 @@
 - A narrow window (a large text size on a smaller screen) folds the sidebar away; the sidebar button at the start
   of the top bar, or View › Show Sidebar, brings it back. Figures and totals that don't fit step aside instead of
   being cut short.
+- The page window has its options beside the pages, and every change redraws them at once: Letter or A4 paper, your
+  logo and contact on or off (for paper that has your letterhead printed on it), and a note at the foot. The
+  inventory list and the rate card also choose their columns (tick the ones to print, drag to put them in order:
+  Company, Group, Day Rate and Status can join) and their gear, with filters (a group, a company, a status, or what
+  it cost, its day rate or how many from one amount to another). Bodega keeps your last choice for each kind of
+  page, and Use as This Profile's Default keeps it for your profile.
 - The Assistant's answers say which of your gear they drew on ("From your gear: …"). A change your AI is only
   guessing at is marked Not Sure: Review leaves it unticked, and the chat takes you to Review instead of making it.
 - Letters are spaced the way Apple spaces them at each size: a touch tighter in everyday words, a little looser in

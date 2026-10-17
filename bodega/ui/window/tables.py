@@ -914,16 +914,7 @@ class _GearPainter(RowPainter):
 
     @staticmethod
     def _grip(painter, rect) -> None:
-        painter.save()
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(theme.qcolor(tokens.FAINT))
-        c = QPointF(rect.center())
-        gap = tokens.GRIP_GAP
-        for dx in (-gap / 2, gap / 2):
-            for dy in (-gap, 0, gap):
-                painter.drawEllipse(QPointF(c.x() + dx, c.y() + dy), tokens.GRIP_DOT, tokens.GRIP_DOT)
-        painter.restore()
+        theme.draw_grip(painter, rect)
 
 
 # the gear table's columns: key, title, width (0 = takes the rest), alignment

@@ -18,6 +18,7 @@ from datetime import datetime
 from typing import Any, cast
 
 ITEM_STATUSES = ("ready", "repair", "retired")
+ITEM_WORDS = {"ready": "Ready", "repair": "In Repair", "retired": "Retired"}  # a piece's status, as people read it
 RENTAL_STATUSES = ("quote", "booked", "out", "returned", "cancelled")
 RENTAL_WORDS = {  # a rental's status, as people read it (the one table: lists, panels, paper)
     "quote": "Quote",
@@ -330,6 +331,7 @@ class Business(Record):
     terms: str = ""  # the agreement's standard terms, one clause per paragraph
     note: str = ""  # a short closing line on every agreement
     saldo_profile: str = ""  # Send to Saldo: the Saldo profile (its id) this one sends invoices as
+    page_options: dict = field(default_factory=dict)  # how each kind of page prints by default (core/pageopts.py)
     newer: dict = field(default_factory=dict, compare=False, repr=False)  # see Record
 
     @classmethod

@@ -371,7 +371,7 @@ def _header(out: _Pages, v: DocView, pal: Palette, F: _Fonts, logo: Path | None,
     left_w = cw - right_w - 20
     y = out.y
     x = x0
-    dims = logo_size(logo) if logo else None
+    dims = logo_size(logo) if logo and v.letterhead else None
     if dims:
         lh = LOGO_H
         lw = min(lh * dims[0] / dims[1], left_w * 0.45)
@@ -379,17 +379,18 @@ def _header(out: _Pages, v: DocView, pal: Palette, F: _Fonts, logo: Path | None,
         out.steps.append(Logo(QRectF(x, y, lw, lh), logo))
         x += lw + 12
     nw = x0 + left_w - x
-    name = v.business or "Your Rental House"
-    pt = fit_size(name, F.name, 20, 12, nw - 6)
-    spec = F.name(pt)
     ly = y
-    ly += out.text(x, ly, nw, name, spec, pal.ink, wrap=text_w(name, spec) > nw - 6)
-    if v.tagline:
-        ly += 2
-        ly += out.text(x, ly, nw, v.tagline.upper(), F.label, pal.soft)
-    ly += 4
-    for c in v.contact:
-        ly += out.text(x, ly, nw, c, F.small, pal.soft)
+    if v.letterhead:  # (without it: the page's own title and figures only, for paper that has its own)
+        name = v.business or "Your Rental House"
+        pt = fit_size(name, F.name, 20, 12, nw - 6)
+        spec = F.name(pt)
+        ly += out.text(x, ly, nw, name, spec, pal.ink, wrap=text_w(name, spec) > nw - 6)
+        if v.tagline:
+            ly += 2
+            ly += out.text(x, ly, nw, v.tagline.upper(), F.label, pal.soft)
+        ly += 4
+        for c in v.contact:
+            ly += out.text(x, ly, nw, c, F.small, pal.soft)
     if dims:
         ly = max(ly, y + LOGO_H)
 

@@ -224,8 +224,8 @@ QComboBox QAbstractItemView::separator {{ height: 1px; background: {tokens.BORDE
 
 /* ---------- checkboxes, sliders, progress */
 QCheckBox {{ spacing: {SPACE_2}px; min-height: {SMALL_H}px; }}
-QCheckBox::indicator, QTreeView::indicator {{ width: {INDICATOR}px; height: {INDICATOR}px; border-radius: {RADIUS_XS}px; border: 1px solid {tokens.BORDER_CHECK}; background: {tokens.CARD}; }}
-QCheckBox::indicator:checked, QTreeView::indicator:checked {{ background: {tokens.ACCENT_FILL}; border-color: {tokens.ACCENT_FILL}; image: url(__CHECK__); }}
+QCheckBox::indicator, QTreeView::indicator, QListView::indicator {{ width: {INDICATOR}px; height: {INDICATOR}px; border-radius: {RADIUS_XS}px; border: 1px solid {tokens.BORDER_CHECK}; background: {tokens.CARD}; }}
+QCheckBox::indicator:checked, QTreeView::indicator:checked, QListView::indicator:checked {{ background: {tokens.ACCENT_FILL}; border-color: {tokens.ACCENT_FILL}; image: url(__CHECK__); }}
 QCheckBox:disabled {{ color: {tokens.TEXT_OFF}; }}
 QSlider {{ min-height: {SMALL_H}px; }}
 QSlider::groove:horizontal {{ height: {TRACK_H}px; background: {tokens.RAISED}; border-radius: {TRACK_H // 2}px; }}
@@ -328,6 +328,11 @@ QPushButton#SideSearch:hover {{ background: {tokens.FILL_3}; }}
 #GroupName {{ color: {tokens.MUTED}; font-size: {tokens.TEXT_BODY}px; font-weight: {tokens.WEIGHT_MEDIUM}; }}
 #GroupCard {{ background: {tokens.CARD}; border: none; border-radius: {RADIUS_LG}px; }}
 #GroupNote {{ color: {tokens.MUTED}; font-size: {tokens.TEXT_CALLOUT}px; }}
+QScrollArea#PageOptions {{ background: {tokens.BG}; border: none; border-left: 1px solid {tokens.BORDER}; }}
+QListWidget#ColumnList {{ background: transparent; border: none; outline: none; }}
+QListWidget#ColumnList::item {{ height: {tokens.ROW_H - tokens.HAIRLINE}px; padding: 0 {tokens.GROUP_INSET}px;
+    border-bottom: 1px solid {tokens.BORDER}; color: {tokens.TEXT}; background: transparent; }}
+QListWidget#ColumnList::item:hover {{ background: {tokens.ROW_HOVER}; }}
 #RowValue {{ color: {tokens.MUTED}; }}
 QPushButton#RowAction {{ background: transparent; border: none; border-radius: {RADIUS_LG}px; color: {tokens.ACCENT_TEXT};
     text-align: left; padding: 0 {tokens.GROUP_INSET}px; min-height: {tokens.ROW_H - tokens.HAIRLINE}px;
@@ -769,6 +774,23 @@ def plain_tip(text: str) -> str:
     import html
 
     return f"<p style='white-space:pre-wrap'>{html.escape(text)}</p>" if text else ""
+
+
+def draw_grip(painter, rect) -> None:
+    """The grip a row is dragged by (C-54): two columns of three dots, in the middle of `rect`."""
+    from PySide6.QtCore import QPointF
+    from PySide6.QtGui import QPainter
+
+    painter.save()
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(qcolor(tokens.FAINT))
+    c = QPointF(rect.center())
+    gap = tokens.GRIP_GAP
+    for dx in (-gap / 2, gap / 2):
+        for dy in (-gap, 0, gap):
+            painter.drawEllipse(QPointF(c.x() + dx, c.y() + dy), tokens.GRIP_DOT, tokens.GRIP_DOT)
+    painter.restore()
 
 
 def qcolor(value: str):

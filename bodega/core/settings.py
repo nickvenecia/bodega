@@ -47,6 +47,7 @@ DEFAULTS: dict[str, tuple[type, object]] = {  # key -> (what it holds, its defau
     "numbers": (dict, {}),  # the last rental number given in each series (never given again)
     "last_update_check": (float, 0.0),  # when Bodega last asked for an update (seconds)
     "format": (int, 0),  # the data folder's format (core/store.py FORMAT): what wrote it
+    "page_options": (dict, {}),  # how each kind of page last printed: paper, letterhead, note, columns, filters
 }
 
 

@@ -11,7 +11,7 @@ from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QFileDialog
 
-from bodega.core import dates, document, errors, settings
+from bodega.core import dates, document, errors, pageopts, settings
 from bodega.core.fileutil import reveal
 from bodega.core.log import get_logger
 from bodega.core.looks import palette
@@ -50,11 +50,57 @@ class PagesMixin:
         panel.mark_booked.connect(self._mark_booked)
         panel.email_wanted.connect(self.email_renter)
         panel.dark_changed.connect(self._dark_changed)
-        panel.doc_changed.connect(lambda _k: self.redraw())
+        panel.doc_changed.connect(lambda _k: (self._show_options(), self.redraw()))
+        panel.options.changed.connect(self._options_changed)
+        panel.options.default_wanted.connect(self._options_as_default)
+        self._show_options()
         self.redraw()
         d.exec()
         self.page = None
         self.refresh()
+
+    # The page's options (core/pageopts.py): kept as you last chose them for each kind of page
+    def _page_business(self) -> Business | None:
+        kind, ref = self.page_ctx
+        r = self.lib.rentals.get(ref) if PAGES[kind].rental else None
+        if r is not None:
+            return self.lib.businesses.get(r.business_id) or self.business()
+        return self.lib.pricing()
+
+    def page_options(self, doc: str = "") -> pageopts.PageOptions:
+        doc = doc or (self.page.panel.current_doc() if self.page is not None else "")
+        return pageopts.for_page(self.lib.settings, self._page_business(), doc)
+
+    def _show_options(self) -> None:
+        if self.page is None:
+            return
+        doc = self.page.panel.current_doc()
+        self.page.panel.options.setVisible(doc != "labels")  # (a sheet of stickers is laid out by its sheet)
+        kind, ref = self.page_ctx
+        items = [i for i in self.lib.ordered_items() if not ref or i.group == ref] if kind == "gear" else []
+        self.page.panel.options.show_for(doc, self.page_options(doc), items or self.lib.ordered_items())
+
+    def _options_changed(self) -> None:
+        """An option changed: kept as your last choice for this kind of page, and the pages redrawn."""
+        if self.page is None:
+            return
+        o = self.page.panel.options
+        pageopts.remember(self.lib.settings, o.kind, o.opts)
+        self.redraw()
+
+    def _options_as_default(self) -> None:
+        if self.page is None:
+            return
+        o, b = self.page.panel.options, self._page_business()
+        if b is None:
+            return
+        b.page_options = {**b.page_options, o.kind: o.opts.to_dict()}
+        try:
+            self.lib.save_businesses()
+        except OSError as e:
+            self.toast(errors.plain(e, "keep the profile's default"), "problem")
+            return
+        self.toast(f"Kept as {b.name or 'your profile'}'s default.", "done")
 
     def view(self, doc: str = "") -> tuple[document.DocView, Business | None, str] | None:
         """The page for the page window (or `doc` of it), whose it is, and a file name for it."""
@@ -68,17 +114,20 @@ class PagesMixin:
         if r is None:
             return None
         b = self.lib.businesses.get(r.business_id) or self.business()
-        return document.build_rental(self.lib, r, b), b, document.rental_stem(r)
+        v = document.with_options(document.build_rental(self.lib, r, b), self.page_options("agreement"))
+        return v, b, document.rental_stem(r)
 
     def _kit_sheet(self, ref: str):
         p, b = self.lib.packages.get(ref), self.lib.pricing()
         if p is None:
             return None
-        return document.build_package(self.lib, p, b), b, document.file_name(p.name or "Kit")
+        v = document.with_options(document.build_package(self.lib, p, b), self.page_options("package"))
+        return v, b, document.file_name(p.name or "Kit")
 
     def _rate_card(self, _ref: str):
         lib, b = self.lib, self.lib.pricing()
-        page = document.build_ratecard(lib, lib.ordered_items(), list(lib.packages.values()), b)
+        o = self.page_options("ratecard")
+        page = document.build_ratecard(lib, lib.ordered_items(), list(lib.packages.values()), b, o)
         return page, b, f"Rate Card {dates.iso(dates.today())}"
 
     def _labels(self, ref: str):
@@ -94,7 +143,7 @@ class PagesMixin:
         b = self.lib.pricing()
         items = [i for i in self.lib.ordered_items() if not ref or i.group == ref]
         title = f"{ref} Inventory" if ref else "Equipment Inventory"
-        page = document.build_inventory(self.lib, items, b, title)
+        page = document.build_inventory(self.lib, items, b, title, self.page_options("inventory"))
         return page, b, document.file_name(f"{title} {dates.iso(dates.today())}")
 
     def page_list(self, dark: bool = False, doc: str = "") -> list[render.Page]:
@@ -104,7 +153,8 @@ class PagesMixin:
             return []
         v, b, _stem = got
         logo = logos_dir() / b.logo if b and b.logo else None
-        return render.layout(v, palette(b.color if b else "blue", dark), logo)
+        size = render.LETTER if v.labels else self.page_options(doc).size  # (labels: their own sheet's)
+        return render.layout(v, palette(b.color if b else "blue", dark), logo, size)
 
     def redraw(self) -> None:
         if self.page is None:

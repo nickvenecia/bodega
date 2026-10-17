@@ -72,6 +72,8 @@ bodega/
     search.py      folded(): case and accents off, so "cafe" finds "Café"; words(), matches()
     tidy_renters.py  Tidy Up Renters: proper() case by rule (business words kept), changes() shown first;
                    Library.tidy_clients() applies them (a safety copy, bookings follow)
+    pageopts.py    how a page prints (C-53, C-61): PageOptions (paper, letterhead, note, a list's columns and
+                   filters), for_page() (your last choice, else the profile's default), kept(), reading_key()
     tidy.py        Tidy Up Groups: GROUPS, RULES (by name), RENAMES (by old group); suggest(), changes()
     prices.py      Check Price: fetch a product page, read its price (JSON-LD offers, price meta tags). Stores
                    may block it; that's web.Refused, with a plain message
@@ -175,7 +177,8 @@ bodega/
                    are Embeddable (widgets.py): the same form stands alone or sits in Settings, settings.py (Settings:
                    a glass sidebar of sections that edit in place, in grouped rows (components/rows.py); one window
                    at a time), ai_setup.py (AISettings: Settings › AI, each change kept as it's made),
-                   ai_review.py, account.py (sign in), feedback.py, import_sheet.py,
+                   ai_review.py, account.py (sign in), feedback.py, import_sheet.py, page_options.py (the page
+                   window's options: grouped rows beside the pages, each change redrawn),
                    gear_picker.py, preview.py (the page window), profile.py, client.py, update.py
   app.py           QApplication, fonts, stylesheet, rounded popups, every QLabel plain text, one window at a time,
                    use_text_size() (Settings › Text Size or the computer's, as Qt's scale, before the app starts),

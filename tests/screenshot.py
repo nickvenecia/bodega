@@ -184,7 +184,7 @@ def main(out: Path, sheet: Path | None = None) -> int:
     shot(w, out / "11-assistant.png")
     w.close_assistant()
 
-    names = iter(["7-agreement.png", "8-inventory.png", "16-labels.png"])
+    names = iter(["7-agreement.png", "8-inventory.png", "8b-inventory-options.png", "16-labels.png"])
 
     def page_shot(d):
         d.show()
@@ -195,6 +195,12 @@ def main(out: Path, sheet: Path | None = None) -> int:
     PageDialog.exec = page_shot
     w.show_pages(("rental", next(iter(lib.rentals))))
     w.show_pages(("gear", ""), "inventory")
+    lib.settings["page_options"] = {  # its options in use: columns chosen, two filters, no letterhead
+        "inventory": {"columns": ["qty", "gear", "company", "value"], "letterhead": False, "note": "Checked May 2026.",
+                      "filters": [{"col": "group", "lo": "Lenses"}, {"col": "value", "lo": "500", "hi": ""}]}
+    }  # fmt: skip
+    w.show_pages(("gear", ""), "inventory")
+    lib.settings.pop("page_options")
     w.show_pages(("gear", ""), "labels")
     from bodega.ui.dialogs.gear_picker import GearPicker
 

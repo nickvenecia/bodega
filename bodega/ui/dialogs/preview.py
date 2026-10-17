@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 from bodega.doc import export
 from bodega.doc.render import Page
 from bodega.ui.components.widgets import PanelHeader, Segmented, hbox, menu_item, primary_button, status_line, vbox
+from bodega.ui.dialogs.page_options import PageOptionsPanel
 from bodega.ui.style import theme, tokens
 
 
@@ -138,7 +139,11 @@ class PreviewPanel(QFrame):
         self.area.setWidget(self.view)
         self.area.viewport().setAutoFillBackground(True)
         self.area.viewport().setObjectName("PreviewArea")
-        outer.addWidget(self.area, 1)
+        self.options = PageOptionsPanel()  # (C-53) paper, letterhead, note; a list's columns and filters
+        middle = hbox(spacing=0)
+        middle.addWidget(self.area, 1)
+        middle.addWidget(self.options)
+        outer.addLayout(middle, 1)
 
         bottom = QFrame()
         bottom.setObjectName("PanelBottom")
