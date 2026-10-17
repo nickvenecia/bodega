@@ -13,6 +13,8 @@ settings (Send Feedback, About) have their own windows.
 
 from __future__ import annotations
 
+import os
+
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QStackedWidget, QWidget
 
@@ -21,7 +23,7 @@ from bodega.core import backups, dates, errors, settings
 from bodega.core.paths import data_dir
 from bodega.core.store import Library
 from bodega.services import account
-from bodega.ui.components import sheet
+from bodega.ui.components import access, sheet
 from bodega.ui.components.glass import GlassRoot
 from bodega.ui.components.panels import LeftPanel
 from bodega.ui.components.rows import Group
@@ -34,13 +36,14 @@ from bodega.ui.components.widgets import (
     combo,
     hbox,
     set_combo,
+    sized,
     vbox,
 )
 from bodega.ui.style import theme, tokens
 
 LOOKS = [("system", "Match System"), ("light", "Light"), ("dark", "Dark")]
 FINDS = {  # what each section holds, for Settings' search (with its name)
-    "general": "look appearance light dark accent color updates check automatically",
+    "general": "look appearance light dark accent color text size larger bigger zoom updates check automatically",
     "profiles": "profile business name logo email phone address pricing day rate percent tax week weekend deposit "
     "numbers prefix next number paper terms agreement note currency",
     "ai": "ai assistant provider key model anthropic openai gemini claude",
@@ -205,6 +208,16 @@ class SettingsDialog(QDialog):
         self.accent = look.control("Accent Color", AccentPicker(settings.value(self.lib.settings, "accent")))
         self.accent.picked.connect(self.win.set_accent)
         lay.addWidget(look)
+        size = Group("Text Size", "The whole window grows with it: words, rows and buttons.")
+        system = round(access.system_text_scale() * 100)
+        choices = [("0", f"Match System ({system}%)", "")] + [(str(n), f"{n}%", "") for n in access.TEXT_SIZES]
+        self.text_size = size.control(
+            "Text Size", sized(combo(choices, str(settings.value(self.lib.settings, "text_size"))), "popup")
+        )
+        self.text_size.currentIndexChanged.connect(lambda _i: self._text_size())
+        self.restart = size.action("Restart Bodega to Use It", self._restart)
+        self._text_size(save=False)
+        lay.addWidget(size)
         upd = Group("Updates")
         self.auto = upd.switch("Check for Updates Automatically", settings.value(self.lib.settings, "auto_update"))
         self.auto.toggled.connect(self._auto)
@@ -213,6 +226,20 @@ class SettingsDialog(QDialog):
         lay.addWidget(upd)
         lay.addStretch(1)
         self._fill("general", w)
+
+    def _restart(self) -> None:
+        from bodega.app import restart
+
+        self._then(restart)
+
+    def _text_size(self, save: bool = True) -> None:
+        """Kept as it's picked; it shows from the next time Bodega opens (Restart offers that now)."""
+        chosen = int(self.text_size.currentData() or 0)
+        if save:
+            self.lib.settings["text_size"] = chosen
+            self.lib.save_settings()
+        now = float(os.environ.get("QT_SCALE_FACTOR") or 1)
+        self.restart.parentWidget().setVisible(abs(access.text_scale(chosen) - now) > 0.01)
 
     def _auto(self, on: bool) -> None:
         self.lib.settings["auto_update"] = on

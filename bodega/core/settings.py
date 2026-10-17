@@ -16,6 +16,7 @@ log = get_logger(__name__)
 DEFAULTS: dict[str, tuple[type, object]] = {  # key -> (what it holds, its default)
     "appearance": (str, "system"),  # system / light / dark
     "accent": (str, ""),  # "" = Bodega's own blue
+    "text_size": (int, 0),  # how large Bodega draws, in percent (100–200); 0: as the computer's text size is
     "auto_update": (bool, True),  # check for updates each time Bodega opens
     "dark_preview": (bool, False),  # the page window's Dark Page
     "view": (str, "gear"),  # the place you were on

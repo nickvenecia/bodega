@@ -80,6 +80,44 @@ def less_transparency() -> bool:
     return _transparency
 
 
+TEXT_SIZES = (100, 125, 150, 175, 200)  # Settings › General › Text Size, in percent (the standard's 200% at most)
+
+
+def system_text_scale() -> float:
+    """The computer's own text size, as a scale (Windows' Make Text Bigger, GNOME's Large Text); 1.0 where there's
+    none to read (a Mac keeps text sizes to each app). BODEGA_TEXT_SCALE stands in for the system."""
+    forced = os.environ.get("BODEGA_TEXT_SCALE", "").strip()
+    if forced:
+        try:
+            return min(2.0, max(1.0, float(forced)))
+        except ValueError:
+            return 1.0
+    try:
+        if sys.platform == "win32":
+            import winreg
+
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Accessibility") as k:
+                value, _kind = winreg.QueryValueEx(k, "TextScaleFactor")
+            return min(2.0, max(1.0, int(value) / 100))
+        if sys.platform.startswith("linux"):
+            out = subprocess.run(
+                ["gsettings", "get", "org.gnome.desktop.interface", "text-scaling-factor"],
+                capture_output=True, text=True, timeout=2, **popen_kwargs(),
+            )  # fmt: skip
+            return min(2.0, max(1.0, float(out.stdout.strip() or 1)))
+    except (OSError, subprocess.SubprocessError, ValueError):
+        log.debug("couldn't read the text size", exc_info=True)
+    return 1.0
+
+
+def text_scale(chosen: int) -> float:
+    """How large Bodega draws: `chosen` (Settings › General › Text Size, a percent), or the computer's own text size
+    when it's 0 (Match System)."""
+    if chosen in TEXT_SIZES:
+        return chosen / 100
+    return system_text_scale()
+
+
 _always_bars: bool | None = None
 
 

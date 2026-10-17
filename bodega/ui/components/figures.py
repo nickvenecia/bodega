@@ -59,7 +59,8 @@ class FigureTile(QFrame):
 
 
 class FigureRow(QWidget):
-    """Tiles side by side (FIGURE_GAP apart); `pressed` says which slice a tile turns on, or off."""
+    """Tiles side by side (FIGURE_GAP apart); `pressed` says which slice a tile turns on, or off. Where they don't all
+    fit (a narrow window, a large text size), the last ones step aside rather than cut their words short."""
 
     pressed = Signal(str)
 
@@ -67,6 +68,8 @@ class FigureRow(QWidget):
         super().__init__(parent)
         self.setObjectName("FigureRow")
         self.lay = hbox(self, (tokens.PAGE_INSET, 0, tokens.PAGE_INSET, tokens.FIGURE_BELOW), tokens.FIGURE_GAP)
+        self.lay.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)  # its width is the page's: what doesn't
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)  # fit steps aside (_fit)
         self.tiles: list[FigureTile] = []
 
     def show_for(self, figures: list[Figure], on: str = "") -> None:
@@ -76,13 +79,31 @@ class FigureRow(QWidget):
             t.pressed.connect(self.pressed)
             self.lay.addWidget(t, 1)
             self.tiles.append(t)
+        self._count = len(figures)
         for n, t in enumerate(self.tiles):
             if n < len(figures):
                 t.show_figure(figures[n], bool(on) and figures[n].slice == on)
-                t.show()
-            else:
-                t.hide()
+        self._fit()
         self.setVisible(bool(figures))
+
+    def _fit(self) -> None:
+        """As many tiles as fit at their own width, most important first."""
+        count = getattr(self, "_count", 0)
+        m = self.lay.contentsMargins()
+        room = self.width() - m.left() - m.right()
+        shown, used = 0, 0
+        for t in self.tiles[:count]:
+            need = t.minimumSizeHint().width() + (tokens.FIGURE_GAP if shown else 0)
+            if shown and used + need > room:
+                break
+            used += need
+            shown += 1
+        for n, t in enumerate(self.tiles):
+            t.setVisible(n < shown)
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self._fit()
 
 
 class FigureStrip(QWidget):

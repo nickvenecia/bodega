@@ -26,6 +26,16 @@ def win(qapp, data_folder):
     w.close()
 
 
+def full_size(w) -> None:
+    """The window at its usual smallest (Qt's test screen is 800 wide, where the sidebar folds away)."""
+    from bodega.ui.style import tokens
+
+    w._restored = True
+    w.showNormal()  # (it opened filling the test screen)
+    w.resize(*tokens.WINDOW_MIN)
+    QApplication.processEvents()
+
+
 def when_open(kind, do) -> None:
     """`do(window)` once a window of this kind shows (it may open from inside a click and wait there)."""
     tries = [500]
@@ -1079,6 +1089,7 @@ def test_ctrl_backspace_while_typing_edits_the_field_and_deletes_nothing(win, mo
 
 
 def test_screen_readers_hear_a_name_for_every_icon_button_and_place(win):
+    full_size(win)
     from PySide6.QtWidgets import QAbstractButton
 
     from bodega.ui.components.panels import NavRow
@@ -1146,6 +1157,7 @@ def test_a_search_that_finds_nothing_says_so_with_a_way_back(win):
 def test_measured_to_the_standard(win):
     """The standard's Appendix A, measured in the real window: controls 28, the bar's circles 36, table rows 44,
     sidebar rows 32, figures that line up."""
+    full_size(win)
     from PySide6.QtGui import QFont
     from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton
 
@@ -1677,6 +1689,7 @@ def test_your_data_imports_once_settings_has_closed(win, monkeypatch):
 
 
 def test_every_page_shares_one_left_edge_and_one_right_edge(win):
+    full_size(win)
     from PySide6.QtCore import QPoint
 
     from bodega.ui.style import tokens

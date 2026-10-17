@@ -356,6 +356,12 @@
   scroll bars, Bodega's stay too, with their room kept.
 - The gear, kit and rental lists sit in a rounded card, as the figures above them do, with the column titles in its
   top. In the dark look, the group bands in the gear list are a shade lighter so they stand out on the card.
+- Settings › General has Text Size: Match System, or 100% up to 200%. The whole window grows with it (words, rows
+  and buttons), from the next time Bodega opens (Restart Bodega does it now). Match System follows Windows' Make Text
+  Bigger and Linux's Large Text.
+- A narrow window (a large text size on a smaller screen) folds the sidebar away; the sidebar button at the start
+  of the top bar, or View › Show Sidebar, brings it back. Figures and totals that don't fit step aside instead of
+  being cut short.
 - The Assistant's answers say which of your gear they drew on ("From your gear: …"). A change your AI is only
   guessing at is marked Not Sure: Review leaves it unticked, and the chat takes you to Review instead of making it.
 - Letters are spaced the way Apple spaces them at each size: a touch tighter in everyday words, a little looser in

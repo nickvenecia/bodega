@@ -7,6 +7,7 @@ Edits save themselves a moment after you stop typing.
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -76,7 +77,12 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.lib = lib or Library().load()
         self.setWindowTitle("Bodega")
         self.resize(*tokens.WINDOW_SIZE)
-        self.setMinimumSize(*tokens.WINDOW_MIN)
+        w_min, h_min = tokens.WINDOW_MIN
+        larger = float(os.environ.get("QT_SCALE_FACTOR") or 1) > 1  # (a text size over 100%: app.use_text_size)
+        if larger and self.screen() is not None:  # the screen holds fewer points then: the window still fits it
+            room = self.screen().availableGeometry()
+            w_min, h_min = min(w_min, room.width()), min(h_min, room.height())
+        self.setMinimumSize(w_min, h_min)
         self._dirty_items = False
         self._dirty_packages = False
         self._dirty_rentals: set[str] = set()
@@ -85,6 +91,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.last_export: Path | None = None
         self._release: update.Release | None = None
         self.view_key = "gear"
+        self._sidebar_choice: bool | None = None  # shown or hidden by you (None: by the window's width)
         self.page_ctx: tuple[str, str] = ("gear", "")
         self.page: PageDialog | None = None
 
@@ -206,6 +213,17 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         grid.setColumnStretch(0, 1)
         grid.setColumnStretch(2, 1)
         left = hbox(spacing=tokens.SPACE_2)
+        self.btn_sidebar = QToolButton()  # (a narrow window folds the sidebar away: this brings it back)
+        self.btn_sidebar.setObjectName("Circle")
+        self.btn_sidebar.setIcon(theme.icon("sidebar", theme.MUTED, tokens.ICON_BAR))
+        self.btn_sidebar.setIconSize(QSize(tokens.ICON_BAR, tokens.ICON_BAR))
+        self.btn_sidebar.setToolTip("Show or Hide the Sidebar")
+        self.btn_sidebar.setAccessibleName("Sidebar")
+        self.btn_sidebar.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_sidebar.setProperty("bar", True)
+        self.btn_sidebar.clicked.connect(self.toggle_sidebar)
+        self.btn_sidebar.hide()
+        left.addWidget(self.btn_sidebar)
         self.title = QLabel("All Gear")
         self.title.setObjectName("PageTitle")
         self.count = ElidedLabel()  # "131", or "5 selected": gives way before the search and dropdowns do
@@ -307,7 +325,10 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         tl = hbox(self.totals, (tokens.PAGE_INSET, tokens.SPACE_3, tokens.PAGE_INSET, tokens.SPACE_3), tokens.SPACE_5)
         self.total_values: dict[str, QLabel] = {}
         self.total_labels: dict[str, QLabel] = {}
+        self.total_cells: dict[str, QWidget] = {}
         tl.addStretch(1)
+        self.totals.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)  # (what doesn't fit goes)
+        self.totals.installEventFilter(self)
         for key, label in (
             ("pieces", "Pieces"),
             ("paid", "Paid"),
@@ -315,7 +336,9 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             ("value", "With Tax"),
             ("day", "Day Rate, Everything"),
         ):
-            box = vbox(spacing=0)
+            cell = QWidget()
+            box = vbox(cell, 0, 0)
+            self.total_cells[key] = cell
             k = QLabel(label)
             k.setObjectName("TotalLabel")
             v = QLabel()
@@ -325,7 +348,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             v.setAlignment(Qt.AlignmentFlag.AlignRight)
             box.addWidget(k)
             box.addWidget(v)
-            tl.addLayout(box)
+            tl.addWidget(cell)
             self.total_values[key] = v
             self.total_labels[key] = k
         lay.addWidget(self.totals)
@@ -674,6 +697,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self.total_labels["tax"].setText(f"Tax {money.fmt_rate(tax)}")
         self.total_values["value"].setText(money.fmt(total.value, cur))
         self.total_values["day"].setText(money.fmt(total.day, cur))
+        self._fit_totals()  # (longer figures may no longer all fit)
 
     def _empty_page(self, which: str) -> QWidget:
         """Where the list would be, with nothing in it yet: a title, a line, the one button that starts it."""
@@ -1031,9 +1055,45 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         frame = self.frameGeometry()
         return any(s.availableGeometry().adjusted(-2, -2, 2, 2).contains(frame) for s in QGuiApplication.screens())
 
+    TOTALS_GO = ("pieces", "tax", "paid", "value")  # where the totals don't all fit, these step aside, in turn
+
+    def _fit_totals(self) -> None:
+        """The totals that fit the bar, the day rate for everything last to go (never a total cut short)."""
+        if not getattr(self, "total_cells", None):
+            return
+        m = self.totals.layout().contentsMargins()
+        gap = self.totals.layout().spacing()
+        room = self.totals.width() - m.left() - m.right()
+        shown = set(self.total_cells)
+        for key in (None, *self.TOTALS_GO):
+            if key is not None:
+                shown.discard(key)
+            need = sum(self.total_cells[k].minimumSizeHint().width() for k in shown) + gap * max(0, len(shown) - 1)
+            if need <= room:
+                break
+        for key, cell in self.total_cells.items():
+            cell.setVisible(key in shown)
+
+    def _fit_sidebar(self) -> None:
+        """A window narrower than NARROW_W (a large text size, a small screen) folds the sidebar away; the bar's
+        sidebar button and View › Show Sidebar bring it back. A choice you made stays until you change it."""
+        narrow = self.width() < tokens.NARROW_W
+        wanted = self._sidebar_choice if self._sidebar_choice is not None else not narrow
+        if self.sidebar.isHidden() == wanted:
+            self.sidebar.setVisible(wanted)
+        self.btn_sidebar.setVisible(narrow or not wanted)
+        if hasattr(self, "sidebar_act"):  # (the menus come after the first resize)
+            self.sidebar_act.setText("Hide Sidebar" if wanted else "Show Sidebar")
+
+    def toggle_sidebar(self) -> None:
+        self._sidebar_choice = self.sidebar.isHidden()
+        self._fit_sidebar()
+
     def resizeEvent(self, e):
         """The inspector gives up some width on a smaller window, so the toolbar never crowds."""
         super().resizeEvent(e)
+        if hasattr(self, "btn_sidebar"):
+            self._fit_sidebar()
         w = max(tokens.INSPECTOR_MIN, min(tokens.INSPECTOR_W, int(self.width() * tokens.INSPECTOR_SHARE)))
         self.dock.set_target(w)
         for i in range(self.inspector.count()):  # every right-hand panel, whatever it is
@@ -1045,6 +1105,8 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
     def eventFilter(self, obj, e) -> bool:
         if obj is getattr(self, "pages", None) and e.type() in (QEvent.Type.Resize, QEvent.Type.Move):
             self._place_selbar()  # (the panel opening or closing moves the list's middle)
+        if obj is getattr(self, "totals", None) and e.type() == QEvent.Type.Resize:
+            self._fit_totals()
         return super().eventFilter(obj, e)
 
     def _let_work_finish(self) -> None:

@@ -372,6 +372,42 @@ def setup_app(app: QApplication) -> None:
         app._gc = _MainThreadGC(app)
 
 
+def use_text_size() -> float:
+    """Draw Bodega at the text size you chose (Settings › General), or the computer's: the whole window scales, so
+    words, rows and controls grow together (the standard's 200%, V-16). Read before the app starts (Qt takes the
+    scale only then); a scale already asked for (QT_SCALE_FACTOR) is kept."""
+    from bodega.core import settings
+    from bodega.core.store import read_json
+    from bodega.ui.components import access
+
+    saved = read_json(data_dir() / "settings.json", {})
+    scale = access.text_scale(settings.value(saved if isinstance(saved, dict) else {}, "text_size"))
+    if scale != 1.0 and not os.environ.get("QT_SCALE_FACTOR"):
+        os.environ["QT_SCALE_FACTOR"] = f"{scale:g}"
+    return scale
+
+
+def restart() -> None:
+    """Quit and open Bodega again (a new text size shows from the start). The window closes as it would on Quit
+    (asking first over anything unsaved); once Bodega has stopped, main() opens the new one."""
+    app = QApplication.instance()
+    if app is not None:
+        app.setProperty("restart", True)
+        QTimer.singleShot(0, app, app.closeAllWindows)
+
+
+def _open_again(app: QApplication) -> None:
+    """After Quit for a restart: stop listening (so the new Bodega doesn't just wake this one), then start it."""
+    from PySide6.QtCore import QProcess
+
+    server = getattr(app, "_server", None)
+    if server is not None:
+        server.close()
+    args = sys.argv[1:] if getattr(sys, "frozen", False) else ["-m", "bodega", *sys.argv[1:]]
+    if not QProcess.startDetached(sys.executable, args):
+        log.warning("couldn't open Bodega again")
+
+
 def saved_look() -> tuple[str, str]:
     """The look and accent you picked, as Bodega last saved them (Match System and its own blue at first)."""
     from bodega.core import settings
@@ -458,6 +494,7 @@ def main() -> int:
     log.info("Bodega %s starting (%s)", __version__, sys.platform)
     _crash_log()
     _log_uncaught()
+    use_text_size()
     app = QApplication(sys.argv)
     if not smoke and _wake_running():
         return 0  # Bodega is already open: it came to the front
@@ -474,6 +511,8 @@ def main() -> int:
     w.raise_()
     _ask_to_sign_in(w)
     code = app.exec()
+    if app.property("restart"):
+        _open_again(app)
     if app.property("exit_now"):  # a download was still running: leave without waiting for it
         logging.shutdown()
         os._exit(code)

@@ -130,6 +130,7 @@ WINDOW_SIZE = (1600, 1000)
 FILLED_SLACK = 4  # a window this close to the screen's size counts as filling it
 TEXT_SLACK = 2  # room a label keeps past its words, so they never cut at the last pixel
 WINDOW_MIN = (1280, 700)  # the toolbar, table and inspector all fit
+NARROW_W = 1100  # a window narrower than this (a large text size on a small screen) folds its sidebar away (V-16)
 TABLE_ROW_H = ROW_H  # one row in the gear, kit and rental tables
 NAME_MIN = 240  # the gear table's Name column never gets narrower; other columns step aside
 RENTER_MIN = 160  # the rentals table's Renter column, the same way

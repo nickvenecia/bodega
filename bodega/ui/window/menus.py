@@ -143,6 +143,9 @@ class MenusMixin:
             if p.menu:
                 act(v, p.menu, lambda _c=False, k=p.key: self.go(k))
         act(v, "Close Panel", self.deselect)
+        self.sidebar_act = act(
+            v, "Hide Sidebar", self.toggle_sidebar, "Meta+Ctrl+S" if sys.platform == "darwin" else None
+        )
         v.addSeparator()
         self.look_actions = {}
         looks = v.addMenu("Appearance")
