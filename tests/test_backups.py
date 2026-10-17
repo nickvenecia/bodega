@@ -9,6 +9,7 @@ import pytest
 from bodega.core import backups, sample
 from bodega.core.fileutil import zip_folder
 from bodega.core.store import Library
+from tests.ui import type_into
 
 
 def _lib(folder) -> Library:
@@ -133,8 +134,8 @@ def test_restore_from_the_window(qapp, data_folder, tmp_path, monkeypatch):
     zip_folder(w.lib.root, tmp_path / "b.zip")
     it = next(iter(w.lib.items.values()))
     was = it.name
-    it.name = "Changed"
-    w._item_edited(it)
+    w.open("gear", it.id)
+    type_into(w.items.name, "Changed")
     monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *a, **k: (str(tmp_path / "b.zip"), ""))
     monkeypatch.setattr(common, "confirm", lambda *a, **k: True)
     w.restore()

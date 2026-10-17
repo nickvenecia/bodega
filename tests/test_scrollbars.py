@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QApplication, QLabel
 from bodega.ui.components import scrollbars
 from bodega.ui.components.widgets import FitScroll
 from bodega.ui.style import tokens
+from tests.ui import wait_for
 
 
 def _area():
@@ -42,19 +43,13 @@ def test_overlay_bars_lie_over_the_content_and_show_only_while_it_scrolls(qapp, 
     area = _area()
     assert area.viewport().width() == area.width()  # no room kept: it lies over the content
     bar = area.verticalScrollBar()
-    shown = scrollbars._Shown.of(bar)
-    shown.on = False  # (past the moment it showed as the list appeared)
-    bar.update()
-    QApplication.processEvents()
+    wait_for(lambda: not _thumb_drawn(area), tokens.SCROLL_HIDE_MS + 1500)  # (past the moment it showed at first)
     assert not _thumb_drawn(area)  # out of sight at rest
     bar.setValue(bar.value() + 40)  # scrolling
     QApplication.processEvents()
-    assert shown.on and _thumb_drawn(area)
-    for _ in range((tokens.SCROLL_HIDE_MS + 1500) // 20):
-        if not shown.on:
-            break
-        QTest.qWait(20)
-    assert not shown.on  # gone a moment after
+    assert _thumb_drawn(area)
+    wait_for(lambda: not _thumb_drawn(area), tokens.SCROLL_HIDE_MS + 1500)
+    assert not _thumb_drawn(area)  # gone a moment after
     area.close()
 
 

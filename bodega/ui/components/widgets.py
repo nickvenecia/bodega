@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Callable
 
 from PySide6.QtCore import (
     QDate,
@@ -363,14 +364,15 @@ class AccentPicker(QWidget):
     def _pitch() -> int:
         return tokens.SWATCH + 2 * tokens.SWATCH_RING * 2 + tokens.SPACE_1
 
-    def _rect(self, i: int) -> QRectF:
+    def swatch_rect(self, i: int) -> QRectF:
+        """Where the `i`th color's circle sits, with its ring, in the picker's own coordinates."""
         outer = tokens.SWATCH + 4 * tokens.SWATCH_RING
         y = (self.height() - outer) / 2
         return QRectF(i * self._pitch(), y, outer, outer)
 
     def _key_at(self, pos) -> str:
         for i, k in enumerate(self.keys):
-            if self._rect(i).contains(pos):
+            if self.swatch_rect(i).contains(pos):
                 return k
         return ""
 
@@ -391,7 +393,7 @@ class AccentPicker(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         ring = tokens.SWATCH_RING
         for i, k in enumerate(self.keys):
-            r = self._rect(i)
+            r = self.swatch_rect(i)
             dot = r.adjusted(2 * ring, 2 * ring, -2 * ring, -2 * ring)
             if k == self.current or k == self._hover:
                 pen = QPen(theme.qcolor(tokens.TEXT if k == self.current else tokens.BORDER_HOVER))
@@ -407,7 +409,7 @@ class AccentPicker(QWidget):
             pen.setWidthF(tokens.FOCUS_RING)
             p.setPen(pen)
             p.setBrush(Qt.BrushStyle.NoBrush)
-            p.drawEllipse(self._rect(self.keys.index(self.current)))
+            p.drawEllipse(self.swatch_rect(self.keys.index(self.current)))
 
     def mouseMoveEvent(self, e) -> None:
         k = self._key_at(e.position())
@@ -600,14 +602,14 @@ class Toast(QWidget):
         self._anim = QVariantAnimation(self)
         self._anim.valueChanged.connect(self._step)
         self._anim.finished.connect(self._settled)
-        self._t = QTimer(self)
+        self._t = QTimer(self, objectName="ToastTimer")  # how long it stays (not running: until it's closed)
         self._t.setSingleShot(True)
         self._t.timeout.connect(self._time_up)
         self._action = None  # its capsule's job: a job's Stop, a delete's Undo
         self._action_word = ""
         self._frac: float | None = None  # how far a job is (None: not known, so a spinner)
         self._action_rect = QRectF()
-        self._turn = QVariantAnimation(self)  # the spinner
+        self._turn = QVariantAnimation(self, objectName="ToastSpinner")  # the spinner
         self._turn.setStartValue(0.0)
         self._turn.setEndValue(360.0)
         self._turn.setLoopCount(-1)
@@ -665,6 +667,32 @@ class Toast(QWidget):
     def lasts(self) -> bool:
         """An error that needs you stays until you close it; a job, until it's over."""
         return self.tone in ("error", "job")
+
+    # What it shows (it's painted, so these say what's drawn; its words are `text`)
+    @property
+    def pill(self) -> QRectF:
+        """Its rounded shape, in its own coordinates (its shadow reaches past it)."""
+        return QRectF(self._pill)
+
+    @property
+    def action_word(self) -> str:
+        """The word on its capsule ("Undo", "Stop"), or "" with none."""
+        return self._action_word
+
+    @property
+    def action(self) -> Callable[[], object] | None:
+        """What its capsule does (None once it's been pressed, or with no capsule)."""
+        return self._action
+
+    @property
+    def action_place(self) -> QRectF:
+        """Where its capsule is, in its own coordinates (empty with none): a click there does it."""
+        return QRectF(self._action_rect)
+
+    @property
+    def progress(self) -> float | None:
+        """How far a job is, 0 to 1 (its bar), or None while that isn't known (its spinner)."""
+        return self._frac
 
     def mousePressEvent(self, e) -> None:
         if self.tone == "error" and self._pill.contains(e.position()):

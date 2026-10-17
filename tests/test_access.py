@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QApplication, QLineEdit
 from bodega.core import sample
 from bodega.core.store import Library
 from bodega.ui.style import tokens
+from tests.ui import keep_size
 
 
 @pytest.fixture
@@ -19,7 +20,7 @@ def win(qapp, data_folder):
     from bodega.ui.window.main_window import MainWindow
 
     w = MainWindow(sample.fill(Library(data_folder).load()))
-    w._restored = True
+    keep_size(w)
     w.resize(1440, 900)
     w.show()
     yield w
@@ -42,7 +43,8 @@ def test_increase_contrast_and_reduce_transparency_change_the_look():
 def test_reduce_motion_opens_the_panel_at_once(win, monkeypatch):
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "1")
     win.open("gear", next(iter(win.lib.items)))
-    assert win.dock.opened and win.dock._t == 1.0  # no slide: it's simply there
+    d = win.dock  # no slide: it's simply there, its edge a gap in from the window's
+    assert d.opened and d.x() + d.width() == win.root.width() - tokens.GLASS_GAP
 
 
 def test_esc_closes_one_layer_at_a_time(win):
@@ -270,7 +272,6 @@ def test_every_page_names_what_the_keyboard_can_reach(win):
 
 
 def test_a_segmented_controls_highlight_slides_unless_motion_is_reduced(qapp, monkeypatch):
-    from PySide6.QtCore import QAbstractAnimation
     from PySide6.QtTest import QTest
 
     from bodega.ui.components.widgets import Segmented
@@ -282,15 +283,14 @@ def test_a_segmented_controls_highlight_slides_unless_motion_is_reduced(qapp, mo
     assert s.thumb.geometry() == s.buttons["month"].geometry()
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "0")
     s.buttons["timeline"].click()
-    assert s._slide.state() == QAbstractAnimation.State.Running  # on its way…
+    assert s.thumb.geometry() != s.buttons["timeline"].geometry()  # on its way…
     for _ in range(200):  # (it takes SEG_SLIDE_MS)
-        if s._slide.state() != QAbstractAnimation.State.Running:
+        if s.thumb.geometry() == s.buttons["timeline"].geometry():
             break
         QTest.qWait(10)
     assert s.thumb.geometry() == s.buttons["timeline"].geometry()  # …and there
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "1")
     s.buttons["month"].click()
-    assert s._slide.state() != QAbstractAnimation.State.Running
     assert s.thumb.geometry() == s.buttons["month"].geometry()  # straight there
     s.deleteLater()
 

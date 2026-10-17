@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QApplication, QDialog
 
 from bodega.core import sample
 from bodega.core.store import Library
+from tests.ui import by_id
 
 ROUNDS = 3
 MEMORY_LIMIT_KB = 600  # what the rounds may add (caches filling up), all told; a leak adds about 1 MB a round
@@ -88,7 +89,8 @@ def test_cycles_are_collected_only_on_the_windows_thread(qapp):
     import gc
     import weakref
 
-    assert not gc.isenabled() and qapp._gc.timer.isActive()
+    collector = by_id(qapp, "CycleCollector")
+    assert not gc.isenabled() and collector.timer.isActive()
 
     class Loop:
         pass
@@ -100,5 +102,5 @@ def test_cycles_are_collected_only_on_the_windows_thread(qapp):
     del a, b
     assert gone() is not None  # a cycle: counting references alone never frees it
     made = [[] for _ in range(gc.get_threshold()[0] + 1)]  # enough made that a collection is due
-    qapp._gc.collect()
+    collector.collect()
     assert gone() is None and made

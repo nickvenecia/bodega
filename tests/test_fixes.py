@@ -131,7 +131,7 @@ def test_opening_something_deleted_does_nothing(win):
 
 def test_kit_row_stays_picked_after_an_edit(win):
     kit = next(iter(win.lib.packages.values()))
-    win._place_picked(f"kit:{kit.id}")
+    win.sidebar.pick(f"kit:{kit.id}")  # its row in the sidebar
     win.refresh()
     assert win.sidebar.rows[f"kit:{kit.id}"].property("selected")
 

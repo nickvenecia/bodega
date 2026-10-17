@@ -5,6 +5,7 @@ from __future__ import annotations
 from bodega.core import addresses, sample
 from bodega.core.model import Business, Client
 from bodega.core.store import Library
+from tests.ui import button
 
 
 def test_an_address_from_before_prints_as_it_was_typed():
@@ -78,7 +79,7 @@ def test_the_renter_form_has_the_one_address_control(qapp):
     a.country.activated.emit(a.country.currentIndex())
     assert a.region_text.isVisibleTo(d) and not a.region_pick.isVisibleTo(d)  # no list kept: typed
     a.region_text.setText("Île-de-France")
-    d._save()
+    button(d, "Save").click()
     c = d.client
     assert (c.city, c.region, c.postal, c.country) == ("Phoenix", "Île-de-France", "85004", "FR")
     p = ProfileDialog(Business(name="Juniper Lane Films"), True)

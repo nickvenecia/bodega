@@ -16,6 +16,7 @@ from PySide6.QtWidgets import QAbstractButton, QLabel, QWidget
 from bodega.core import sample
 from bodega.core.store import Library
 from bodega.ui.style import tokens
+from tests.ui import keep_size
 
 # Words the standard lets read lower, and why
 EXEMPT = {
@@ -76,7 +77,7 @@ def win(qapp, data_folder, monkeypatch):
 
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "1")
     w = MainWindow(sample.fill(Library(data_folder).load()))
-    w._restored = True
+    keep_size(w)
     w.resize(1280, 800)
     w.show()
     QTest.qWait(50)
@@ -137,7 +138,7 @@ def test_every_accent_reads_on_a_chosen_row(qapp):
         for key in tokens.ACCENTS:
             for scheme in ("light", "dark"):
                 tokens.use(scheme, key)
-                wash = tokens._solid(tokens.ACCENT_TINT, tokens._solid(tokens.GLASS, tokens.BG))
+                wash = tokens.solid(tokens.ACCENT_TINT, tokens.solid(tokens.GLASS, tokens.BG))
                 for k in ("SOFT_TEXT", "SOFT_MUTED", "SOFT_WARN", "SOFT_BAD"):
                     assert tokens.contrast(getattr(tokens, k), wash) >= 4.5, (key, scheme, k)
     finally:

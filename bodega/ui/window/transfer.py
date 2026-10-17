@@ -77,9 +77,9 @@ class TransferMixin:
 
         def came(n: int, total: int) -> None:
             how_much = f"{words.size(n)} of {words.size(total)}" if total else words.size(n)
-            self.toast_job(f"Getting the sheet from Google… {how_much}", n, total, self._stop_transfer)
+            self.toast_job(f"Getting the sheet from Google… {how_much}", n, total, self.stop_transfer)
 
-        self.toast_job("Getting the sheet from Google…", stop=self._stop_transfer)
+        self.toast_job("Getting the sheet from Google…", stop=self.stop_transfer)
         self._run_transfer(
             lambda progress, cancel: importer.download_google_sheet(link, folder, progress, cancel),
             got,
@@ -110,7 +110,8 @@ class TransferMixin:
         self._transfer_job = w
         w.start()
 
-    def _stop_transfer(self) -> None:
+    def stop_transfer(self) -> None:
+        """Stop the download or backup under way (its toast's Stop)."""
         job = getattr(self, "_transfer_job", None)
         if job is not None:
             job.stop()
@@ -284,14 +285,14 @@ class TransferMixin:
             self.toaster.dismiss()
             notice(self, "Couldn't Back Up", message)
 
-        self.toast_job("Backing up…", stop=self._stop_transfer)
+        self.toast_job("Backing up…", stop=self.stop_transfer)
         self._run_transfer(
             lambda progress, cancel: zip_folder(data_dir(), Path(path), ("ui",), progress, cancel),
             done,
             failed,
             "save the backup",
             lambda n, total: self.toast_job(
-                f"Backing up: {n + 1:,} of {words.count(total, 'file')}", n, total, self._stop_transfer
+                f"Backing up: {n + 1:,} of {words.count(total, 'file')}", n, total, self.stop_transfer
             ),
         )
 

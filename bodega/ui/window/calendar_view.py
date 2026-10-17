@@ -65,7 +65,8 @@ class _Bars:
     def _key(bar) -> tuple[str, date, int]:
         return bar[1].id, bar[2], round(bar[0].top())
 
-    def _ordered(self) -> list:
+    def bars(self) -> list:
+        """The bars as painted, in reading order (what the arrow keys walk): (rect, rental, first day, last day)."""
         return sorted(self._bars, key=lambda b: (round(b[0].top()), b[0].left()))
 
     def _current(self, order: list) -> int | None:
@@ -99,7 +100,7 @@ class _Bars:
         self.update()
 
     def keyPressEvent(self, e) -> None:
-        order, k = self._ordered(), e.key()
+        order, k = self.bars(), e.key()
         i = self._current(order) if order else None
         if not order or e.modifiers() & ~Qt.KeyboardModifier.KeypadModifier:
             QWidget.keyPressEvent(self, e)
@@ -123,7 +124,7 @@ class _Bars:
 
     def focusInEvent(self, e) -> None:
         QWidget.focusInEvent(self, e)
-        order = self._ordered()
+        order = self.bars()
         i = self._current(order) if order else None
         if order:
             self._go_to(order[i if i is not None else 0])
@@ -136,7 +137,7 @@ class _Bars:
         """The bar you're on, ringed while the calendar has the keyboard."""
         if not self.hasFocus():
             return
-        order = self._ordered()
+        order = self.bars()
         i = self._current(order) if order else None
         if i is None:
             return

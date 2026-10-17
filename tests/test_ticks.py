@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QAbstractItemView
 from bodega.core import sample
 from bodega.core.store import Library
 from bodega.ui.window.tables import ID, TICK
+from tests.ui import pick
 
 CMD, SHIFT = Qt.KeyboardModifier.ControlModifier, Qt.KeyboardModifier.ShiftModifier
 
@@ -125,13 +126,13 @@ def test_the_selection_bar_says_how_many_and_deletes_them_all(win):
     foot = win.pages.mapTo(win, win.pages.rect().bottomLeft()).y()
     assert bar.geometry().bottom() < foot  # over the list's foot
     win.toast("Saved.")
-    assert win.toaster.geometry().top() + win.toaster._pill.bottom() < bar.geometry().top()  # a toast rises above it
+    assert win.toaster.geometry().top() + win.toaster.pill.bottom() < bar.geometry().top()  # a toast rises above it
     ids = [r.data(0, ID) for r in free]
     bar.buttons["delete"].click()
     QTest.qWait(50)  # (once the click is over)
-    assert not any(i in win.lib.items for i in ids) and win.toaster._action_word == "Undo"
+    assert not any(i in win.lib.items for i in ids) and win.toaster.action_word == "Undo"
     assert not bar.isVisibleTo(win)  # nothing ticked: it goes
-    pill_foot = win.toaster.geometry().top() + win.toaster._pill.bottom()  # (its shadow reaches further)
+    pill_foot = win.toaster.geometry().top() + win.toaster.pill.bottom()  # (its shadow reaches further)
     assert pill_foot <= win.pages.mapTo(win, win.pages.rect().bottomLeft()).y()
 
 
@@ -143,9 +144,7 @@ def test_the_bars_cross_unticks_and_move_to_group_moves_them(win):
         x.setSelected(True)
     ids = [x.data(0, ID) for x in r]
     group = win.lib.groups()[-1]
-    win._fill_move_menu()
-    move = next(a for a in win._move_menu.actions() if a.text() == group)
-    move.trigger()
+    pick(win.selbar.buttons["move"].menu(), group)  # Move to Group › the group
     QTest.qWait(50)
     assert all(win.lib.items[i].group == group for i in ids)
     win.selbar.close.click()
@@ -197,7 +196,7 @@ def test_rentals_bar_checks_out_the_booked_ones_at_once_asked_once(win, monkeypa
     assert lib.rentals[booked.id].is_out() and lib.rentals[q.id].is_quote()
     assert len(asked) == 1 and asked[0][0] == "Check Out 1 Rental?" and "in all" in asked[0][1]
     assert "The other one stays as it is." in asked[0][1]  # what's left as it was is said
-    assert win.toaster._action_word == "Undo"
+    assert win.toaster.action_word == "Undo"
     for row in rows(t):
         row.setSelected(row.data(0, ID) == booked.id)
     assert bar.buttons["in"].text() == "Check In…" and not bar.buttons["out"].isVisibleTo(bar)

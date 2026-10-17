@@ -10,6 +10,7 @@ from bodega.core import document, pageopts, sample
 from bodega.core.model import Item
 from bodega.core.store import Library
 from bodega.doc import render
+from tests.ui import button
 
 
 @pytest.fixture
@@ -97,7 +98,7 @@ def test_the_page_window_redraws_and_keeps_each_change(qapp, lib, monkeypatch):
         o.paper.setCurrentIndex(o.paper.findData("a4"))
         row = o.cols.item(o.cols.count() - 1)  # a column not shown at first: ticked
         row.setCheckState(row.checkState().__class__.Checked)
-        o._add_filter()
+        button(o, "Add Filter").click()
         qapp.processEvents()
         seen["filters"] = len(o.opts.filters)
         o.default_wanted.emit()

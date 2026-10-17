@@ -9,6 +9,7 @@ from PySide6.QtTest import QTest
 
 from bodega.core import sample
 from bodega.core.store import Library
+from tests.ui import press
 
 SHIFT, CTRL, ALT = (
     Qt.KeyboardModifier.ShiftModifier,
@@ -56,9 +57,10 @@ def test_e_opens_whats_marked_with_the_cursor_in_its_name(win):
     QTest.keyClick(t, Qt.Key.Key_E)  # nothing marked: nothing to edit
     assert not win.dock.opened
     row = next(iter(t.showing_rows()))
-    t._quiet = True
-    t.setCurrentItem(row)
-    t._quiet = False
+    win.search.setFocus()
+    press(win.search, Qt.Key.Key_Down)  # ↓ in the search marks the first row, without opening it
+    assert t.currentItem() is row and not win.dock.opened
+    t.setFocus()
     QTest.keyClick(t, Qt.Key.Key_E)
     assert win.dock.opened and win.items.it.id == row.data(0, 256) and win.items.name.hasFocus()
 
@@ -76,7 +78,7 @@ def test_d_deletes_whats_picked_with_undo_and_ctrl_d_duplicates(win):
     assert win.gear_table.chosen_ids() == [free.id]  # only what's open is picked (never the copy too)
     t.setFocus()
     QTest.keyClick(t, Qt.Key.Key_D)
-    assert free.id not in win.lib.items and copy in win.lib.items and win.toaster._action_word == "Undo"
+    assert free.id not in win.lib.items and copy in win.lib.items and win.toaster.action_word == "Undo"
 
 
 def test_slash_goes_to_the_search_and_question_mark_to_the_shortcuts(win, monkeypatch):

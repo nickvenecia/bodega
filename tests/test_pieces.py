@@ -12,6 +12,7 @@ from PySide6.QtTest import QTest
 from bodega.core import pricing, sample
 from bodega.core.store import Library
 from bodega.ui.window.tables import CHILD, GEAR_COL, ID, SUMMARY, TICK
+from tests.ui import hover, wait_for
 
 
 @pytest.fixture
@@ -183,9 +184,12 @@ def test_gear_under_a_piece_moves_with_it(win):
     t = win.gear_table
     fx6 = piece(win, "Sony FX6")
     t.open_piece(fx6, True)
-    assert t._on_grip(QPoint(t.header().sectionViewportPosition(GEAR_COL["grip"]) + 4, t.visualItemRect(fx6.child(0)).center().y())) is None  # fmt: skip
-    t.start_lift(fx6, t.visualItemRect(fx6).center().y())
-    lift = t._lift
+    grip = t.header().sectionViewportPosition(GEAR_COL["grip"]) + 4
+    hover(t.viewport(), QPoint(grip, t.visualItemRect(fx6).center().y()))
+    assert t.viewport().cursor().shape() == Qt.CursorShape.OpenHandCursor  # the piece's grip takes it…
+    hover(t.viewport(), QPoint(grip, t.visualItemRect(fx6.child(0)).center().y()))
+    assert t.viewport().cursor().shape() == Qt.CursorShape.ArrowCursor  # …the gear under it has none to take
+    lift = t.start_lift(fx6, t.visualItemRect(fx6).center().y())
     assert lift.ids == [fx6.data(0, ID)]  # the piece is what moves…
     assert {r.data(0, ID) for r in lift.moving} == {fx6.data(0, ID)} | {
         fx6.child(i).data(0, ID) for i in range(fx6.childCount())
@@ -202,10 +206,11 @@ def test_the_chevron_turns_and_everything_paints(win, monkeypatch):
     fx6 = piece(win, "Sony FX6")
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "0")
     t.open_piece(fx6, True)
-    assert 0 <= t.angle(fx6) < 90 and fx6.data(0, ID) in t._turns  # on its way
+    assert fx6.isExpanded() and 0 <= t.angle(fx6) < 90  # open, its chevron on its way
+    wait_for(lambda: t.angle(fx6) == 90)  # …and there
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "1")
     t.open_piece(fx6, False)
-    assert t.angle(fx6) == 0 and fx6.data(0, ID) not in t._turns  # Reduce Motion: it just points
+    assert t.angle(fx6) == 0  # Reduce Motion: it just points
 
     def shot() -> QImage:
         img = QImage(t.viewport().size(), QImage.Format.Format_ARGB32)

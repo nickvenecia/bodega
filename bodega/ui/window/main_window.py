@@ -144,11 +144,15 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
         self._move_menu.aboutToShow.connect(self._fill_move_menu)
 
         self._save_timer = QTimer(self, singleShot=True, interval=tokens.SAVE_DELAY_MS, timeout=self.flush)
-        self._save_cap = QTimer(self, singleShot=True, interval=tokens.SAVE_MAX_MS, timeout=self.flush)
+        self._save_cap = QTimer(
+            self, singleShot=True, interval=tokens.SAVE_MAX_MS, timeout=self.flush, objectName="SaveCap"
+        )
         # undo's note of where things stand, once the moment is over: an action's saves and refreshes (opening a
         # piece is four) are one note, not one each (at 3,000 pieces a note is a tenth of a second)
         self._mark_timer = QTimer(self, singleShot=True, interval=0, timeout=self.mark_now)
-        self._retry_timer = QTimer(self, interval=tokens.SAVE_RETRY_MS, timeout=self.flush)  # while not saved
+        self._retry_timer = QTimer(  # while not saved
+            self, interval=tokens.SAVE_RETRY_MS, timeout=self.flush, objectName="SaveRetry"
+        )
         self._was_unsaved = False
         self.lib.on_unsaved = lambda: QTimer.singleShot(0, self, self.show_save_state)
         self._table_timer = QTimer(self, singleShot=True, interval=tokens.TABLE_DELAY_MS, timeout=self.refresh)
@@ -187,7 +191,7 @@ class MainWindow(AIMixin, MenusMixin, GroupsMixin, EditingMixin, TransferMixin, 
             QTimer.singleShot(0, self, self._say_newer_format)
         QTimer.singleShot(tokens.UPDATE_CHECK_DELAY_MS, self, self._auto_check_updates)
         self._day = dates.today()  # a new day refreshes what "today" decides: late, out now, coming up
-        self._midnight = QTimer(self, singleShot=True, timeout=self._new_day)
+        self._midnight = QTimer(self, singleShot=True, timeout=self._new_day, objectName="Midnight")
         self._arm_midnight()
         QGuiApplication.instance().applicationStateChanged.connect(self._app_state)
 

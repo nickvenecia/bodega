@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import pytest
-from PySide6.QtCore import QBuffer, QByteArray, QIODevice
+from PySide6.QtCore import QBuffer, QByteArray, QIODevice, Qt
 from PySide6.QtGui import QColor, QImage
+from PySide6.QtWidgets import QApplication
 
 from bodega.core import sample, web
 from bodega.core.model import Item
 from bodega.core.store import Library
+from tests.ui import button, open_menu, pick, press, wait_for
 
 
 def picture(w=40, h=30, fmt="PNG", color="#7c5cff") -> bytes:
@@ -131,14 +133,14 @@ def test_a_pasted_picture_becomes_the_pieces_photo(qapp, data_folder, monkeypatc
     it = next(iter(win.lib.items.values()))
     win.open("gear", it.id)
     QApplication.clipboard().setText("just words")
-    win.items._paste_state()
+    open_menu(win.items.add_photo.menu())  # + Photo's menu, as it opens
     assert not win.items.act_add_photo_paste.isEnabled()
     win.paste()  # ⌘V with no picture copied: nothing happens
     assert not it.photo
     img = QImage(40, 30, QImage.Format.Format_ARGB32)
     img.fill(QColor("#7c5cff"))
     QApplication.clipboard().setImage(img)
-    win.items._paste_state()
+    open_menu(win.items.add_photo.menu())
     assert win.items.act_add_photo_paste.isEnabled()
     win.paste()  # ⌘V (no text box being typed in)
     assert win.lib.items[it.id].photo.endswith(".jpg")
@@ -165,7 +167,7 @@ def test_a_store_that_turns_bodega_away_says_what_to_do(qapp, data_folder, monke
     said = []
     win.items.toast_wanted.connect(lambda text, tone: said.append((text, tone)))
     win.items.photo_from_link()
-    win.items._photo_job.wait(5000)
+    wait_for(lambda: said and said[-1][1] == "problem")  # (the photo's job, once it's over)
     QApplication.processEvents()
     assert said[-1] == (f"B&H only lets web browsers read its pages. {PASTE_INSTEAD}", "problem") and not it.photo
     said_price = "B&H won't let Bodega read its price. Open the link instead."
@@ -175,10 +177,10 @@ def test_a_store_that_turns_bodega_away_says_what_to_do(qapp, data_folder, monke
     check.run()  # (in this thread)
     assert got == [(it.id, "", "", said_price)]
     # Check Price: the problem stays under the link, beside what it's about, until it's closed (no timed toast)
-    win.items._check_price()
+    button(win.items, "Check Price: read the price on this page").click()
     assert win.items.price_found.text() == "Checking B&H…" and not win.items.check_price.isEnabled()
     toasts = len(said)
-    win.items._price_thread.wait(5000)
+    wait_for(win.items.check_price.isEnabled)  # (on again once the check is over)
     QApplication.processEvents()
     p = win.items
     assert len(said) == toasts and p.price_found.text() == said_price and p.price_found.objectName() == "Warn"
@@ -197,7 +199,9 @@ def test_photo_in_the_panel_and_the_list(qapp, data_folder, monkeypatch):
     it = next(iter(win.lib.items.values()))
     win.open("gear", it.id)
     assert win.items.add_photo.isVisibleTo(win.items) and not win.items.photo.isVisibleTo(win.items)
-    win.items._use_photo(photos.keep(picture()))
+    QApplication.clipboard().setImage(QImage.fromData(picture()))  # a picture copied…
+    pick(win.items.add_photo.menu(), "Paste")  # …and pasted from + Photo
+    assert it.photo == photos.keep(picture())
     win.flush()
     assert Library(data_folder).load().items[it.id].photo == it.photo
     assert win.items.photo.isVisibleTo(win.items) and not win.items.add_photo.isVisibleTo(win.items)
@@ -223,7 +227,7 @@ def test_get_photos_from_links(qapp, data_folder, monkeypatch):
     monkeypatch.setattr("bodega.ui.dialogs.common.confirm", lambda *a, **k: True)
     monkeypatch.setattr(photos, "from_link", lambda link: photos.keep(picture(color="#22aa66")))
     win.get_photos_from_links()
-    win._photo_worker.wait(5000)
+    wait_for(lambda: all(win.lib.items[i.id].photo for i in with_links))  # (the job, once it's over)
     from PySide6.QtWidgets import QApplication
 
     QApplication.processEvents()
@@ -273,6 +277,6 @@ def test_labels_sheet_and_scanning(qapp, data_folder):
     win = MainWindow(lib)
     win.show()
     win.search.setText(document.label_code(it.id))
-    win._scanned()  # (a scanner presses Return)
+    press(win.search, Qt.Key.Key_Return)  # (a scanner presses Return)
     assert win.items.it is it and win.search.text() == ""
     win.close()

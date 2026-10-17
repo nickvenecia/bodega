@@ -154,6 +154,10 @@ packaging/     Installer files per OS
 - A warning from Qt fails the test it came in. A test that hands Qt a broken file on purpose is marked
   `@pytest.mark.qt_warnings`. The offscreen screen's own limits ("This plugin does not support…") are let through.
 - Wait for what you're waiting on (`wait_for(done)` in `tests/test_window.py`), never a fixed time.
+- A UI test finds things as a person does, through `tests/ui.py`: a button by its words, a field by its label, a
+  menu command by its menu and words, a part by the object name it gives itself (`by_id`). It acts through what a
+  part makes public, never a private `._name` (`tests/test_code_rules.py` checks; its short allowlist says why for
+  each).
 - A document's PDF is read back with an independent reader (pypdf): its words are real text.
 - UI changes: check screenshots (`QT_QPA_PLATFORM=offscreen python tests/screenshot.py OUTDIR`).
 - Before a release, the packaged app must pass `--smoke-test` (CI does this on every platform).

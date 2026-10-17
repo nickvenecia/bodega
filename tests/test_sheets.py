@@ -152,7 +152,7 @@ def test_it_comes_in_unless_motion_is_reduced(win, monkeypatch):
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "0")
     d = renter(win)
     s = the_sheet(d)
-    assert s._anims and d.windowOpacity() < 1  # fading in, rising
+    assert s.lift > 0 and d.windowOpacity() < 1  # fading in, rising
     QTest.qWait(tokens.SHEET_RISE_MS + 150)
     assert d.windowOpacity() == pytest.approx(1.0) and s.lift == 0
     d.reject()

@@ -1278,8 +1278,9 @@ class GearTable(Table):
             return
         super().mousePressEvent(e)
 
-    def start_lift(self, row, y: float) -> None:
-        """Lift the pressed row (and the others selected with it) to drag it into place."""
+    def start_lift(self, row, y: float) -> Lift:
+        """Lift the pressed row (and the others selected with it) to drag it into place; the Lift follows the
+        pointer until end_lift()."""
         if not self.your_order():  # dragging means your own order: switch to it first
             self.sortByColumn(GEAR_COL["grip"], Qt.SortOrder.AscendingOrder)
             y = self.visualItemRect(row).center().y()
@@ -1288,6 +1289,7 @@ class GearTable(Table):
             ids = [row.data(0, ID)]
         self._lift = Lift(self, self._visible_rows(), ids, row, y, self._describe)
         self.viewport().setCursor(Qt.CursorShape.ClosedHandCursor)
+        return self._lift
 
     def end_lift(self, drop: bool = True) -> None:
         lift, self._lift = self._lift, None

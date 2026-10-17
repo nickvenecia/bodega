@@ -82,10 +82,11 @@ def main(out: Path, sheet: Path | None = None) -> int:
     setup_app(app)
     from bodega.ui.dialogs.preview import PageDialog
     from bodega.ui.window.main_window import MainWindow
+    from tests.ui import keep_size
 
     def window(lib):
         w = MainWindow(lib)
-        w._restored = True  # a fixed size, not the screen's
+        keep_size(w)  # a fixed size, not the screen's
         w.resize(*SIZE)
         w.set_look(LOOK)
         if ACCENT:
@@ -140,7 +141,7 @@ def main(out: Path, sheet: Path | None = None) -> int:
     if lib.rentals:
         w.open("rentals", next(iter(lib.rentals)))  # (its panel: the head, the strip, a line open)
     for e in w.rentals.editors[1:2]:
-        w.rentals._open_editor(e)
+        e.open_wanted.emit(e)  # (a click on the line)
     shot(w, out / "5-rental.png")
     w.go("renters")
     if lib.clients:

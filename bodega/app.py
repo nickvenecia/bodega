@@ -323,6 +323,7 @@ class _MainThreadGC(QObject):
 
     def __init__(self, app: QApplication):
         super().__init__(app)
+        self.setObjectName("CycleCollector")
         gc.disable()
         self._limits = gc.get_threshold()
         self.timer = QTimer(self, interval=tokens.GC_MS, timeout=self.collect)

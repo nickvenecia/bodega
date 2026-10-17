@@ -5,6 +5,7 @@ from __future__ import annotations
 from bodega.core import sample
 from bodega.core.history import History
 from bodega.core.store import Library
+from tests.ui import bar_menu, type_into
 
 
 def test_undo_redo_round_trip(tmp_path):
@@ -54,16 +55,17 @@ def test_undo_says_what_it_would_change_back(qapp, data_folder):
     from bodega.ui.window.main_window import MainWindow
 
     win = MainWindow(sample.fill(Library(data_folder).load()))
-    win._edit_menu_state()
+    bar_menu(win, "Edit")  # (it says what Undo would do as it opens)
     assert win.act_undo.text() == "Undo" and not win.act_undo.isEnabled()
     it = next(iter(win.lib.items.values()))
-    it.name = "Renamed"
-    win._item_edited(it)
+    win.open("gear", it.id)
+    type_into(win.items.name, "Renamed")
     win.flush()
-    win._edit_menu_state()
+    win.setFocus()  # (out of the name: in a text box, Undo is the typing's)
+    bar_menu(win, "Edit")
     assert win.act_undo.text() == "Undo Change to Renamed" and win.act_undo.isEnabled()
     win.undo()
-    win._edit_menu_state()
+    bar_menu(win, "Edit")
     assert win.act_redo.text() == "Redo Change to Renamed"
     win.close()
 

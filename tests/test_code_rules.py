@@ -92,3 +92,98 @@ def test_no_layout_is_asked_for_its_items():
                 if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "itemAt":
                     asked.append(f"{p.relative_to(ROOT.parent).as_posix()}:{node.lineno}")
     assert asked == [], asked
+
+
+# A private name a UI test still reaches, and why it can't do it as a person would: "file:name" -> the reason.
+# Keep it short: anything else a UI test needs it finds by its words or its role (tests/ui.py), or the part makes
+# it public (an object name for by_id, or a method the app itself has).
+PRIVATE_ALLOWED = {
+    "ui.py:_restored": "The window opens where it was left and saves its size and place for next time; a test or a "
+    "screenshot needs it at a size it sets instead. A person never wants that, so the window has no setting for it "
+    "and keeps it as a private note: tests/ui.py's keep_size() is the one place a test sets it.",
+    "test_window.py:_done": "When every row of a sheet is gear you already have, Import is off even with Add Links "
+    "to Pieces You Have on, so no click reaches the links choice (a person can't bring only links in yet: a bug "
+    "to fix in the Import window). The test finishes the window the way Import would.",
+}
+
+
+def _imported(tree: ast.AST) -> dict[str, set[str]]:
+    """Each name a file imports (anywhere in it) with what it is: "bodega.ui.style.tokens", "os"…"""
+    names: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for a in node.names:
+                names.setdefault(a.asname or a.name.split(".")[0], set()).add(a.name)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            for a in node.names:
+                names.setdefault(a.asname or a.name, set()).add(f"{node.module}.{a.name}")
+    return names
+
+
+def _root(node: ast.AST) -> str:
+    """The name an expression starts from (`win` in `win.items.name.text()`), or "" for anything else."""
+    while isinstance(node, (ast.Attribute, ast.Call, ast.Subscript)):
+        node = node.func if isinstance(node, ast.Call) else node.value
+    return node.id if isinstance(node, ast.Name) else ""
+
+
+def _ui_parts(tree: ast.Module, window_fixtures: set[str]) -> list[ast.AST]:
+    """What in a test file builds a window or dialog: its tests and fixtures that take `qapp` (or a fixture that
+    does) and, once it has any, the helpers they use (everything else at the top of the file)."""
+    tops = [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.ClassDef))]
+    funcs = [n for n in tops if isinstance(n, ast.FunctionDef)]
+
+    def is_fixture(f: ast.FunctionDef) -> bool:
+        return any("fixture" in ast.unparse(d) for d in f.decorator_list)
+
+    def takes_a_window(f: ast.FunctionDef) -> bool:
+        return any(a.arg in window_fixtures for a in f.args.args)
+
+    for _ in funcs:  # (a fixture can take one that takes qapp)
+        window_fixtures |= {f.name for f in funcs if is_fixture(f) and takes_a_window(f)}
+    ui = [f for f in funcs if (f.name.startswith("test_") or is_fixture(f)) and takes_a_window(f)]
+    if not ui:
+        return []
+    return ui + [
+        n for n in tops if not (isinstance(n, ast.FunctionDef) and (n.name.startswith("test_") or is_fixture(n)))
+    ]
+
+
+def test_ui_tests_never_reach_a_parts_private_names():
+    """The standard's T-13 and T-04: a UI test finds what it works with as a person does (a button by its words, a
+    field by its label, a menu command by its menu and its words: tests/ui.py) or by the part's own object name,
+    and acts through what the part makes public, never through a `._name`. A test that reaches a part's private
+    name breaks when the part is tidied though a person sees nothing change, and it can pass doing what a person
+    couldn't (a click on a button that's off). A UI test builds a window or dialog: it takes `qapp`, or a fixture
+    that does. What it reaches through a name it imported from outside bodega/ui (bodega.core, the standard
+    library, Qt) is a unit test's business and isn't counted; anything else is, unless PRIVATE_ALLOWED says why."""
+    tests = ROOT.parent / "tests"
+    conftest = ast.parse((tests / "conftest.py").read_text(encoding="utf-8"))
+    window_fixtures = {"qapp"} | {
+        f.name for f in conftest.body if isinstance(f, ast.FunctionDef) and any(a.arg == "qapp" for a in f.args.args)
+    }
+    found, used = [], set()
+    for p in sorted(tests.glob("*.py")):
+        tree = ast.parse(p.read_text(encoding="utf-8"))
+        parts = [tree] if p.name == "ui.py" else _ui_parts(tree, set(window_fixtures))
+        outside = {n for n, what in _imported(tree).items() if not any(w.startswith("bodega.ui") for w in what)}
+        for part in parts:
+            known = set(outside)
+            made = [n for n in ast.walk(part) if isinstance(n, ast.Assign) and len(n.targets) == 1]
+            for _ in made:  # names made from something outside bodega/ui (`pace = tasks.Pace()`)
+                known |= {
+                    a.targets[0].id for a in made if isinstance(a.targets[0], ast.Name) and _root(a.value) in known
+                }
+            for node in ast.walk(part):
+                private = (
+                    isinstance(node, ast.Attribute) and node.attr.startswith("_") and not node.attr.startswith("__")
+                )
+                if not private or _root(node.value) in known:
+                    continue
+                key = f"{p.name}:{node.attr}"
+                if key in PRIVATE_ALLOWED:
+                    used.add(key)
+                else:
+                    found.append(f"{p.name}:{node.lineno}: {ast.unparse(node)}")
+    assert found == [], "\n".join(sorted(set(found)))
+    assert set(PRIVATE_ALLOWED) <= used, f"no longer reached, so off the list: {set(PRIVATE_ALLOWED) - used}"

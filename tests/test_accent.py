@@ -8,6 +8,7 @@ import re
 from bodega.core import sample
 from bodega.core.store import Library, read_json
 from bodega.ui.style import tokens
+from tests.ui import click
 
 COLOR = re.compile(r"^(#[0-9A-F]{6}|rgba\(\d+, \d+, \d+, [0-9.]+\))$")
 
@@ -33,7 +34,7 @@ def test_bodegas_own_blue_reads_too():
         assert tokens.contrast("#FFFFFF", look["BAD_BUTTON"]) >= 4.5
         for meaning in ("GOOD", "BAD", "WARN", "INFO"):
             assert tokens.contrast(look[meaning], look["BG"]) >= 4.5, meaning
-        glass = tokens._solid(look["GLASS"], look["BG"])  # the sidebar's counts and labels sit on the glass
+        glass = tokens.solid(look["GLASS"], look["BG"])  # the sidebar's counts and labels sit on the glass
         assert tokens.contrast(look["MUTED"], glass) >= 4.5
 
 
@@ -79,12 +80,17 @@ def test_picking_an_accent_in_settings(qapp, data_folder):
     set_appearance(qapp, "dark", "")  # whatever look an earlier test left on
     try:
         d = SettingsDialog(win.lib, win, "general")
-        assert d.accent.current == tokens.APP_ACCENT
-        d.accent._pick("purple")
+        picker = d.accent
+        assert picker.current == tokens.APP_ACCENT
+
+        def pick(key: str) -> None:  # a click on its circle
+            click(picker, picker.swatch_rect(picker.keys.index(key)).center())
+
+        pick("purple")
         assert tokens.ACCENTS["purple"][1] == tokens.ACCENT
         assert tokens.ACCENTS["purple"][1] in qapp.styleSheet()
         assert read_json(data_folder / "settings.json", {}).get("accent") == "purple"
-        d.accent._pick(tokens.APP_ACCENT)
+        pick(tokens.APP_ACCENT)
         assert read_json(data_folder / "settings.json", {}).get("accent") == ""
         assert tokens.DARK["ACCENT"] == tokens.ACCENT
         d.close()
@@ -141,12 +147,12 @@ def test_the_light_looks_whites_and_greys_lean_toward_the_accent():
                 if math.hypot(aa, ab) > 0.05:  # a colorful accent: it leans its way
                     assert math.hypot(a1 - aa, b1 - ab) < math.hypot(a0 - aa, b0 - ab), (name, k)
             if key == "graphite":  # (as numbers: "0.90" and "0.9" are one see-through)
-                same = lambda a, b: tokens._solid(a, "#FFFFFF") == tokens._solid(b, "#FFFFFF")
+                same = lambda a, b: tokens.solid(a, "#FFFFFF") == tokens.solid(b, "#FFFFFF")
                 assert all(same(getattr(tokens, k), tokens.LIGHT[k]) for k in ("BG", "PANEL", "GLASS", "MUTED")), name
             for meaning in ("GOOD", "BAD", "WARN", "INFO", "PAPER"):
                 assert getattr(tokens, meaning) == tokens.LIGHT[meaning], (name, meaning)
             assert tokens.contrast(tokens.MUTED, tokens.BG) >= 4.5, name
-            assert tokens.contrast(tokens.MUTED, tokens._solid(tokens.GLASS, tokens.BG)) >= 4.5, name
+            assert tokens.contrast(tokens.MUTED, tokens.solid(tokens.GLASS, tokens.BG)) >= 4.5, name
             assert tokens.contrast(tokens.TEXT, tokens.PANEL) >= 4.5, name
             assert tokens.contrast(tokens.ACCENT_TEXT, tokens.BG) >= 4.5, name
             for meaning in ("GOOD", "BAD", "WARN", "INFO"):

@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from bodega.core import update
+from tests.ui import wait_for
 
 GITHUB_ANSWER = {
     "tag_name": "v9.1.0",
@@ -278,13 +279,15 @@ def test_release_notes_are_the_changelog_entries():
     assert rn.changes(rn.CHANGELOG.read_text(encoding="utf-8"), __version__)  # this version has its entries
 
 
-def test_window_offers_the_update(qapp, data_folder):
+def test_window_offers_the_update(qapp, data_folder, monkeypatch):
     from bodega.core.store import Library
     from bodega.ui.window.main_window import MainWindow
 
     w = MainWindow(Library(data_folder).load())
     rel = update.parse_release(GITHUB_ANSWER)
-    w._found_release(rel, quiet=True)
+    monkeypatch.setattr(update, "check", lambda: rel)  # what the latest release says
+    w.check_updates(quiet=True)  # (as on opening)
+    wait_for(lambda: w.sidebar.btn_update.isVisibleTo(w.sidebar))
     assert w.sidebar.btn_update.isVisibleTo(w.sidebar) and w.sidebar.btn_update.text() == "Update to 9.1.0"
     w.shutdown()
 
@@ -296,21 +299,27 @@ def test_a_new_version_found_on_opening_shows_right_away(qapp, data_folder, monk
 
     from bodega.core import sample, update
     from bodega.core.store import Library
+    from bodega.ui.dialogs.update import CheckThread
     from bodega.ui.window.main_window import MainWindow
 
     win = MainWindow(sample.fill(Library(data_folder).load()))
     win.show()
-    shown, later = [], []
-    monkeypatch.setattr(win, "show_update", lambda: shown.append(win._release.version))
-    monkeypatch.setattr("PySide6.QtCore.QTimer.singleShot", lambda ms, *a: later.append(a[-1]))  # (ms, owner, fn)
+    shown = []
+    monkeypatch.setattr(win, "show_update", lambda: shown.append(win.sidebar.btn_update.text()))
     monkeypatch.setattr(QApplication, "activeModalWidget", staticmethod(lambda: object()))
-    win._found_release(update.Release("99.0.0"), quiet=True)
-    assert not shown and later  # another window is open: it waits
+    monkeypatch.setattr(update, "check", lambda: update.Release("99.0.0"))  # what the latest release says
+    win.check_updates(quiet=True)  # (as on opening)
+    wait_for(lambda: win.sidebar.btn_update.isVisibleTo(win.sidebar))  # found…
+    assert not shown  # …but another window is open: it waits
     monkeypatch.setattr(QApplication, "activeModalWidget", staticmethod(lambda: None))
-    later.pop()()
-    assert shown == ["99.0.0"] and win.sidebar.btn_update.isVisibleTo(win.sidebar)
-    win._found_release(update.Release("0.0.1"), quiet=True)  # nothing newer: nothing shows
-    assert shown == ["99.0.0"]
+    wait_for(lambda: shown)  # free again: it shows (it looks again every little while)
+    assert shown == ["Update to 99.0.0"] and win.sidebar.btn_update.isVisibleTo(win.sidebar)
+    wait_for(lambda: not win.findChildren(CheckThread))  # (that check is over)
+    before = win.lib.settings.get("last_update_check")
+    monkeypatch.setattr(update, "check", lambda: update.Release("0.0.1"))
+    win.check_updates(quiet=True)
+    wait_for(lambda: win.lib.settings.get("last_update_check") != before)  # nothing newer: nothing shows
+    assert shown == ["Update to 99.0.0"]
     win.close()
 
 

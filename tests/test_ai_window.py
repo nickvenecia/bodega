@@ -14,6 +14,7 @@ from bodega.services import account, feedback
 from bodega.services.ai import providers
 from bodega.services.ai.providers import Setup
 from tests.test_ai import FakeKeyring, FakeResponse, anthropic_reply
+from tests.ui import button, choose, field, keep_size, type_into, wait_for
 
 
 @pytest.fixture
@@ -103,8 +104,7 @@ def test_ai_setup_saves_to_keychain_not_settings(win, keychain, monkeypatch):
     monkeypatch.setattr(d, "_load_models", lambda **_k: None)  # (no provider to ask here)
     d.provider.setCurrentIndex(d.provider.findData("kimi"))
     assert win.lib.settings["ai"]["provider"] == "kimi"  # kept as it's picked
-    d.key.setText("sk-kimi-abc")
-    d._check_key()  # (pasted: kept, then tried)
+    type_into(field(d, "API Key"), "sk-kimi-abc")  # (pasted: kept, then tried, as you leave it)
     d.model.setEditText("kimi-model")
     d.model.lineEdit().editingFinished.emit()
     assert providers.key_for("kimi") == "sk-kimi-abc"
@@ -122,7 +122,7 @@ def test_question_is_answered_as_plain_text(win, monkeypatch):
     )
     win.open_ai_assistant()
     win.assistant.question.setText("how many lenses?")
-    win.assistant._ask()
+    button(win.assistant, "Send").click()
     _wait(win.assistant.worker)
     shown = win.assistant.log.toPlainText()
     assert "<b>Two</b> lenses" in shown  # shown as typed, not as bold
@@ -146,7 +146,7 @@ def test_an_answer_names_its_sources_and_a_guess_goes_to_review(win, monkeypatch
     win.open_ai_assistant()
     a = win.assistant
     a.question.setText("what lenses do I have?")
-    a._ask()
+    button(a, "Send").click()
     _wait(a.worker)
     shown = [lb.text() for lb in a.findChildren(QLabel) if lb.objectName() == "AnswerSources"]
     assert shown and shown[-1].startswith("From your gear: ") and shown[-1].endswith(" and 1 more")
@@ -173,7 +173,7 @@ def test_sign_in_says_accounts_arent_on_yet(win):
     d = SignInDialog(win)
     d.email.setText("me@example.com")
     d.password.setText("hunter2")
-    d._sign_in()
+    button(d, "Sign In").click()
     assert "aren't switched on" in d.error.text() and d.password.text() == ""
     assert account.current() is None
 
@@ -182,8 +182,8 @@ def test_feedback_waits_in_the_outbox(win, data_folder):
     from bodega.ui.dialogs.feedback import FeedbackDialog
 
     d = FeedbackDialog(win)
-    d.message.set_text("Love it. Could kits have photos?")
-    d._send()
+    type_into(d.message, "Love it. Could kits have photos?")
+    button(d, "Send").click()
     waiting = feedback.waiting()
     assert len(waiting) == 1 and not d.sent_now
     saved = json.loads(waiting[0].read_text(encoding="utf-8"))
@@ -202,28 +202,28 @@ def test_settings_sections_edit_in_place(win, keychain, monkeypatch):
     e = d.ai_editor
     monkeypatch.setattr(e, "_load_models", lambda **_k: None)  # (no provider to ask here)
     e.provider.setCurrentIndex(e.provider.findData("kimi"))
-    e.key.setText("sk-kimi-abc")
-    e._check_key()
+    type_into(field(e, "API Key"), "sk-kimi-abc")
     e.model.setEditText("kimi-model")
     e.model.lineEdit().editingFinished.emit()
     assert providers.key_for("kimi") == "sk-kimi-abc" and e.isVisibleTo(d)
     assert win.lib.settings["ai"]["model"] == "kimi-model"
     # a profile, edited in place
+    d.show_pane("profiles")
     p = d.profile_editor
-    p.name.setText("Renamed Rentals")
-    p._save()
+    type_into(p.name, "Renamed Rentals")
+    button(p, "Save Changes").click()
     assert win.business().name == "Renamed Rentals"
     assert d.profile_editor is not p  # rebuilt with the saved one
     # adding a profile
-    d._add_profile()
-    d.profile_editor.name.setText("Second Shop")
-    d.profile_editor._save()
+    button(d, "Add Profile").click()
+    type_into(d.profile_editor.name, "Second Shop")
+    button(d.profile_editor, "Add Profile").click()
     assert len(win.lib.businesses) == 2 and win.business().name == "Second Shop"
     d.close()
 
 
 def test_every_right_panel_fits_a_small_window(win):
-    win._restored = True
+    keep_size(win)
     win.resize(1100, 700)
     win.open_ai_assistant()
     widths = {win.inspector.widget(i).width() for i in range(win.inspector.count())}
@@ -256,7 +256,7 @@ def test_a_model_the_provider_dropped_is_kept_and_said(qapp, data_folder, monkey
     monkeypatch.setattr(
         d, "_run", lambda _job, done, _msg, _failed=None: done([("model-a", "Model A"), ("model-b", "Model B")])
     )
-    d._load_models()
+    button(d, "Ask for the List Again").click()
     assert d.model.currentText() == "retired-model-1"  # never swapped for another without asking
     assert "isn't offered" in d.status.text()
     d.deleteLater()
@@ -270,16 +270,17 @@ def test_a_pasted_key_checks_itself_and_models_show_by_name(qapp, data_folder, k
     d = AISettings(lib)
     asked = []
     monkeypatch.setattr(prov, "named_models", lambda setup, key=None: asked.append(key) or [("claude-x", "Claude X")])
-    d.key.setText("sk-oops")  # (Anthropic's keys start sk-ant-)
-    d._check_key()
+    type_into(field(d, "API Key"), "sk-oops")  # (Anthropic's keys start sk-ant-)
     assert not asked and "start with sk-ant-" in d.status.text()  # said without sending it
     assert not prov.key_for("anthropic")  # …and not kept
-    d.key.setText("sk-ant-good")
-    d._check_key()
-    _wait(d._worker)
+    type_into(field(d, "API Key"), "sk-ant-good")
+    wait_for(d.load.isEnabled)  # (Ask for the List Again is off while the key is tried)
+    QApplication.processEvents()
     assert asked == ["sk-ant-good"] and d.status.text() == "Key works · 1 model"
     assert prov.key_for("anthropic") == "sk-ant-good"  # kept as it was pasted (there's no Save)
-    assert d.model.itemText(0) == "Claude X" and d._setup().model == "claude-x"  # the name shown, the id used
+    assert d.model.itemText(0) == "Claude X"
+    choose(d.model, "Claude X")
+    assert lib.settings["ai"]["model"] == "claude-x"  # the name shown, the id used
     assert lib.settings["ai_models"]["models"] == [["claude-x", "Claude X"]]  # kept for the day
     d.deleteLater()
 
@@ -318,7 +319,7 @@ def _asked_for_a_change(win, monkeypatch):
         json.dumps({"reply": "Moved it.", "changes": [{"n": 0, "field": "group", "value": "Cases"}]}),
     )
     win.assistant.question.setText("put the first piece in a group called Cases")
-    win.assistant._ask()
+    button(win.assistant, "Send").click()
     _wait(win.assistant.worker)
     return win.assistant
 
@@ -369,7 +370,7 @@ def test_the_assistant_header_clears_the_chat_and_offers_settings(win, monkeypat
     a = win.assistant
     a.examples[0].click()  # an example question fills the box, ready to send
     assert a.question.text() == a.examples[0].text() and win.focusWidget() is a.question
-    a._ask()
+    button(a, "Send").click()
     _wait(a.worker)
     assert not a.log.isHidden() and "Plenty." in a.log.toPlainText()
     a.clear_btn.click()
@@ -411,7 +412,7 @@ def test_a_message_can_be_copied_edited_and_asked_again(win, monkeypatch):
     win.open_ai_assistant()
     a = win.assistant
     a.question.setText("what's it worth?")
-    a._ask()
+    button(a, "Send").click()
     _wait(a.worker)
     mine, answer = [m for m in a.chat.parts if isinstance(m, Message)]
     assert mine.kind == "mine" and answer.kind == "answer" and len(answer.actions) == 1  # Copy only, on answers
@@ -442,5 +443,5 @@ def test_the_assistant_names_its_model_as_the_provider_does(win):
     win.open_ai_assistant()
     assert win.assistant.model_line.text() == "Claude X" and win.assistant.model_line.isVisibleTo(win.assistant)
     win.lib.settings["ai_models"] = {}
-    win._ai_state()
+    win.open_ai_assistant()  # (shown again: it reads where things stand)
     assert not win.assistant.model_line.isVisibleTo(win.assistant)  # no name known: never the id

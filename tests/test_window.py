@@ -14,6 +14,20 @@ from PySide6.QtWidgets import QApplication, QLabel, QWidget
 from bodega.core import sample
 from bodega.core.model import RentalLine
 from bodega.core.store import Library
+from tests.ui import (
+    bar_menu,
+    button,
+    by_id,
+    choose,
+    click,
+    keep_size,
+    menu_action,
+    pick,
+    pick_from_next_menu,
+    press,
+    right_click,
+    type_into,
+)
 
 
 @pytest.fixture
@@ -33,7 +47,7 @@ def full_size(w) -> None:
     """The window at its usual smallest (Qt's test screen is 800 wide, where the sidebar folds away)."""
     from bodega.ui.style import tokens
 
-    w._restored = True
+    keep_size(w)
     w.showNormal()  # (it opened filling the test screen)
     w.resize(*tokens.WINDOW_MIN)
     QApplication.processEvents()
@@ -111,7 +125,7 @@ def test_empty_gear_page_starts_and_takes_a_dropped_sheet(qapp, data_folder, tmp
     w = MainWindow(Library(data_folder).load())
     w.show()
     w.new("gear")  # the + button: a new piece, open on the right
-    assert len(w.lib.items) == 1 and w._list_shown() is w.gear_table and w.search.isVisible()
+    assert len(w.lib.items) == 1 and w.gear_table.isVisible() and w.search.isVisible()
     w.deselect()  # left blank, so it goes
     assert not w.lib.items and w.pages.currentWidget() is w.empty
 
@@ -305,7 +319,7 @@ def test_every_sidebar_place_opens_and_is_marked(win):
     win.open("packages", next(iter(win.lib.packages)))
     assert win.dock.opened and win.packages.sum_rows["value"].text()
     win.sidebar.pick("gear")
-    assert win._list_shown() is win.gear_table and not win.dock.opened
+    assert win.gear_table.isVisible() and not win.dock.opened
     win.open("gear", next(iter(win.lib.items)))
     assert win.dock.opened and win.items.it is not None
     win.deselect()  # Esc
@@ -405,8 +419,8 @@ def test_a_toast_says_its_news_and_goes(win):
     t = win.toaster
     win.toast("Copied 3 pieces.", "done")
     assert t.isVisible() and (t.text, t.tone) == ("Copied 3 pieces.", "done")
-    pill = t._pill.translated(t.pos().x(), t.pos().y())
-    area = win._toast_area()
+    pill = t.pill.translated(t.pos().x(), t.pos().y())
+    area = t.anchor()  # (between the side panels, over the page)
     assert area.contains(pill.toRect()) and pill.center().x() == pytest.approx(area.center().x(), abs=2)
     win.toast("Something odd.", "sparkly")  # an unknown tone is plain news
     assert t.tone == ""
@@ -441,15 +455,15 @@ def test_new_item_edit_and_attach(win, monkeypatch):
 
     win.new("gear")
     it = win.items.it
-    win.items.name.setText("Matte Box for FX6")
-    win.items._set("name", "Matte Box for FX6")
+    type_into(win.items.name, "Matte Box for FX6")
+    assert it.name == "Matte Box for FX6"
     win.items.qty.setValue(2)
     assert not win.items.blocks["serials"].isVisibleTo(win.items)  # added only when wanted
     assert not win.items.serial_fields  # and its fields are made only then
-    win.items._add_part("serials")
+    button(win.items, "Serial Numbers").click()  # its + chip
     assert win.items.blocks["serials"].isVisibleTo(win.items) and "serials" in it.extras
     assert len(win.items.serial_fields) == 2
-    win.items._remove_part("serials")
+    button(win.items, "Take Serial Numbers off this piece").click()  # its ✕, while it's empty
     assert "serials" not in it.extras
     fx6 = next(i for i in win.lib.items.values() if i.name.startswith("Sony FX6"))
 
@@ -517,7 +531,7 @@ def test_next_number_in_the_profile_form(qapp, data_folder):
     d.next_field.setText("120")
     d.next_field.textEdited.emit("120")
     assert d.save.isEnabled() and d.next_note.isHidden()
-    d._save()
+    button(d, "Save").click()
     assert d.next_number == 120
 
 
@@ -628,7 +642,7 @@ def test_the_import_window_leaves_out_what_you_untick_and_repicks_columns(qapp, 
     d.pick_column("name", None)
     assert not d.chosen() and not d.go.isEnabled()
     d.pick_column("name", 1)
-    d._done()
+    d.go.click()  # Import
     assert d.items and d.pricing == ("4", "8.25")  # no profile yet: it starts with the sheet's pricing
 
 
@@ -658,6 +672,9 @@ def test_the_sheets_links_go_to_gear_you_have_only_if_you_say(win, tmp_path, mon
         def exec_(d):
             assert not d.links.isHidden()
             d.links.setChecked(links_on)
+            # Nothing here is new, so Import is off and a person can't take the links alone (a bug): the window is
+            # finished as Import would finish it. Once Import is on for links too, click it (test_code_rules.py).
+            assert not d.go.isEnabled()
             d._done()
             return import_sheet.ImportDialog.DialogCode.Accepted
 
@@ -689,7 +706,10 @@ def test_you_can_make_rename_order_and_fill_your_own_groups(win, monkeypatch):
     monkeypatch.setattr(dialogs, "ask_name", lambda *a, **k: "Lighting")
     win.rename_group("Lights")
     assert mic.group == "Lighting" and "Lights" not in lib.groups()
-    win._step_group("Lighting", -10)
+    win.go("grp:Lighting")
+    for _ in range(len(lib.groups())):  # Gear › Move Group Up, in it, until it's first
+        if lib.groups()[0] != "Lighting":
+            menu_action(win, "Gear", "Move Group Up").trigger()
     assert lib.groups()[0] == "Lighting"
     assert win.sidebar.rows["grp:Lighting"]
     # the inspector picks from the list, or names a new one
@@ -697,8 +717,7 @@ def test_you_can_make_rename_order_and_fill_your_own_groups(win, monkeypatch):
     c = win.items.group
     assert c.itemText(c.count() - 1) == "New Group…"
     monkeypatch.setattr(dialogs, "ask_name", lambda *a, **k: "Shotguns")
-    c.setCurrentIndex(c.count() - 1)
-    win.items._group_picked()
+    choose(c, "New Group…")
     assert mic.group == "Shotguns" and "Shotguns" in lib.groups()
     again = Library(lib.root).load()
     assert again.items[mic.id].group == "Shotguns"
@@ -732,7 +751,7 @@ def test_select_all_and_delete(win, monkeypatch):
     before = len(win.lib.items)
     t.keyPressEvent(QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Delete, Qt.KeyboardModifier.NoModifier))
     assert asked == []  # deleted at once (the standard's 4.19), said with Undo
-    assert win.toaster.text == f"Deleted {len(ids)} pieces." and win.toaster._action_word == "Undo"
+    assert win.toaster.text == f"Deleted {len(ids)} pieces." and win.toaster.action_word == "Undo"
     assert len(win.lib.items) == before - len(ids)
     assert all(i not in Library(win.lib.root).load().items for i in ids)
     win.undo()
@@ -752,29 +771,36 @@ def test_select_all_and_delete(win, monkeypatch):
 
 
 def test_order_columns_and_divide(win):
+    from PySide6.QtCore import QPoint
+
     from bodega.ui.window.tables import GEAR_COL
 
+    full_size(win)  # (the test screen's 796 has no room for another column: one more steps aside there)
     lib = win.lib
     win.go("grp:Lenses")
-    win.view_menu.divide = "none"
-    win._view_picked()
+    pick(win.view_menu.menu(), "No Dividers")
     t = win.gear_table
     shown = [r.data(0, 256) for r in t.showing_rows()]
     first, last = shown[0], shown[-1]
     assert first != last
-    win._reordered([last], first, False)  # dragged by its grip to the top
+    t.reordered.emit([last], first, False)  # dragged by its grip to the top
     assert next(r.data(0, 256) for r in t.showing_rows()) == last
     order = [i.id for i in Library(lib.root).load().ordered_items()]
     assert order.index(last) < order.index(first)
     # divide by company
     win.go("gear")
-    win.view_menu.divide = "brand"
-    win._view_picked()
+    pick(win.view_menu.menu(), "Company")
     names = [t.topLevelItem(i).text(1) for i in range(t.topLevelItemCount())]
     assert "Sony" in names and t.isColumnHidden(GEAR_COL["brand"])
-    assert win._divide_for("gear") == "brand" and win._divide_for("grp:Body") == "none"
-    # columns you choose
-    t._toggle_column("series", True)
+    assert win.view_menu.divide == "brand"  # each place keeps its own: All Gear by company…
+    win.go("grp:Lenses")
+    assert win.view_menu.divide == "none"  # …a group with none
+    win.go("gear")
+    # columns you choose (the headings' menu, from a right-click on one)
+    h = t.header()
+    offered = pick_from_next_menu("Series")
+    right_click(h.viewport(), QPoint(h.sectionViewportPosition(GEAR_COL["name"]) + 4, h.height() // 2))
+    assert "Series" in offered
     assert not t.isColumnHidden(GEAR_COL["series"]) and "series" not in lib.settings["hidden_columns"]
     # duplicate from the ⋯ menu
     n = len(lib.items)
@@ -795,20 +821,23 @@ def test_moves_wait_for_the_drag(win, monkeypatch):
     def fake_drag(self, actions):
         self.after_drag(lambda: seen.append(self.topLevelItemCount()))
         assert not seen  # waits
-        self._fill_start()  # anything refilling mid-drag would show here; the queued move hasn't run
+        self.clear()  # anything refilling mid-drag would show here; the queued move hasn't run
 
     monkeypatch.setattr(QTreeWidget, "startDrag", fake_drag)
     t.startDrag(None)
-    assert seen and not t._dragging
+    assert seen
+    now: list = []
+    t.after_drag(lambda: now.append(1))
+    assert now  # the drag is over: what's asked now runs at once
 
 
 def test_sidebar_nests_groups_and_kits(win):
     sb = win.sidebar
     assert not sb.boxes["gear"].isVisible() and sb.rows["gear"].folded  # groups tucked away at first
-    sb._fold("gear", False)
+    button(sb, "Show All Gear").click()  # its arrow
     assert sb.boxes["gear"].isVisible() and "gear" not in win.lib.settings["sidebar_folded"]
     kit = next(iter(win.lib.packages.values()))
-    win._place_picked(f"kit:{kit.id}")
+    sb.pick(f"kit:{kit.id}")
     assert win.view_key == "kits" and win.packages.pkg is kit
     assert sb.rows[f"kit:{kit.id}"].property("selected")
 
@@ -840,6 +869,11 @@ def test_back_up_zips_the_data(tmp_path):
     assert sorted(zipfile.ZipFile(dest).namelist()) == ["Bodega/gear.json", "Bodega/rentals/a.json"]
 
 
+def lifted(t) -> bool:
+    """A row is up, following the pointer: the closed hand shows."""
+    return t.viewport().cursor().shape() == Qt.CursorShape.ClosedHandCursor
+
+
 def pieces_of_a_group(t, n: int) -> list:
     """The pieces of the first group listing at least `n` (most of the sample's gear is under its piece),
     scrolled to the top."""
@@ -865,12 +899,10 @@ def test_dragging_a_row_shifts_the_others_live_and_moves_it(win):
     first, third = rows[0], rows[2]
     first_id, third_id = first.data(0, ID), third.data(0, ID)  # the rows are rebuilt after the drop
     y0 = t.visualItemRect(first).center().y()
-    t.start_lift(first, y0)
-    lift = t._lift
-    assert lift is not None and lift.ids == [first_id]
-    t._lift.move_to(t.visualItemRect(third).bottom() + 2)  # past the third row
-    for _ in range(30):  # let the rows slide
-        lift._step()
+    lift = t.start_lift(first, y0)
+    assert lift is not None and lift.ids == [first_id] and lifted(t)
+    lift.move_to(t.visualItemRect(third).bottom() + 2)  # past the third row
+    wait_for(lambda: lift.k > lift.start_k)  # the rows slide apart
     QApplication.processEvents()
     assert lift.k > lift.start_k
     moved = []
@@ -887,10 +919,9 @@ def test_esc_puts_a_lifted_row_back(win):
     win.go("gear")
     row = next(r for r in t.item_rows() if not r.isHidden())
     before = list(win.lib.items)
-    t.start_lift(row, t.visualItemRect(row).center().y())
-    t._lift.move_to(t.viewport().height() - 5)
+    t.start_lift(row, t.visualItemRect(row).center().y()).move_to(t.viewport().height() - 5)
     t.end_lift(drop=False)
-    assert t._lift is None and list(win.lib.items) == before
+    assert not lifted(t) and list(win.lib.items) == before
 
 
 def test_all_rentals_starts_folded_even_with_older_settings(qapp, data_folder):
@@ -900,7 +931,7 @@ def test_all_rentals_starts_folded_even_with_older_settings(qapp, data_folder):
     lib.settings["sidebar_folded"] = ["gear"]  # saved before All Rentals existed
     w = MainWindow(lib)
     assert w.sidebar.rows["rentals"].folded and not w.sidebar.boxes["rentals"].isVisibleTo(w.sidebar)
-    w.sidebar._fold("rentals", False)  # you open it: that's remembered
+    button(w.sidebar, "Show All Rentals").click()  # you open it: that's remembered
     w.close()
     w2 = MainWindow(Library(data_folder).load())
     assert not w2.sidebar.rows["rentals"].folded
@@ -923,10 +954,10 @@ def test_calendar_month_and_timeline(win):
     cal.month.year, cal.month.month = a.year, a.month
     cal.month.fill(win.lib)
     cal.month.grab()  # paints: lays out the bars
-    assert cal.month._bars, "the rental shows as a bar"
+    assert cal.month.bars(), "the rental shows as a bar"
     got = []
     cal.picked.connect(got.append)
-    c = cal.month._bars[0][0].center()
+    c = next(rect for rect, rental, _a, _z in cal.month.bars() if rental.id == r.id).center()
     QTest.mouseClick(cal.month, Qt.MouseButton.LeftButton, pos=QPoint(int(c.x()), int(c.y())))
     assert got == [r.id]  # a click on a bar opens the rental
     cal.month.step(1)
@@ -935,9 +966,9 @@ def test_calendar_month_and_timeline(win):
     cal.set_mode("timeline")
     assert win.lib.settings["calendar_mode"] == "timeline" and "–" in cal.title.text()
     start = cal.timeline.start
-    cal._step(1)
+    button(cal, "Later").click()
     assert cal.timeline.start == dates.plus(start, cal.timeline.days)
-    cal._today()
+    button(cal, "Today").click()
     cal.set_mode("month")
 
 
@@ -986,8 +1017,7 @@ def test_undo_puts_a_change_back_and_redo_makes_it_again(win, monkeypatch):
     win.undo()
     # a change in a panel, then undo with the panel open: the panel shows the old name
     win.open("gear", victim)
-    win.items.it.name = "Renamed"
-    win._item_edited(win.items.it)
+    type_into(win.items.name, "Renamed")
     win.flush()
     win.setFocus()
     win.undo()
@@ -1010,8 +1040,7 @@ def test_blank_new_piece_goes_on_esc(win):
     assert len(win.lib.items) == n and len(Library(win.lib.root).load().items) == n
     assert len(win.history.undos) == steps - 1  # and it left no undo step
     win.new("gear")
-    win.items.it.name = "Kept"
-    win._item_edited(win.items.it)
+    type_into(win.items.name, "Kept")
     win.deselect()
     assert any(i.name == "Kept" for i in win.lib.items.values())
     k = len(win.lib.packages)
@@ -1062,12 +1091,12 @@ def test_drifting_left_or_up_keeps_the_row_lifted(win):
             Qt.KeyboardModifier.NoModifier,
         )
         t.mouseMoveEvent(ev)
-        assert t._lift is not None, (x, dy)  # still following the pointer
+        assert lifted(t), (x, dy)  # still following the pointer
     win.refresh()  # a refill asked for mid-drag waits until the row lands
-    assert t._lift is not None and t._fill_later is not None
+    assert lifted(t) and shiboken6.isValid(row)  # (the rows under it aren't made again)
     t.end_lift(drop=False)
     QApplication.processEvents()
-    assert t._fill_later is None
+    assert not shiboken6.isValid(row)  # down: the list fills again
 
 
 def test_ctrl_backspace_while_typing_edits_the_field_and_deletes_nothing(win, monkeypatch):
@@ -1218,10 +1247,12 @@ def test_a_date_is_never_cut_off(qapp):
     d.show()
     d.resize(320, 28)
     QApplication.processEvents()
-    assert d._fmt == DATE_FORMATS[0]  # "Sun, Oct 18, 2026" when there's room
+    longest = d.locale().toString(d.date(), DATE_FORMATS[0])
+    assert d.text() == longest  # "Sun, Oct 18, 2026" when there's room
     d.resize(140, 28)
+    d.clearFocus()  # (while you type in it, it keeps what you typed; leaving it, it shows the date as it fits)
     QApplication.processEvents()
-    assert d._fmt != DATE_FORMATS[0]
+    assert d.text() != longest
     assert d.fontMetrics().horizontalAdvance(d.text()) <= d.width()
     d.close()
     d.deleteLater()
@@ -1316,7 +1347,7 @@ def test_back_up_runs_without_freezing_the_window(win, monkeypatch, tmp_path):
     monkeypatch.setattr(win, "toast_job", lambda text, *a, **k: (working.append(text), real_job(text, *a, **k)))
     win.back_up()
     assert working[0] == "Backing up…" and not said  # the window carries on while the zip is made…
-    assert win.toaster._action == win._stop_transfer and win.toaster._action_word == "Stop"  # …with Stop
+    assert win.toaster.action == win.stop_transfer and win.toaster.action_word == "Stop"  # …with Stop
     wait_for(lambda: len(said) == 1)
     assert target.exists() and said[0].startswith("Backed up.")
     assert any(w.startswith("Backing up: 1 of") for w in working)  # how far, as it goes
@@ -1326,17 +1357,18 @@ def test_slow_work_says_how_far_it_is_and_offers_stop(win):
     """The standard's progress (4.10, G.27): a bar when how much is known, a spinner while it isn't, Stop."""
     t = win.toaster
     stopped = []
+    spinner, timer = by_id(t, "ToastSpinner"), by_id(t, "ToastTimer")
     win.toast_job("Getting the sheet from Google…", stop=lambda: stopped.append(1))
-    assert t.isVisible() and t.lasts() and t._frac is None and t._turn.state() == t._turn.State.Running
+    assert t.isVisible() and t.lasts() and t.progress is None and spinner.state() == spinner.State.Running
     win.toast_job("Backing up: 3 of 10 files", 2, 10, lambda: stopped.append(1))
-    assert t._frac == pytest.approx(0.2) and t._turn.state() != t._turn.State.Running
+    assert t.progress == pytest.approx(0.2) and spinner.state() != spinner.State.Running
     # Stop takes a click from the moment it shows, before it's drawn or while it's still rising
-    assert not t._action_rect.isEmpty() and t._pill.contains(t._action_rect)
-    QTest.mouseClick(t, Qt.MouseButton.LeftButton, pos=t._action_rect.center().toPoint())
-    assert t.text == "Stopping…" and t._action is None and t._action_rect.isEmpty()
+    assert t.action_word == "Stop" and not t.action_place.isEmpty() and t.pill.contains(t.action_place)
+    click(t, t.action_place.center())
+    assert t.text == "Stopping…" and t.action is None and t.action_place.isEmpty()
     wait_for(lambda: stopped == [1])  # (once the click is over)
     win.toast("Stopped. Nothing was saved.")  # the job's own last word takes its place, and goes by itself
-    assert not t.lasts() and t._t.isActive()
+    assert not t.lasts() and timer.isActive()
 
 
 def test_the_totals_say_how_many_pieces_have_no_price(win):
@@ -1391,23 +1423,24 @@ def test_export_csv_exports_what_the_list_shows(win, monkeypatch, tmp_path):
 
 
 def test_folding_by_keyboard_is_remembered_and_option_click_folds_every_group(win, monkeypatch):
-    from bodega.ui.window.tables import GearTable
+    from bodega.ui.window.tables import HEAD
 
     win.go("gear")
     t = win.gear_table
-    dividers = t._dividers()
+    top = [t.topLevelItem(i) for i in range(t.topLevelItemCount())]
+    dividers = [r for r in top if r.data(0, HEAD) is not None]
     assert len(dividers) > 1 and all(d.isExpanded() for d in dividers)
     t.setCurrentItem(dividers[0])
     t.setFocus()
     QTest.keyClick(t, Qt.Key.Key_Left)
     assert not dividers[0].isExpanded() and win.lib.settings["folded"]  # kept, as a click would be
     monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.KeyboardModifier.AltModifier))
-    GearTable._divider_clicked(t, dividers[1], 0)  # ⌥-click on an open one folds them all
-    assert not any(d.isExpanded() for d in t._dividers())
+    alt = Qt.KeyboardModifier.AltModifier
+    click(t.viewport(), t.visualItemRect(dividers[1]).center(), alt)  # ⌥-click on an open one…
+    assert not any(d.isExpanded() for d in dividers)  # …folds them all
 
 
 def test_a_rows_menu_has_what_its_panels_more_menu_has(win, monkeypatch):
-    from PySide6.QtCore import QPoint
     from PySide6.QtWidgets import QMenu
 
     from bodega.ui.window import main_window, tables
@@ -1421,13 +1454,14 @@ def test_a_rows_menu_has_what_its_panels_more_menu_has(win, monkeypatch):
     monkeypatch.setattr(main_window, "QMenu", Noted)
     monkeypatch.setattr(tables, "QMenu", Noted)
     cases = [
-        ("gear", next(i.id for i in win.lib.items.values() if not i.parent), win.items),
-        ("packages", next(iter(win.lib.packages)), win.packages),
-        ("rentals", next(iter(win.lib.rentals)), win.rentals),
+        ("gear", next(i.id for i in win.lib.items.values() if not i.parent), win.items, win.gear_table),
+        ("packages", next(iter(win.lib.packages)), win.packages, win.kit_table),
+        ("rentals", next(iter(win.lib.rentals)), win.rentals, win.rental_table),
     ]
-    for kind, obj_id, panel in cases:
+    for kind, obj_id, panel, table in cases:
         win.open(kind, obj_id)
-        win._row_menu(kind, obj_id, QPoint(0, 0))
+        assert table.current_id() == obj_id
+        right_click(table.viewport(), table.visualItemRect(table.currentItem()).center())  # on its row
         panel.fill_more()
         mine = {a.text() for a in panel.more_menu.actions() if a.text()}
         beside = {b.toolTip() or b.text() for b in (panel.print_btn, *panel.header_buttons[1:]) if not b.isHidden()}
@@ -1524,7 +1558,7 @@ def test_settings_search_narrows_its_sections(win):
     d.find.setText("logo")
     shown = [k for k, r in d.rows.items() if not r.isHidden()]
     assert shown == ["profiles"]
-    d._found()
+    press(d.find, Qt.Key.Key_Return)  # Return: the first section left
     assert d.current_pane() == "profiles"
     d.find.setText("")
     assert not d.rows["data"].isHidden() and d.rows["account"].isHidden()  # (no account service yet)
@@ -1555,8 +1589,8 @@ def test_a_piece_renamed_after_an_import_isnt_imported_twice(win, tmp_path):
     sheet.write_text("Item,Qty,Price\nArri SkyPanel S60-C,1,7000\n", encoding="utf-8")
     assert win.import_file(sheet, ask=False) == 1
     it = next(i for i in win.lib.items.values() if i.imported_as == "Arri SkyPanel S60-C")
-    it.name = "SkyPanel (the big one)"
-    win._item_edited(it)
+    win.open("gear", it.id)
+    type_into(win.items.name, "SkyPanel (the big one)")
     win.flush()
     assert win.import_file(sheet, ask=False) == 0  # the same sheet again: it's known by the sheet's name
 
@@ -1578,7 +1612,7 @@ def test_a_piece_renamed_in_the_sheet_or_moved_in_bodega_is_known_by_its_link_or
     light = next(i for i in win.lib.items.values() if i.name == "Aputure 600d Pro")
     cam = next(i for i in win.lib.items.values() if i.name == "Sony FX3")
     cam.department = "Camera B"  # moved in Bodega
-    win._item_edited(cam)
+    win.items.changed.emit(cam)  # (said as its panel says an edit: a department has no field to type in)
     win.flush()
     sheet.write_text(  # renamed in the sheet; the other moved: both still known
         "Item,Qty,Price,Link,Serial\n"
@@ -1602,12 +1636,13 @@ def test_the_menu_bar_has_the_open_rentals_commands(win):
     assert {"Gear", "Rental"} <= set(tops)
     r = next(iter(win.lib.rentals.values()))
     win.open("rentals", r.id)
-    win._record_menu_state()
+    rental = bar_menu(win, "Rental")  # (it sets its commands on or off as it opens)
     acts = win.rental_acts
     assert acts["agreement"].isEnabled() and acts["out"].isEnabled() != acts["in"].isEnabled()
     win.deselect()
-    win._record_menu_state()
+    bar_menu(win, "Rental")
     assert not acts["agreement"].isEnabled()  # nothing open: nothing to act on
+    assert acts["agreement"] in rental.actions()
 
 
 def test_menus_and_words_are_measured_to_the_standard(win):
@@ -1634,7 +1669,7 @@ def test_a_name_with_its_own_full_stop_gets_one_and_problems_stay_longer(win):
     win.toast("Saved Northwind Media Inc..", "done")
     assert win.toaster.text == "Saved Northwind Media Inc."
     win.toast("Couldn't save.", "problem")
-    assert win.toaster._ms >= tokens.TOAST_WARN_MS
+    assert by_id(win.toaster, "ToastTimer").interval() >= tokens.TOAST_WARN_MS
 
 
 def test_every_empty_page_says_its_words_whole(qapp, data_folder):
@@ -1796,6 +1831,8 @@ def test_goes_with_stays_away_while_nothing_is_attached(win):
 
 
 def test_gear_columns_go_in_your_order_and_stay_there(win, data_folder):
+    from PySide6.QtCore import QPoint
+
     from bodega.ui.window.main_window import MainWindow
     from bodega.ui.window.tables import GEAR_COL
 
@@ -1806,7 +1843,8 @@ def test_gear_columns_go_in_your_order_and_stay_there(win, data_folder):
     assert t.column_order()[0] == "day" and win.lib.settings["column_order"][0] == "day"
     h.moveSection(h.visualIndex(GEAR_COL["name"]), 5)  # Name stays first
     assert h.visualIndex(GEAR_COL["name"]) == 1
-    t._step_column("day", 1)  # Move Right, past what's hidden
+    pick_from_next_menu("Move Right")  # its heading's menu: Move Right, past what's hidden
+    right_click(h.viewport(), QPoint(h.sectionViewportPosition(GEAR_COL["day"]) + 4, h.height() // 2))
     assert t.column_order().index("day") > 0
     win.flush()
     win.lib.save_settings()
@@ -1862,7 +1900,7 @@ def test_the_record_pager_walks_the_list_as_it_shows(win):
 def test_a_date_can_be_typed_or_picked_from_its_month(qapp):
     from PySide6.QtCore import QDate
 
-    from bodega.ui.components.datefield import DateField
+    from bodega.ui.components.datefield import DateField, MonthPopover
 
     d = DateField()
     d.setDate(QDate(2026, 10, 16))
@@ -1877,8 +1915,8 @@ def test_a_date_can_be_typed_or_picked_from_its_month(qapp):
     assert d.text() in ("Tue, Oct 20, 2026", "Oct 20, 2026", "10/20/26")  # written out (Return, or leaving it)
     d.setFocus()
     QTest.keyClick(d, Qt.Key.Key_Down)  # ↓ opens the month
-    pop = d._pop
-    wait_for(lambda: pop is not None and pop.isVisible())
+    wait_for(lambda: d.findChild(MonthPopover) is not None and d.findChild(MonthPopover).isVisible())
+    pop = d.findChild(MonthPopover)
     assert pop.title.text() == "October 2026"
     for key in (Qt.Key.Key_Right, Qt.Key.Key_Down, Qt.Key.Key_PageDown):  # a day, a week, a month
         QTest.keyClick(pop, key)
@@ -1971,13 +2009,13 @@ def test_the_group_youre_in_has_its_commands_in_the_gear_menu(win, monkeypatch):
 
     group = win.lib.groups()[1]
     win.go(f"grp:{group}")
-    win._record_menu_state()
+    bar_menu(win, "Gear")
     assert all(a.isEnabled() for a in win.group_acts)
     monkeypatch.setattr(dialogs, "ask_name", lambda *a, **k: group + " Kit")
     next(a for a in win.group_acts if a.text() == "Rename Group…").trigger()
     assert group + " Kit" in win.lib.groups() and group not in win.lib.groups()
     win.go("gear")
-    win._record_menu_state()
+    bar_menu(win, "Gear")
     assert not any(a.isEnabled() for a in win.group_acts)  # not in a group: off
 
 
@@ -1985,13 +2023,14 @@ def test_an_error_that_needs_you_stays_until_you_close_it(win):
     """The standard's toasts: a warning leaves after a while; an error that needs the person stays until it's
     dismissed (a click on it), and while it's up it takes the click instead of what's under it."""
     t = win.toaster
+    timer = by_id(t, "ToastTimer")
     win.toast("Couldn't read that file: it's open in another app.", "error")
-    assert t.isVisible() and t.lasts() and not t._t.isActive()
+    assert t.isVisible() and t.lasts() and not timer.isActive()
     assert not t.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-    QTest.mouseClick(t, Qt.MouseButton.LeftButton, pos=t._pill.center().toPoint())
+    click(t, t.pill.center())
     wait_for(lambda: not t.isVisible())
     win.toast("Couldn't save.", "problem")  # a warning still goes by itself, and never takes a click
-    assert t._t.isActive() and t.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+    assert timer.isActive() and t.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
 
 def test_the_calendars_bars_are_reached_from_the_keyboard_and_heard(win):
@@ -2022,15 +2061,14 @@ def test_the_calendars_bars_are_reached_from_the_keyboard_and_heard(win):
         assert view.focusPolicy() == Qt.FocusPolicy.StrongFocus and view.accessibleName() == "Calendar"
         view.setFocus()
         QApplication.processEvents()
-        order = view._ordered()
-        assert len(order) >= 2 and view._current(order) == 0
-        assert view.accessibleDescription() == view.say_bar(order[0])
+        order = view.bars()
+        assert len(order) >= 2 and view.accessibleDescription() == view.say_bar(order[0])  # on the first
         assert order[0][1].number in view.accessibleDescription()
         QTest.keyClick(view, Qt.Key.Key_Right)
-        assert view._current(view._ordered()) == 1
+        assert view.accessibleDescription() == view.say_bar(view.bars()[1])  # on the next
         QTest.keyClick(view, Qt.Key.Key_End)
         QTest.keyClick(view, Qt.Key.Key_Home)
-        assert view._current(view._ordered()) == 0
+        assert view.accessibleDescription() == view.say_bar(view.bars()[0])
         QTest.keyClick(view, Qt.Key.Key_Return)
         assert got[-1] == order[0][1].id
 
@@ -2093,7 +2131,7 @@ def test_circles_swatches_lists_and_popups_are_measured_to_the_standard(win):
     picker = s.findChild(AccentPicker)
     assert picker is not None
     for i in range(len(picker.keys)):
-        ring = picker._rect(i)
+        ring = picker.swatch_rect(i)
         assert ring.width() == ring.height() == tokens.SWATCH + 4 * tokens.SWATCH_RING  # the swatch, ringed
     s.done(0)
 
@@ -2121,7 +2159,7 @@ def test_import_remembers_the_columns_you_set_for_a_sheet_laid_out_the_same(qapp
     assert "value" not in cols and key == importer.layout_key(rows, d.layout_guess)
     saved = importer.remember({}, key, cols)
     again = ImportDialog(path, rows, set(), saved_columns=saved)
-    assert again.as_last_time and "value" not in again._layout().cols  # as you set it
+    assert again.as_last_time and "value" not in again.columns_to_keep()[1]  # as you set it
     assert again.columns_to_keep() == (key, cols)  # kept fresh
     other = [list(r) for r in rows]
     other[1] = ["How Many", "Item", "Cost", "Total", "Rent?", 0.04]  # another layout
@@ -2137,7 +2175,12 @@ def test_a_long_kit_or_rental_has_its_own_search(win):
     """The standard's rule for every list (LIST_SEARCH_ABOVE): a kit's gear and a rental's lines, once longer
     than that, get a search that hides what doesn't match, and says so when nothing does."""
     from bodega.core.model import PackageLine, RentalLine
+    from bodega.ui.components.widgets import ElidedLabel, widgets_of
     from bodega.ui.style import tokens
+
+    def rows():  # the kit's gear, row by row, and the name each row shows
+        boxes = [w for w in widgets_of(win.packages.lines_lay) if w.objectName() == "ItemBox"]
+        return [(w, w.findChild(ElidedLabel, "ItemTitle").full_text()) for w in boxes]
 
     lib = win.lib
     p = next(iter(lib.packages.values()))
@@ -2153,12 +2196,12 @@ def test_a_long_kit_or_rental_has_its_own_search(win):
     s.setText(target.name)
     from bodega.core import search
 
-    shown = [hay for w, hay in s._rows if not w.isHidden()]
-    assert shown and all(search.folded(target.name) in hay for hay in shown) and len(shown) < len(s._rows)
+    shown = [name for w, name in rows() if not w.isHidden()]
+    assert shown and all(search.folded(target.name) in search.folded(n) for n in shown) and len(shown) < len(rows())
     s.setText("nothing is called this")
-    assert not any(not w.isHidden() for w, _h in s._rows) and s.none.isVisibleTo(win.packages)
+    assert not any(not w.isHidden() for w, _n in rows()) and s.none.isVisibleTo(win.packages)
     s.clear()
-    assert all(not w.isHidden() for w, _h in s._rows)
+    assert all(not w.isHidden() for w, _n in rows())
 
     r = next(iter(lib.rentals.values()))
     r.lines = [RentalLine("item", i, 1) for i in ids[: tokens.LIST_SEARCH_ABOVE + 1]]
@@ -2168,16 +2211,17 @@ def test_a_long_kit_or_rental_has_its_own_search(win):
     rs = win.rentals.line_search
     assert rs.box.isVisibleTo(win.rentals)
     rs.setText(lib.items[ids[1]].name)
-    assert any(not w.isHidden() for w, _h in rs._rows) and any(w.isHidden() for w, _h in rs._rows)
+    lines = win.rentals.editors  # (its lines, row by row)
+    assert any(not e.isHidden() for e in lines) and any(e.isHidden() for e in lines)
 
 
 def test_a_buttons_key_in_its_tooltip_is_its_menu_commands(win):
     """I-04: one place says a command's key (the menu); the bar's buttons read it from there."""
     from PySide6.QtGui import QKeySequence
 
-    for button, action in ((win.btn_ai, win.act_assistant), (win.sidebar.search, win.act_search)):
+    for btn, action in ((win.btn_ai, win.act_assistant), (win.sidebar.search, win.act_search)):
         keys = action.shortcut().toString(QKeySequence.SequenceFormat.NativeText)
-        assert keys and button.toolTip().endswith(f"({keys})")
+        assert keys and btn.toolTip().endswith(f"({keys})")
 
 
 def test_a_delete_says_so_with_undo_for_a_while_and_undo_brings_it_back(win):
@@ -2187,11 +2231,12 @@ def test_a_delete_says_so_with_undo_for_a_while_and_undo_brings_it_back(win):
     p = next(iter(win.lib.packages.values()))
     win.delete("packages", p.id)
     t = win.toaster
-    assert p.id not in win.lib.packages and t.text.startswith(f"Deleted {p.name}.") and t._action_word == "Undo"
-    assert t._ms >= tokens.TOAST_UNDO_MS and t._t.isActive()  # it goes by itself, after a while
+    timer = by_id(t, "ToastTimer")
+    assert p.id not in win.lib.packages and t.text.startswith(f"Deleted {p.name}.") and t.action_word == "Undo"
+    assert timer.interval() >= tokens.TOAST_UNDO_MS and timer.isActive()  # it goes by itself, after a while
     QApplication.processEvents()
     t.repaint()
-    QTest.mouseClick(t, Qt.MouseButton.LeftButton, pos=t._action_rect.center().toPoint())
+    click(t, t.action_place.center())
     wait_for(lambda: p.id in win.lib.packages)  # Undo, once the click is over
 
 

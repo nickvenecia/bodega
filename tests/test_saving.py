@@ -10,6 +10,7 @@ from bodega.core import sample, store
 from bodega.core.model import Client, Rental
 from bodega.core.store import Library
 from bodega.ui.dialogs.common import Alert
+from tests.ui import button, by_id, click, type_into, wait_for
 
 
 @pytest.fixture
@@ -78,20 +79,21 @@ def test_a_write_that_fails_is_kept_and_tried_again(data_folder, full_disk):
 
 def test_a_failed_save_stays_said_until_it_works(win, full_disk):
     it = next(iter(win.lib.items.values()))
-    it.name = "Edited"
-    win._item_edited(it)
+    win.open("gear", it.id)
+    type_into(win.items.name, "Edited")
     win.flush()
     assert win.banner.isVisibleTo(win) and "aren't saved" in win.banner.text.text()
     assert "no free space" in win.banner.text.text()  # the computer's real reason, in plain words
     assert "Errno" not in win.banner.text.text()
     assert win.sidebar.profile_card.sub.text() == "Not Saved"
-    assert win._retry_timer.isActive()
+    retry = by_id(win, "SaveRetry")
+    assert retry.isActive()  # tried again every little while
     win.banner.close_btn.click()  # put away…
     win.flush()  # …it comes back while the problem lasts
     assert win.banner.isVisibleTo(win)
     full_disk.fixed()
     win.try_saving_again()
-    assert not win.banner.isVisibleTo(win) and not win._retry_timer.isActive()
+    assert not win.banner.isVisibleTo(win) and not retry.isActive()
     assert win.sidebar.profile_card.sub.text() != "Not Saved"
     assert Library(win.lib.root).load().items[it.id].name == "Edited"
 
@@ -111,8 +113,8 @@ def test_a_save_outside_the_autosave_is_said_too(win, full_disk, qapp):
 def test_quitting_over_unsaved_changes_asks(win, full_disk, answers):
     said, asked = answers
     it = next(iter(win.lib.items.values()))
-    it.name = "Edited"
-    win._item_edited(it)
+    win.open("gear", it.id)
+    type_into(win.items.name, "Edited")
     said.append(QDialog.DialogCode.Rejected)  # Cancel: Bodega stays open
     assert not win.close() and win.isVisible() and asked == ["Quit Without Saving?"]
     full_disk.fixed()
@@ -236,12 +238,14 @@ def test_deleting_a_profile_names_it_and_undo_brings_it_back(win, answers):
 
     win.history = History(win.lib)  # a profile you've had a while (adding then deleting it undoes itself)
     s = SettingsDialog(win.lib, win, "profiles", profile=second.id)
-    s.profile_editor._delete()
+    s.show()
+    button(s.profile_editor, "Delete Profile").click()
     assert asked == []  # the owner's call (the standard's 4.19): deleted at once, nothing asked…
     assert second.id not in win.lib.businesses
-    assert s.toaster.text == "Deleted Second Unit." and s.toaster._action_word == "Undo"  # …said with Undo, in Settings
-    s._undo_delete()
-    assert second.id in win.lib.businesses  # and Undo brings it back
+    t = s.toaster
+    assert t.text == "Deleted Second Unit." and t.action_word == "Undo"  # …said with Undo, in Settings
+    click(t, t.action_place.center())
+    wait_for(lambda: second.id in win.lib.businesses)  # and Undo brings it back (once the click is over)
     s.close()
 
 
@@ -253,30 +257,39 @@ def test_account_settings_wait_for_an_account_service(win):
     s.close()
 
 
-def test_a_new_day_refreshes_what_today_decides(win, monkeypatch):
+def test_a_new_day_refreshes_what_today_decides(win, monkeypatch, qapp):
     from datetime import timedelta
 
+    from PySide6.QtCore import Qt
+
     from bodega.core import dates
+
+    def back() -> None:  # back to Bodega (a computer asleep over midnight misses the timer)
+        qapp.applicationStateChanged.emit(Qt.ApplicationState.ApplicationActive)
 
     tomorrow = dates.today() + timedelta(days=1)
     refreshed = []
     monkeypatch.setattr(win, "refresh", lambda: refreshed.append(1))
-    win._new_day()
+    back()
     assert not refreshed  # the same day: nothing to do
     monkeypatch.setattr(dates, "today", lambda: tomorrow)
-    win._new_day()
-    assert refreshed and win._day == tomorrow and win._midnight.isActive()
+    back()
+    assert refreshed and by_id(win, "Midnight").isActive()  # a new day: what today decides, and midnight's next
+    refreshed.clear()
+    back()
+    assert not refreshed  # it goes by tomorrow now: the same day again
 
 
-def test_typing_without_a_pause_is_still_saved(win):
+def test_typing_without_a_pause_is_still_saved(win, qapp):
     from PySide6.QtCore import Qt
 
     it = next(iter(win.lib.items.values()))
-    it.name = "Typed Without a Pause"
-    win._item_edited(it)
-    assert win._save_cap.isActive()  # however long the typing goes on, it's saved by then
-    win._app_state(Qt.ApplicationState.ApplicationInactive)  # going to another app saves at once
-    assert not win._save_cap.isActive()
+    win.open("gear", it.id)
+    cap = by_id(win, "SaveCap")
+    type_into(win.items.name, "Typed Without a Pause")
+    assert cap.isActive()  # however long the typing goes on, it's saved by then
+    qapp.applicationStateChanged.emit(Qt.ApplicationState.ApplicationInactive)  # going to another app saves at once
+    assert not cap.isActive()
     assert Library(win.lib.root).load().items[it.id].name == "Typed Without a Pause"
 
 

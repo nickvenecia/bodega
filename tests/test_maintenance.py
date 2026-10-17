@@ -7,6 +7,7 @@ from datetime import date
 from bodega.core import maintenance, sample
 from bodega.core.model import Item, LogEntry
 from bodega.core.store import Library
+from tests.ui import button, type_into
 
 
 def test_due_from_the_last_service():
@@ -38,14 +39,14 @@ def test_maintenance_in_the_panel(qapp, data_folder):
     it = next(iter(win.lib.items.values()))
     win.open("gear", it.id)
     p = win.items
-    p._add_part("care")
+    button(p, "Maintenance").click()  # its + chip
     p.every.setCurrentIndex(p.every.findData("90"))
     assert it.service_days == 90 and p.due.isVisibleTo(p)
-    p.log_text.setText("Cleaned the sensor")
-    p._log_add()
+    type_into(p.log_text, "Cleaned the sensor")
+    button(p, "Add").click()
     assert it.log and it.log[-1].kind == "service" and p.log_box.isVisibleTo(p)
     win.flush()
     assert Library(data_folder).load().items[it.id].log[0].text == "Cleaned the sensor"
-    p._log_remove(0)
+    button(p, "Remove this line").click()  # its ✕
     assert not it.log
     win.close()

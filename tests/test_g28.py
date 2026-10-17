@@ -31,6 +31,7 @@ from bodega.core import sample
 from bodega.core.store import Library
 from bodega.ui.components import access
 from bodega.ui.style import theme, tokens
+from tests.ui import keep_size
 
 RAMP = {
     tokens.TEXT_FOOTNOTE,
@@ -111,7 +112,7 @@ def win(qapp, data_folder, monkeypatch):
 
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "1")
     w = MainWindow(sample.fill(Library(data_folder).load()))
-    w._restored = True
+    keep_size(w)
     w.resize(1280, 900)
     w.show()
     QTest.qWait(50)

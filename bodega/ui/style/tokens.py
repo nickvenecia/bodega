@@ -623,7 +623,7 @@ def _on_soft() -> None:
     words and the muted ones, each taken just far enough toward the main text's side to read at 4.5:1 on the wash over the glass
     (aimed at SOFT_RATIO: the glass shades itself a touch more than its color says)."""
     g = globals()
-    wash = _solid(g["CHIP_HOVER"], _solid(g["GLASS"], g["BG"]))  # (the deepest wash words sit on: a chip, hovered)
+    wash = solid(g["CHIP_HOVER"], solid(g["GLASS"], g["BG"]))  # (the deepest wash words sit on: a chip, hovered)
     ink = "#000000" if SCHEME == "light" else "#FFFFFF"
     g.update(
         {
@@ -681,7 +681,7 @@ def use(
             GLASS_STROKE=strong,
         )
     if opaque:
-        globals().update(GLASS=_solid(look["GLASS"], look["BG"]), TOAST=_solid(look["TOAST"], look["BG"]))
+        globals().update(GLASS=solid(look["GLASS"], look["BG"]), TOAST=solid(look["TOAST"], look["BG"]))
     _off()
     _on_soft()
 
@@ -771,7 +771,7 @@ def tint(c: str, accent: str, share: float) -> str:
     return _hex(out) if alpha is None else _rgba(_hex(out), alpha)
 
 
-def _solid(c: str, under: str) -> str:
+def solid(c: str, under: str) -> str:
     """An rgba() color as the solid color it makes over `under`."""
     if not c.startswith("rgba("):
         return c

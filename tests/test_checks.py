@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from PySide6.QtCore import Qt
+
 from bodega.core import checks, document, sample
 from bodega.core.model import CheckRow
 from bodega.core.store import Library
+from tests.ui import hover, press, wait_for
 
 
 def test_rows_follow_the_gear(tmp_path):
@@ -36,7 +39,7 @@ def test_check_out_and_in(qapp, data_folder, monkeypatch):
             c.back = c.back or self.back
         first = self.rows[0].item_id
         self.scan.setText(document.label_code(first))
-        self._scanned()
+        press(self.scan, Qt.Key.Key_Return)  # (a scanner presses Return)
         assert self.widgets[first].tick.isChecked()
         self.mark = True
         return checklist.CheckDialog.DialogCode.Accepted
@@ -91,8 +94,8 @@ def test_only_the_hovered_sections_plus_fades_in(qapp, data_folder, monkeypatch)
     head = sb.heads["rental-section"]
     monkeypatch.setattr(sb, "underMouse", lambda: True)
     monkeypatch.setattr(QCursor, "pos", staticmethod(lambda: head.mapToGlobal(QPoint(4, 4))))
-    sb._hover_check()
-    assert sb.btn_new_rental._fade.endValue() == 1.0  # Rentals' + fades in
+    hover(head, QPoint(4, 4))
+    wait_for(lambda: sb.btn_new_rental.graphicsEffect().opacity() == 1.0)  # Rentals' + fades in
     assert sb.btn_new_dep.graphicsEffect().opacity() == 0.0  # Inventory's stays away
     win.close()
 
