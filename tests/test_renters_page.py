@@ -108,7 +108,7 @@ def test_a_new_renter_is_a_sheet_then_opens_on_the_page(win, qapp, monkeypatch):
 
     def fill(d):
         d.name.setText("Jo Park")
-        d._save()
+        d.save.click()
         return ClientDialog.DialogCode.Accepted
 
     monkeypatch.setattr(ClientDialog, "exec", fill)

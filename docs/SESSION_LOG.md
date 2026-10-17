@@ -22,8 +22,7 @@ Bodega will notice (it becomes the release notes and the update window), so this
     `QT_QPA_PLATFORM="offscreen:configfile=screen.json"`, as `tests/test_sizes.py` does).
   - `python -m bodega cli update-check`: says which release this copy would update to, offline.
 - **Next**: the owner's answers (the questions still open in [STANDARD_AUDIT.md](STANDARD_AUDIT.md), and the
-  departures proposed in PROJECT_ADDENDUM.md). Its "After the fixes" has every check fixed or waiting on the owner
-  but the tests' own two (T-04, T-13: tests reach controls through private names, not roles and visible words).
+  departures proposed in PROJECT_ADDENDUM.md). Its "After the fixes" has every check fixed or waiting on the owner.
 - **Quirks**:
   - Qt's offscreen test screen is only 800 points wide, under Bodega's 1280 minimum: anything measured wider runs in
     its own process with a configured screen (`tests/test_sizes.py`). A screenshot narrower than 1280 cuts the
@@ -78,15 +77,19 @@ Bodega will notice (it becomes the release notes and the update window), so this
   Bodega's own process, checking each step and logging it; both Windows checks pass.
 - **Speed**: many rentals are saved side by side (a big delete was slow on Windows); the scale test counts writes
   instead of timing the disk.
-- **Bugs found on the way**: Review had lost its ticks and piece names when every list got a tick column (the
+- **Tests as a person uses Bodega** (T-04, T-13): UI tests find a button by its words, a field by its label, a menu
+  command by its menu and words (`tests/ui.py`), and act through what a part makes public. A code rule counts any
+  private name a UI test reaches; its allowlist has one entry, with its reason.
+- **Bugs found on the way**: a sheet of gear you already have couldn't bring just its links in (Import stayed off);
+  Review had lost its ticks and piece names when every list got a tick column (the
   shared row painter draws column 0 only as a tick); the renter form's City was squeezed by the State list in a
   narrow panel; an OpenRouter key was "checked" against a list anyone can read.
 
 **Decided**: none by the owner this round. As the standard has it: Import and Review are pages; Settings sections
 keep each change as made (Profiles still waits on question 31).
 
-**Open**: T-04 and T-13 (tests by role and visible words); everything waiting on the owner (20 checks: the
-questions still open in STANDARD_AUDIT.md, and the proposed departures).
+**Open**: only what waits on the owner (20 checks: the questions still open in STANDARD_AUDIT.md, and the proposed
+departures).
 
 **For the Standard** (general lessons):
 
@@ -103,6 +106,10 @@ questions still open in STANDARD_AUDIT.md, and the proposed departures).
 - **A shared painter can quietly break a list it was never meant for.** When every list got a tick column, the one
   list with Qt's own check boxes lost them. A screenshot of every screen, read after each shared change, would have
   shown it the day it happened.
+- **Tests that act as a person does find bugs that private calls hide.** Run over the old tests, a rule against
+  private names found 173 reaches; rewriting them as clicks by visible words found a button that stayed off when
+  it shouldn't, and a test that passed only because it ran before the table was laid out. T-13 could ship with
+  that rule as its check.
 - **A stylesheet rule for a scroll area's children reaches its scroll bars.** `QScrollArea > QWidget > QWidget`
   matched them; the overlay bars only drew right once the rule named the viewport.
 

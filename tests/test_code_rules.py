@@ -101,9 +101,6 @@ PRIVATE_ALLOWED = {
     "ui.py:_restored": "The window opens where it was left and saves its size and place for next time; a test or a "
     "screenshot needs it at a size it sets instead. A person never wants that, so the window has no setting for it "
     "and keeps it as a private note: tests/ui.py's keep_size() is the one place a test sets it.",
-    "test_window.py:_done": "When every row of a sheet is gear you already have, Import is off even with Add Links "
-    "to Pieces You Have on, so no click reaches the links choice (a person can't bring only links in yet: a bug "
-    "to fix in the Import window). The test finishes the window the way Import would.",
 }
 
 

@@ -169,6 +169,7 @@ class ImportDialog(QDialog):
         )
         self.links.setToolTip("Only where a piece has no link yet")
         self.links.setVisible(bool(known_links))
+        self.links.toggled.connect(lambda _on: self._summary())  # (links alone are something to bring in)
         self.options.add(self.links)
         # what a blank means, when the sheet leaves some blank (shown only then): today's defaults, chosen
         self.blank_rent = ToggleRow("A Blank Rent? Means For Rent", True)
@@ -389,12 +390,16 @@ class ImportDialog(QDialog):
                 f"{len(keep):,} of {words.count(found, 'row')}, {words.count(pieces, 'piece')}"
                 + (f", {attached} attached to other gear" if attached else "")
             )
-        self.go.setText(f"Import {words.count(len(keep), 'Row')}" if keep else "Import")
-        self.go.setEnabled(bool(keep))
+        links = self._links_wanted()
+        self.go.setText(f"Import {words.count(len(keep), 'Row')}" if keep else "Add Links" if links else "Import")
+        self.go.setEnabled(bool(keep) or links)  # (a sheet of gear you have can still bring its links in)
+
+    def _links_wanted(self) -> bool:
+        return not self.links.isHidden() and self.links.isChecked()
 
     def _done(self) -> None:
         self.items = self.chosen()
-        self.fill_links = not self.links.isHidden() and self.links.isChecked()
+        self.fill_links = self._links_wanted()
         if self._has_pricing and self.use_pricing.isChecked():
             self.pricing = (self.got.rate_pct, self.got.value_tax)
         self.accept()

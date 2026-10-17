@@ -14,6 +14,7 @@ from bodega.core.store import Library
 from bodega.services.ai import tasks
 from bodega.ui.components import sheet
 from bodega.ui.style import tokens
+from tests.ui import keep_size
 
 
 @pytest.fixture
@@ -22,7 +23,7 @@ def win(qapp, data_folder, monkeypatch):
 
     monkeypatch.setenv("BODEGA_REDUCE_MOTION", "1")
     w = MainWindow(sample.fill(Library(data_folder).load()))
-    w._restored = True
+    keep_size(w)
     w.resize(*tokens.WINDOW_MIN)
     w.show()
     QTest.qWait(50)

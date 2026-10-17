@@ -31,8 +31,8 @@ server, organization, sign-in, phone and stock checks: Bodega is one person's de
 
 **Pass 111 · Fail 253 (S1 39 · S2 135 · S3 79) · N/A 157** of 521 checks.
 
-Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **230 fixed, 1 partly, 1 not
-started (larger redesigns), 20 waiting on the owner, and 1 no longer applies** (a web page's rule).
+Since then (see [After the fixes](#after-the-fixes)): of the 253 failures, **232 fixed, 20
+waiting on the owner, and 1 no longer applies** (a web page's rule).
 
 | Section | Checks | Pass | Fail | S1 | S2 | S3 | N/A |
 |---|---|---|---|---|---|---|---|
@@ -62,19 +62,15 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 "Not started" are the larger redesigns; the owner's items wait on a question below or a departure in
 [PROJECT_ADDENDUM.md](PROJECT_ADDENDUM.md). Nothing is marked fixed by skipping or loosening a test.
 
-**Of the 253 failures: Fixed 230 · Partly 1 · Open 1 · Waiting on the owner 20 · No longer applies 1.**
+**Of the 253 failures: Fixed 232 · Partly 0 · Open 0 · Waiting on the owner 20 · No longer applies 1.**
 
 ### Partly: what's left
 
-| Check | Sev | What's left |
-|---|---|---|
-| T-04 | S2 | Tests still reach some controls through private names (about 48 in test_window.py). |
+None: every check started is finished.
 
 ### Not started: the larger redesigns
 
-| Check | Sev | What it needs |
-|---|---|---|
-| T-13 | S3 | Tests find controls by their code names, not by role and visible words. |
+None: every larger redesign is done.
 
 ### Waiting on the owner
 
@@ -121,7 +117,7 @@ the same way. "Fixed" means the code does what the check asks and a test holds i
 - **P**: P-01, P-02, P-03, P-04, P-09, P-13, P-15, P-16
 - **R**: R-01, R-05
 - **S**: S-17, S-21, S-25
-- **T**: T-01, T-03, T-05, T-06, T-09, T-11, T-12, T-14, T-15, T-16, T-18
+- **T**: T-01, T-03, T-04, T-05, T-06, T-09, T-11, T-12, T-13, T-14, T-15, T-16, T-18
 - **V**: V-04, V-08, V-09, V-11, V-13, V-14, V-15, V-16, V-17, V-18, V-19, V-23, V-24, V-25, V-26, V-32, V-33, V-35, V-36, V-37, V-40, V-41
 - **W**: W-02, W-03, W-04, W-06, W-09, W-10, W-11, W-12, W-14, W-15, W-16, W-17, W-18, W-19, W-20, W-21, W-22
 - **X**: X-01, X-06, X-08

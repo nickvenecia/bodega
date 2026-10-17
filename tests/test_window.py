@@ -36,7 +36,7 @@ def win(qapp, data_folder):
     from bodega.ui.window.main_window import MainWindow
 
     w = MainWindow(sample.fill(Library(data_folder).load()))
-    w._restored = True  # at its usual smallest: on a Mac it would fill Qt's test screen, 800 wide, and fold its sidebar
+    keep_size(w)  # at its usual smallest: on a Mac it would fill Qt's test screen, 800 wide, and fold its sidebar
     w.resize(*tokens.WINDOW_MIN)
     w.show()
     yield w
@@ -672,10 +672,11 @@ def test_the_sheets_links_go_to_gear_you_have_only_if_you_say(win, tmp_path, mon
         def exec_(d):
             assert not d.links.isHidden()
             d.links.setChecked(links_on)
-            # Nothing here is new, so Import is off and a person can't take the links alone (a bug): the window is
-            # finished as Import would finish it. Once Import is on for links too, click it (test_code_rules.py).
-            assert not d.go.isEnabled()
-            d._done()
+            if not links_on:  # nothing here is new and no links wanted: nothing to bring in
+                assert not d.go.isEnabled()
+                return import_sheet.ImportDialog.DialogCode.Rejected
+            assert d.go.isEnabled() and d.go.text() == "Add Links"  # the links alone come in
+            d.go.click()
             return import_sheet.ImportDialog.DialogCode.Accepted
 
         monkeypatch.setattr(import_sheet.ImportDialog, "exec", exec_)

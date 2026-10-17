@@ -41,7 +41,8 @@
 - Importing a sheet no longer replaces your profile's pricing unless you turn on Use the Sheet's Pricing (it starts
   off once you have a profile). The Import page now says what it filled in where the sheet was blank (a quantity
   of 1, for rent, a company from the name), lets you turn off the company guess, and asks before adding the
-  sheet's links to gear you already have (only where it has none).
+  sheet's links to gear you already have (only where it has none). A sheet of gear you already have can bring
+  just its links in: the button says Add Links.
 - SVG logos are kept as their drawing only: a logo can no longer pull a picture from your computer onto your
   agreements. Logos you added before are drawn the same safe way.
 - A sheet too big to be a gear list, or one with a cell far too long, now says so in plain words instead of
